@@ -27,9 +27,23 @@ server <- function(input, output, session) {
   callModule(modelResultsAssign, "assign", isoData = isoData)
 
   callModule(savedMapsTab, "svmt", savedMaps = savedMaps)
+
   if (reSourcesInstalled()) {
     callModule(ReSources::fruitsTab, "fruits", isoMemoData = fruitsData)
     hideTab("tab", "fruits")
+  }
+
+  if (Sys.getenv("ISOMEMO_HIDE_MODELLING") != "") {
+    hideTab("tab", "Modeling", session = session)
+    appendTab(inputId = "tab",
+              modelLinkUI("modelLink", title = "Modeling")
+    )
+  }
+
+  if (Sys.getenv("ISOMEMO_HIDE_MODELLING") == "") {
+    appendTab(inputId = "tab",
+              savedMapsTabUI("svmt", "Saved maps")
+    )
   }
 
   observeEvent(input$getHelp, {
