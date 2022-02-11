@@ -13,7 +13,7 @@ modelLinkUI <- function(id, title = ""){
     value = id,
     sidebarLayout(
       sidebarPanel(width = 3,
-                   tags$h5("Download IsoMemo app with modeling feature"),
+                   tags$h5("Download IsoMemo app with modeling feature as R-Package."),
                    div(
                      id = "download-full-package",
                      tags$button(
