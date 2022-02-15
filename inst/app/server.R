@@ -38,9 +38,7 @@ server <- function(input, output, session) {
     appendTab(inputId = "tab",
               modelLinkUI("modelLink", title = "Modeling")
     )
-  }
-
-  if (Sys.getenv("ISOMEMO_HIDE_MODELLING") == "") {
+  } else {
     appendTab(inputId = "tab",
               savedMapsTabUI("svmt", "Saved maps")
     )
