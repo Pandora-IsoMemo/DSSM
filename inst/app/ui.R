@@ -20,7 +20,8 @@ tagList(
                modelResultsSimUI("similarity", "LocateR"),
                modelResultsAssignUI("assign", "AssignR")
                ),
-    savedMapsTabUI("svmt", "Saved maps"),
+    # added via appendTab() inside server.R:
+    #savedMapsTabUI("svmt", "Saved maps"),
     if (reSourcesInstalled()) ReSources::fruitsUI("fruits", "ReSources")
     else NULL
   ),
