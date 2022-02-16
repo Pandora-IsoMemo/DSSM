@@ -3,4 +3,4 @@ Shiny App für Isotopen Datenbank (Position 3)
 
 ## Deployment Versionen:
 
-- http://inwt-vmeh2.inwt.de:3838/MpiIsoApp/
+- https://isomemoapp.com/app/iso-memo-app
