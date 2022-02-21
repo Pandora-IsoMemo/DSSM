@@ -121,7 +121,7 @@ combineCheckboxSelectize <- function(x, ns){
                        choices = choices,
                        selected = choices,
                        options = list(
-                         `actions-box` = FALSE,
+                         `actions-box` = TRUE,
                          size = 10,
                          `none-selected-text` = "No fields selected",
                          `selected-text-format` = "count > 8"
