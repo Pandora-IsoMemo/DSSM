@@ -11,7 +11,7 @@ pipeline {
         stage('Testing') {
             steps {
                 sh '''
-                docker build -t tmp-$CUR_PROJ-$TMP_SUFFIX .
+                docker build --pull -t tmp-$CUR_PROJ-$TMP_SUFFIX .
                 docker run --rm --network host tmp-$CUR_PROJ-$TMP_SUFFIX check
                 docker rmi tmp-$CUR_PROJ-$TMP_SUFFIX
                 '''
