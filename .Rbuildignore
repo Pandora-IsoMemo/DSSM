@@ -1,15 +1,14 @@
 ^.+\.Rproj$
-^\.Rproj\.user$
 ^libWin$
 ^libMac$
 ^lib$
 ^libLinux$
 ^Dockerfile$
-^.dockerignore$
-^.gitignore$
 ^covr$
 ^deps$
 ^Jenkinsfile$
 ^JenkinsfileMPI$
 ^bin$
 ^LICENSE\.md$
+^deploy\.sh$
+^\..*$

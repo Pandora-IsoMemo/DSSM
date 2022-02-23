@@ -13,6 +13,7 @@
   } else if (Sys.info()["sysname"] == "Darwin") {
     .libPaths(new = c(paste(getwd(), "libMac", sep = "/"), .libPaths()))
   }
+  options(repos = c(getOption("repos"), PANDORA = "https://Pandora-IsoMemo.github.io/drat/"))
 }
 
 .First()
