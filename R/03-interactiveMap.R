@@ -111,9 +111,6 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Create the map
   output$map <- renderLeaflet({
-    validate(
-      need(!is.null(isoData()), "Please select a database first.")
-    )
     draw(
       isoData(),
       zoom = 4,
@@ -229,8 +226,6 @@ interactiveMap <- function(input, output, session, isoData){
 draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
                  northArrow = FALSE, scalePosition = "topleft",
                  northArrowPosition = "bottomright", center = NULL){
-
-  if (nrow(isoData) == 0) return(leaflet())
 
   if (type == "1"){
     mType <- "CartoDB.Positron"
