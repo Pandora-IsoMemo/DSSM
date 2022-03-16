@@ -74,6 +74,11 @@ interactiveMapUI <- function(id, title = ""){
                     "Map type", choices = c("Type 1" = "1", "Type 2" = "2", "Type 3" = "3",
                                             "Type 4" = "4", "Type 5" = "5", "Type 6" = "6",
                                             "Type 7" = "7")),
+        checkboxInput(ns("LeafletFixedPointSize"), "Use fixed point size", value = FALSE),
+        conditionalPanel(condition = "input.LeafletFixedPointSize",
+                         ns = ns,
+                         sliderInput(ns("LeafletPointSize"), "Point Size", min = 1, max = 100, value = 5)
+                         ),
         selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
         downloadButton(ns("exportLeaflet"), "Export map"),
         div(
@@ -91,6 +96,13 @@ interactiveMapUI <- function(id, title = ""){
           condition = 'input.includeNorthArrow',
           ns = ns,
           selectInput(ns("northArrowPosition"), "North Arrow Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "bottomright")
+        ),
+        checkboxInput(ns("includeLogo"), "Include Logo"),
+        conditionalPanel(
+          condition = 'input.includeLogo',
+          ns = ns,
+          selectInput(ns("logo"), "Choose Logo", choices = c("Pandora", "Isomemo")),
+          selectInput(ns("logoPosition"), "Logo Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "topleft")
         )
       )
     )
@@ -114,6 +126,7 @@ interactiveMap <- function(input, output, session, isoData){
     draw(
       isoData(),
       zoom = 4,
+      #pointSize = input$LeafletPointSize,
       type = input$LeafletType,
       scale = input$includeScale,
       scalePosition = input$scalePosition,
@@ -122,12 +135,29 @@ interactiveMap <- function(input, output, session, isoData){
     )
   })
 
+  leafletPointRadius <- reactiveVal()
+
+  leafletValues <- reactiveValues(pointRadius = 20000)
+
+  observeEvent(input$map_zoom, {
+    if (!input$LeafletFixedPointSize) {
+      leafletValues$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+    }
+  })
+
+  observeEvent(input$LeafletPointSize, {
+    if (input$LeafletFixedPointSize) {
+      leafletValues$pointRadius <- input$LeafletPointSize
+    }
+  })
+
   # Add Circles relative to zoom
   observe({
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
+      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), #pointRadius = 20000,
+                               newZoom = new_zoom, zoom = 4)
     })
 
   })
@@ -190,6 +220,7 @@ interactiveMap <- function(input, output, session, isoData){
     m <- draw(
         isoData(),
         zoom = input$map_zoom,
+        #pointSize = input$LeafletPointSize,
         center = input$map_center,
         type = input$LeafletType,
         scale = input$includeScale,
@@ -223,7 +254,8 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param center where to center map (list of lat and lng)
 #'
 #' @export
-draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
+draw <- function(isoData, zoom = 5, #pointSize = 20000,
+                 type = "1", scale = FALSE,
                  northArrow = FALSE, scalePosition = "topleft",
                  northArrowPosition = "bottomright", center = NULL){
 
@@ -259,7 +291,8 @@ draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
     addProviderTiles(mType) %>%
     setView(lng = lng, lat = lat, zoom = zoom)
 
-  map <- addCirclesRelativeToZoom(map, isoData, newZoom = zoom, zoom = zoom)
+  map <- addCirclesRelativeToZoom(map, isoData, #pointSize = 20000,
+                                  newZoom = zoom, zoom = zoom)
 
   if (northArrowPosition %in% c("bottomright", "bottomleft")) {
     if (scale) {
@@ -300,7 +333,8 @@ draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
   map
 }
 
-addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
+addCirclesRelativeToZoom <- function(map, isoData, #pointRadius,
+                                     newZoom, zoom = 5){
   if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
 
   isoData <- isoData[!is.na(isoData$longitude), ]
@@ -332,6 +366,7 @@ addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
               layerId = "colorLegend")
 
 }
+
 
 
 # Show a popup at the given location
