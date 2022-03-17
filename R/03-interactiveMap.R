@@ -69,40 +69,12 @@ interactiveMapUI <- function(id, title = ""){
         id = "controls", class = "panel panel-default", fixed = TRUE,
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
-        h2("Map Settings and Export"),
-        selectInput(ns("LeafletType"),
-                    "Map type", choices = c("Type 1" = "1", "Type 2" = "2", "Type 3" = "3",
-                                            "Type 4" = "4", "Type 5" = "5", "Type 6" = "6",
-                                            "Type 7" = "7")),
-        checkboxInput(ns("LeafletFixedPointSize"), "Use fixed point size", value = FALSE),
-        conditionalPanel(condition = "input.LeafletFixedPointSize",
-                         ns = ns,
-                         sliderInput(ns("LeafletPointSize"), "Point Size", min = 1, max = 100, value = 5)
-                         ),
+        leafletSettingsUI(ns("mapSettings"), "Map Settings and Export"),
         selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
         downloadButton(ns("exportLeaflet"), "Export map"),
         div(
           id = ns("phantomjsHelp"),
           helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
-        ),
-        checkboxInput(ns("includeScale"), "Include Scale"),
-        conditionalPanel(
-          condition = 'input.includeScale',
-          ns = ns,
-          selectInput(ns("scalePosition"), "Scale Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "bottomright")
-        ),
-        checkboxInput(ns("includeNorthArrow"), "Include North Arrow"),
-        conditionalPanel(
-          condition = 'input.includeNorthArrow',
-          ns = ns,
-          selectInput(ns("northArrowPosition"), "North Arrow Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "bottomright")
-        ),
-        checkboxInput(ns("includeLogo"), "Include Logo"),
-        conditionalPanel(
-          condition = 'input.includeLogo',
-          ns = ns,
-          selectInput(ns("logo"), "Choose Logo", choices = c("Pandora", "Isomemo")),
-          selectInput(ns("logoPosition"), "Logo Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "topleft")
         )
       )
     )
@@ -121,35 +93,22 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
+  leafletValues <- callModule(leafletSettings, "mapSettings")
+
   # Create the map
   output$map <- renderLeaflet({
     draw(
       isoData(),
       zoom = 4,
       #pointSize = input$LeafletPointSize,
-      type = input$LeafletType,
-      scale = input$includeScale,
-      scalePosition = input$scalePosition,
-      northArrow = input$includeNorthArrow,
-      northArrowPosition = input$northArrowPosition
+      type = leafletValues()$leafletType,
+      scale = !is.na(leafletValues()$scalePosition),
+      scalePosition = leafletValues()$scalePosition,
+      northArrow = !is.na(leafletValues()$northArrowPosition),
+      northArrowPosition = leafletValues()$northArrowPosition
     )
   })
 
-  leafletPointRadius <- reactiveVal()
-
-  leafletValues <- reactiveValues(pointRadius = 20000)
-
-  observeEvent(input$map_zoom, {
-    if (!input$LeafletFixedPointSize) {
-      leafletValues$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
-    }
-  })
-
-  observeEvent(input$LeafletPointSize, {
-    if (input$LeafletFixedPointSize) {
-      leafletValues$pointRadius <- input$LeafletPointSize
-    }
-  })
 
   # Add Circles relative to zoom
   observe({
@@ -222,11 +181,11 @@ interactiveMap <- function(input, output, session, isoData){
         zoom = input$map_zoom,
         #pointSize = input$LeafletPointSize,
         center = input$map_center,
-        type = input$LeafletType,
-        scale = input$includeScale,
-        scalePosition = input$scalePosition,
-        northArrow = input$includeNorthArrow,
-        northArrowPosition = input$northArrowPosition
+        type = leafletValues()$leafletType,
+        scale = !is.na(leafletValues()$scalePosition),
+        scalePosition = leafletValues()$scalePosition,
+        northArrow = !is.na(leafletValues()$northArrowPosition),
+        northArrowPosition = leafletValues()$northArrowPosition
       )
       mapview::mapshot(
         m, file = filename,
@@ -294,7 +253,7 @@ draw <- function(isoData, zoom = 5, #pointSize = 20000,
   map <- addCirclesRelativeToZoom(map, isoData, #pointSize = 20000,
                                   newZoom = zoom, zoom = zoom)
 
-  if (northArrowPosition %in% c("bottomright", "bottomleft")) {
+  if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {
       map <- addScaleBar(
         map,

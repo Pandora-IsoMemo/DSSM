@@ -1,0 +1,122 @@
+#' ui function of leaflet settings module
+#'
+#' @param id namespace
+#' @param title title in tab
+leafletSettingsUI <- function(id, title = "") {
+  ns <- NS(id)
+
+  tagList(
+    tags$h2(title),
+    selectInput(
+      ns("LeafletType"),
+      "Map type",
+      choices = c(
+        "Type 1" = "1",
+        "Type 2" = "2",
+        "Type 3" = "3",
+        "Type 4" = "4",
+        "Type 5" = "5",
+        "Type 6" = "6",
+        "Type 7" = "7"
+      )
+    ),
+    checkboxInput(ns("LeafletFixedPointSize"), "Use fixed point size", value = FALSE),
+    conditionalPanel(
+      condition = "input.LeafletFixedPointSize",
+      ns = ns,
+      sliderInput(
+        ns("LeafletPointSize"),
+        "Point Size",
+        min = 1,
+        max = 100,
+        value = 5
+      )
+    ),
+    checkboxInput(ns("includeScale"), "Include Scale"),
+    conditionalPanel(
+      condition = 'input.includeScale',
+      ns = ns,
+      selectInput(
+        ns("scalePosition"),
+        "Scale Position",
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "bottomright"
+      )
+    ),
+    checkboxInput(ns("includeNorthArrow"), "Include North Arrow"),
+    conditionalPanel(
+      condition = 'input.includeNorthArrow',
+      ns = ns,
+      selectInput(
+        ns("northArrowPosition"),
+        "North Arrow Position",
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "bottomright"
+      )
+    ),
+    checkboxInput(ns("includeLogo"), "Include Logo"),
+    conditionalPanel(
+      condition = 'input.includeLogo',
+      ns = ns,
+      selectInput(ns("logo"), "Choose Logo", choices = c("Pandora", "Isomemo")),
+      selectInput(
+        ns("logoPosition"),
+        "Logo Position",
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "topleft"
+      )
+    )
+  )
+}
+
+
+#' server funtion of leaflet settings module
+#'
+#' @param input input
+#' @param output output
+#' @param session session
+leafletSettings <- function(input, output, session) {
+  values <- reactiveValues(pointRadius = 20000)
+
+  observeEvent(input$map_zoom, {
+    req(!input$LeafletFixedPointSize)
+    values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+  })
+
+  observeEvent(input$LeafletPointSize, {
+    req(input$LeafletFixedPointSize)
+    values$pointRadius <- input$LeafletPointSize
+  })
+
+  observe({
+    values$scalePosition <-
+      ifelse(input$includeScale, input$scalePosition, NA_character_)
+  })
+
+  observe({
+    values$northArrowPosition <-
+      ifelse(input$includeNorthArrow,
+             input$northArrowPosition,
+             NA_character_)
+  })
+
+  observe({
+    values$logo <-
+      ifelse(input$includeLogo, input$logo, NA_character_)
+  })
+
+  observe({
+    values$logoPosition <-
+      ifelse(input$includeLogo, input$logoPosition, NA_character_)
+  })
+
+  reactive(
+    list(
+      leafletType = input$LeafletType,
+      pointRadius = values$pointRadius,
+      scalePosition = values$scalePosition,
+      northArrowPosition = values$northArrowPosition,
+      logoPosition = values$logoPosition
+    )
+  )
+}
