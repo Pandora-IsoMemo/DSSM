@@ -35,7 +35,7 @@ Imports:
   rgdal,
   RColorBrewer (>= 1.1.2),
   rcarbon (>= 1.4.0),
-  rcrossref (>=1.1.0)
+  rcrossref (>=1.1.0),
   shiny (>= 1.0.5),
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),
