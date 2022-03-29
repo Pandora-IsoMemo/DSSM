@@ -35,6 +35,7 @@ Imports:
   rgdal,
   RColorBrewer (>= 1.1.2),
   rcarbon (>= 1.4.0),
+  rcrossref (>=1.1.0)
   shiny (>= 1.0.5),
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),
@@ -42,7 +43,7 @@ Imports:
   shinyWidgets (>= 0.4.1),
   sp (>= 1.2.7),
   stringi (>= 1.1.7),
-  webshot
+  webshot (>= 0.5.2)
 Suggests:
   lintr (>= 1.0.2),
   testthat (>= 2.0.0),
