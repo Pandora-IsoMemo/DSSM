@@ -51,17 +51,17 @@ citationElement <- function(ref, doi) {
 }
 
 # TODO: how to use this in the console?
-generateRcrossRefromDOI < - function(doi,format){
+#generateRcrossRefromDOI < - function(doi,format){
 
-  bibtex <- cr_cn(dois=doi, format= "bibtex")
-  rdf_xml < -cr_cn(dois=doi, format= "rdf-xml")
-  citejson <- cr_cn(dois=doi, format= "citeproc-json")
-  citejson_ish <- cr_cn(dois=doi, format= "citeproc-json-ish")
-  text <- cr_cn(dois=doi, format= "text")
-  ris <- cr_cn(dois=doi, format= "ris")
-  cross_xml <- cr_cn(dois=doi, format= "crossref-xml")
-  #cr_cn(dois=doi, format= "datacite-xml")
-  bibentry <- cr_cn(dois=doi, format= "bibentry")
-  cross_tdm <- cr_cn(dois=doi, format= "crossref-tdm")
+#  bibtex <- cr_cn(dois=doi, format= "bibtex")
+#  rdf_xml < -cr_cn(dois=doi, format= "rdf-xml")
+#  citejson <- cr_cn(dois=doi, format= "citeproc-json")
+#  citejson_ish <- cr_cn(dois=doi, format= "citeproc-json-ish")
+#  text <- cr_cn(dois=doi, format= "text")
+#  ris <- cr_cn(dois=doi, format= "ris")
+#  cross_xml <- cr_cn(dois=doi, format= "crossref-xml")
+#  #cr_cn(dois=doi, format= "datacite-xml")
+#  bibentry <- cr_cn(dois=doi, format= "bibentry")
+#  cross_tdm <- cr_cn(dois=doi, format= "crossref-tdm")
 
-}
+#}
