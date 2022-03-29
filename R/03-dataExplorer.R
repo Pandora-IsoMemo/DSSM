@@ -429,6 +429,7 @@ dataExplorer <- function(input, output, session){
       }
 
       data <- isoDataFull()[citationColumns]
+      browser()
       generateCitation(data, input$citationType, file = filename)
     }
   )
