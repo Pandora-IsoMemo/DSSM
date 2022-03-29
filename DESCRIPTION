@@ -35,7 +35,7 @@ Imports:
   rgdal,
   RColorBrewer (>= 1.1.2),
   rcarbon (>= 1.4.0),
-  rcrossref (>=1.1.0),
+  rcrossref,
   shiny (>= 1.0.5),
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),
@@ -48,4 +48,4 @@ Suggests:
   lintr (>= 1.0.2),
   testthat (>= 2.0.0),
   ReSources (>= 0.7.9)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
