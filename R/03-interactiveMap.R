@@ -105,7 +105,8 @@ interactiveMap <- function(input, output, session, isoData){
       scale = !is.na(leafletValues()$scalePosition),
       scalePosition = leafletValues()$scalePosition,
       northArrow = !is.na(leafletValues()$northArrowPosition),
-      northArrowPosition = leafletValues()$northArrowPosition
+      northArrowPosition = leafletValues()$northArrowPosition,
+      logoPosition = leafletValues()$logoPosition
     )
   })
 
@@ -185,7 +186,8 @@ interactiveMap <- function(input, output, session, isoData){
         scale = !is.na(leafletValues()$scalePosition),
         scalePosition = leafletValues()$scalePosition,
         northArrow = !is.na(leafletValues()$northArrowPosition),
-        northArrowPosition = leafletValues()$northArrowPosition
+        northArrowPosition = leafletValues()$northArrowPosition,
+        logoPosition = leafletValues()$logoPosition
       )
       mapview::mapshot(
         m, file = filename,
@@ -216,7 +218,8 @@ interactiveMap <- function(input, output, session, isoData){
 draw <- function(isoData, zoom = 5, #pointSize = 20000,
                  type = "1", scale = FALSE,
                  northArrow = FALSE, scalePosition = "topleft",
-                 northArrowPosition = "bottomright", center = NULL){
+                 northArrowPosition = "bottomright",
+                 logoPosition = NA, center = NULL){
 
   if (type == "1"){
     mType <- "CartoDB.Positron"
@@ -252,6 +255,15 @@ draw <- function(isoData, zoom = 5, #pointSize = 20000,
 
   map <- addCirclesRelativeToZoom(map, isoData, #pointSize = 20000,
                                   newZoom = zoom, zoom = zoom)
+
+  if (!is.na(logoPosition)) {
+    map <- addControl(
+      map,
+      tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
+      position = logoPosition,
+      className = ""
+    )
+  }
 
   if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {

@@ -103,11 +103,6 @@ leafletSettings <- function(input, output, session) {
   })
 
   observe({
-    values$logo <-
-      ifelse(input$includeLogo, input$logo, NA_character_)
-  })
-
-  observe({
     values$logoPosition <-
       ifelse(input$includeLogo, input$logoPosition, NA_character_)
   })
