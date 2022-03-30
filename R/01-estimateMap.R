@@ -1788,13 +1788,12 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
   else{q = spreadQ}
   eta <- (1 - 2 * q) / (q * (1-q))
   sigma <- (2) / (q * (1 - q))
-
   XBeta <- XX %*% beta
   print(nrow(data))
-  if (MinMax == "Max" && minValue == -Inf){
+  if (MinMax == "Max" && (minValue == -Inf | is.na(minValue))){
     minValue <- Inf
   }
-  if ((MinMax == "Min" && minValue == Inf)){
+  if ((MinMax == "Min" && (minValue == Inf | is.na(minValue)))){
     minValue <- -Inf
   }
 
