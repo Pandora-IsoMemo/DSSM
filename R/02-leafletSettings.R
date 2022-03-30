@@ -20,52 +20,54 @@ leafletSettingsUI <- function(id, title = "") {
         "Type 7" = "7"
       )
     ),
-    checkboxInput(ns("LeafletFixedPointSize"), "Use fixed point size", value = FALSE),
-    conditionalPanel(
-      condition = "input.LeafletFixedPointSize",
-      ns = ns,
-      sliderInput(
+    fluidRow(column(6, checkboxInput(
+      ns("includeScale"), "Scale"
+    )),
+    column(
+      6,
+      selectInput(
+        ns("scalePosition"),
+        label = NULL,
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "bottomright"
+      )
+    )),
+    fluidRow(column(6, checkboxInput(
+      ns("includeNorthArrow"), "North Arrow"
+    )),
+    column(
+      6,
+      selectInput(
+        ns("northArrowPosition"),
+        label = NULL,
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "bottomright"
+      )
+    )),
+    fluidRow(column(6, checkboxInput(
+      ns("includeLogo"), "Logo"
+    )),
+    column(
+      6,
+      selectInput(
+        ns("logoPosition"),
+        label = NULL,
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "topleft"
+      )
+    )),
+    fluidRow(column(
+      6, checkboxInput(ns("LeafletFixedPointSize"), "Fixed point size", value = FALSE)
+    ),
+    column(
+      6, sliderInput(
         ns("LeafletPointSize"),
-        "Point Size",
+        label = NULL,
         min = 1,
         max = 100,
         value = 5
       )
-    ),
-    checkboxInput(ns("includeScale"), "Include Scale"),
-    conditionalPanel(
-      condition = 'input.includeScale',
-      ns = ns,
-      selectInput(
-        ns("scalePosition"),
-        "Scale Position",
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    ),
-    checkboxInput(ns("includeNorthArrow"), "Include North Arrow"),
-    conditionalPanel(
-      condition = 'input.includeNorthArrow',
-      ns = ns,
-      selectInput(
-        ns("northArrowPosition"),
-        "North Arrow Position",
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    ),
-    checkboxInput(ns("includeLogo"), "Include Logo"),
-    conditionalPanel(
-      condition = 'input.includeLogo',
-      ns = ns,
-      selectInput(ns("logo"), "Choose Logo", choices = c("Pandora", "Isomemo")),
-      selectInput(
-        ns("logoPosition"),
-        "Logo Position",
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "topleft"
-      )
-    )
+    ))
   )
 }
 
