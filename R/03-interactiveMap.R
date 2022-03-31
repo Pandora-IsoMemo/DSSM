@@ -70,10 +70,8 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
-        tags$h2("Export"),
-        #selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
-        #downloadButton(ns("exportLeaflet"), "Export map"),
-        div(style = 'display:inline-block', leafletExportButton(ns("exportLeaflet"))),
+        tags$br(),
+        leafletExportButton(ns("exportLeaflet")),
         div(
           id = ns("phantomjsHelp"),
           helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
@@ -172,37 +170,11 @@ interactiveMap <- function(input, output, session, isoData){
     }
   })
 
-  # output$exportLeaflet <- downloadHandler(
-  #   filename = function() {
-  #     paste0('plot-', Sys.Date(), '.', input$exportType)
-  #   },
-  #   content = function(filename) {
-  #
-  #   m <- draw(
-  #       isoData(),
-  #       zoom = input$map_zoom,
-  #       center = input$map_center,
-  #       type = leafletValues()$leafletType,
-  #       scale = !is.na(leafletValues()$scalePosition),
-  #       scalePosition = leafletValues()$scalePosition,
-  #       northArrow = !is.na(leafletValues()$northArrowPosition),
-  #       northArrowPosition = leafletValues()$northArrowPosition,
-  #       logoPosition = leafletValues()$logoPosition
-  #     )
-  #     mapview::mapshot(
-  #       m, file = filename,
-  #       remove_controls = "zoomControl",
-  #       vwidth = input$map_width,
-  #       vheight = input$map_height)
-  #   }
-  # )
-
   callModule(leafletExport, "exportLeaflet",
              isoData,
-             leafletValues
-             #reactive(values$plot), "similarity",
-             #reactive(values$predictions)
-  )
+             zoom = reactive(input$map_zoom), center = reactive(input$map_center),
+             width = reactive(input$map_width), height = reactive(input$map_height),
+             leafletValues)
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
