@@ -74,8 +74,9 @@ interactiveMapUI <- function(id, title = ""){
                     "Map type", choices = c("Type 1" = "1", "Type 2" = "2", "Type 3" = "3",
                                             "Type 4" = "4", "Type 5" = "5", "Type 6" = "6",
                                             "Type 7" = "7")),
-        selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
-        downloadButton(ns("exportLeaflet"), "Export map"),
+        #selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
+        #downloadButton(ns("exportLeaflet"), "Export map"),
+        div(style = 'display:inline-block', leafletExportButton(ns("export"))),
         div(
           id = ns("phantomjsHelp"),
           helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
@@ -184,29 +185,36 @@ interactiveMap <- function(input, output, session, isoData){
     }
   })
 
-  output$exportLeaflet <- downloadHandler(
-    filename = function() {
-      paste0('plot-', Sys.Date(), '.', input$exportType)
-    },
-    content = function(filename) {
+  # output$exportLeaflet <- downloadHandler(
+  #   filename = function() {
+  #     paste0('plot-', Sys.Date(), '.', input$exportType)
+  #   },
+  #   content = function(filename) {
+  #
+  #   m <- draw(
+  #       isoData(),
+  #       zoom = input$map_zoom,
+  #       center = input$map_center,
+  #       type = input$LeafletType,
+  #       scale = input$includeScale,
+  #       scalePosition = input$scalePosition,
+  #       northArrow = input$includeNorthArrow,
+  #       northArrowPosition = input$northArrowPosition
+  #     )
+  #     mapview::mapshot(
+  #       m, file = filename,
+  #       remove_controls = "zoomControl",
+  #       vwidth = input$map_width,
+  #       vheight = input$map_height)
+  #   }
+  # )
 
-    m <- draw(
-        isoData(),
-        zoom = input$map_zoom,
-        center = input$map_center,
-        type = input$LeafletType,
-        scale = input$includeScale,
-        scalePosition = input$scalePosition,
-        northArrow = input$includeNorthArrow,
-        northArrowPosition = input$northArrowPosition
-      )
-      mapview::mapshot(
-        m, file = filename,
-        remove_controls = "zoomControl",
-        vwidth = input$map_width,
-        vheight = input$map_height)
-    }
-  )
+  callModule(leafletExport, "export",
+             isoData,
+             leafletValues,
+             #reactive(values$plot), "similarity",
+             #reactive(values$predictions)
+             )
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
