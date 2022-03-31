@@ -69,7 +69,8 @@ interactiveMapUI <- function(id, title = ""){
         id = "controls", class = "panel panel-default", fixed = TRUE,
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
-        leafletSettingsUI(ns("mapSettings"), "Map Settings and Export"),
+        leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+        tags$h2("Export"),
         selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
         downloadButton(ns("exportLeaflet"), "Export map"),
         div(
@@ -100,7 +101,6 @@ interactiveMap <- function(input, output, session, isoData){
     draw(
       isoData(),
       zoom = 4,
-      #pointSize = input$LeafletPointSize,
       type = leafletValues()$leafletType,
       scale = !is.na(leafletValues()$scalePosition),
       scalePosition = leafletValues()$scalePosition,
@@ -180,7 +180,6 @@ interactiveMap <- function(input, output, session, isoData){
     m <- draw(
         isoData(),
         zoom = input$map_zoom,
-        #pointSize = input$LeafletPointSize,
         center = input$map_center,
         type = leafletValues()$leafletType,
         scale = !is.na(leafletValues()$scalePosition),
@@ -215,7 +214,7 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param center where to center map (list of lat and lng)
 #'
 #' @export
-draw <- function(isoData, zoom = 5, #pointSize = 20000,
+draw <- function(isoData, zoom = 5,
                  type = "1", scale = FALSE,
                  northArrow = FALSE, scalePosition = "topleft",
                  northArrowPosition = "bottomright",
@@ -253,7 +252,7 @@ draw <- function(isoData, zoom = 5, #pointSize = 20000,
     addProviderTiles(mType) %>%
     setView(lng = lng, lat = lat, zoom = zoom)
 
-  map <- addCirclesRelativeToZoom(map, isoData, #pointSize = 20000,
+  map <- addCirclesRelativeToZoom(map, isoData,
                                   newZoom = zoom, zoom = zoom)
 
   if (!is.na(logoPosition)) {
@@ -304,7 +303,7 @@ draw <- function(isoData, zoom = 5, #pointSize = 20000,
   map
 }
 
-addCirclesRelativeToZoom <- function(map, isoData, #pointRadius,
+addCirclesRelativeToZoom <- function(map, isoData,
                                      newZoom, zoom = 5){
   if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
 

@@ -55,18 +55,6 @@ leafletSettingsUI <- function(id, title = "") {
         choices = c("topright", "bottomright", "bottomleft", "topleft"),
         selected = "topleft"
       )
-    )),
-    fluidRow(column(
-      6, checkboxInput(ns("LeafletFixedPointSize"), "Fixed point size", value = FALSE)
-    ),
-    column(
-      6, sliderInput(
-        ns("LeafletPointSize"),
-        label = NULL,
-        min = 1,
-        max = 100,
-        value = 5
-      )
     ))
   )
 }
@@ -81,13 +69,7 @@ leafletSettings <- function(input, output, session) {
   values <- reactiveValues(pointRadius = 20000)
 
   observeEvent(input$map_zoom, {
-    req(!input$LeafletFixedPointSize)
     values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
-  })
-
-  observeEvent(input$LeafletPointSize, {
-    req(input$LeafletFixedPointSize)
-    values$pointRadius <- input$LeafletPointSize
   })
 
   observe({
