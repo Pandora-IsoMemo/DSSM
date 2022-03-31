@@ -47,4 +47,4 @@ Suggests:
   lintr (>= 1.0.2),
   testthat (>= 2.0.0),
   ReSources (>= 0.7.9)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
