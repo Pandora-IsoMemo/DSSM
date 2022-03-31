@@ -211,14 +211,15 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
+#' @param logoPosition character position of logo if selected, else NA
 #' @param center where to center map (list of lat and lng)
 #'
 #' @export
-draw <- function(isoData, zoom = 5,
-                 type = "1", scale = FALSE,
-                 northArrow = FALSE, scalePosition = "topleft",
-                 northArrowPosition = "bottomright",
-                 logoPosition = NA, center = NULL){
+draw <- function(isoData, zoom = 5, type = "1",
+                 northArrow = FALSE, northArrowPosition = "bottomright",
+                 scale = FALSE, scalePosition = "topleft",
+                 logoPosition = NA,
+                 center = NULL){
 
   if (type == "1"){
     mType <- "CartoDB.Positron"

@@ -8,10 +8,11 @@ draw(
   isoData,
   zoom = 5,
   type = "1",
-  scale = FALSE,
   northArrow = FALSE,
-  scalePosition = "topleft",
   northArrowPosition = "bottomright",
+  scale = FALSE,
+  scalePosition = "topleft",
+  logoPosition = NA,
   center = NULL
 )
 }
@@ -22,13 +23,15 @@ draw(
 
 \item{type}{map type}
 
-\item{scale}{show scale?}
-
 \item{northArrow}{show north arrow?}
+
+\item{northArrowPosition}{position of north arrow}
+
+\item{scale}{show scale?}
 
 \item{scalePosition}{position of scale}
 
-\item{northArrowPosition}{position of north arrow}
+\item{logoPosition}{character position of logo if selected, else NA}
 
 \item{center}{where to center map (list of lat and lng)}
 }
