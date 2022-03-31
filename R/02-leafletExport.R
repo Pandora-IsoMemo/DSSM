@@ -5,7 +5,7 @@
 #' @param id namespace
 leafletExportButton <- function(id){
   ns <- NS(id)
-  actionButton(ns("exportLeafletPopUp"), "Export Map")
+  actionButton(ns("exportLeaflet"), "Export Map")
 }
 
 
@@ -18,10 +18,12 @@ leafletExport <- function(input, output, session,
                           #map,
                           isoData,
                           # zoom, center,
-                          leafletValues,
+                          leafletValues
                           #plotObj, type, predictions = function(){NULL}, plotFun = NULL, Model = NULL
                           ){
-  observeEvent(input$exportLeafletMap, {
+  ns <- session$ns
+
+  observeEvent(input$exportLeaflet, {
     showModal(modalDialog(
       title = "Export Map",
       footer = modalButton("OK"),
@@ -55,7 +57,7 @@ leafletExport <- function(input, output, session,
   })
 
 
-  output$exportLeaflet <- downloadHandler(
+  output$exportLeafletMap <- downloadHandler(
     filename = function() {
       paste0('plot-', Sys.Date(), '.', input$exportType)
     },

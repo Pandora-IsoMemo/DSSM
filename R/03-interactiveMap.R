@@ -73,7 +73,7 @@ interactiveMapUI <- function(id, title = ""){
         tags$h2("Export"),
         #selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
         #downloadButton(ns("exportLeaflet"), "Export map"),
-        div(style = 'display:inline-block', leafletExportButton(ns("export"))),
+        div(style = 'display:inline-block', leafletExportButton(ns("exportLeaflet"))),
         div(
           id = ns("phantomjsHelp"),
           helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
@@ -197,9 +197,9 @@ interactiveMap <- function(input, output, session, isoData){
   #   }
   # )
 
-  callModule(leafletExport, "export",
+  callModule(leafletExport, "exportLeaflet",
              isoData,
-             leafletValues,
+             leafletValues
              #reactive(values$plot), "similarity",
              #reactive(values$predictions)
   )
