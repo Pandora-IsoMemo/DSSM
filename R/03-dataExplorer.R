@@ -90,6 +90,7 @@ dataExplorerUI <- function(id, title = ""){
           selectInput(ns("citationColumns"), "Citation columns", choices = NULL, multiple = TRUE)
         ),
         selectInput(ns("citationType"), "Citation Type", selected = "txt", choices = c("txt", "xml", "json")),
+        selectInput(ns("citationStyle"), "Style", selected = "txt", choices = c("chicago", "harvard", "apa")),
         downloadButton(ns("exportCitation"), "Export Citation")
       ),
       mainPanel(
@@ -430,8 +431,9 @@ dataExplorer <- function(input, output, session){
       }
 
       data <- isoDataFull()[citationColumns]
-      browser()
       generateCitation(data, input$citationType, file = filename)
+      browser()
+      #generateCitation(data, input$citationStyle, file = filename)
       x <- c(2,5,3,9,8,11,6)
       count <- 0
       for (doi in data$databaseDOI) {

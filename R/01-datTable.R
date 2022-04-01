@@ -12,6 +12,10 @@ datTable <- function(dat, columns = names(dat)){
 
   dat <- dat[names(dat) %in% columns]
 
+  #generateRcrossRefromDOI <- function(tmp,style,format){
+  #  data <- cr_cn(doi, format = format,style = style)
+  #  return(data)
+
   descCol <- which(colnames(dat) == "description")
 
   columnDefs <- if (length(descCol) == 0) NULL

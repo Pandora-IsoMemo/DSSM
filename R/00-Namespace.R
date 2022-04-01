@@ -37,5 +37,6 @@
 #' sd setNames cor density median kmeans
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head
+#' @importFrom rcrossref cr_cn
 #' packageVersion read.csv read.csv2 write.table installed.packages capture.output download.file
 NULL
