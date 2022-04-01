@@ -51,17 +51,31 @@ citationElement <- function(ref, doi) {
 }
 
 # TODO: how to use this in the console?
-#generateRcrossRefromDOI < - function(doi,format){
-
-#  bibtex <- cr_cn(dois=doi, format= "bibtex")
-#  rdf_xml < -cr_cn(dois=doi, format= "rdf-xml")
-#  citejson <- cr_cn(dois=doi, format= "citeproc-json")
-#  citejson_ish <- cr_cn(dois=doi, format= "citeproc-json-ish")
-#  text <- cr_cn(dois=doi, format= "text")
-#  ris <- cr_cn(dois=doi, format= "ris")
-#  cross_xml <- cr_cn(dois=doi, format= "crossref-xml")
+generateRcrossRefromDOI <- function(doi,style,format){
+  browser()
+  citation <- cr_cn(doi, format = format,style = style)
+  return(citation)
+  #rdf_xml < -cr_cn(dois=doi, format= "rdf-xml")
+  #citejson <- cr_cn(dois=doi, format= "citeproc-json")
+  #citejson_ish <- cr_cn(dois=doi, format= "citeproc-json-ish")
+  #text <- cr_cn(dois=doi, format= "text")
+  #ris <- cr_cn(dois=doi, format= "ris")
+  #cross_xml <- cr_cn(dois=doi, format= "crossref-xml")
 #  #cr_cn(dois=doi, format= "datacite-xml")
-#  bibentry <- cr_cn(dois=doi, format= "bibentry")
-#  cross_tdm <- cr_cn(dois=doi, format= "crossref-tdm")
+  #bibentry <- cr_cn(dois=doi, format= "bibentry")
+  #cross_tdm <- cr_cn(dois=doi, format= "crossref-tdm")
 
-#}
+# sometimes the DOI is not there: database, original, compilation: when the DOI is empty, the txt reference is generated
+  #step 2: harvard vs. chicago style: fetch the text, not using the itsef, but use the DOI
+  cr_cn("10.1126/science.169.3946.635", "text", "apa")
+  cr_cn("10.1126/science.169.3946.635", "text", "harvard3")
+  cr_cn("10.1126/science.169.3946.635", "text", "elsevier-harvard")
+  cr_cn("10.1126/science.169.3946.635", "text", "ecoscience")
+  cr_cn("10.1126/science.169.3946.635", "text", "heredity")
+  cr_cn("10.1126/science.169.3946.635", "text", "oikos")
+  cr_cn('https://doi.org/10.1016/j.jasrep.2017.07.030', format = "bibtex",style = "geophysics")
+  # output: have three columns.
+  # drop down for citation format:
+  # drop down: change citation export type
+  originalDataDOIauto
+}

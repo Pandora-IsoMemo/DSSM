@@ -133,7 +133,7 @@ combineCheckboxSelectize <- function(x, ns){
 }
 
 
-#' server funtion of data explorer module
+#' server function of data explorer module
 #'
 #' @param input input
 #' @param output output
@@ -369,6 +369,7 @@ dataExplorer <- function(input, output, session){
 
   ## Output
   output$dataTable <- renderDataTable({
+    browser()
     validate(
       need(!is.null(isoDataFull()), "Please select a database in the sidebar panel.")
     )
@@ -431,6 +432,13 @@ dataExplorer <- function(input, output, session){
       data <- isoDataFull()[citationColumns]
       browser()
       generateCitation(data, input$citationType, file = filename)
+      x <- c(2,5,3,9,8,11,6)
+      count <- 0
+      for (doi in data$databaseDOI) {
+        generateRcrossRefromDOI(doi)
+      }
+
+      generateRcrossRefromDOI()
     }
   )
 
