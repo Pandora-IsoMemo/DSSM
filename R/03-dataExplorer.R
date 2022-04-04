@@ -161,6 +161,7 @@ dataExplorer <- function(input, output, session){
   isoDataRaw <- reactiveVal(NULL)
 
   observe({
+    req(database())
     d <- getRemoteData(database())
 
     isoDataRaw(d)

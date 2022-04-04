@@ -69,28 +69,13 @@ interactiveMapUI <- function(id, title = ""){
         id = "controls", class = "panel panel-default", fixed = TRUE,
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
-        h2("Map Settings and Export"),
-        selectInput(ns("LeafletType"),
-                    "Map type", choices = c("Type 1" = "1", "Type 2" = "2", "Type 3" = "3",
-                                            "Type 4" = "4", "Type 5" = "5", "Type 6" = "6",
-                                            "Type 7" = "7")),
+        leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+        tags$h2("Export"),
         selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
         downloadButton(ns("exportLeaflet"), "Export map"),
         div(
           id = ns("phantomjsHelp"),
           helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
-        ),
-        checkboxInput(ns("includeScale"), "Include Scale"),
-        conditionalPanel(
-          condition = 'input.includeScale',
-          ns = ns,
-          selectInput(ns("scalePosition"), "Scale Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "bottomright")
-        ),
-        checkboxInput(ns("includeNorthArrow"), "Include North Arrow"),
-        conditionalPanel(
-          condition = 'input.includeNorthArrow',
-          ns = ns,
-          selectInput(ns("northArrowPosition"), "North Arrow Position", choices = c("topright", "bottomright", "bottomleft", "topleft"), selected = "bottomright")
         )
       )
     )
@@ -109,28 +94,30 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
+  leafletValues <- callModule(leafletSettings, "mapSettings")
+
   # Create the map
   output$map <- renderLeaflet({
-    validate(
-      need(!is.null(isoData()), "Please select a database first.")
-    )
     draw(
       isoData(),
       zoom = 4,
-      type = input$LeafletType,
-      scale = input$includeScale,
-      scalePosition = input$scalePosition,
-      northArrow = input$includeNorthArrow,
-      northArrowPosition = input$northArrowPosition
+      type = leafletValues()$leafletType,
+      scale = !is.na(leafletValues()$scalePosition),
+      scalePosition = leafletValues()$scalePosition,
+      northArrow = !is.na(leafletValues()$northArrowPosition),
+      northArrowPosition = leafletValues()$northArrowPosition,
+      logoPosition = leafletValues()$logoPosition
     )
   })
+
 
   # Add Circles relative to zoom
   observe({
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
+      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), #pointRadius = 20000,
+                               newZoom = new_zoom, zoom = 4)
     })
 
   })
@@ -194,11 +181,12 @@ interactiveMap <- function(input, output, session, isoData){
         isoData(),
         zoom = input$map_zoom,
         center = input$map_center,
-        type = input$LeafletType,
-        scale = input$includeScale,
-        scalePosition = input$scalePosition,
-        northArrow = input$includeNorthArrow,
-        northArrowPosition = input$northArrowPosition
+        type = leafletValues()$leafletType,
+        scale = !is.na(leafletValues()$scalePosition),
+        scalePosition = leafletValues()$scalePosition,
+        northArrow = !is.na(leafletValues()$northArrowPosition),
+        northArrowPosition = leafletValues()$northArrowPosition,
+        logoPosition = leafletValues()$logoPosition
       )
       mapview::mapshot(
         m, file = filename,
@@ -223,14 +211,15 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
+#' @param logoPosition character position of logo if selected, else NA
 #' @param center where to center map (list of lat and lng)
 #'
 #' @export
-draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
-                 northArrow = FALSE, scalePosition = "topleft",
-                 northArrowPosition = "bottomright", center = NULL){
-
-  if (nrow(isoData) == 0) return(leaflet())
+draw <- function(isoData, zoom = 5, type = "1",
+                 northArrow = FALSE, northArrowPosition = "bottomright",
+                 scale = FALSE, scalePosition = "topleft",
+                 logoPosition = NA,
+                 center = NULL){
 
   if (type == "1"){
     mType <- "CartoDB.Positron"
@@ -264,9 +253,19 @@ draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
     addProviderTiles(mType) %>%
     setView(lng = lng, lat = lat, zoom = zoom)
 
-  map <- addCirclesRelativeToZoom(map, isoData, newZoom = zoom, zoom = zoom)
+  map <- addCirclesRelativeToZoom(map, isoData,
+                                  newZoom = zoom, zoom = zoom)
 
-  if (northArrowPosition %in% c("bottomright", "bottomleft")) {
+  if (!is.na(logoPosition)) {
+    map <- addControl(
+      map,
+      tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
+      position = logoPosition,
+      className = ""
+    )
+  }
+
+  if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {
       map <- addScaleBar(
         map,
@@ -305,7 +304,8 @@ draw <- function(isoData, zoom = 5, type = "1", scale = FALSE,
   map
 }
 
-addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
+addCirclesRelativeToZoom <- function(map, isoData,
+                                     newZoom, zoom = 5){
   if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
 
   isoData <- isoData[!is.na(isoData$longitude), ]
@@ -337,6 +337,7 @@ addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
               layerId = "colorLegend")
 
 }
+
 
 
 # Show a popup at the given location
