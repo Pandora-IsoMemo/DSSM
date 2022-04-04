@@ -27,13 +27,12 @@ leafletExport <- function(input, output, session,
       title = "Export Map",
       footer = modalButton("OK"),
       selectInput(ns("exportType"), "Filetype", choices = c("png", "pdf", "jpeg")),
-      numericInput(ns("width"), "Width (px)", value = 1280),
-      numericInput(ns("height"), "Height (px)", value = 800),
+      numericInput(ns("width"), "Width (px)", value = width()),
+      numericInput(ns("height"), "Height (px)", value = height()),
       downloadButton(session$ns("exportLeafletMap"), "Export"),
       easyClose = TRUE
     ))
   })
-
 
   output$exportLeafletMap <- downloadHandler(
     filename = function() {
@@ -55,8 +54,8 @@ leafletExport <- function(input, output, session,
       mapview::mapshot(
         m, file = filename,
         remove_controls = "zoomControl",
-        vwidth = width(),
-        vheight = height())
+        vwidth = input$width,
+        vheight = input$height)
     }
   )
 
