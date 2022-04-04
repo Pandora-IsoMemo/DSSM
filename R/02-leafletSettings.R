@@ -55,7 +55,9 @@ leafletSettingsUI <- function(id, title = "") {
         choices = c("topright", "bottomright", "bottomleft", "topleft"),
         selected = "topleft"
       )
-    ))
+    )),
+    sliderInput(ns("latitude"), "Latitude", value = c(45, 55), min = -90, max = 90),
+    sliderInput(ns("longitude"), "Longitude", value = c(25, 35), min = -180, max = 180),
   )
 }
 
@@ -95,7 +97,9 @@ leafletSettings <- function(input, output, session) {
       pointRadius = values$pointRadius,
       scalePosition = values$scalePosition,
       northArrowPosition = values$northArrowPosition,
-      logoPosition = values$logoPosition
+      logoPosition = values$logoPosition,
+      lngBounds = input$longitude,
+      latBounds = input$latitude
     )
   )
 }

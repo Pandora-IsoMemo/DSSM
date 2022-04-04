@@ -105,7 +105,9 @@ interactiveMap <- function(input, output, session, isoData){
       scalePosition = leafletValues()$scalePosition,
       northArrow = !is.na(leafletValues()$northArrowPosition),
       northArrowPosition = leafletValues()$northArrowPosition,
-      logoPosition = leafletValues()$logoPosition
+      logoPosition = leafletValues()$logoPosition,
+      lngBounds = leafletValues()$lngBounds,
+      latBounds = leafletValues()$latBounds
     )
   })
 
@@ -199,7 +201,9 @@ draw <- function(isoData, zoom = 5, type = "1",
                  northArrow = FALSE, northArrowPosition = "bottomright",
                  scale = FALSE, scalePosition = "topleft",
                  logoPosition = NA,
-                 center = NULL){
+                 center = NULL,
+                 lngBounds = NULL,
+                 latBounds = NULL){
 
   if (type == "1"){
     mType <- "CartoDB.Positron"
@@ -232,6 +236,10 @@ draw <- function(isoData, zoom = 5, type = "1",
   map <- leaflet() %>%
     addProviderTiles(mType) %>%
     setView(lng = lng, lat = lat, zoom = zoom)
+
+  if (!is.null(lngBounds) && !is.null(latBounds)) {
+    map <- map %>% leaflet::fitBounds(lngBounds[[1]], latBounds[[1]], lngBounds[[2]], latBounds[[2]])
+  }
 
   map <- addCirclesRelativeToZoom(map, isoData,
                                   newZoom = zoom, zoom = zoom)
