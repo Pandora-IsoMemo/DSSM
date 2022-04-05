@@ -56,8 +56,16 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "topleft"
       )
     )),
-    sliderInput(ns("latitude"), "Latitude", value = c(45, 55), min = -90, max = 90),
-    sliderInput(ns("longitude"), "Longitude", value = c(25, 35), min = -180, max = 180),
+    fluidRow(
+      column(6,
+             numericInput(ns("centerLat"), "Center Latitude", value = 50, min = -90, max = 90)
+      ),
+      column(6,
+             numericInput(ns("centerLng"), "Center Longitude", value = 30, min = -180, max = 180)
+      )
+    ),
+    sliderInput(ns("latitude"), "Latitude Range", value = c(45, 55), min = -90, max = 90),
+    sliderInput(ns("longitude"), "Longitude Range", value = c(25, 35), min = -180, max = 180)
   )
 }
 
@@ -72,6 +80,10 @@ leafletSettings <- function(input, output, session) {
 
   observeEvent(input$map_zoom, {
     values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+  })
+
+  observeEvent(input$LeafletType, {
+    values$leafletType <- input$LeafletType
   })
 
   observe({
@@ -91,15 +103,19 @@ leafletSettings <- function(input, output, session) {
       ifelse(input$includeLogo, input$logoPosition, NA_character_)
   })
 
-  reactive(
-    list(
-      leafletType = input$LeafletType,
-      pointRadius = values$pointRadius,
-      scalePosition = values$scalePosition,
-      northArrowPosition = values$northArrowPosition,
-      logoPosition = values$logoPosition,
-      lngBounds = input$longitude,
-      latBounds = input$latitude
-    )
-  )
+  observe({
+    values$center <-
+      reactiveValues(lat = input$centerLat,
+                     lng = input$centerLng)
+  })
+
+  observe({
+    values$bounds <-
+      reactiveValues(lngMin = input$longitude[[1]],
+                     lngMax = input$longitude[[2]],
+                     latMin = input$latitude[[1]],
+                     latMax = input$latitude[[2]])
+  })
+
+  reactive({values})
 }

@@ -14,7 +14,7 @@
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers awesomeIcons addCircles addLegend
-#' addMarkers addPopups addTiles clearPopups clearShapes colorFactor leaflet
+#' addMarkers addPopups addTiles clearPopups clearShapes colorFactor fitBounds leaflet
 #' leafletProxy leafletOutput markerClusterOptions popupOptions renderLeaflet
 #' setMaxBounds setView addProviderTiles addScaleBar scaleBarOptions addControl
 #' @importFrom magrittr "%>%"

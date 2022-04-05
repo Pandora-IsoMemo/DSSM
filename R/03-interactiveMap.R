@@ -94,26 +94,67 @@ interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
   leafletValues <- callModule(leafletSettings, "mapSettings")
+  leafletMap <- reactiveVal(leaflet())
 
   # Create the map
-  output$map <- renderLeaflet({
-    draw(
-      isoData(),
-      zoom = 4,
-      type = leafletValues()$leafletType,
-      scale = !is.na(leafletValues()$scalePosition),
-      scalePosition = leafletValues()$scalePosition,
-      northArrow = !is.na(leafletValues()$northArrowPosition),
-      northArrowPosition = leafletValues()$northArrowPosition,
-      logoPosition = leafletValues()$logoPosition,
-      lngBounds = leafletValues()$lngBounds,
-      latBounds = leafletValues()$latBounds
+
+  # set map type
+  observeEvent(leafletValues()$leafletType, {
+    req(leafletValues()$leafletType)
+    leafletMap(
+      drawType(map = leafletMap(),
+               type = leafletValues()$leafletType)
     )
   })
 
+  # add icons to map
+  observeEvent({
+    leafletValues()$scalePosition
+    leafletValues()$northArrowPosition
+    leafletValues()$logoPosition
+    }, {
+    browser()
+    leafletMap(
+      drawIcons(
+        map = leafletMap(),
+        scale = !is.na(leafletValues()$scalePosition),
+        scalePosition = leafletValues()$scalePosition,
+        northArrow = !is.na(leafletValues()$northArrowPosition),
+        northArrowPosition = leafletValues()$northArrowPosition,
+        logoPosition = leafletValues()$logoPosition
+      )
+    )
+  })
+
+  # adjust map center
+  observeEvent(leafletValues()$center, {
+    req(leafletValues()$center)#, input$map_zoom)
+    browser()
+    leafletMap(leafletMap() %>%
+                 setView(lng = leafletValues()$center$lng,
+                         lat = leafletValues()$center$lat,
+                         zoom = input$map_zoom
+                         ))
+  })
+
+  # adjust map bounds fit
+  observeEvent(leafletValues()$bounds, {
+    req(leafletValues()$bounds)
+    leafletMap(leafletMap() %>%
+                 fitBounds(leafletValues()$bounds$lngMin,
+                           leafletValues()$bounds$latMin,
+                           leafletValues()$bounds$lngMax,
+                           leafletValues()$bounds$latMax))
+  })
+
+  # render output map ####
+  output$map <- renderLeaflet({
+    leafletMap()
+  })
 
   # Add Circles relative to zoom
   observe({
+    req(isoData())
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
@@ -126,7 +167,6 @@ interactiveMap <- function(input, output, session, isoData){
 
   # When map is clicked, show a popup with info
   observe({
-
     leafletProxy("map") %>% clearPopups()
     event <- input$map_shape_click
     if (is.null(event)) return()
@@ -185,6 +225,8 @@ interactiveMap <- function(input, output, session, isoData){
 }
 
 
+# helper functions ####
+
 #'  draw Interactive Map
 #' @param isoData isoData data
 #' @param zoom zoom
@@ -201,9 +243,7 @@ draw <- function(isoData, zoom = 5, type = "1",
                  northArrow = FALSE, northArrowPosition = "bottomright",
                  scale = FALSE, scalePosition = "topleft",
                  logoPosition = NA,
-                 center = NULL,
-                 lngBounds = NULL,
-                 latBounds = NULL){
+                 center = NULL){
 
   if (type == "1"){
     mType <- "CartoDB.Positron"
@@ -236,10 +276,6 @@ draw <- function(isoData, zoom = 5, type = "1",
   map <- leaflet() %>%
     addProviderTiles(mType) %>%
     setView(lng = lng, lat = lat, zoom = zoom)
-
-  if (!is.null(lngBounds) && !is.null(latBounds)) {
-    map <- map %>% leaflet::fitBounds(lngBounds[[1]], latBounds[[1]], lngBounds[[2]], latBounds[[2]])
-  }
 
   map <- addCirclesRelativeToZoom(map, isoData,
                                   newZoom = zoom, zoom = zoom)
@@ -291,6 +327,106 @@ draw <- function(isoData, zoom = 5, type = "1",
 
   map
 }
+
+
+#' Draw Type of Interactive Map
+#' @param map leaflet map
+#' @param type map type
+drawType <- function(map, type = "1"){
+
+  if (type == "1"){
+    mType <- "CartoDB.Positron"
+  }
+  if (type == "2"){
+    mType <- "OpenStreetMap.Mapnik"
+  }
+  if (type == "3"){
+    mType <- "OpenStreetMap.DE"
+  }
+  if (type == "4"){
+    mType <- "OpenTopoMap"
+  }
+  if (type == "5"){
+    mType <- "Stamen.TonerLite"
+  }
+  if (type == "5"){
+    mType <-  "Esri"
+  }
+  if (type == "6"){
+    mType <- "Esri.WorldTopoMap"
+  }
+  if (type == "7"){
+    mType <-  "Esri.WorldImagery"
+  }
+
+  map <- map %>%
+    addProviderTiles(mType)
+
+  map
+}
+
+
+
+#' Draw Icons on Interactive Map
+#' @param map leaflet map
+#' @param northArrow show north arrow?
+#' @param northArrowPosition position of north arrow
+#' @param scale show scale?
+#' @param scalePosition position of scale
+#' @param logoPosition character position of logo if selected, else NA
+drawIcons <- function(map,
+                      northArrow = FALSE, northArrowPosition = "bottomright",
+                      scale = FALSE, scalePosition = "topleft",
+                      logoPosition = NA){
+
+  if (!is.na(logoPosition)) {
+    map <- addControl(
+      map,
+      tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
+      position = logoPosition,
+      className = ""
+    )
+  }
+
+  if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
+    if (scale) {
+      map <- addScaleBar(
+        map,
+        position = scalePosition,
+        options = scaleBarOptions()
+      )
+    }
+
+    if (northArrow) {
+      map <- addControl(
+        map,
+        tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
+        position = northArrowPosition,
+        className = ""
+      )
+    }
+  } else {
+    if (northArrow) {
+      map <- addControl(
+        map,
+        tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
+        position = northArrowPosition,
+        className = ""
+      )
+    }
+
+    if (scale) {
+      map <- addScaleBar(
+        map,
+        position = scalePosition,
+        options = scaleBarOptions()
+      )
+    }
+  }
+
+  map
+}
+
 
 addCirclesRelativeToZoom <- function(map, isoData,
                                      newZoom, zoom = 5){
