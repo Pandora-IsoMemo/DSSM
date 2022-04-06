@@ -70,6 +70,7 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+        leafletDataStyleUI(ns("dataStyle"), "Style Data Groups"),
         tags$br(),
         leafletExportButton(ns("exportLeaflet")),
         div(
@@ -95,6 +96,8 @@ interactiveMap <- function(input, output, session, isoData){
 
   leafletValues <- callModule(leafletSettings, "mapSettings")
   leafletMap <- reactiveVal(leaflet())
+
+  dataStyle <- callModule(leafletDataStyle, "dataStyle", isoData = isoData)
 
   # Create the map
 
