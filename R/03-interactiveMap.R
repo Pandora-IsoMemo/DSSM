@@ -108,12 +108,9 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   # add icons to map
-  observeEvent({
-    leafletValues()$scalePosition
-    leafletValues()$northArrowPosition
-    leafletValues()$logoPosition
-    }, {
-    browser()
+  observeEvent(is.na(leafletValues()$scalePosition) |
+                 is.na(leafletValues()$northArrowPosition) |
+                 is.na(leafletValues()$logoPosition), {
     leafletMap(
       drawIcons(
         map = leafletMap(),
@@ -129,7 +126,6 @@ interactiveMap <- function(input, output, session, isoData){
   # adjust map center
   observeEvent(leafletValues()$center, {
     req(leafletValues()$center)#, input$map_zoom)
-    browser()
     leafletMap(leafletMap() %>%
                  setView(lng = leafletValues()$center$lng,
                          lat = leafletValues()$center$lat,
@@ -140,11 +136,13 @@ interactiveMap <- function(input, output, session, isoData){
   # adjust map bounds fit
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
+    #input$map_bounds
     leafletMap(leafletMap() %>%
-                 fitBounds(leafletValues()$bounds$lngMin,
-                           leafletValues()$bounds$latMin,
-                           leafletValues()$bounds$lngMax,
-                           leafletValues()$bounds$latMax))
+                 fitBounds(lng1 = leafletValues()$bounds$west,
+                           lng2 = leafletValues()$bounds$east,
+                           lat1 = leafletValues()$bounds$south,
+                           lat2 = leafletValues()$bounds$north
+                 ))
   })
 
   # render output map ####
@@ -212,11 +210,8 @@ interactiveMap <- function(input, output, session, isoData){
     }
   })
 
-  callModule(leafletExport, "exportLeaflet",
-             isoData,
-             zoom = reactive(input$map_zoom), center = reactive(input$map_center),
-             width = reactive(input$map_width), height = reactive(input$map_height),
-             leafletValues)
+  callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
+             width = reactive(input$map_width), height = reactive(input$map_height))
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
@@ -379,13 +374,17 @@ drawIcons <- function(map,
                       scale = FALSE, scalePosition = "topleft",
                       logoPosition = NA){
 
+  map <- map %>%
+    clearControls() %>%
+    removeScaleBar()
+
   if (!is.na(logoPosition)) {
-    map <- addControl(
-      map,
-      tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
-      position = logoPosition,
-      className = ""
-    )
+    map <- map %>%
+      addControl(
+        tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
+        position = logoPosition,
+        className = ""
+      )
   }
 
   if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
