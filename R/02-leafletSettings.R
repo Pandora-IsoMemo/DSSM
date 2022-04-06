@@ -58,14 +58,37 @@ leafletSettingsUI <- function(id, title = "") {
     )),
     fluidRow(
       column(6,
-             numericInput(ns("centerLat"), "Center Latitude", value = 50, min = -90, max = 90)
+             tags$h4("Latitude"),
+             numericInput(ns("centerLat"), "Center", value = 50, min = -90, max = 90)
       ),
       column(6,
-             numericInput(ns("centerLng"), "Center Longitude", value = 30, min = -180, max = 180)
+             tags$h4("Longitude"),
+             numericInput(ns("centerLng"), "Center", value = 30, min = -180, max = 180)
       )
     ),
-    sliderInput(ns("latitude"), "Latitude Range", value = c(45, 55), min = -90, max = 90),
-    sliderInput(ns("longitude"), "Longitude Range", value = c(25, 35), min = -180, max = 180)
+    sliderInput(ns("boundsLat"), "Latitude: South - North", value = c(15, 60), min = -90, max = 90),
+    sliderInput(ns("boundsLng"), "Longitude: West - East", value = c(-15, 60), min = -180, max = 180)
+    # alternative UI for lat/lng bounds:
+    # fluidRow(
+    #   column(6,
+    #          numericInput(ns("boundNorth"), "Bound North",
+    #                       value = 65, min = -90, max = 90)
+    #   ),
+    #   column(6,
+    #          numericInput(ns("boundEast"), "Bound East",
+    #                       value = 60, min = -180, max = 180)
+    #   )
+    # ),
+    # fluidRow(
+    #   column(6,
+    #          numericInput(ns("boundSouth"), "Bound South",
+    #                       value = 15, min = -90, max = 90)
+    #   ),
+    #   column(6,
+    #          numericInput(ns("boundWest"), "Bound West",
+    #                       value = -15, min = -180, max = 180)
+    #   )
+    # )
   )
 }
 
@@ -111,10 +134,15 @@ leafletSettings <- function(input, output, session) {
 
   observe({
     values$bounds <-
-      reactiveValues(lngMin = input$longitude[[1]],
-                     lngMax = input$longitude[[2]],
-                     latMin = input$latitude[[1]],
-                     latMax = input$latitude[[2]])
+      reactiveValues(north = input$boundsLat[[2]],
+                     south = input$boundsLat[[1]],
+                     east = input$boundsLng[[2]],
+                     west = input$boundsLng[[1]])
+    # alternative output for lat/lng bounds:
+    # reactiveValues(north = input$boundNorth,
+    #                south = input$boundSouth,
+    #                east = input$boundEast,
+    #                west = input$boundWest)
   })
 
   reactive({values})
