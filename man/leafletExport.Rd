@@ -4,17 +4,7 @@
 \alias{leafletExport}
 \title{server funtion of leaflet map export module}
 \usage{
-leafletExport(
-  input,
-  output,
-  session,
-  isoData,
-  zoom,
-  center,
-  width,
-  height,
-  leafletValues
-)
+leafletExport(input, output, session, leafletMap, width, height)
 }
 \arguments{
 \item{input}{input}
@@ -22,6 +12,12 @@ leafletExport(
 \item{output}{output}
 
 \item{session}{session}
+
+\item{leafletMap}{reactive leaflet map object}
+
+\item{width}{reactive width of map in px}
+
+\item{height}{reactive height of map in px}
 }
 \description{
 server funtion of leaflet map export module
