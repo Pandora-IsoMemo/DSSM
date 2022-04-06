@@ -101,9 +101,8 @@ interactiveMap <- function(input, output, session, isoData){
   # set map type
   observeEvent(leafletValues()$leafletType, {
     req(leafletValues()$leafletType)
-    leafletMap(
-      drawType(map = leafletMap(),
-               type = leafletValues()$leafletType)
+    leafletMap(leafletMap() %>%
+                 drawType(type = leafletValues()$leafletType)
     )
   })
 
@@ -111,21 +110,19 @@ interactiveMap <- function(input, output, session, isoData){
   observeEvent(is.na(leafletValues()$scalePosition) |
                  is.na(leafletValues()$northArrowPosition) |
                  is.na(leafletValues()$logoPosition), {
-    leafletMap(
-      drawIcons(
-        map = leafletMap(),
-        scale = !is.na(leafletValues()$scalePosition),
-        scalePosition = leafletValues()$scalePosition,
-        northArrow = !is.na(leafletValues()$northArrowPosition),
-        northArrowPosition = leafletValues()$northArrowPosition,
-        logoPosition = leafletValues()$logoPosition
-      )
-    )
-  })
+                   leafletMap(leafletMap() %>%
+                                drawIcons(scale = !is.na(leafletValues()$scalePosition),
+                                          scalePosition = leafletValues()$scalePosition,
+                                          northArrow = !is.na(leafletValues()$northArrowPosition),
+                                          northArrowPosition = leafletValues()$northArrowPosition,
+                                          logoPosition = leafletValues()$logoPosition
+                                )
+                   )
+                 })
 
   # adjust map center
   observeEvent(leafletValues()$center, {
-    req(leafletValues()$center)#, input$map_zoom)
+    req(leafletValues()$center)
     leafletMap(leafletMap() %>%
                  setView(lng = leafletValues()$center$lng,
                          lat = leafletValues()$center$lat,
@@ -165,6 +162,7 @@ interactiveMap <- function(input, output, session, isoData){
 
   # When map is clicked, show a popup with info
   observe({
+    req(input$map_shape_click)
     leafletProxy("map") %>% clearPopups()
     event <- input$map_shape_click
     if (is.null(event)) return()
@@ -176,6 +174,7 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Show Histograms and Scatterplot in Sidebar
   observe({
+    req(isoData())
     numVars <- unlist(lapply(names(isoData()), function(x){
       if (is.integer(isoData()[[x]]) | is.numeric(isoData()[[x]]))
         x
