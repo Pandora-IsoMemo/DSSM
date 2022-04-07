@@ -60,22 +60,33 @@ testthat::test_that("function extractMarker", {
 
   testStyle <-
     list(
-      sizes = NULL,
-      colours = NULL,
       customizeMarkers = TRUE,
-      categories = structure(1:2, .Label = c("CIMA",
-                                             "LiVES"), class = "factor"),
-      shapes = list(CIMA = "circle", LiVES = "square")
+      groupingColumn = "source",
+      groups = structure(1:2, .Label = c("CIMA",
+                                         "LiVES"), class = "factor"),
+      colours = c(CIMA = "#F39C12", LiVES = "#D81B60"),
+      radiusKm = c(CIMA = 80000, LiVES = 20000),
+      opacity = c(0.3, 0.8)
+      #shapes = list(CIMA = "circle", LiVES = "square")
     )
 
-  icons <- extractMarker(testStyle)
-
   testthat::expect_is(leaflet(testData) %>% addTiles(), "leaflet")
-  testthat::expect_is(testMap %>% addAwesomeMarkers(testData$longitude, testData$latitude,
-                                                    icon = icons[testData$source]),
-                      "leaflet")
-  testthat::expect_is(leaflet(testData) %>%
-                        addTiles() %>%
-                        addAwesomeMarkers(~ longitude, ~ latitude, icon = ~ icons[testData$source]),
-                      "leaflet")
+  testthat::expect_is(
+    testMap %>%
+      addAwesomeMarkers(testData$longitude, testData$latitude,
+                        icon = extractMarker(testStyle)[testData$source]),
+    "leaflet"
+  )
+  testthat::expect_is(
+    leaflet(testData) %>%
+      addTiles() %>%
+      addAwesomeMarkers( ~ longitude, ~ latitude, icon = ~ extractMarker(testStyle)[testData$source]),
+    "leaflet"
+  )
+
+  testthat::expect_is(
+    testMap %>%
+      addCustomCircles(testData, testStyle),
+    "leaflet"
+  )
 })

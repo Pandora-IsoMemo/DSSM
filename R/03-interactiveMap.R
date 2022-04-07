@@ -70,6 +70,7 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+        tags$br(),
         leafletDataStyleUI(ns("dataStyle"), "Data Grouping"),
         tags$br(),
         leafletExportButton(ns("exportLeaflet")),
@@ -163,17 +164,24 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   # Add custom markers
-  # only for testing, must restrict this to data < 100 rows
+
   observe({
     req(isoData(), dataStyle()$customizeMarkers)
-    icons <- extractMarker(dataStyle())
-    dataForMarkers <- isoData()[1:100, ]
 
     leafletProxy("map") %>%
       clearShapes() %>%
-      addAwesomeMarkers(lng = dataForMarkers$longitude,
-                        lat = dataForMarkers$latitude,
-                        icon = icons[dataForMarkers$source])
+      addCustomCircles(isoData = isoData(), style = dataStyle())
+
+    # awesomeMarkers only works with little data:
+    #
+    # icons <- extractMarker(dataStyle())
+    # dataForMarkers <- isoData()[1:100, ]
+    #
+    # leafletProxy("map") %>%
+    #   clearShapes() %>%
+    #   addAwesomeMarkers(lng = dataForMarkers$longitude,
+    #                     lat = dataForMarkers$latitude,
+    #                     icon = icons[dataForMarkers$source])
   })
 
   # When map is clicked, show a popup with info
@@ -377,6 +385,33 @@ drawIcons <- function(map,
   }
 
   map
+}
+
+
+addCustomCircles <- function(map, isoData, style){
+  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+
+  isoData <- isoData[!is.na(isoData$longitude), ]
+
+  pal <- colorFactor(style$colours, isoData$source)
+
+  map %>%
+    clearShapes() %>%
+    addCircles(
+      lng = isoData$longitude,
+      lat = isoData$latitude,
+      color = pal(isoData[[style$groupingColumn]]),
+      radius = unname(style$radiusKm[isoData[[style$groupingColumn]]]) * 1000,
+      stroke = FALSE,
+      fillOpacity = unname(style$opacity[isoData[[style$groupingColumn]]])
+    ) %>%
+    addLegend(
+      "topleft",
+      pal = pal,
+      values = isoData[[style$groupingColumn]],
+      title = style$groupingColumn,
+      layerId = "colorLegend"
+    )
 }
 
 
