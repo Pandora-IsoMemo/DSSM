@@ -370,7 +370,7 @@ dataExplorer <- function(input, output, session){
 
   ## Output
   output$dataTable <- renderDataTable({
-    browser()
+    #browser()
     validate(
       need(!is.null(isoDataFull()), "Please select a database in the sidebar panel.")
     )
@@ -432,7 +432,7 @@ dataExplorer <- function(input, output, session){
 
       data <- isoDataFull()[citationColumns]
       generateCitation(data, input$citationType, file = filename)
-      browser()
+      #browser()
       #generateCitation(data, input$citationStyle, file = filename)
       x <- c(2,5,3,9,8,11,6)
       count <- 0

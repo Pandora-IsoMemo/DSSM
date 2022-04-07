@@ -1,6 +1,6 @@
 generateCitation <- function(data, type, file) {
   stopifnot(ncol(data) == 6)
-  browser()
+  #browser()
   data <- data[!duplicated(data), ]
   citations <- citationList(data)
   switch(
@@ -51,9 +51,9 @@ citationElement <- function(ref, doi) {
 }
 
 # TODO: how to use this in the console?
-generateRcrossRefromDOI <- function(tmp,style,format){
-  data <- cr_cn(doi, format = format,style = style)
-  return(data)
+#generateRcrossRefromDOI <- function(tmp,style,format){
+#  data <- cr_cn(doi, format = format,style = style)
+#  return(data)
   #rdf_xml < -cr_cn(dois=doi, format= "rdf-xml")
   #citejson <- cr_cn(dois=doi, format= "citeproc-json")
   #citejson_ish <- cr_cn(dois=doi, format= "citeproc-json-ish")
@@ -77,4 +77,4 @@ generateRcrossRefromDOI <- function(tmp,style,format){
   # drop down for citation format:
   # drop down: change citation export type
   #originalDataDOIauto
-}
+#}
