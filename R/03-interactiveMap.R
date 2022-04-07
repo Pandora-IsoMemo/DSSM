@@ -70,7 +70,7 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
-        leafletDataStyleUI(ns("dataStyle"), "Style Data Groups"),
+        leafletDataStyleUI(ns("dataStyle"), "Data Grouping"),
         tags$br(),
         leafletExportButton(ns("exportLeaflet")),
         div(
@@ -153,7 +153,7 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Add Circles relative to zoom
   observe({
-    req(isoData())
+    req(isoData(), !dataStyle()$customizeMarkers)
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
@@ -163,14 +163,18 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   # Add custom markers
+  # only for testing, must restrict this to data < 100 rows
+  observe({
+    req(isoData(), dataStyle()$customizeMarkers)
+    icons <- extractMarker(dataStyle())
+    dataForMarkers <- isoData()[1:100, ]
 
-  # observe({
-  #   req(isoData(), dataStyle()$customizeMarkers)
-  #   browser()
-  #   icons <- dataStyle()$shapes    #isoData()
-  #
-  #   #addAwesomeMarkers(leafletProxy("map"), ~longitude, ~latitude, icon=icons, label=~as.character(mag))
-  # })
+    leafletProxy("map") %>%
+      clearShapes() %>%
+      addAwesomeMarkers(lng = dataForMarkers$longitude,
+                        lat = dataForMarkers$latitude,
+                        icon = icons[dataForMarkers$source])
+  })
 
   # When map is clicked, show a popup with info
   observe({
@@ -233,6 +237,19 @@ interactiveMap <- function(input, output, session, isoData){
 
 
 # helper functions ####
+
+extractMarker <- function(dataStyle){
+  awesomeIconNameList <- dataStyle$shapes
+  icons <- lapply(awesomeIconNameList, function(shape) {
+    makeAwesomeIcon(icon = shape,
+                    library = "fa",
+                    markerColor = "green")
+  })
+  names(icons) <- names(awesomeIconNameList)
+
+  do.call(awesomeIconList, icons)
+}
+
 
 #'  draw Interactive Map
 #' @param isoData isoData data

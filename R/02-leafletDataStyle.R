@@ -60,7 +60,7 @@ leafletDataStyle <- function(input, output, session, isoData) {
                       selected = "source")
   })
 
-  observe({
+  observeEvent(list(input$groupingColumn, isoData()), {
     req(isoData())
     values$categories <- isoData()[[input$groupingColumn]] %>%
       unique()
@@ -70,7 +70,7 @@ leafletDataStyle <- function(input, output, session, isoData) {
     values$customizeMarkers <- input$customizeMarkers
   })
 
-  observe({
+  observeEvent(c(input$dataShapes, values$categories), {
     values$shapes <- rep(input$dataShapes, length.out = length(values$categories))
     names(values$shapes) <- values$categories
   })
