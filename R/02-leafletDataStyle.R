@@ -12,24 +12,32 @@ leafletDataStyleUI <- function(id, title = "") {
       "Column with Categories",
       choices = NULL
     ),
-    selectInput(
-      ns("dataShapes"),
-      "Shape(s)",
-      choices = c(
-        "Type 1" = "1",
-        "Type 2" = "2",
-        "Type 3" = "3",
-        "Type 4" = "4",
-        "Type 5" = "5",
-        "Type 6" = "6",
-        "Type 7" = "7"
-      ),
-      multiple = TRUE
-    ),
-    colourInput(
-      ns("dataColour"), "Colour Palette", value = "red"
-    ),
-    numericInput(ns("dataSize"), "Size(s)", value = 5, min = 1, max = 10)
+    checkboxInput(ns("customizeMarkers"), "Customize Markers", value = FALSE),
+    conditionalPanel(ns = ns,
+                     "input.customizeMarkers == true",
+                     selectInput(
+                       ns("dataShapes"),
+                       "Fontawesome Icon(s)",
+                       choices = c(
+                         "circle",
+                         "diamond",
+                         "square",
+                         "leaf",
+                         "seedling",
+                         "tree",
+                         "water",
+                         "volcano",
+                         "mountain",
+                         "fire"
+                       ),
+                       multiple = TRUE,
+                       selected = "circle"
+                     ),
+                     colourInput(
+                       ns("dataColour"), "Colour Palette", value = "red"
+                     ),
+                     numericInput(ns("dataSize"), "Size(s)", value = 5, min = 1, max = 10)
+                     )
   )
 }
 
@@ -52,15 +60,19 @@ leafletDataStyle <- function(input, output, session, isoData) {
                       selected = "source")
   })
 
-  observeEvent(input$groupingColumn, {
+  observe({
     req(isoData())
     values$categories <- isoData()[[input$groupingColumn]] %>%
       unique()
   })
 
-  observeEvent(input$dataShapes, {
-    req(values$categories)
+  observeEvent(input$customizeMarkers, {
+    values$customizeMarkers <- input$customizeMarkers
+  })
+
+  observe({
     values$shapes <- rep(input$dataShapes, length.out = length(values$categories))
+    names(values$shapes) <- values$categories
   })
 
   reactive({values})
