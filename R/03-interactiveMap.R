@@ -93,13 +93,12 @@ interactiveMapUI <- function(id, title = ""){
 #' @export
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
-
-  leafletValues <- callModule(leafletSettings, "mapSettings")
   leafletMap <- reactiveVal(leaflet())
 
+  leafletValues <- callModule(leafletSettings, "mapSettings")
   dataStyle <- callModule(leafletDataStyle, "dataStyle", isoData = isoData)
 
-  # Create the map
+  # Create the map ####
 
   # set map type
   observeEvent(leafletValues()$leafletType, {
@@ -145,10 +144,12 @@ interactiveMap <- function(input, output, session, isoData){
                  ))
   })
 
-  # render output map ####
+  # Render Map ####
   output$map <- renderLeaflet({
     leafletMap()
   })
+
+  # Add Markers ####
 
   # Add Circles relative to zoom
   observe({
@@ -156,12 +157,20 @@ interactiveMap <- function(input, output, session, isoData){
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), #pointRadius = 20000,
-                               newZoom = new_zoom, zoom = 4)
+      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
     })
 
   })
 
+  # Add custom markers
+
+  # observe({
+  #   req(isoData(), dataStyle()$customizeMarkers)
+  #   browser()
+  #   icons <- dataStyle()$shapes    #isoData()
+  #
+  #   #addAwesomeMarkers(leafletProxy("map"), ~longitude, ~latitude, icon=icons, label=~as.character(mag))
+  # })
 
   # When map is clicked, show a popup with info
   observe({
@@ -175,7 +184,8 @@ interactiveMap <- function(input, output, session, isoData){
     })
   })
 
-  # Show Histograms and Scatterplot in Sidebar
+
+  # Show Histograms and Scatterplot in Sidebar ####
   observe({
     req(isoData())
     numVars <- unlist(lapply(names(isoData()), function(x){
