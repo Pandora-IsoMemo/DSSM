@@ -11,7 +11,7 @@ datTable <- function(dat, columns = names(dat)){
     return(NULL)
 
   dat <- dat[names(dat) %in% columns]
-
+  browse()
   #generateRcrossRefromDOI <- function(tmp,style,format){
   #  data <- cr_cn(doi, format = format,style = style)
   #  return(data)
