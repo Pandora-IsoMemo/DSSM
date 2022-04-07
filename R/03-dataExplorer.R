@@ -89,8 +89,9 @@ dataExplorerUI <- function(id, title = ""){
           condition = "input.skin == 'pandora'",
           selectInput(ns("citationColumns"), "Citation columns", choices = NULL, multiple = TRUE)
         ),
-        selectInput(ns("citationType"), "Citation Type", selected = "txt", choices = c("txt", "xml", "json")),
-        selectInput(ns("citationStyle"), "Style", selected = "txt", choices = c("chicago", "harvard", "apa")),
+        selectInput(ns("citationStyle"), "Select Citation Style", selected = "APA", choices = c("APA","Chicago", "Harvard")),
+        selectInput(ns("citationType"), "Select Export Format", selected = "bibtex", choices = c("bibtex","txt", "xml","rdf-xml","crossref-xml","json",
+                                                                                       "citeproc-json","citeproc-json-ish","ris","bibentry","crossref-tdm","turtle")),
         downloadButton(ns("exportCitation"), "Export Citation")
       ),
       mainPanel(
