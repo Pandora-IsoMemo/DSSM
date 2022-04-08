@@ -138,6 +138,14 @@ interactiveMap <- function(input, output, session, isoData){
     req(leafletValues()$bounds)
     #input$map_bounds
     leafletMap(leafletMap() %>%
+                 clearShapes() %>%
+                 leaflet::addRectangles(lng1 = leafletValues()$bounds$west,
+                                        lng2 = leafletValues()$bounds$east,
+                                        lat1 = leafletValues()$bounds$south,
+                                        lat2 = leafletValues()$bounds$north,
+                                        color = "grey",
+                                        weight = 1,
+                                        fillColor = "transparent") %>%
                  fitBounds(lng1 = leafletValues()$bounds$west,
                            lng2 = leafletValues()$bounds$east,
                            lat1 = leafletValues()$bounds$south,
