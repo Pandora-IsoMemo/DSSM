@@ -7,39 +7,48 @@ leafletDataStyleUI <- function(id, title = "") {
 
   tagList(
     tags$h2(title),
-    selectInput(
-      ns("groupingColumn"),
-      "Column with Groups",
-      choices = NULL
-    ),
+    selectInput(ns("groupingColumn"),
+                "Column with Groups",
+                choices = NULL),
     checkboxInput(ns("customizeMarkers"), "Customize Circles", value = FALSE),
-    conditionalPanel(ns = ns,
-                     "input.customizeMarkers == true",
-                     # selectInput(
-                     #   ns("dataShapes"),
-                     #   "Fontawesome Icon(s)",
-                     #   choices = c(
-                     #     "circle",
-                     #     "diamond",
-                     #     "square",
-                     #     "leaf",
-                     #     "seedling",
-                     #     "tree",
-                     #     "water",
-                     #     "volcano",
-                     #     "mountain",
-                     #     "fire"
-                     #   ),
-                     #   multiple = TRUE,
-                     #   selected = "circle"
-                     # ),
-                     colourInput(
-                       ns("dataColour"), "Colour Palette", value = "red"
-                     ),
-                     selectInput(ns("selectedGroup"), "Group", choices = NULL),
-                     sliderInput(ns("radiusKm"), "Radius in km", value = 20, min = 1, max = 100),
-                     sliderInput(ns("opacity"), "Opacity", value = 0.2, min = 0, max = 1)
-                     )
+    conditionalPanel(
+      ns = ns,
+      "input.customizeMarkers == true",
+      # selectInput(
+      #   ns("dataShapes"),
+      #   "Fontawesome Icon(s)",
+      #   choices = c(
+      #     "circle",
+      #     "diamond",
+      #     "square",
+      #     "leaf",
+      #     "seedling",
+      #     "tree",
+      #     "water",
+      #     "volcano",
+      #     "mountain",
+      #     "fire"
+      #   ),
+      #   multiple = TRUE,
+      #   selected = "circle"
+      # ),
+      colourInput(ns("dataColour"), "Colour Palette", value = "red"),
+      selectInput(ns("selectedGroup"), "Group", choices = NULL),
+      sliderInput(
+        ns("radiusKm"),
+        "Radius in km",
+        value = 20,
+        min = 1,
+        max = 100
+      ),
+      sliderInput(
+        ns("opacity"),
+        "Opacity",
+        value = 0.2,
+        min = 0,
+        max = 1
+      )
+    )
   )
 }
 
@@ -51,12 +60,14 @@ leafletDataStyleUI <- function(id, title = "") {
 #' @param session session
 #' @param isoData reactive isoData table
 leafletDataStyle <- function(input, output, session, isoData) {
-  values <- reactiveValues(customizeMarkers = NULL,
-                           groupingColumn = NULL,
-                           groups = NULL,
-                           opacity = NULL,
-                           radiusKm = NULL,
-                           colours = NULL)
+  values <- reactiveValues(
+    customizeMarkers = NULL,
+    groupingColumn = NULL,
+    groups = NULL,
+    opacity = NULL,
+    radiusKm = NULL,
+    colours = NULL
+  )
 
   observeEvent(input$customizeMarkers, {
     values$customizeMarkers <- input$customizeMarkers
@@ -64,7 +75,11 @@ leafletDataStyle <- function(input, output, session, isoData) {
 
   observe({
     req(isoData(), !is.null(isoData()$source))
-    updateSelectInput(session, "groupingColumn", choices = colnames(isoData()),
+    nonNumericColumns <-
+      colnames(isoData())[!sapply(isoData(), is.numeric)]
+    updateSelectInput(session,
+                      "groupingColumn",
+                      choices = nonNumericColumns,
                       selected = "source")
   })
 
@@ -74,10 +89,12 @@ leafletDataStyle <- function(input, output, session, isoData) {
     values$groups <- isoData()[[input$groupingColumn]] %>%
       unique()
 
-    values$opacity <- rep(input$opacity, length.out = length(values$groups))
+    values$opacity <-
+      rep(input$opacity, length.out = length(values$groups))
     names(values$opacity) <- values$groups
 
-    values$radiusKm <- rep(input$radiusKm, length.out = length(values$groups))
+    values$radiusKm <-
+      rep(input$radiusKm, length.out = length(values$groups))
     names(values$radiusKm) <- values$groups
 
   })
@@ -89,7 +106,10 @@ leafletDataStyle <- function(input, output, session, isoData) {
 
 
   observeEvent(c(input$dataColour, values$groups), {
-    values$colours <- rep(input$dataColour, length.out = length(values$groups))
+    # colourPicker does not work correctly
+    # start with some palette, selectInput for several palettes
+    values$colours <-
+      rep(input$dataColour, length.out = length(values$groups))
     names(values$colours) <- values$groups
   })
 
@@ -112,5 +132,7 @@ leafletDataStyle <- function(input, output, session, isoData) {
   #   names(values$shapes) <- values$groups
   # })
 
-  reactive({values})
+  reactive({
+    values
+  })
 }
