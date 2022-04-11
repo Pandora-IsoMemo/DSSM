@@ -12,16 +12,24 @@
 #' @param center where to center map (list of lat and lng)
 #'
 #' @export
-draw <- function(isoData, zoom = 5, type = "1",
-                 northArrow = FALSE, northArrowPosition = "bottomright",
-                 scale = FALSE, scalePosition = "topleft",
+draw <- function(isoData,
+                 zoom = 5,
+                 type = "1",
+                 northArrow = FALSE,
+                 northArrowPosition = "bottomright",
+                 scale = FALSE,
+                 scalePosition = "topleft",
                  logoPosition = NA,
-                 center = NULL){
-
+                 center = NULL) {
   map <- leaflet() %>% drawType(type = type)
-  map <- map %>% drawIcons(northArrow = northArrow, northArrowPosition = northArrowPosition,
-                           scale = scale, scalePosition = scalePosition,
-                           logoPosition = logoPosition)
+  map <-
+    map %>% drawIcons(
+      northArrow = northArrow,
+      northArrowPosition = northArrowPosition,
+      scale = scale,
+      scalePosition = scalePosition,
+      logoPosition = logoPosition
+    )
   map
 }
 
@@ -30,30 +38,29 @@ draw <- function(isoData, zoom = 5, type = "1",
 #'
 #' @inheritParams draw
 #' @param map leaflet map
-drawType <- function(map, type = "1"){
-
-  if (type == "1"){
+drawType <- function(map, type = "1") {
+  if (type == "1") {
     mType <- "CartoDB.Positron"
   }
-  if (type == "2"){
+  if (type == "2") {
     mType <- "OpenStreetMap.Mapnik"
   }
-  if (type == "3"){
+  if (type == "3") {
     mType <- "OpenStreetMap.DE"
   }
-  if (type == "4"){
+  if (type == "4") {
     mType <- "OpenTopoMap"
   }
-  if (type == "5"){
+  if (type == "5") {
     mType <- "Stamen.TonerLite"
   }
-  if (type == "5"){
+  if (type == "5") {
     mType <-  "Esri"
   }
-  if (type == "6"){
+  if (type == "6") {
     mType <- "Esri.WorldTopoMap"
   }
-  if (type == "7"){
+  if (type == "7") {
     mType <-  "Esri.WorldImagery"
   }
 
@@ -70,10 +77,11 @@ drawType <- function(map, type = "1"){
 #' @inheritParams draw
 #' @param map leaflet map
 drawIcons <- function(map,
-                      northArrow = FALSE, northArrowPosition = "bottomright",
-                      scale = FALSE, scalePosition = "topleft",
-                      logoPosition = NA){
-
+                      northArrow = FALSE,
+                      northArrowPosition = "bottomright",
+                      scale = FALSE,
+                      scalePosition = "topleft",
+                      logoPosition = NA) {
   map <- map %>%
     clearControls() %>%
     removeScaleBar()
@@ -81,25 +89,32 @@ drawIcons <- function(map,
   if (!is.na(logoPosition)) {
     map <- map %>%
       addControl(
-        tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
+        tags$img(
+          src = "https://isomemo.com/images/logo.jpg",
+          width = "75",
+          height = "50"
+        ),
         position = logoPosition,
         className = ""
       )
   }
 
-  if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
+  if (northArrow &&
+      (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {
-      map <- addScaleBar(
-        map,
-        position = scalePosition,
-        options = scaleBarOptions()
-      )
+      map <- addScaleBar(map,
+                         position = scalePosition,
+                         options = scaleBarOptions())
     }
 
     if (northArrow) {
       map <- addControl(
         map,
-        tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
+        tags$img(
+          src = "https://isomemodb.com/NorthArrow.png",
+          width = "80",
+          height = "80"
+        ),
         position = northArrowPosition,
         className = ""
       )
@@ -108,18 +123,20 @@ drawIcons <- function(map,
     if (northArrow) {
       map <- addControl(
         map,
-        tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
+        tags$img(
+          src = "https://isomemodb.com/NorthArrow.png",
+          width = "80",
+          height = "80"
+        ),
         position = northArrowPosition,
         className = ""
       )
     }
 
     if (scale) {
-      map <- addScaleBar(
-        map,
-        position = scalePosition,
-        options = scaleBarOptions()
-      )
+      map <- addScaleBar(map,
+                         position = scalePosition,
+                         options = scaleBarOptions())
     }
   }
 
@@ -134,41 +151,56 @@ drawIcons <- function(map,
 #' @param style reactive list of values to style the circles
 #' @param newZoom numeric zoom factor used for lat/lng jitter and radius calculation
 #' @param mapBounds bounds for the lat/lng frame
-leafletAddCircles <- function(map, isoData, style, newZoom, mapBounds){
-
-  if (!style$customizeMarkers) {
-
-    # Add Circles relative to zoom
-    new_zoom <- newZoom
-    if (is.null(new_zoom)) return()
-    map <- isolate({
-      addCirclesRelativeToZoom(map, isoData, mapBounds = mapBounds, newZoom = new_zoom, zoom = 4)
-    })
-  } else {
-
-    # Add custom circles
+leafletAddCircles <-
+  function(map, isoData, style, newZoom, mapBounds) {
     map <- map %>%
-      clearShapes()
+      clearShapes() %>%
+      addRectangles(
+        lng1 = mapBounds$west,
+        lng2 = mapBounds$east,
+        lat1 = mapBounds$south,
+        lat2 = mapBounds$north,
+        color = "blue",
+        weight = 1,
+        fillColor = "transparent"
+      )
 
-    map <- map %>%
-      addCustomCircles(isoData = isoData, style = style, mapBounds = mapBounds)
+    if (!style$customizeMarkers) {
+      # Add Circles relative to zoom
+      new_zoom <- newZoom
+      if (is.null(new_zoom))
+        return()
+      map <- isolate({
+        addCirclesRelativeToZoom(map,
+                                 isoData,
+                                 newZoom = new_zoom,
+                                 zoom = 4)
+      })
+    } else {
+      # Add custom circles
+      map <- map %>%
+        clearShapes()
 
-    # awesomeMarkers only works with little data:
-    #
-    # icons <- extractMarker(style)
-    # dataForMarkers <- isoData[1:100, ]
-    #
-    # map %>%
-    #   addAwesomeMarkers(lng = dataForMarkers$longitude,
-    #                     lat = dataForMarkers$latitude,
-    #                     icon = icons[dataForMarkers$source])
+      map <- map %>%
+        addCustomCircles(isoData = isoData,
+                         style = style)
+
+      # awesomeMarkers only works with little data:
+      #
+      # icons <- extractMarker(style)
+      # dataForMarkers <- isoData[1:100, ]
+      #
+      # map %>%
+      #   addAwesomeMarkers(lng = dataForMarkers$longitude,
+      #                     lat = dataForMarkers$latitude,
+      #                     icon = icons[dataForMarkers$source])
+    }
+
+    map
   }
 
-  map
-}
 
-
-extractMarker <- function(dataStyle){
+extractMarker <- function(dataStyle) {
   awesomeIconNameList <- dataStyle$shapes
   icons <- lapply(awesomeIconNameList, function(shape) {
     makeAwesomeIcon(icon = shape,
@@ -184,23 +216,16 @@ extractMarker <- function(dataStyle){
 #' Add Custom Circles to existing Map
 #'
 #' @inheritParams leafletAddCircles
-#' @param mapBounds bounds for the lat/lng frame
-addCustomCircles <- function(map, isoData, style, mapBounds){
-  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+addCustomCircles <- function(map, isoData, style) {
+  if (is.null(isoData$latitude) ||
+      all(is.na(isoData$latitude)))
+    return(map)
 
-  isoData <- isoData[!is.na(isoData$longitude), ]
+  isoData <- isoData[!is.na(isoData$longitude),]
 
   pal <- colorFactor(style$colours, isoData$source)
 
   map %>%
-    clearShapes() %>%
-    addRectangles(lng1 = mapBounds$west,
-                  lng2 = mapBounds$east,
-                  lat1 = mapBounds$south,
-                  lat2 = mapBounds$north,
-                  color = "blue",
-                  weight = 1,
-                  fillColor = "transparent") %>%
     addCircles(
       lng = isoData$longitude,
       lat = isoData$latitude,
@@ -222,13 +247,14 @@ addCustomCircles <- function(map, isoData, style, mapBounds){
 #' Add Circles to existing Map
 #'
 #' @inheritParams leafletAddCircles
-#' @param mapBounds bounds for the lat/lng frame
 #' @param zoom numeric default zoom factor used for lat/lng jitter and radius calculation
-addCirclesRelativeToZoom <- function(map, isoData, mapBounds,
-                                     newZoom, zoom = 5){
-  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+addCirclesRelativeToZoom <- function(map, isoData,
+                                     newZoom, zoom = 5) {
+  if (is.null(isoData$latitude) ||
+      all(is.na(isoData$latitude)))
+    return(map)
 
-  isoData <- isoData[!is.na(isoData$longitude), ]
+  isoData <- isoData[!is.na(isoData$longitude),]
 
   numColors <- length(unique(isoData$source))
 
@@ -238,29 +264,29 @@ addCirclesRelativeToZoom <- function(map, isoData, mapBounds,
   pal <- colorFactor(colors, isoData$Source)
 
   set.seed(20180213)
-  isoData$Latitude_jit <- jitter(isoData$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
-  isoData$Longitude_jit <- jitter(isoData$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  isoData$Latitude_jit <-
+    jitter(isoData$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  isoData$Longitude_jit <-
+    jitter(isoData$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
 
   map %>%
-    clearShapes() %>%
-    addRectangles(lng1 = mapBounds$west,
-                  lng2 = mapBounds$east,
-                  lat1 = mapBounds$south,
-                  lat2 = mapBounds$north,
-                  color = "blue",
-                  weight = 1,
-                  fillColor = "transparent") %>%
-    addCircles(data = isoData,
-               lat = ~ Latitude_jit,
-               lng =  ~ Longitude_jit,
-               layerId = ~ id,
-               stroke = F,
-               fillOpacity = 0.7,
-               color = pal(isoData$source),
-               fillColor = pal(isoData$source),
-               radius = 20000 * (zoom / newZoom) ^ 3
+    addCircles(
+      data = isoData,
+      lat = ~ Latitude_jit,
+      lng =  ~ Longitude_jit,
+      layerId = ~ id,
+      stroke = F,
+      fillOpacity = 0.7,
+      color = pal(isoData$source),
+      fillColor = pal(isoData$source),
+      radius = 20000 * (zoom / newZoom) ^ 3
     ) %>%
-    addLegend("topleft", pal = pal, values = isoData$source, title = "Database",
-              layerId = "colorLegend")
+    addLegend(
+      "topleft",
+      pal = pal,
+      values = isoData$source,
+      title = "Database",
+      layerId = "colorLegend"
+    )
 
 }
