@@ -55,7 +55,40 @@ leafletSettingsUI <- function(id, title = "") {
         choices = c("topright", "bottomright", "bottomleft", "topleft"),
         selected = "topleft"
       )
-    ))
+    )),
+    fluidRow(
+      column(6,
+             tags$h4("Latitude"),
+             numericInput(ns("centerLat"), "Center", value = 50, min = -90, max = 90)
+      ),
+      column(6,
+             tags$h4("Longitude"),
+             numericInput(ns("centerLng"), "Center", value = 30, min = -180, max = 180)
+      )
+    ),
+    sliderInput(ns("boundsLat"), "Latitude: South - North", value = c(15, 60), min = -90, max = 90),
+    sliderInput(ns("boundsLng"), "Longitude: West - East", value = c(-15, 60), min = -180, max = 180)
+    # alternative UI for lat/lng bounds:
+    # fluidRow(
+    #   column(6,
+    #          numericInput(ns("boundNorth"), "Bound North",
+    #                       value = 65, min = -90, max = 90)
+    #   ),
+    #   column(6,
+    #          numericInput(ns("boundEast"), "Bound East",
+    #                       value = 60, min = -180, max = 180)
+    #   )
+    # ),
+    # fluidRow(
+    #   column(6,
+    #          numericInput(ns("boundSouth"), "Bound South",
+    #                       value = 15, min = -90, max = 90)
+    #   ),
+    #   column(6,
+    #          numericInput(ns("boundWest"), "Bound West",
+    #                       value = -15, min = -180, max = 180)
+    #   )
+    # )
   )
 }
 
@@ -70,6 +103,10 @@ leafletSettings <- function(input, output, session) {
 
   observeEvent(input$map_zoom, {
     values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+  })
+
+  observeEvent(input$LeafletType, {
+    values$leafletType <- input$LeafletType
   })
 
   observe({
@@ -89,13 +126,24 @@ leafletSettings <- function(input, output, session) {
       ifelse(input$includeLogo, input$logoPosition, NA_character_)
   })
 
-  reactive(
-    list(
-      leafletType = input$LeafletType,
-      pointRadius = values$pointRadius,
-      scalePosition = values$scalePosition,
-      northArrowPosition = values$northArrowPosition,
-      logoPosition = values$logoPosition
-    )
-  )
+  observe({
+    values$center <-
+      reactiveValues(lat = input$centerLat,
+                     lng = input$centerLng)
+  })
+
+  observe({
+    values$bounds <-
+      reactiveValues(north = input$boundsLat[[2]],
+                     south = input$boundsLat[[1]],
+                     east = input$boundsLng[[2]],
+                     west = input$boundsLng[[1]])
+    # alternative output for lat/lng bounds:
+    # reactiveValues(north = input$boundNorth,
+    #                south = input$boundSouth,
+    #                east = input$boundEast,
+    #                west = input$boundWest)
+  })
+
+  reactive({values})
 }
