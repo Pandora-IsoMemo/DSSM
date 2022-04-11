@@ -3,7 +3,14 @@
 #' @param id namespace
 leafletExportButton <- function(id) {
   ns <- NS(id)
-  actionButton(ns("exportLeaflet"), "Export Map")
+
+  tagList(actionButton(ns("exportLeaflet"), "Export Map"),
+          div(
+            id = ns("phantomjsHelp"),
+            helpText(
+              "To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)"
+            )
+          ))
 }
 
 
@@ -22,6 +29,15 @@ leafletExport <- function(input,
                           width,
                           height) {
   ns <- session$ns
+
+  observe({
+    if (webshot::is_phantomjs_installed()) {
+      shinyjs::enable("exportLeaflet")
+      shinyjs::hide("phantomjsHelp")
+    } else {
+      shinyjs::disable("exportLeaflet")
+    }
+  })
 
   observeEvent(input$exportLeaflet, {
     showModal(
