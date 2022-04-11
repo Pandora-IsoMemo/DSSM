@@ -71,11 +71,7 @@ interactiveMapUI <- function(id, title = ""){
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
         tags$br(),
-        leafletExportButton(ns("exportLeaflet")),
-        div(
-          id = ns("phantomjsHelp"),
-          helpText("To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)")
-        )
+        leafletExportButton(ns("exportLeaflet"))
       )
     )
   )
@@ -198,15 +194,6 @@ interactiveMap <- function(input, output, session, isoData){
       return(NULL)
 
     isoData()[[input$var2]]
-  })
-
-  observe({
-    if (webshot::is_phantomjs_installed()) {
-      shinyjs::enable("exportLeaflet")
-      shinyjs::hide("phantomjsHelp")
-    } else {
-      shinyjs::disable("exportLeaflet")
-    }
   })
 
   callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
