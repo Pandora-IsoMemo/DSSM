@@ -1,4 +1,4 @@
-# iso-app
+# Pandora & IsoMemo spatiotemporal modelling
 Shiny App für Isotopen Datenbank (Position 3)
 
 ## Deployment Versionen:
