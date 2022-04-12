@@ -145,7 +145,7 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Add Circles relative to zoom
   observe({
-    req(isoData())
+    req(isoData(), leafletMap())
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
