@@ -4,6 +4,28 @@
 #' @param columns which columns should be shown?
 #' @export
 
+generateRcrossRefromDOI <- function(dat,format,style){
+  library(rcrossref)
+  databaseDOI <- dat$databaseDOI
+  originalDOI <- dat$originalDataDOI
+  compilationDOI <- dat$compilationDOI
+
+  databaseDOIout <- character()
+  for (x in databaseDOI) {
+    databaseDOIout <- c(databaseDOIout , cr_cn(doi=x, format = format,style = style))
+  }
+  originalDOIout <- character()
+  for (x in originalDOI) {
+    originalDOIout <- c(originalDOIout , cr_cn(doi=x, format = format,style = style))
+  }
+  compilationDOIout <- character()
+  for (x in compilationDOI) {
+    compilationDOIout <- c(compilationDOIout , cr_cn(doi=x, format = format,style = style))
+  }
+  DOI <- cbind(databaseDOIout, originalDOIout,compilationDOIout)
+  return(DOI)
+}
+#### TODO: integrate generateRcrossRefromDOI into datTable()
 datTable <- function(dat, columns = names(dat)){
   if (nrow(dat) == 0)
     return(NULL)
@@ -11,10 +33,8 @@ datTable <- function(dat, columns = names(dat)){
     return(NULL)
 
   dat <- dat[names(dat) %in% columns]
-  browse()
-  #generateRcrossRefromDOI <- function(tmp,style,format){
-  #  data <- cr_cn(doi, format = format,style = style)
-  #  return(data)
+
+  DOI <- generateRcrossRefromDOI(dat,format, style) #####
 
   descCol <- which(colnames(dat) == "description")
 
@@ -54,7 +74,7 @@ getDataColumns <- function(mapping, input){
 
   cats <- gsub(" ", "", paste0("selectCategory", categoryChoices(mapping)))
   cats <- cats[sapply(cats, function(x) isTRUE(input[[x]]))]
-  cols <- gsub("Category", "Columns", cats)
+  cols <- gsub("Categoryterst", "Columns", cats)
 
   c(columnDefault(), unlist(lapply(cols, function(x) input[[x]])))
 
