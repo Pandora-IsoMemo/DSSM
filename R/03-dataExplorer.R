@@ -89,7 +89,9 @@ dataExplorerUI <- function(id, title = ""){
           condition = "input.skin == 'pandora'",
           selectInput(ns("citationColumns"), "Citation columns", choices = NULL, multiple = TRUE)
         ),
-        selectInput(ns("citationType"), "Citation Type", selected = "txt", choices = c("txt", "xml", "json")),
+        selectInput(ns("citationStyle"), "Select Citation Style", selected = "APA", choices = c("APA","Chicago", "Harvard")),
+        selectInput(ns("citationType"), "Select Export Format", selected = "bibtex", choices = c("bibtex","txt", "xml","rdf-xml","crossref-xml","json",
+                                                                                                 "citeproc-json","citeproc-json-ish","ris","bibentry","crossref-tdm","turtle")),
         downloadButton(ns("exportCitation"), "Export Citation")
       ),
       mainPanel(
@@ -221,6 +223,7 @@ dataExplorer <- function(input, output, session){
         d$longitude <- d[,input$LongitudePandora]
         d$latitude <- d[,input$LatitudePandora]
         d$id <- as.character(1:nrow(d))
+
         }
       }
 
@@ -373,7 +376,24 @@ dataExplorer <- function(input, output, session){
     validate(
       need(!is.null(isoDataFull()), "Please select a database in the sidebar panel.")
     )
-    datTable(isoDataFull(), columns = dataColumns())
+    DF = datTable(isoDataFull(), columns = dataColumns())
+    #generateCitation(data, input$citationType, file = filename)
+    library(rcrossref)
+    databaseDOIout <- character()
+    for (x in DF$databaseDOI) {
+      databaseDOIout <- c(databaseDOIout , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
+    }
+    originalDOIout <- character()
+    for (x in DF$originalDataDOI) {
+      originalDOIout <- c(data$originalDataDOI , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
+    }
+    compilationDOIout <- character()
+    for (x in DF$compilationDOI) {
+      compilationDOIout <- c(compilationDOIout , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
+    }
+    DOI <- cbind(databaseDOIout, originalDOIout,compilationDOIout)
+    DF <- cbind(DF,DOI)
+    DF
   })
 
   decriptionTableClick <- reactive({
