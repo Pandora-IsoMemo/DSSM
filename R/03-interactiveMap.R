@@ -89,7 +89,9 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
-  leafletValues <- callModule(leafletSettings, "mapSettings")
+  leafletValues <- callModule(leafletSettings, "mapSettings",
+                              zoom = reactive({input$map_zoom}),
+                              center = reactive({input$map_center}))
   leafletMap <- reactiveVal(leaflet())
 
   # Create the map

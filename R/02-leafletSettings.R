@@ -98,11 +98,11 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param input input
 #' @param output output
 #' @param session session
-leafletSettings <- function(input, output, session) {
+leafletSettings <- function(input, output, session, zoom, center) {
   values <- reactiveValues(pointRadius = 20000)
 
-  observeEvent(input$map_zoom, {
-    values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+  observeEvent(zoom(), {
+    values$pointRadius <- (20000 * (4 / zoom()) ^ 3)
   })
 
   observeEvent(input$LeafletType, {
@@ -130,6 +130,11 @@ leafletSettings <- function(input, output, session) {
     values$center <-
       reactiveValues(lat = input$centerLat,
                      lng = input$centerLng)
+  })
+
+  observeEvent(center(), {
+    updateNumericInput(session, "centerLat", value = center()$lat)
+    updateNumericInput(session, "centerLng", value = center()$lng)
   })
 
   observe({
