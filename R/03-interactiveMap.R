@@ -117,6 +117,7 @@ interactiveMap <- function(input, output, session, isoData){
     draw(
       isoData(),
       zoom = 4,
+      center = input$map_center,
       type = input$LeafletType,
       scale = input$includeScale,
       scalePosition = input$scalePosition,
