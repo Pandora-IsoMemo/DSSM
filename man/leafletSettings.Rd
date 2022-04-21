@@ -4,7 +4,7 @@
 \alias{leafletSettings}
 \title{server funtion of leaflet settings module}
 \usage{
-leafletSettings(input, output, session)
+leafletSettings(input, output, session, zoom, center)
 }
 \arguments{
 \item{input}{input}

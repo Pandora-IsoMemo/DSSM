@@ -27,7 +27,9 @@ leafletExport <- function(input,
                           session,
                           leafletMap,
                           width,
-                          height) {
+                          height,
+                          zoom,
+                          isoData) {
   ns <- session$ns
 
   observe({
@@ -63,6 +65,11 @@ leafletExport <- function(input,
     },
     content = function(filename) {
       m <- leafletMap()
+
+      if (!is.null(isoData)) {
+        m <- m %>%
+          addCirclesRelativeToZoom(isoData(), newZoom = zoom(), zoom = zoom())
+      }
 
       mapview::mapshot(
         m,

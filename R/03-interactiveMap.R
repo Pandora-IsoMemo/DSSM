@@ -90,8 +90,8 @@ interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
   leafletValues <- callModule(leafletSettings, "mapSettings",
-                              zoom = reactive({input$map_zoom}),
-                              center = reactive({input$map_center}))
+                              zoom = reactive(input$map_zoom),
+                              center = reactive(input$map_center))
   leafletMap <- reactiveVal(leaflet())
 
   # Create the map
@@ -199,7 +199,8 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
-             width = reactive(input$map_width), height = reactive(input$map_height))
+             width = reactive(input$map_width), height = reactive(input$map_height),
+             zoom = reactive(input$map_zoom), isoData = isoData)
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
@@ -220,19 +221,37 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param scalePosition position of scale
 #' @param logoPosition character position of logo if selected, else NA
 #' @param center where to center map (list of lat and lng)
+#' @param bounds map bounds (list of north, south, east, west)
 #'
 #' @export
 draw <- function(isoData, zoom = 5, type = "1",
                  northArrow = FALSE, northArrowPosition = "bottomright",
                  scale = FALSE, scalePosition = "topleft",
                  logoPosition = NA,
-                 center = NULL){
+                 center = NULL,
+                 bounds = NULL){
 
   map <- leaflet() %>% drawType(type = type)
   map <- map %>% drawIcons(northArrow = northArrow, northArrowPosition = northArrowPosition,
                            scale = scale, scalePosition = scalePosition,
                            logoPosition = logoPosition)
-  map
+
+  if (!is.null(center)) {
+    map <- map %>% setView(lng = center$lng,
+                           lat = center$lat,
+                           zoom = zoom
+    )
+  }
+
+  if (!is.null(bounds)) {
+    map <- map %>% fitBounds(lng1 = bounds$west,
+                             lng2 = bounds$east,
+                             lat1 = bounds$south,
+                             lat2 = bounds$north
+    )
+  }
+
+  map <- map %>% addCirclesRelativeToZoom(isoData, newZoom = zoom, zoom = zoom)
 }
 
 
