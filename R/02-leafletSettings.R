@@ -65,20 +65,29 @@ leafletSettingsUI <- function(id, title = "") {
         max = 180
       )
     )),
-    sliderInput(
-      ns("boundsLat"),
-      "Latitude: South - North",
-      value = c(15, 60),
-      min = -90,
-      max = 90
+    checkboxInput(ns("fitBounds"), "Fit boundaries"),
+    conditionalPanel(
+      condition = "input.fitBounds == true",
+      tags$hr(),
+      sliderInput(
+        ns("boundsLat"),
+        "Latitude: South - North",
+        value = c(15, 60),
+        min = -90,
+        max = 90
+      ),
+      sliderInput(
+        ns("boundsLng"),
+        "Longitude: West - East",
+        value = c(-15, 60),
+        min = -180,
+        max = 180
+      ),
+      actionButton(ns("applyBounds"), "Apply boundaries"),
+      checkboxInput(ns("showBounds"), "Show boundaries"),
+      tags$hr(),
+      ns = ns
     ),
-    sliderInput(
-      ns("boundsLng"),
-      "Longitude: West - East",
-      value = c(-15, 60),
-      min = -180,
-      max = 180
-    )
     # alternative UI for lat/lng bounds:
     # fluidRow(
     #   column(6,
@@ -113,6 +122,14 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param center where to center map (list of lat and lng)
 leafletSettings <- function(input, output, session, zoom, center) {
   values <- reactiveValues(pointRadius = 20000)
+
+  values$bounds <-
+    reactiveValues(
+      north = 60,
+      south = 15,
+      east = 60,
+      west = -15
+    )
 
   observeEvent(zoom(), {
     values$pointRadius <- (20000 * (4 / zoom()) ^ 3)
@@ -149,7 +166,7 @@ leafletSettings <- function(input, output, session, zoom, center) {
     updateNumericInput(session, "centerLng", value = center()$lng)
   })
 
-  observe({
+  observeEvent(input$applyBounds, {
     values$bounds <-
       reactiveValues(
         north = input$boundsLat[[2]],
@@ -162,6 +179,11 @@ leafletSettings <- function(input, output, session, zoom, center) {
     #                south = input$boundSouth,
     #                east = input$boundEast,
     #                west = input$boundWest)
+
+  })
+
+  observe({
+    values$showBounds <- input$showBounds & input$fitBounds
   })
 
   reactive({

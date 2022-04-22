@@ -138,13 +138,22 @@ interactiveMap <- function(input, output, session, isoData){
   # adjust map bounds fit
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
-    #input$map_bounds
+    # not exact bounds, only fit to input$map_bounds
     leafletMap(leafletMap() %>%
                  fitBounds(lng1 = leafletValues()$bounds$west,
                            lng2 = leafletValues()$bounds$east,
                            lat1 = leafletValues()$bounds$south,
                            lat2 = leafletValues()$bounds$north
                  ))
+  })
+
+  observeEvent(list(leafletValues()$showBounds, leafletValues()$bounds), {
+    req(leafletValues()$bounds)
+
+    leafletMap(leafletMap() %>%
+                 drawFittedBounds(showBounds = leafletValues()$showBounds,
+                                  bounds = leafletValues()$bounds)
+                 )
   })
 
   # render output map ####
@@ -428,8 +437,39 @@ getColourPal <- function(values){
   colorFactor(colors, values)
 }
 
+#' Draw Fitted Bounds
+#'
+#' @param map leaflet map
+#' @param showBounds logical show/hide fitted bounds
+#' @param bounds list of (west, east, south, north) boundaries to be drawn
+drawFittedBounds <- function(map, showBounds, bounds){
+  if (showBounds) {
+    map <- map %>%
+      addRectangles(
+        layerId = "mapBoundsFrame",
+        lng1 = bounds$west,
+        lng2 = bounds$east,
+        lat1 = bounds$south,
+        lat2 = bounds$north,
+        color = "grey",
+        weight = 1,
+        fillColor = "transparent"
+      )
+  } else {
+    map <- map %>%
+      removeShape(layerId = "mapBoundsFrame")
+  }
 
-# Show a popup at the given location
+  map
+}
+
+
+#' Show a popup at the given location
+#'
+#' @param dat dat contains data to show
+#' @param id id of what to show
+#' @param lat lat for popup
+#' @param lng lng for popup
 showIDPopup <- function(dat, id, lat, lng) {
   selectedId <- dat[which(dat$id == id), ]
 
