@@ -12,6 +12,10 @@ leafletSettings(input, output, session, zoom, center)
 \item{output}{output}
 
 \item{session}{session}
+
+\item{zoom}{map zoom}
+
+\item{center}{where to center map (list of lat and lng)}
 }
 \description{
 server funtion of leaflet settings module

@@ -22,6 +22,8 @@ leafletExportButton <- function(id) {
 #' @param leafletMap reactive leaflet map object
 #' @param width reactive width of map in px
 #' @param height reactive height of map in px
+#' @param zoom map zoom
+#' @param isoData isoData data
 leafletExport <- function(input,
                           output,
                           session,

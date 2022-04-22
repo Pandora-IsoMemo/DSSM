@@ -109,6 +109,8 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param input input
 #' @param output output
 #' @param session session
+#' @param zoom map zoom
+#' @param center where to center map (list of lat and lng)
 leafletSettings <- function(input, output, session, zoom, center) {
   values <- reactiveValues(pointRadius = 20000)
 

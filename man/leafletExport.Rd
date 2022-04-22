@@ -18,6 +18,10 @@ leafletExport(input, output, session, leafletMap, width, height, zoom, isoData)
 \item{width}{reactive width of map in px}
 
 \item{height}{reactive height of map in px}
+
+\item{zoom}{map zoom}
+
+\item{isoData}{isoData data}
 }
 \description{
 server funtion of leaflet map export module
