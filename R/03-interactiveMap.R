@@ -106,17 +106,24 @@ interactiveMap <- function(input, output, session, isoData){
 
   # add icons to map
   observeEvent(is.na(leafletValues()$scalePosition) |
-                 is.na(leafletValues()$northArrowPosition) |
-                 is.na(leafletValues()$logoPosition), {
+                 is.na(leafletValues()$northArrowPosition), {
                    leafletMap(leafletMap() %>%
                                 drawIcons(scale = !is.na(leafletValues()$scalePosition),
                                           scalePosition = leafletValues()$scalePosition,
                                           northArrow = !is.na(leafletValues()$northArrowPosition),
-                                          northArrowPosition = leafletValues()$northArrowPosition,
-                                          logoPosition = leafletValues()$logoPosition
+                                          northArrowPosition = leafletValues()$northArrowPosition
                                 )
                    )
                  })
+
+  # set legend
+  observeEvent(list(leafletValues()$showLegend), {
+    leafletMap(
+      leafletMap() %>%
+        setColorLegend(leafletValues()$showLegend,
+                       values = isoData()$source)
+    )
+  })
 
   # adjust map center
   observeEvent(leafletValues()$center, {
@@ -151,8 +158,7 @@ interactiveMap <- function(input, output, session, isoData){
     new_zoom <- input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), #pointRadius = 20000,
-                               newZoom = new_zoom, zoom = 4)
+      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
     })
 
   })
@@ -219,7 +225,6 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
-#' @param logoPosition character position of logo if selected, else NA
 #' @param center where to center map (list of lat and lng)
 #' @param bounds map bounds (list of north, south, east, west)
 #'
@@ -227,14 +232,12 @@ interactiveMap <- function(input, output, session, isoData){
 draw <- function(isoData, zoom = 5, type = "1",
                  northArrow = FALSE, northArrowPosition = "bottomright",
                  scale = FALSE, scalePosition = "topleft",
-                 logoPosition = NA,
                  center = NULL,
                  bounds = NULL){
 
   map <- leaflet() %>% drawType(type = type)
   map <- map %>% drawIcons(northArrow = northArrow, northArrowPosition = northArrowPosition,
-                           scale = scale, scalePosition = scalePosition,
-                           logoPosition = logoPosition)
+                           scale = scale, scalePosition = scalePosition)
 
   if (!is.null(center)) {
     map <- map %>% setView(lng = center$lng,
@@ -299,24 +302,10 @@ drawType <- function(map, type = "1"){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
-#' @param logoPosition character position of logo if selected, else NA
 drawIcons <- function(map,
                       northArrow = FALSE, northArrowPosition = "bottomright",
-                      scale = FALSE, scalePosition = "topleft",
-                      logoPosition = NA){
-
-  map <- map %>%
-    clearControls() %>%
-    removeScaleBar()
-
-  if (!is.na(logoPosition)) {
-    map <- map %>%
-      addControl(
-        tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
-        position = logoPosition,
-        className = ""
-      )
-  }
+                      scale = FALSE, scalePosition = "topleft"
+                      ){
 
   if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {
@@ -325,6 +314,9 @@ drawIcons <- function(map,
         position = scalePosition,
         options = scaleBarOptions()
       )
+    } else {
+      map <- map %>%
+        removeScaleBar()
     }
 
     if (northArrow) {
@@ -332,8 +324,11 @@ drawIcons <- function(map,
         map,
         tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
         position = northArrowPosition,
+        layerId = "northArrowIcon",
         className = ""
       )
+    } else {
+      map <- map %>% removeControl("northArrowIcon")
     }
   } else {
     if (northArrow) {
@@ -341,8 +336,11 @@ drawIcons <- function(map,
         map,
         tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
         position = northArrowPosition,
+        layerId = "northArrowIcon",
         className = ""
       )
+    } else {
+      map <- map %>% removeControl("northArrowIcon")
     }
 
     if (scale) {
@@ -351,6 +349,9 @@ drawIcons <- function(map,
         position = scalePosition,
         options = scaleBarOptions()
       )
+    } else {
+      map <- map %>%
+        removeScaleBar()
     }
   }
 
@@ -386,12 +387,46 @@ addCirclesRelativeToZoom <- function(map, isoData,
                color = pal(isoData$source),
                fillColor = pal(isoData$source),
                radius = 20000 * (zoom / newZoom) ^ 3
-    ) %>%
-    addLegend("topleft", pal = pal, values = isoData$source, title = "Database",
-              layerId = "colorLegend")
-
+    )
 }
 
+
+#' Add Colour Legend
+#'
+#' @param map leaflet map
+#' @param showLegend logical show/hide legend
+#' @param values possible values that can be mapped, e.g. isoData$source
+setColorLegend <- function(map, showLegend, values){
+
+  if (showLegend) {
+
+    map <- map %>%
+      addLegend("topleft",
+                pal = getColourPal(values),
+                values = values,
+                title = "Database",
+                layerId = "colorLegend")
+  } else {
+    map <- map %>% removeControl("colorLegend")
+  }
+
+  map
+}
+
+
+#' Get Colour Palette
+#'
+#' Get colour palette for the points and the legend
+#'
+#' @inheritParams setColorLegend
+getColourPal <- function(values){
+  numColors <- length(unique(values))
+
+  colors <- appColors(c("red", "green", "purple", "black"),
+                      names = FALSE)[1:numColors]
+
+  colorFactor(colors, values)
+}
 
 
 # Show a popup at the given location

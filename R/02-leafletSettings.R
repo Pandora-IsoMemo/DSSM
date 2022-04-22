@@ -44,30 +44,41 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    fluidRow(column(6, checkboxInput(
-      ns("includeLogo"), "Logo"
-    )),
-    column(
+    checkboxInput(ns("showLegend"), "Legend"),
+    fluidRow(column(
       6,
-      selectInput(
-        ns("logoPosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "topleft"
-      )
-    )),
-    fluidRow(
-      column(6,
-             tags$h4("Latitude"),
-             numericInput(ns("centerLat"), "Center", value = 50, min = -90, max = 90)
-      ),
-      column(6,
-             tags$h4("Longitude"),
-             numericInput(ns("centerLng"), "Center", value = 30, min = -180, max = 180)
+      numericInput(
+        ns("centerLat"),
+        "Latitude: Center",
+        value = 50,
+        min = -90,
+        max = 90
       )
     ),
-    sliderInput(ns("boundsLat"), "Latitude: South - North", value = c(15, 60), min = -90, max = 90),
-    sliderInput(ns("boundsLng"), "Longitude: West - East", value = c(-15, 60), min = -180, max = 180)
+    column(
+      6,
+      numericInput(
+        ns("centerLng"),
+        "Longitude: Center",
+        value = 30,
+        min = -180,
+        max = 180
+      )
+    )),
+    sliderInput(
+      ns("boundsLat"),
+      "Latitude: South - North",
+      value = c(15, 60),
+      min = -90,
+      max = 90
+    ),
+    sliderInput(
+      ns("boundsLng"),
+      "Longitude: West - East",
+      value = c(-15, 60),
+      min = -180,
+      max = 180
+    )
     # alternative UI for lat/lng bounds:
     # fluidRow(
     #   column(6,
@@ -122,8 +133,7 @@ leafletSettings <- function(input, output, session, zoom, center) {
   })
 
   observe({
-    values$logoPosition <-
-      ifelse(input$includeLogo, input$logoPosition, NA_character_)
+    values$showLegend <- input$showLegend
   })
 
   observe({
@@ -139,10 +149,12 @@ leafletSettings <- function(input, output, session, zoom, center) {
 
   observe({
     values$bounds <-
-      reactiveValues(north = input$boundsLat[[2]],
-                     south = input$boundsLat[[1]],
-                     east = input$boundsLng[[2]],
-                     west = input$boundsLng[[1]])
+      reactiveValues(
+        north = input$boundsLat[[2]],
+        south = input$boundsLat[[1]],
+        east = input$boundsLng[[2]],
+        west = input$boundsLng[[1]]
+      )
     # alternative output for lat/lng bounds:
     # reactiveValues(north = input$boundNorth,
     #                south = input$boundSouth,
@@ -150,5 +162,7 @@ leafletSettings <- function(input, output, session, zoom, center) {
     #                west = input$boundWest)
   })
 
-  reactive({values})
+  reactive({
+    values
+  })
 }

@@ -12,7 +12,6 @@ draw(
   northArrowPosition = "bottomright",
   scale = FALSE,
   scalePosition = "topleft",
-  logoPosition = NA,
   center = NULL,
   bounds = NULL
 )
@@ -31,8 +30,6 @@ draw(
 \item{scale}{show scale?}
 
 \item{scalePosition}{position of scale}
-
-\item{logoPosition}{character position of logo if selected, else NA}
 
 \item{center}{where to center map (list of lat and lng)}
 
