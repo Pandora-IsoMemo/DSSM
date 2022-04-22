@@ -94,6 +94,17 @@ interactiveMap <- function(input, output, session, isoData){
                               center = reactive(input$map_center))
   leafletMap <- reactiveVal(leaflet())
 
+  newZoom <- reactive({
+    if (is.null(input$map_zoom))
+      4
+    else
+      input$map_zoom
+  })
+
+  #zoomSlow <- newZoom %>% debounce(1000)
+  #zoomSlow <- newZoom %>% throttle(1000)
+  zoomSlow <- newZoom
+
   # Create the map
 
   # set map type
@@ -164,7 +175,7 @@ interactiveMap <- function(input, output, session, isoData){
   # Add Circles relative to zoom
   observe({
     req(isoData(), leafletMap())
-    new_zoom <- input$map_zoom
+    new_zoom <- zoomSlow() #input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
       addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
@@ -385,8 +396,10 @@ addCirclesRelativeToZoom <- function(map, isoData,
   isoData$Latitude_jit <- jitter(isoData$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
   isoData$Longitude_jit <- jitter(isoData$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
 
+  map <- map %>%
+    removeShape(layerId = isoData$id)
+
   map %>%
-    clearShapes() %>%
     addCircles(data = isoData,
                lat = ~ Latitude_jit,
                lng =  ~ Longitude_jit,
