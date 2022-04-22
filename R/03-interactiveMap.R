@@ -67,7 +67,7 @@ interactiveMapUI <- function(id, title = ""){
       condition = "$('#interactivemap-map').css('visibility') != 'hidden'",
       absolutePanel(
         id = "controls", class = "panel panel-default", fixed = TRUE,
-        draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
+        draggable = TRUE, top = 110, right = "auto", left = 50, bottom = "auto",
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
         tags$br(),
