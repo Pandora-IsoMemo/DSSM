@@ -162,9 +162,15 @@ dataExplorer <- function(input, output, session){
 
   observe({
     req(database())
-    d <- getRemoteData(database())
 
-    isoDataRaw(d)
+    withProgress({
+      d <- getRemoteData(database())
+
+      isoDataRaw(d)
+    },
+      value = 0.9,
+      message = 'Get remote data ...'
+    )
   })
 
   ## Load Data from file
