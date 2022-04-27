@@ -24,6 +24,7 @@
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom rcrossref cr_cn
 #' @importFrom readr guess_encoding
 #' @importFrom readxl read_excel
 #' @importFrom Rfast spdinv Crossprod rmvnorm

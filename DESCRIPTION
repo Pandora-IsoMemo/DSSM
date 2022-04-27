@@ -28,6 +28,7 @@ Imports:
   mgcv (>= 1.8.23),
   openxlsx (>= 4.0.17),
   raster (>= 2.6.7),
+  rcrossref,
   readODS,
   readxl,
   readr,

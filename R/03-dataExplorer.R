@@ -377,23 +377,9 @@ dataExplorer <- function(input, output, session){
       need(!is.null(isoDataFull()), "Please select a database in the sidebar panel.")
     )
     DF = datTable(isoDataFull(), columns = dataColumns())
+    browser()
     #generateCitation(data, input$citationType, file = filename)
-    library(rcrossref)
-    databaseDOIout <- character()
-    for (x in DF$databaseDOI) {
-      databaseDOIout <- c(databaseDOIout , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
-    }
-    originalDOIout <- character()
-    for (x in DF$originalDataDOI) {
-      originalDOIout <- c(data$originalDataDOI , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
-    }
-    compilationDOIout <- character()
-    for (x in DF$compilationDOI) {
-      compilationDOIout <- c(compilationDOIout , cr_cn(doi=x, format =  input$citationtype,style = input$citationstyle))
-    }
-    DOI <- cbind(databaseDOIout, originalDOIout,compilationDOIout)
-    DF <- cbind(DF,DOI)
-    DF
+
   })
 
   decriptionTableClick <- reactive({
