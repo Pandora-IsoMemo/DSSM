@@ -70,7 +70,6 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = 110, right = "auto", left = 50, bottom = "auto",
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
-        tags$br(),
         leafletExportButton(ns("exportLeaflet"))
       )
     )

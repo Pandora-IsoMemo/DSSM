@@ -63,10 +63,12 @@ leafletSettingsUI <- function(id, title = "") {
         min = -180,
         max = 180
       ),
-      fluidRow(
-        column(8, checkboxInput(ns("showBounds"), "Show boundaries")),
-        column(4, actionButton(ns("applyBounds"), "Apply"))
+      fluidRow(column(
+        7, checkboxInput(ns("showBounds"), "Show boundaries")
       ),
+      column(5, actionButton(
+        ns("applyBounds"), "Apply"
+      ))),
       tags$hr(),
       ns = ns
     ),
@@ -155,7 +157,9 @@ leafletSettings <- function(input, output, session, zoom) {
 
   })
 
-  observeEvent({input$showBounds & input$fitBounds}, {
+  observeEvent({
+    input$showBounds & input$fitBounds
+  }, {
     values$showBounds <- input$showBounds & input$fitBounds
   })
 
