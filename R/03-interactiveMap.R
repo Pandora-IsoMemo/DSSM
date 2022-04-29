@@ -67,10 +67,9 @@ interactiveMapUI <- function(id, title = ""){
       condition = "$('#interactivemap-map').css('visibility') != 'hidden'",
       absolutePanel(
         id = "controls", class = "panel panel-default", fixed = TRUE,
-        draggable = TRUE, top = "auto", right = "auto", left = 40, bottom = 100,
+        draggable = TRUE, top = 110, right = "auto", left = 50, bottom = "auto",
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
-        tags$br(),
         leafletExportButton(ns("exportLeaflet"))
       )
     )
@@ -89,8 +88,19 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
-  leafletValues <- callModule(leafletSettings, "mapSettings")
+  leafletValues <- callModule(leafletSettings, "mapSettings", zoom = reactive(input$map_zoom))
   leafletMap <- reactiveVal(leaflet())
+
+  newZoom <- reactive({
+    if (is.null(input$map_zoom))
+      4
+    else
+      input$map_zoom
+  })
+
+  #zoomSlow <- newZoom %>% debounce(1000)
+  #zoomSlow <- newZoom %>% throttle(1000)
+  zoomSlow <- newZoom
 
   # Create the map
 
@@ -104,32 +114,29 @@ interactiveMap <- function(input, output, session, isoData){
 
   # add icons to map
   observeEvent(is.na(leafletValues()$scalePosition) |
-                 is.na(leafletValues()$northArrowPosition) |
-                 is.na(leafletValues()$logoPosition), {
+                 is.na(leafletValues()$northArrowPosition), {
                    leafletMap(leafletMap() %>%
                                 drawIcons(scale = !is.na(leafletValues()$scalePosition),
                                           scalePosition = leafletValues()$scalePosition,
                                           northArrow = !is.na(leafletValues()$northArrowPosition),
-                                          northArrowPosition = leafletValues()$northArrowPosition,
-                                          logoPosition = leafletValues()$logoPosition
+                                          northArrowPosition = leafletValues()$northArrowPosition
                                 )
                    )
                  })
 
-  # adjust map center
-  observeEvent(leafletValues()$center, {
-    req(leafletValues()$center)
-    leafletMap(leafletMap() %>%
-                 setView(lng = leafletValues()$center$lng,
-                         lat = leafletValues()$center$lat,
-                         zoom = input$map_zoom
-                         ))
+  # set legend
+  observeEvent(list(leafletValues()$showLegend), {
+    leafletMap(
+      leafletMap() %>%
+        setColorLegend(showLegend = leafletValues()$showLegend,
+                       values = isoData()$source)
+    )
   })
 
   # adjust map bounds fit
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
-    #input$map_bounds
+    # not exact bounds, only fit to input$map_bounds
     leafletMap(leafletMap() %>%
                  fitBounds(lng1 = leafletValues()$bounds$west,
                            lng2 = leafletValues()$bounds$east,
@@ -138,19 +145,39 @@ interactiveMap <- function(input, output, session, isoData){
                  ))
   })
 
+  observeEvent(list(leafletValues()$showBounds, leafletValues()$bounds), {
+    req(leafletValues()$bounds)
+
+    leafletMap(leafletMap() %>%
+                 drawFittedBounds(showBounds = leafletValues()$showBounds,
+                                  bounds = leafletValues()$bounds)
+                 )
+  })
+
   # render output map ####
   output$map <- renderLeaflet({
-    leafletMap()
+    req(leafletMap())
+    isolate({
+      if (!is.null(input$map_center) & !(leafletValues()$applyBounds)) {
+        leafletMap() %>%
+          setView(lng = input$map_center$lng,
+                  lat = input$map_center$lat,
+                  zoom = input$map_zoom
+          )
+      } else {
+        leafletMap()
+      }
+
+    })
   })
 
   # Add Circles relative to zoom
   observe({
     req(isoData(), leafletMap())
-    new_zoom <- input$map_zoom
+    new_zoom <- zoomSlow() #input$map_zoom
     if (is.null(new_zoom)) return()
     isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), #pointRadius = 20000,
-                               newZoom = new_zoom, zoom = 4)
+      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
     })
 
   })
@@ -197,7 +224,9 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
-             width = reactive(input$map_width), height = reactive(input$map_height))
+             width = reactive(input$map_width), height = reactive(input$map_height),
+             zoom = reactive(input$map_zoom), center = reactive(input$map_center),
+             isoData = isoData)
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
@@ -216,21 +245,36 @@ interactiveMap <- function(input, output, session, isoData){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
-#' @param logoPosition character position of logo if selected, else NA
 #' @param center where to center map (list of lat and lng)
+#' @param bounds map bounds (list of north, south, east, west)
 #'
 #' @export
 draw <- function(isoData, zoom = 5, type = "1",
                  northArrow = FALSE, northArrowPosition = "bottomright",
                  scale = FALSE, scalePosition = "topleft",
-                 logoPosition = NA,
-                 center = NULL){
+                 center = NULL,
+                 bounds = NULL){
 
   map <- leaflet() %>% drawType(type = type)
   map <- map %>% drawIcons(northArrow = northArrow, northArrowPosition = northArrowPosition,
-                           scale = scale, scalePosition = scalePosition,
-                           logoPosition = logoPosition)
-  map
+                           scale = scale, scalePosition = scalePosition)
+
+  if (!is.null(center)) {
+    map <- map %>% setView(lng = center$lng,
+                           lat = center$lat,
+                           zoom = zoom
+    )
+  }
+
+  if (!is.null(bounds)) {
+    map <- map %>% fitBounds(lng1 = bounds$west,
+                             lng2 = bounds$east,
+                             lat1 = bounds$south,
+                             lat2 = bounds$north
+    )
+  }
+
+  map <- map %>% addCirclesRelativeToZoom(isoData, newZoom = zoom, zoom = zoom)
 }
 
 
@@ -278,24 +322,10 @@ drawType <- function(map, type = "1"){
 #' @param northArrowPosition position of north arrow
 #' @param scale show scale?
 #' @param scalePosition position of scale
-#' @param logoPosition character position of logo if selected, else NA
 drawIcons <- function(map,
                       northArrow = FALSE, northArrowPosition = "bottomright",
-                      scale = FALSE, scalePosition = "topleft",
-                      logoPosition = NA){
-
-  map <- map %>%
-    clearControls() %>%
-    removeScaleBar()
-
-  if (!is.na(logoPosition)) {
-    map <- map %>%
-      addControl(
-        tags$img(src = "https://isomemo.com/images/logo.jpg", width = "75", height = "50"),
-        position = logoPosition,
-        className = ""
-      )
-  }
+                      scale = FALSE, scalePosition = "topleft"
+                      ){
 
   if (northArrow && (northArrowPosition %in% c("bottomright", "bottomleft"))) {
     if (scale) {
@@ -304,6 +334,9 @@ drawIcons <- function(map,
         position = scalePosition,
         options = scaleBarOptions()
       )
+    } else {
+      map <- map %>%
+        removeScaleBar()
     }
 
     if (northArrow) {
@@ -311,8 +344,11 @@ drawIcons <- function(map,
         map,
         tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
         position = northArrowPosition,
+        layerId = "northArrowIcon",
         className = ""
       )
+    } else {
+      map <- map %>% removeControl("northArrowIcon")
     }
   } else {
     if (northArrow) {
@@ -320,8 +356,11 @@ drawIcons <- function(map,
         map,
         tags$img(src = "https://isomemodb.com/NorthArrow.png", width = "80", height = "80"),
         position = northArrowPosition,
+        layerId = "northArrowIcon",
         className = ""
       )
+    } else {
+      map <- map %>% removeControl("northArrowIcon")
     }
 
     if (scale) {
@@ -330,6 +369,9 @@ drawIcons <- function(map,
         position = scalePosition,
         options = scaleBarOptions()
       )
+    } else {
+      map <- map %>%
+        removeScaleBar()
     }
   }
 
@@ -354,8 +396,10 @@ addCirclesRelativeToZoom <- function(map, isoData,
   isoData$Latitude_jit <- jitter(isoData$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
   isoData$Longitude_jit <- jitter(isoData$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
 
+  map <- map %>%
+    removeShape(layerId = isoData$id)
+
   map %>%
-    clearShapes() %>%
     addCircles(data = isoData,
                lat = ~ Latitude_jit,
                lng =  ~ Longitude_jit,
@@ -365,15 +409,80 @@ addCirclesRelativeToZoom <- function(map, isoData,
                color = pal(isoData$source),
                fillColor = pal(isoData$source),
                radius = 20000 * (zoom / newZoom) ^ 3
-    ) %>%
-    addLegend("topleft", pal = pal, values = isoData$source, title = "Database",
-              layerId = "colorLegend")
-
+    )
 }
 
 
+#' Add Colour Legend
+#'
+#' @param map leaflet map
+#' @param showLegend logical show/hide legend
+#' @param values possible values that can be mapped, e.g. isoData$source
+setColorLegend <- function(map, showLegend, values){
 
-# Show a popup at the given location
+  if (showLegend) {
+
+    map <- map %>%
+      addLegend("topleft",
+                pal = getColourPal(values),
+                values = values,
+                title = "Database",
+                layerId = "colorLegend")
+  } else {
+    map <- map %>% removeControl("colorLegend")
+  }
+
+  map
+}
+
+
+#' Get Colour Palette
+#'
+#' Get colour palette for the points and the legend
+#'
+#' @inheritParams setColorLegend
+getColourPal <- function(values){
+  numColors <- length(unique(values))
+
+  colors <- appColors(c("red", "green", "purple", "black"),
+                      names = FALSE)[1:numColors]
+
+  colorFactor(colors, values)
+}
+
+#' Draw Fitted Bounds
+#'
+#' @param map leaflet map
+#' @param showBounds logical show/hide fitted bounds
+#' @param bounds list of (west, east, south, north) boundaries to be drawn
+drawFittedBounds <- function(map, showBounds, bounds){
+  if (showBounds) {
+    map <- map %>%
+      addRectangles(
+        layerId = "mapBoundsFrame",
+        lng1 = bounds$west,
+        lng2 = bounds$east,
+        lat1 = bounds$south,
+        lat2 = bounds$north,
+        color = "grey",
+        weight = 1,
+        fillColor = "transparent"
+      )
+  } else {
+    map <- map %>%
+      removeShape(layerId = "mapBoundsFrame")
+  }
+
+  map
+}
+
+
+#' Show a popup at the given location
+#'
+#' @param dat dat contains data to show
+#' @param id id of what to show
+#' @param lat lat for popup
+#' @param lng lng for popup
 showIDPopup <- function(dat, id, lat, lng) {
   selectedId <- dat[which(dat$id == id), ]
 

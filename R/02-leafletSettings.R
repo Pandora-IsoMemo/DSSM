@@ -21,18 +21,6 @@ leafletSettingsUI <- function(id, title = "") {
       )
     ),
     fluidRow(column(6, checkboxInput(
-      ns("includeScale"), "Scale"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("scalePosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
-    fluidRow(column(6, checkboxInput(
       ns("includeNorthArrow"), "North Arrow"
     )),
     column(
@@ -45,29 +33,45 @@ leafletSettingsUI <- function(id, title = "") {
       )
     )),
     fluidRow(column(6, checkboxInput(
-      ns("includeLogo"), "Logo"
+      ns("includeScale"), "Scale"
     )),
     column(
       6,
       selectInput(
-        ns("logoPosition"),
+        ns("scalePosition"),
         label = NULL,
         choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "topleft"
+        selected = "bottomright"
       )
     )),
-    fluidRow(
-      column(6,
-             tags$h4("Latitude"),
-             numericInput(ns("centerLat"), "Center", value = 50, min = -90, max = 90)
+    checkboxInput(ns("showLegend"), "Legend"),
+    checkboxInput(ns("fitBounds"), "Fit boundaries"),
+    conditionalPanel(
+      condition = "input.fitBounds == true",
+      tags$hr(),
+      sliderInput(
+        ns("boundsLat"),
+        "Latitude: South - North",
+        value = c(15, 60),
+        min = -90,
+        max = 90
       ),
-      column(6,
-             tags$h4("Longitude"),
-             numericInput(ns("centerLng"), "Center", value = 30, min = -180, max = 180)
-      )
+      sliderInput(
+        ns("boundsLng"),
+        "Longitude: West - East",
+        value = c(-15, 60),
+        min = -180,
+        max = 180
+      ),
+      fluidRow(column(
+        7, checkboxInput(ns("showBounds"), "Show boundaries")
+      ),
+      column(5, actionButton(
+        ns("applyBounds"), "Apply"
+      ))),
+      tags$hr(),
+      ns = ns
     ),
-    sliderInput(ns("boundsLat"), "Latitude: South - North", value = c(15, 60), min = -90, max = 90),
-    sliderInput(ns("boundsLng"), "Longitude: West - East", value = c(-15, 60), min = -180, max = 180)
     # alternative UI for lat/lng bounds:
     # fluidRow(
     #   column(6,
@@ -98,11 +102,21 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param input input
 #' @param output output
 #' @param session session
-leafletSettings <- function(input, output, session) {
-  values <- reactiveValues(pointRadius = 20000)
+#' @param zoom map zoom
+leafletSettings <- function(input, output, session, zoom) {
+  values <- reactiveValues(pointRadius = 20000,
+                           applyBounds = 0)
 
-  observeEvent(input$map_zoom, {
-    values$pointRadius <- (20000 * (4 / input$map_zoom) ^ 3)
+  values$bounds <-
+    reactiveValues(
+      north = 60,
+      south = 15,
+      east = 60,
+      west = -15
+    )
+
+  observeEvent(zoom(), {
+    values$pointRadius <- (20000 * (4 / zoom()) ^ 3)
   })
 
   observeEvent(input$LeafletType, {
@@ -121,29 +135,35 @@ leafletSettings <- function(input, output, session) {
              NA_character_)
   })
 
-  observe({
-    values$logoPosition <-
-      ifelse(input$includeLogo, input$logoPosition, NA_character_)
+  observeEvent(input$showLegend, {
+    values$showLegend <- input$showLegend
   })
 
-  observe({
-    values$center <-
-      reactiveValues(lat = input$centerLat,
-                     lng = input$centerLng)
-  })
+  observeEvent(input$applyBounds, {
+    values$applyBounds <- input$applyBounds
 
-  observe({
     values$bounds <-
-      reactiveValues(north = input$boundsLat[[2]],
-                     south = input$boundsLat[[1]],
-                     east = input$boundsLng[[2]],
-                     west = input$boundsLng[[1]])
+      reactiveValues(
+        north = input$boundsLat[[2]],
+        south = input$boundsLat[[1]],
+        east = input$boundsLng[[2]],
+        west = input$boundsLng[[1]]
+      )
     # alternative output for lat/lng bounds:
     # reactiveValues(north = input$boundNorth,
     #                south = input$boundSouth,
     #                east = input$boundEast,
     #                west = input$boundWest)
+
   })
 
-  reactive({values})
+  observeEvent({
+    input$showBounds & input$fitBounds
+  }, {
+    values$showBounds <- input$showBounds & input$fitBounds
+  })
+
+  reactive({
+    values
+  })
 }

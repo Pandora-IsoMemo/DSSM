@@ -9,8 +9,7 @@ drawIcons(
   northArrow = FALSE,
   northArrowPosition = "bottomright",
   scale = FALSE,
-  scalePosition = "topleft",
-  logoPosition = NA
+  scalePosition = "topleft"
 )
 }
 \arguments{
@@ -23,8 +22,6 @@ drawIcons(
 \item{scale}{show scale?}
 
 \item{scalePosition}{position of scale}
-
-\item{logoPosition}{character position of logo if selected, else NA}
 }
 \description{
 Draw Icons on Interactive Map

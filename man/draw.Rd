@@ -12,8 +12,8 @@ draw(
   northArrowPosition = "bottomright",
   scale = FALSE,
   scalePosition = "topleft",
-  logoPosition = NA,
-  center = NULL
+  center = NULL,
+  bounds = NULL
 )
 }
 \arguments{
@@ -31,9 +31,9 @@ draw(
 
 \item{scalePosition}{position of scale}
 
-\item{logoPosition}{character position of logo if selected, else NA}
-
 \item{center}{where to center map (list of lat and lng)}
+
+\item{bounds}{map bounds (list of north, south, east, west)}
 }
 \description{
 draw Interactive Map

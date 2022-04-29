@@ -22,12 +22,18 @@ leafletExportButton <- function(id) {
 #' @param leafletMap reactive leaflet map object
 #' @param width reactive width of map in px
 #' @param height reactive height of map in px
+#' @param zoom map zoom
+#' @param center map center (list of lat and lng)
+#' @param isoData isoData data
 leafletExport <- function(input,
                           output,
                           session,
                           leafletMap,
                           width,
-                          height) {
+                          height,
+                          zoom,
+                          center,
+                          isoData) {
   ns <- session$ns
 
   observe({
@@ -62,14 +68,27 @@ leafletExport <- function(input,
       paste0('plot-', Sys.Date(), '.', input$exportType)
     },
     content = function(filename) {
-      m <- leafletMap()
+      withProgress({
+        m <- leafletMap() %>%
+          setView(lng = center()$lng,
+                  lat = center()$lat,
+                  zoom = zoom())
 
-      mapview::mapshot(
-        m,
-        file = filename,
-        remove_controls = "zoomControl",
-        vwidth = input$width,
-        vheight = input$height
+        if (!is.null(isoData)) {
+          m <- m %>%
+            addCirclesRelativeToZoom(isoData(), newZoom = zoom(), zoom = zoom())
+        }
+
+        mapview::mapshot(
+          m,
+          file = filename,
+          remove_controls = "zoomControl",
+          vwidth = input$width,
+          vheight = input$height
+        )
+      },
+      value = 0.9,
+      message = "Exporting ..."
       )
     }
   )
