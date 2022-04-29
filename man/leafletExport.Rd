@@ -31,6 +31,8 @@ leafletExport(
 
 \item{zoom}{map zoom}
 
+\item{center}{map center (list of lat and lng)}
+
 \item{isoData}{isoData data}
 }
 \description{
