@@ -4,7 +4,17 @@
 \alias{leafletExport}
 \title{server funtion of leaflet map export module}
 \usage{
-leafletExport(input, output, session, leafletMap, width, height, zoom, isoData)
+leafletExport(
+  input,
+  output,
+  session,
+  leafletMap,
+  width,
+  height,
+  zoom,
+  center,
+  isoData
+)
 }
 \arguments{
 \item{input}{input}

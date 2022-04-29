@@ -168,7 +168,7 @@ dataExplorer <- function(input, output, session){
 
       isoDataRaw(d)
     },
-      value = 0.9,
+      value = 0.75,
       message = 'Get remote data ...'
     )
   })

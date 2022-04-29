@@ -31,6 +31,7 @@ leafletExport <- function(input,
                           width,
                           height,
                           zoom,
+                          center,
                           isoData) {
   ns <- session$ns
 
@@ -66,7 +67,10 @@ leafletExport <- function(input,
       paste0('plot-', Sys.Date(), '.', input$exportType)
     },
     content = function(filename) {
-      m <- leafletMap()
+      m <- leafletMap() %>%
+        setView(lng = center()$lng,
+                lat = center()$lat,
+                zoom = zoom())
 
       if (!is.null(isoData)) {
         m <- m %>%

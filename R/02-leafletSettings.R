@@ -21,18 +21,6 @@ leafletSettingsUI <- function(id, title = "") {
       )
     ),
     fluidRow(column(6, checkboxInput(
-      ns("includeScale"), "Scale"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("scalePosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
-    fluidRow(column(6, checkboxInput(
       ns("includeNorthArrow"), "North Arrow"
     )),
     column(
@@ -44,27 +32,19 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    checkboxInput(ns("showLegend"), "Legend"),
-    fluidRow(column(
-      6,
-      numericInput(
-        ns("centerLat"),
-        "Latitude: Center",
-        value = 50,
-        min = -90,
-        max = 90
-      )
-    ),
+    fluidRow(column(6, checkboxInput(
+      ns("includeScale"), "Scale"
+    )),
     column(
       6,
-      numericInput(
-        ns("centerLng"),
-        "Longitude: Center",
-        value = 30,
-        min = -180,
-        max = 180
+      selectInput(
+        ns("scalePosition"),
+        label = NULL,
+        choices = c("topright", "bottomright", "bottomleft", "topleft"),
+        selected = "bottomright"
       )
     )),
+    checkboxInput(ns("showLegend"), "Legend"),
     checkboxInput(ns("fitBounds"), "Fit boundaries"),
     conditionalPanel(
       condition = "input.fitBounds == true",
@@ -83,8 +63,10 @@ leafletSettingsUI <- function(id, title = "") {
         min = -180,
         max = 180
       ),
-      actionButton(ns("applyBounds"), "Apply boundaries"),
-      checkboxInput(ns("showBounds"), "Show boundaries"),
+      fluidRow(
+        column(8, checkboxInput(ns("showBounds"), "Show boundaries")),
+        column(4, actionButton(ns("applyBounds"), "Apply"))
+      ),
       tags$hr(),
       ns = ns
     ),
@@ -119,9 +101,9 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param output output
 #' @param session session
 #' @param zoom map zoom
-#' @param center where to center map (list of lat and lng)
-leafletSettings <- function(input, output, session, zoom, center) {
-  values <- reactiveValues(pointRadius = 20000)
+leafletSettings <- function(input, output, session, zoom) {
+  values <- reactiveValues(pointRadius = 20000,
+                           applyBounds = 0)
 
   values$bounds <-
     reactiveValues(
@@ -151,22 +133,13 @@ leafletSettings <- function(input, output, session, zoom, center) {
              NA_character_)
   })
 
-  observe({
+  observeEvent(input$showLegend, {
     values$showLegend <- input$showLegend
   })
 
-  observe({
-    values$center <-
-      reactiveValues(lat = input$centerLat,
-                     lng = input$centerLng)
-  })
-
-  observeEvent(center(), {
-    updateNumericInput(session, "centerLat", value = center()$lat)
-    updateNumericInput(session, "centerLng", value = center()$lng)
-  })
-
   observeEvent(input$applyBounds, {
+    values$applyBounds <- input$applyBounds
+
     values$bounds <-
       reactiveValues(
         north = input$boundsLat[[2]],
@@ -182,7 +155,7 @@ leafletSettings <- function(input, output, session, zoom, center) {
 
   })
 
-  observe({
+  observeEvent({input$showBounds & input$fitBounds}, {
     values$showBounds <- input$showBounds & input$fitBounds
   })
 

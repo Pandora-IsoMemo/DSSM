@@ -89,9 +89,7 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
-  leafletValues <- callModule(leafletSettings, "mapSettings",
-                              zoom = reactive(input$map_zoom),
-                              center = reactive(input$map_center))
+  leafletValues <- callModule(leafletSettings, "mapSettings", zoom = reactive(input$map_zoom))
   leafletMap <- reactiveVal(leaflet())
 
   newZoom <- reactive({
@@ -131,19 +129,9 @@ interactiveMap <- function(input, output, session, isoData){
   observeEvent(list(leafletValues()$showLegend), {
     leafletMap(
       leafletMap() %>%
-        setColorLegend(leafletValues()$showLegend,
+        setColorLegend(showLegend = leafletValues()$showLegend,
                        values = isoData()$source)
     )
-  })
-
-  # adjust map center
-  observeEvent(leafletValues()$center, {
-    req(leafletValues()$center)
-    leafletMap(leafletMap() %>%
-                 setView(lng = leafletValues()$center$lng,
-                         lat = leafletValues()$center$lat,
-                         zoom = input$map_zoom
-                         ))
   })
 
   # adjust map bounds fit
@@ -169,7 +157,19 @@ interactiveMap <- function(input, output, session, isoData){
 
   # render output map ####
   output$map <- renderLeaflet({
-    leafletMap()
+    req(leafletMap())
+    isolate({
+      if (!is.null(input$map_center) & !(leafletValues()$applyBounds)) {
+        leafletMap() %>%
+          setView(lng = input$map_center$lng,
+                  lat = input$map_center$lat,
+                  zoom = input$map_zoom
+          )
+      } else {
+        leafletMap()
+      }
+
+    })
   })
 
   # Add Circles relative to zoom
@@ -226,7 +226,8 @@ interactiveMap <- function(input, output, session, isoData){
 
   callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
              width = reactive(input$map_width), height = reactive(input$map_height),
-             zoom = reactive(input$map_zoom), isoData = isoData)
+             zoom = reactive(input$map_zoom), center = reactive(input$map_center),
+             isoData = isoData)
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))

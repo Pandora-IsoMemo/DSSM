@@ -4,7 +4,7 @@
 \alias{leafletSettings}
 \title{server funtion of leaflet settings module}
 \usage{
-leafletSettings(input, output, session, zoom, center)
+leafletSettings(input, output, session, zoom)
 }
 \arguments{
 \item{input}{input}
@@ -14,8 +14,6 @@ leafletSettings(input, output, session, zoom, center)
 \item{session}{session}
 
 \item{zoom}{map zoom}
-
-\item{center}{where to center map (list of lat and lng)}
 }
 \description{
 server funtion of leaflet settings module
