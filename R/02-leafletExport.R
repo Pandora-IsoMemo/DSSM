@@ -25,6 +25,7 @@ leafletExportButton <- function(id) {
 #' @param zoom map zoom
 #' @param center map center (list of lat and lng)
 #' @param isoData isoData data
+#' @param leafletPointValues settings for points on map
 leafletExport <- function(input,
                           output,
                           session,
@@ -33,7 +34,8 @@ leafletExport <- function(input,
                           height,
                           zoom,
                           center,
-                          isoData) {
+                          isoData,
+                          leafletPointValues) {
   ns <- session$ns
 
   observe({
@@ -75,9 +77,18 @@ leafletExport <- function(input,
                   zoom = zoom())
 
         if (!is.null(isoData)) {
-          # to do: consistently update with changes on map
-          m <- m %>%
-            addCirclesRelativeToZoom(isoData(), newZoom = zoom(), zoom = zoom())
+          if (!leafletPointValues()$useJitter) {
+            m <- m %>%
+              addCirclesToMap(
+                isoData(),
+                pointRadius = leafletPointValues()$pointRadius
+                )
+          } else {
+            m <- m %>%
+              addCirclesToMap(
+                addJitterCoords(isoData(), zoom = zoom(), newZoom = zoom(), amount = 0.05),
+                pointRadius = leafletPointValues()$pointRadius)
+          }
         }
 
         mapview::mapshot(

@@ -13,7 +13,8 @@ leafletExport(
   height,
   zoom,
   center,
-  isoData
+  isoData,
+  leafletPointValues
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ leafletExport(
 \item{center}{map center (list of lat and lng)}
 
 \item{isoData}{isoData data}
+
+\item{leafletPointValues}{settings for points on map}
 }
 \description{
 server funtion of leaflet map export module
