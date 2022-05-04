@@ -12,7 +12,7 @@ leafletPointSettingsUI <- function(id, title = "") {
                 value = 20,
                 min = 1,
                 max = 100),
-    checkboxInput(ns("useJitter"), "Use point jitter")
+    checkboxInput(ns("useJitter"), "Use point jitter (dependent on zoom)")
   )
 }
 

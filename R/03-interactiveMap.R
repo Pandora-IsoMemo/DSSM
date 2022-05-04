@@ -173,28 +173,35 @@ interactiveMap <- function(input, output, session, isoData){
     })
   })
 
-  # Add Circles relative to zoom
-  observeEvent(list(isoData(), leafletMap(), zoomSlow(), leafletPointValues()$useJitter), {
-    req(isoData(), leafletMap())
+  # Add Circles with jitter relative to zoom
+  observeEvent(
+    list(isoData(), leafletMap(), zoomSlow(),
+         leafletPointValues()$useJitter,
+         leafletPointValues()$pointRadius),
+    {
+      req(isoData(), leafletMap(), leafletPointValues()$useJitter)
 
-    new_zoom <- zoomSlow() #input$map_zoom
-    if (is.null(new_zoom)) return()
+      new_zoom <- zoomSlow() #input$map_zoom
+      if (is.null(new_zoom)) return()
 
-    if (!leafletPointValues()$useJitter) {
-      addCirclesRelativeToZoom(leafletProxy("map"),
-                                 isoData(),
-                                 newZoom = new_zoom,
-                                 zoom = 4)
-    }
+      addCirclesToMap(leafletProxy("map"),
+                      addJitterCoords(isoData(), zoom = 4, newZoom = new_zoom, amount = 0.05),
+                      pointRadius = leafletPointValues()$pointRadius)
+    })
 
-    if (leafletPointValues()$useJitter) {
-        addCirclesRelativeToZoom(leafletProxy("map"),
-                                 addJitterCoords(isoData(), zoom = 4, newZoom = new_zoom, amount = 0.05),
-                                 newZoom = new_zoom, zoom = 4)
-    }
 
-  })
+  # Add Circles
+  observeEvent(
+    list(isoData(), leafletMap(),
+         leafletPointValues()$useJitter,
+         leafletPointValues()$pointRadius),
+    {
+      req(isoData(), leafletMap(), !leafletPointValues()$useJitter)
 
+      addCirclesToMap(leafletProxy("map"),
+                      isoData(),
+                      pointRadius = leafletPointValues()$pointRadius)
+    })
 
   # When map is clicked, show a popup with info
   observe({
