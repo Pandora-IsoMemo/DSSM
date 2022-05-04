@@ -28,7 +28,7 @@ leafletPointSettingsServer <- function(id){
   moduleServer(
     id,
     function(input, output, session) {
-      values <- reactiveValues(pointRadius = 20000,
+      values <- reactiveValues(pointRadius = 20,
                                useJitter = FALSE)
 
       observeEvent(input$pointRadius, {

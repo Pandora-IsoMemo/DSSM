@@ -431,7 +431,7 @@ addCirclesToMap <- function(map, isoData, pointRadius){
                fillOpacity = 0.7,
                color = pal(isoData$source),
                fillColor = pal(isoData$source),
-               radius = 100 * pointRadius
+               radius = 1000 * pointRadius
     )
 }
 
