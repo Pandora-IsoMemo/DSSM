@@ -75,6 +75,7 @@ leafletExport <- function(input,
                   zoom = zoom())
 
         if (!is.null(isoData)) {
+          # to do: consistently update with changes on map
           m <- m %>%
             addCirclesRelativeToZoom(isoData(), newZoom = zoom(), zoom = zoom())
         }

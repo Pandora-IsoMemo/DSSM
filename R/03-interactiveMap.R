@@ -172,13 +172,24 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   # Add Circles relative to zoom
-  observe({
+  observeEvent(list(isoData(), leafletMap(), zoomSlow(), leafletValues()$useJitter), {
     req(isoData(), leafletMap())
+
     new_zoom <- zoomSlow() #input$map_zoom
     if (is.null(new_zoom)) return()
-    isolate({
-      addCirclesRelativeToZoom(leafletProxy("map"), isoData(), newZoom = new_zoom, zoom = 4)
-    })
+
+    if (!leafletValues()$useJitter) {
+      addCirclesRelativeToZoom(leafletProxy("map"),
+                                 isoData(),
+                                 newZoom = new_zoom,
+                                 zoom = 4)
+    }
+
+    if (leafletValues()$useJitter) {
+        addCirclesRelativeToZoom(leafletProxy("map"),
+                                 addJitterCoords(isoData(), zoom = 4, newZoom = new_zoom, amount = 0.05),
+                                 newZoom = new_zoom, zoom = 4)
+    }
 
   })
 
@@ -392,17 +403,16 @@ addCirclesRelativeToZoom <- function(map, isoData,
 
   pal <- colorFactor(colors, isoData$Source)
 
-  set.seed(20180213)
-  isoData$Latitude_jit <- jitter(isoData$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
-  isoData$Longitude_jit <- jitter(isoData$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
+  if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
 
   map <- map %>%
     removeShape(layerId = isoData$id)
 
   map %>%
     addCircles(data = isoData,
-               lat = ~ Latitude_jit,
-               lng =  ~ Longitude_jit,
+               lat = ~ latitude,
+               lng =  ~ longitude,
                layerId = ~ id,
                stroke = F,
                fillOpacity = 0.7,
@@ -412,6 +422,13 @@ addCirclesRelativeToZoom <- function(map, isoData,
     )
 }
 
+addJitterCoords <- function(dat, zoom, newZoom, amount = 0.05) {
+  set.seed(20180213)
+  dat$Latitude_jit <- jitter(dat$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  dat$Longitude_jit <- jitter(dat$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+
+  dat
+}
 
 #' Add Colour Legend
 #'

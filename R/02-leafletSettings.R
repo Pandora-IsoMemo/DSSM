@@ -72,27 +72,12 @@ leafletSettingsUI <- function(id, title = "") {
       tags$hr(),
       ns = ns
     ),
-    # alternative UI for lat/lng bounds:
-    # fluidRow(
-    #   column(6,
-    #          numericInput(ns("boundNorth"), "Bound North",
-    #                       value = 65, min = -90, max = 90)
-    #   ),
-    #   column(6,
-    #          numericInput(ns("boundEast"), "Bound East",
-    #                       value = 60, min = -180, max = 180)
-    #   )
-    # ),
-    # fluidRow(
-    #   column(6,
-    #          numericInput(ns("boundSouth"), "Bound South",
-    #                       value = 15, min = -90, max = 90)
-    #   ),
-    #   column(6,
-    #          numericInput(ns("boundWest"), "Bound West",
-    #                       value = -15, min = -180, max = 180)
-    #   )
-    # )
+    # sliderInput(ns("pointRadius"),
+    #             "Point Radius in km",
+    #             value = 20,
+    #             min = 1,
+    #             max = 100),
+    checkboxInput(ns("useJitter"), "Use point jitter")
   )
 }
 
@@ -115,9 +100,9 @@ leafletSettings <- function(input, output, session, zoom) {
       west = -15
     )
 
-  observeEvent(zoom(), {
-    values$pointRadius <- (20000 * (4 / zoom()) ^ 3)
-  })
+  # observeEvent(input$pointRadius, {
+  #   values$pointRadius <- input$pointRadius
+  # })
 
   observeEvent(input$LeafletType, {
     values$leafletType <- input$LeafletType
@@ -149,18 +134,16 @@ leafletSettings <- function(input, output, session, zoom) {
         east = input$boundsLng[[2]],
         west = input$boundsLng[[1]]
       )
-    # alternative output for lat/lng bounds:
-    # reactiveValues(north = input$boundNorth,
-    #                south = input$boundSouth,
-    #                east = input$boundEast,
-    #                west = input$boundWest)
-
   })
 
   observeEvent({
     input$showBounds & input$fitBounds
   }, {
     values$showBounds <- input$showBounds & input$fitBounds
+  })
+
+  observeEvent(input$useJitter, {
+    values$useJitter <- input$useJitter
   })
 
   reactive({
