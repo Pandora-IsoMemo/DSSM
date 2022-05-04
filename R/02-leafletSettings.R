@@ -71,13 +71,7 @@ leafletSettingsUI <- function(id, title = "") {
       ))),
       tags$hr(),
       ns = ns
-    ),
-    # sliderInput(ns("pointRadius"),
-    #             "Point Radius in km",
-    #             value = 20,
-    #             min = 1,
-    #             max = 100),
-    checkboxInput(ns("useJitter"), "Use point jitter")
+    )
   )
 }
 
@@ -99,10 +93,6 @@ leafletSettings <- function(input, output, session, zoom) {
       east = 60,
       west = -15
     )
-
-  # observeEvent(input$pointRadius, {
-  #   values$pointRadius <- input$pointRadius
-  # })
 
   observeEvent(input$LeafletType, {
     values$leafletType <- input$LeafletType
@@ -140,10 +130,6 @@ leafletSettings <- function(input, output, session, zoom) {
     input$showBounds & input$fitBounds
   }, {
     values$showBounds <- input$showBounds & input$fitBounds
-  })
-
-  observeEvent(input$useJitter, {
-    values$useJitter <- input$useJitter
   })
 
   reactive({

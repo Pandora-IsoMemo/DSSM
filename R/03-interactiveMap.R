@@ -70,6 +70,7 @@ interactiveMapUI <- function(id, title = ""){
         draggable = TRUE, top = 110, right = "auto", left = 50, bottom = "auto",
         width = 330, height = "auto",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+        leafletPointSettingsUI(ns("mapPointSettings")),
         leafletExportButton(ns("exportLeaflet"))
       )
     )
@@ -89,6 +90,7 @@ interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
   leafletValues <- callModule(leafletSettings, "mapSettings", zoom = reactive(input$map_zoom))
+  leafletPointValues <- leafletPointSettingsServer("mapPointSettings")
   leafletMap <- reactiveVal(leaflet())
 
   newZoom <- reactive({
@@ -172,20 +174,20 @@ interactiveMap <- function(input, output, session, isoData){
   })
 
   # Add Circles relative to zoom
-  observeEvent(list(isoData(), leafletMap(), zoomSlow(), leafletValues()$useJitter), {
+  observeEvent(list(isoData(), leafletMap(), zoomSlow(), leafletPointValues()$useJitter), {
     req(isoData(), leafletMap())
 
     new_zoom <- zoomSlow() #input$map_zoom
     if (is.null(new_zoom)) return()
 
-    if (!leafletValues()$useJitter) {
+    if (!leafletPointValues()$useJitter) {
       addCirclesRelativeToZoom(leafletProxy("map"),
                                  isoData(),
                                  newZoom = new_zoom,
                                  zoom = 4)
     }
 
-    if (leafletValues()$useJitter) {
+    if (leafletPointValues()$useJitter) {
         addCirclesRelativeToZoom(leafletProxy("map"),
                                  addJitterCoords(isoData(), zoom = 4, newZoom = new_zoom, amount = 0.05),
                                  newZoom = new_zoom, zoom = 4)
