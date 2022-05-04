@@ -1,18 +1,23 @@
 #' ui function of leaflet point settings module
 #'
 #' @param id namespace
-#' @param title title in tab
-leafletPointSettingsUI <- function(id, title = "") {
+leafletPointSettingsUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    tags$h2(title),
-    sliderInput(ns("pointRadius"),
-                "Point Radius in km",
-                value = 20,
-                min = 1,
-                max = 100),
-    checkboxInput(ns("useJitter"), "Use point jitter (dependent on zoom)")
+    checkboxInput(ns("customPoints"), "Customize points"),
+    conditionalPanel(
+      condition = "input.customPoints == true",
+      tags$hr(),
+      sliderInput(ns("pointRadius"),
+                  "Point Radius in km",
+                  value = 20,
+                  min = 1,
+                  max = 100),
+      checkboxInput(ns("useJitter"), "Use point jitter (dependent on zoom)"),
+      tags$hr(),
+      ns = ns
+    )
   )
 }
 

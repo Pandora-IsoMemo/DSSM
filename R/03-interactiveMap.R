@@ -179,13 +179,10 @@ interactiveMap <- function(input, output, session, isoData){
          leafletPointValues()$useJitter,
          leafletPointValues()$pointRadius),
     {
-      req(isoData(), leafletMap(), leafletPointValues()$useJitter)
-
-      new_zoom <- zoomSlow() #input$map_zoom
-      if (is.null(new_zoom)) return()
+      req(isoData(), leafletMap(), leafletPointValues()$useJitter, zoomSlow())
 
       addCirclesToMap(leafletProxy("map"),
-                      addJitterCoords(isoData(), zoom = 4, newZoom = new_zoom, amount = 0.05),
+                      addJitterCoords(isoData(), zoom = 4, newZoom = zoomSlow(), amount = 0.05),
                       pointRadius = leafletPointValues()$pointRadius)
     })
 
@@ -246,7 +243,7 @@ interactiveMap <- function(input, output, session, isoData){
   callModule(leafletExport, "exportLeaflet", leafletMap = leafletMap,
              width = reactive(input$map_width), height = reactive(input$map_height),
              zoom = reactive(input$map_zoom), center = reactive(input$map_center),
-             isoData = isoData)
+             isoData = isoData, leafletPointValues = leafletPointValues)
 
   callModule(sidebarPlot, "plot1", x = var1, nameX = reactive(input$var1))
   callModule(sidebarPlot, "plot2", x = var2, nameX = reactive(input$var2))
