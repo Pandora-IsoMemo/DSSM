@@ -328,7 +328,6 @@ drawType <- function(map, type = "1"){
 }
 
 
-
 #' Draw Icons on Interactive Map
 #' @param map leaflet map
 #' @param northArrow show north arrow?
@@ -392,8 +391,16 @@ drawIcons <- function(map,
 }
 
 
-addCirclesRelativeToZoom <- function(map, isoData,
-                                     newZoom, zoom = 5){
+addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
+  addCirclesToMap(
+    map = map,
+    isoData = isoData,
+    pointRadius = relateToZoom(radius = 20, zoom = zoom, newZoom = newZoom)
+  )
+}
+
+
+addCirclesToMap <- function(map, isoData, pointRadius){
   if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
 
   isoData <- isoData[!is.na(isoData$longitude), ]
@@ -420,17 +427,24 @@ addCirclesRelativeToZoom <- function(map, isoData,
                fillOpacity = 0.7,
                color = pal(isoData$source),
                fillColor = pal(isoData$source),
-               radius = 20000 * (zoom / newZoom) ^ 3
+               radius = 100 * pointRadius
     )
 }
 
-addJitterCoords <- function(dat, zoom, newZoom, amount = 0.05) {
+
+addJitterCoords <- function(dat, zoom, newZoom, amount = 0.05){
   set.seed(20180213)
   dat$Latitude_jit <- jitter(dat$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
   dat$Longitude_jit <- jitter(dat$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
 
   dat
 }
+
+
+relateToZoom <- function(radius, zoom, newZoom){
+  radius * (zoom / newZoom) ^ 3
+}
+
 
 #' Add Colour Legend
 #'
