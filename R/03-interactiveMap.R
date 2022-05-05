@@ -175,14 +175,18 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Add Circles with jitter relative to zoom
   observeEvent(
-    list(isoData(), leafletMap(), zoomSlow(),
-         leafletPointValues()$useJitter,
+    list(isoData(), leafletMap(), #zoomSlow(),
+         leafletPointValues()$jitterMaxKm,
          leafletPointValues()$pointRadius),
     {
-      req(isoData(), leafletMap(), leafletPointValues()$useJitter, zoomSlow())
+      req(isoData(), leafletMap(), !is.na(leafletPointValues()$jitterMaxKm)#, zoomSlow()
+          )
 
       addCirclesToMap(leafletProxy("map"),
-                      addJitterCoords(isoData(), zoom = 4, newZoom = zoomSlow(), amount = 0.05),
+                      addJitterCoords(isoData(),
+                                      #zoom = 4, newZoom = zoomSlow(),
+                                      #pointRadius = leafletPointValues()$pointRadius,
+                                      km = leafletPointValues()$jitterMaxKm),
                       pointRadius = leafletPointValues()$pointRadius)
     })
 
@@ -190,10 +194,10 @@ interactiveMap <- function(input, output, session, isoData){
   # Add Circles
   observeEvent(
     list(isoData(), leafletMap(),
-         leafletPointValues()$useJitter,
+         leafletPointValues()$jitterMaxKm,
          leafletPointValues()$pointRadius),
     {
-      req(isoData(), leafletMap(), !leafletPointValues()$useJitter)
+      req(isoData(), leafletMap(), is.na(leafletPointValues()$jitterMaxKm))
 
       addCirclesToMap(leafletProxy("map"),
                       isoData(),
@@ -431,16 +435,20 @@ addCirclesToMap <- function(map, isoData, pointRadius){
                fillOpacity = 0.7,
                color = pal(isoData$source),
                fillColor = pal(isoData$source),
-               radius = 1000 * pointRadius
+               radius = pointRadius
     )
 }
 
 
-addJitterCoords <- function(dat, zoom, newZoom, amount = 0.05){
+addJitterCoords <- function(dat,
+                            #zoom, newZoom, #pointRadius,
+                            km = 100) {
   set.seed(20180213)
-  dat$Latitude_jit <- jitter(dat$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
-  dat$Longitude_jit <- jitter(dat$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  # dat$Latitude_jit <- jitter(dat$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
+  # dat$Longitude_jit <- jitter(dat$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
 
+  dat$Latitude_jit <- jitter_latlong(dat$latitude, type = "lat", dat$latitude, km = km)
+  dat$Longitude_jit <- jitter_latlong(dat$longitude, type = "long", dat$latitude, km = km)
   dat
 }
 

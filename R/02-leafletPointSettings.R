@@ -10,11 +10,22 @@ leafletPointSettingsUI <- function(id) {
       condition = "input.customPoints == true",
       tags$hr(),
       sliderInput(ns("pointRadius"),
-                  "Point Radius in km",
+                  "Point radius in km",
                   value = 20,
                   min = 1,
                   max = 100),
-      checkboxInput(ns("useJitter"), "Use point jitter (dependent on zoom)"),
+      fluidRow(
+        column(6,
+               checkboxInput(ns("useJitter"), "Use jitter in km")
+               ),
+        column(6,
+               conditionalPanel(
+                 condition = "input.useJitter == true",
+                 numericInput(ns("jitterMaxKm"), label = NULL,
+                             value = 10, min = 0, max = 100),
+                 ns = ns
+                 ))
+      ),
       tags$hr(),
       ns = ns
     )
@@ -32,11 +43,13 @@ leafletPointSettingsServer <- function(id){
                                useJitter = FALSE)
 
       observeEvent(input$pointRadius, {
-        values$pointRadius <- input$pointRadius
+        values$pointRadius <- input$pointRadius * 1000
       })
 
-      observeEvent(input$useJitter, {
-        values$useJitter <- input$useJitter
+      observe({
+        values$jitterMaxKm <- ifelse(input$useJitter,
+                                      input$jitterMaxKm,
+                                      NA_real_)
       })
 
       reactive({
