@@ -89,8 +89,9 @@ interactiveMapUI <- function(id, title = ""){
 interactiveMap <- function(input, output, session, isoData){
   ns <- session$ns
 
-  leafletValues <- callModule(leafletSettings, "mapSettings", zoom = reactive(input$map_zoom))
+  leafletValues <- callModule(leafletSettings, "mapSettings")
   leafletPointValues <- leafletPointSettingsServer("mapPointSettings")
+
   leafletMap <- reactiveVal(leaflet())
 
   newZoom <- reactive({
@@ -173,36 +174,22 @@ interactiveMap <- function(input, output, session, isoData){
     })
   })
 
-  # Add Circles with jitter relative to zoom
-  observeEvent(
-    list(isoData(), leafletMap(), #zoomSlow(),
-         leafletPointValues()$jitterMaxKm,
-         leafletPointValues()$pointRadius),
-    {
-      req(isoData(), leafletMap(), !is.na(leafletPointValues()$jitterMaxKm)#, zoomSlow()
-          )
-
-      addCirclesToMap(leafletProxy("map"),
-                      addJitterCoords(isoData(),
-                                      #zoom = 4, newZoom = zoomSlow(),
-                                      #pointRadius = leafletPointValues()$pointRadius,
-                                      km = leafletPointValues()$jitterMaxKm),
-                      pointRadius = leafletPointValues()$pointRadius)
-    })
-
-
   # Add Circles
-  observeEvent(
-    list(isoData(), leafletMap(),
-         leafletPointValues()$jitterMaxKm,
-         leafletPointValues()$pointRadius),
-    {
-      req(isoData(), leafletMap(), is.na(leafletPointValues()$jitterMaxKm))
+  observe({
+    req(leafletMap())
 
-      addCirclesToMap(leafletProxy("map"),
-                      isoData(),
-                      pointRadius = leafletPointValues()$pointRadius)
-    })
+    if(is.na(leafletPointValues()$jitterMaxKm)) {
+      plotData <- isoData()
+    } else {
+      plotData <- addJitterCoords(isoData(),
+                                  #zoom = 4, newZoom = zoomSlow(),
+                                  #pointRadius = leafletPointValues()$pointRadius,
+                                  km = leafletPointValues()$jitterMaxKm)
+    }
+
+    addCirclesToMap(leafletProxy("map"), plotData,
+                    pointRadius = leafletPointValues()$pointRadius)
+  })
 
   # When map is clicked, show a popup with info
   observe({

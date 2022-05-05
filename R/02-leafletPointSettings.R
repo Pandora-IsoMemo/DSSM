@@ -15,10 +15,10 @@ leafletPointSettingsUI <- function(id) {
                   min = 1,
                   max = 100),
       fluidRow(
-        column(6,
+        column(8,
                checkboxInput(ns("useJitter"), "Use jitter in km")
                ),
-        column(6,
+        column(4,
                conditionalPanel(
                  condition = "input.useJitter == true",
                  numericInput(ns("jitterMaxKm"), label = NULL,

@@ -4,7 +4,7 @@
 \alias{leafletSettings}
 \title{server funtion of leaflet settings module}
 \usage{
-leafletSettings(input, output, session, zoom)
+leafletSettings(input, output, session, map)
 }
 \arguments{
 \item{input}{input}
@@ -12,8 +12,6 @@ leafletSettings(input, output, session, zoom)
 \item{output}{output}
 
 \item{session}{session}
-
-\item{zoom}{map zoom}
 }
 \description{
 server funtion of leaflet settings module

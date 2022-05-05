@@ -63,12 +63,14 @@ leafletSettingsUI <- function(id, title = "") {
         min = -180,
         max = 180
       ),
-      fluidRow(column(
-        7, checkboxInput(ns("showBounds"), "Show boundaries")
-      ),
-      column(5, actionButton(
-        ns("applyBounds"), "Apply"
-      ))),
+      fluidRow(
+        column(5, actionButton(
+          ns("applyBounds"), "Apply"
+        )),
+        column(
+          7, checkboxInput(ns("showBounds"), "Show boundaries")
+        )
+        ),
       tags$hr(),
       ns = ns
     )
@@ -81,10 +83,8 @@ leafletSettingsUI <- function(id, title = "") {
 #' @param input input
 #' @param output output
 #' @param session session
-#' @param zoom map zoom
-leafletSettings <- function(input, output, session, zoom) {
-  values <- reactiveValues(pointRadius = 20000,
-                           applyBounds = 0)
+leafletSettings <- function(input, output, session) {
+  values <- reactiveValues(applyBounds = 0)
 
   values$bounds <-
     reactiveValues(
