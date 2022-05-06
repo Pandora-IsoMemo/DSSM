@@ -77,16 +77,13 @@ leafletExport <- function(input,
                   zoom = zoom())
 
         if (!is.null(isoData)) {
-          if (is.na(leafletPointValues()$jitterMaxKm)) {
+          if (leafletPointValues()$clusterPoints) {
             m <- m %>%
-              addCirclesToMap(
-                isoData(),
-                pointRadius = leafletPointValues()$pointRadius
-                )
+              addClustersToMap(isoData())
           } else {
             m <- m %>%
               addCirclesToMap(
-                addJitterCoords(isoData(), km = leafletPointValues()$jitterMaxKm),
+                setJitterCoords(isoData(), km = leafletPointValues()$jitterMaxKm),
                 pointRadius = leafletPointValues()$pointRadius)
           }
         }

@@ -176,19 +176,19 @@ interactiveMap <- function(input, output, session, isoData){
 
   # Add Circles
   observe({
-    req(leafletMap())
+    req(leafletMap(), isoData())
 
-    if(is.na(leafletPointValues()$jitterMaxKm)) {
-      plotData <- isoData()
+    if (leafletPointValues()$clusterPoints) {
+      addClustersToMap(leafletProxy("map"), isoData())
     } else {
-      plotData <- addJitterCoords(isoData(),
+      plotData <- setJitterCoords(isoData(),
                                   #zoom = 4, newZoom = zoomSlow(),
                                   #pointRadius = leafletPointValues()$pointRadius,
                                   km = leafletPointValues()$jitterMaxKm)
-    }
 
-    addCirclesToMap(leafletProxy("map"), plotData,
-                    pointRadius = leafletPointValues()$pointRadius)
+      addCirclesToMap(leafletProxy("map"), plotData,
+                      pointRadius = leafletPointValues()$pointRadius)
+    }
   })
 
   # When map is clicked, show a popup with info
@@ -387,10 +387,33 @@ drawIcons <- function(map,
 
 
 addCirclesRelativeToZoom <- function(map, isoData, newZoom, zoom = 5){
+  relateToZoom <- function(radius){
+    radius * (zoom / newZoom) ^ 3
+  }
+
   addCirclesToMap(
     map = map,
     isoData = isoData,
-    pointRadius = relateToZoom(radius = 20, zoom = zoom, newZoom = newZoom)
+    pointRadius = relateToZoom(radius = 20)
+  )
+}
+
+
+addClustersToMap <- function(map, isoData){
+  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+
+  isoData <- isoData[!is.na(isoData$longitude), ]
+
+  map <- map %>%
+    cleanDataFromMap(layerId = isoData$id)
+
+  map %>%
+    addMarkers(
+      data = isoData,
+      lat = ~ latitude,
+      lng =  ~ longitude,
+      layerId = ~ id,
+      clusterOptions = markerClusterOptions()
   )
 }
 
@@ -411,7 +434,7 @@ addCirclesToMap <- function(map, isoData, pointRadius){
   if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
 
   map <- map %>%
-    removeShape(layerId = isoData$id)
+    cleanDataFromMap(layerId = isoData$id)
 
   map %>%
     addCircles(data = isoData,
@@ -427,9 +450,18 @@ addCirclesToMap <- function(map, isoData, pointRadius){
 }
 
 
-addJitterCoords <- function(dat,
+cleanDataFromMap <- function(map, layerId){
+  map %>%
+    removeShape(layerId = layerId) %>%
+    clearMarkerClusters()
+}
+
+
+setJitterCoords <- function(dat,
                             #zoom, newZoom, #pointRadius,
-                            km = 100) {
+                            km) {
+  if (is.na(km)) return(dat)
+
   set.seed(20180213)
   # dat$Latitude_jit <- jitter(dat$latitude, amount = 0.05 * (zoom / newZoom) ^ 2)
   # dat$Longitude_jit <- jitter(dat$longitude, amount = 0.05 * (zoom / newZoom) ^ 2)
@@ -440,9 +472,7 @@ addJitterCoords <- function(dat,
 }
 
 
-relateToZoom <- function(radius, zoom, newZoom){
-  radius * (zoom / newZoom) ^ 3
-}
+
 
 
 #' Add Colour Legend
