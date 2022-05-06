@@ -44,7 +44,6 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    checkboxInput(ns("showLegend"), "Legend"),
     checkboxInput(ns("fitBounds"), "Fit boundaries"),
     conditionalPanel(
       condition = "input.fitBounds == true",
@@ -108,10 +107,6 @@ leafletSettings <- function(input, output, session) {
       ifelse(input$includeNorthArrow,
              input$northArrowPosition,
              NA_character_)
-  })
-
-  observeEvent(input$showLegend, {
-    values$showLegend <- input$showLegend
   })
 
   observeEvent(input$applyBounds, {

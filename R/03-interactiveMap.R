@@ -127,15 +127,6 @@ interactiveMap <- function(input, output, session, isoData){
                    )
                  })
 
-  # set legend
-  observeEvent(list(leafletValues()$showLegend), {
-    leafletMap(
-      leafletMap() %>%
-        setColorLegend(showLegend = leafletValues()$showLegend,
-                       values = isoData()$source)
-    )
-  })
-
   # adjust map bounds fit
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
@@ -187,7 +178,9 @@ interactiveMap <- function(input, output, session, isoData){
                                   km = leafletPointValues()$jitterMaxKm)
 
       addCirclesToMap(leafletProxy("map"), plotData,
-                      pointRadius = leafletPointValues()$pointRadius)
+                      pointRadius = leafletPointValues()$pointRadius) %>%
+        setColorLegend(showLegend = leafletPointValues()$showLegend,
+                       values = isoData()$source)
     }
   })
 
@@ -453,7 +446,8 @@ addCirclesToMap <- function(map, isoData, pointRadius){
 cleanDataFromMap <- function(map, layerId){
   map %>%
     removeShape(layerId = layerId) %>%
-    clearMarkerClusters()
+    clearMarkerClusters() %>%
+    removeControl("colorLegend")
 }
 
 

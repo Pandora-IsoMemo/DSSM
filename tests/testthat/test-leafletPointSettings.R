@@ -24,12 +24,16 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
 
                # Act
                session$setInputs(clusterPoints = FALSE,
+                                 showLegend = FALSE,
                                  pointRadiusKm = 30,
                                  useJitter = TRUE,
                                  jitterMaxKm = 15)
 
                # Assert
+               expect_equal(names(session$returned()),
+                            c("jitterMaxKm", "showLegend", "pointRadius", "clusterPoints"))
                expect_false(session$returned()$clusterPoints)
+               expect_false(session$returned()$showLegend)
                expect_equal(session$returned()$pointRadius, 30000)
                expect_equal(session$returned()$jitterMaxKm, 15)
              })

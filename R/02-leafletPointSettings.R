@@ -8,6 +8,7 @@ leafletPointSettingsUI <- function(id) {
     checkboxInput(ns("clusterPoints"), "Cluster points", value = TRUE),
     conditionalPanel(
       condition = "input.clusterPoints == false",
+      checkboxInput(ns("showLegend"), "Legend", value = TRUE),
       checkboxInput(ns("customPoints"), "Customize points"),
       conditionalPanel(
         condition = "input.customPoints == true",
@@ -46,6 +47,14 @@ leafletPointSettingsServer <- function(id){
     function(input, output, session) {
       values <- reactiveValues()
 
+      observe({
+        values$clusterPoints <- input$clusterPoints
+      })
+
+      observeEvent(input$showLegend, {
+        values$showLegend <- input$showLegend
+      })
+
       observeEvent(input$pointRadiusKm, {
         values$pointRadius <- input$pointRadiusKm * 1000
       })
@@ -54,10 +63,6 @@ leafletPointSettingsServer <- function(id){
         values$jitterMaxKm <- ifelse(input$useJitter,
                                       input$jitterMaxKm,
                                       NA_real_)
-      })
-
-      observe({
-        values$clusterPoints <- input$clusterPoints
       })
 
       reactive({
