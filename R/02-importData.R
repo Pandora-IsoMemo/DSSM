@@ -45,12 +45,17 @@ importDataServer <- function(id,
                    getCKANFiles()
                  })
 
+                 dataSource <- reactiveVal(NULL)
+
                  observeEvent(input$openPopup, ignoreNULL = TRUE, {
                    reset("file")
+                   values$warnings <- list()
+                   values$errors <- list()
                    values$fileImportWarning <- NULL
                    values$fileImportSuccess <- NULL
                    values$dataImport <- NULL
                    values$data <- list()
+                   dataSource(NULL)
 
                    showModal(importDataDialog(ns = ns))
 
@@ -77,8 +82,6 @@ importDataServer <- function(id,
                    choices <- ckanResources()
                    updateSelectizeInput(session, "ckanResource", choices = choices)
                  })
-
-                 dataSource <- reactiveVal(NULL)
 
                  observe({
                    req(input$source == "ckan")
@@ -278,66 +281,90 @@ importDataDialog <- function(ns){
   )
 }
 
-loadData <- function(file, type, sep = ",", dec = ".", rownames = FALSE) {
-  # if(type == "csv" | type == "txt"){
-  #   codepages <- setNames(iconvlist(), iconvlist())
-  #   x <- lapply(codepages, function(enc) try(suppressWarnings({read.csv(file,
-  #                                                     fileEncoding=enc,
-  #                                                     sep = sep, dec = dec,
-  #                                                     stringsAsFactors = FALSE,
-  #                                                     row.names = NULL,
-  #                                                     nrows=3, header=TRUE)}),
-  #                                            silent = TRUE)) # you get lots of errors/warning here
-  #   x <- x[!sapply(x, function(y) class(y) %in% "try-error")]
-  #   maybe_ok <- which(sapply(x, function(y) isTRUE(all.equal(dim(y)[1], c(3)))))
-  #   if(length(maybe_ok) > 0){
-  #     encTry <- names(maybe_ok[1])
-  #   } else {
-  #     encTry <- ""
-  #   }
-  # }
-  encTry <- as.character(guess_encoding(file)[1,1])
-if(type == "xlsx"){
-  xlsSplit <- strsplit(file, split = "\\.")[[1]]
-  if(xlsSplit[length(xlsSplit)] == "xls"){
-    type <- "xls"
+loadData <-
+  function(file,
+           type,
+           sep = ",",
+           dec = ".",
+           rownames = FALSE) {
+    # if(type == "csv" | type == "txt"){
+    #   codepages <- setNames(iconvlist(), iconvlist())
+    #   x <- lapply(codepages, function(enc) try(suppressWarnings({read.csv(file,
+    #                                                     fileEncoding=enc,
+    #                                                     sep = sep, dec = dec,
+    #                                                     stringsAsFactors = FALSE,
+    #                                                     row.names = NULL,
+    #                                                     nrows=3, header=TRUE)}),
+    #                                            silent = TRUE)) # you get lots of errors/warning here
+    #   x <- x[!sapply(x, function(y) class(y) %in% "try-error")]
+    #   maybe_ok <- which(sapply(x, function(y) isTRUE(all.equal(dim(y)[1], c(3)))))
+    #   if(length(maybe_ok) > 0){
+    #     encTry <- names(maybe_ok[1])
+    #   } else {
+    #     encTry <- ""
+    #   }
+    # }
+    encTry <- as.character(guess_encoding(file)[1, 1])
+    if (type == "xlsx") {
+      xlsSplit <- strsplit(file, split = "\\.")[[1]]
+      if (xlsSplit[length(xlsSplit)] == "xls") {
+        type <- "xls"
+      }
+    }
+    data <- switch(
+      type,
+      csv = suppressWarnings({
+        read.csv(
+          file,
+          sep = sep,
+          dec = dec,
+          stringsAsFactors = FALSE,
+          row.names = NULL,
+          fileEncoding = encTry
+        )
+      }),
+      txt = suppressWarnings({
+        read.csv(
+          file,
+          sep = sep,
+          dec = dec,
+          stringsAsFactors = FALSE,
+          row.names = NULL,
+          fileEncoding = encTry
+        )
+      }),
+      xlsx = read.xlsx(file),
+      xls = suppressWarnings({
+        readxl::read_excel(file)
+      }),
+      ods = readODS::read_ods(file)
+    )
+
+    if (is.null(data))
+      return(NULL)
+
+
+    if (any(dim(data) == 1)) {
+      warning("Number of rows or columns equal to 1")
+      return(NULL)
+    }
+
+    if (is.null(dim(data))) {
+      stop("Could not determine dimensions of data")
+      return(NULL)
+    }
+
+    if (any(dim(data) == 0)) {
+      stop("Number of rows or columns equal to 0")
+      return(NULL)
+    }
+
+    if (rownames) {
+      rn <- data[, 1]
+      data <- data[, -1, drop = FALSE]
+      rownames(data) <- rn
+    }
+    data <- convertNumeric(data)
+
+    return(data)
   }
-}
-  data <- switch(
-    type,
-    csv = suppressWarnings({read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, row.names = NULL,
-                   fileEncoding=encTry)}),
-    txt = suppressWarnings({read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, row.names = NULL,
-                   fileEncoding=encTry)}),
-    xlsx = read.xlsx(file),
-    xls = suppressWarnings({readxl::read_excel(file)}),
-    ods = readODS::read_ods(file)
-  )
-
-  if (is.null(data)) return(NULL)
-
-
-  if (any(dim(data) == 1)) {
-    warning("Number of rows or columns equal to 1")
-    return(NULL)
-  }
-
-  if (is.null(dim(data))) {
-    stop("Could not determine dimensions of data")
-    return(NULL)
-  }
-
-  if (any(dim(data) == 0)) {
-    stop("Number of rows or columns equal to 0")
-    return(NULL)
-  }
-
-  if (rownames) {
-    rn <- data[, 1]
-    data <- data[, -1, drop = FALSE]
-    rownames(data) <- rn
-  }
-  data <- convertNumeric(data)
-
-  return(data)
-}
