@@ -158,7 +158,7 @@ dataExplorerServer <- function(id) {
                  })
 
                  ## Load Data from file
-                 importedData <- callModule(importData, "localData")
+                 importedData <- importDataServer("localData")
 
                  observe({
                    req(length(importedData()) > 0)
