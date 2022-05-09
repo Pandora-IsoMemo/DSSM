@@ -148,15 +148,17 @@ dataExplorerServer <- function(id) {
                    getMappingTable()
                  })
 
-                 ## Load Data
                  isoDataRaw <- reactiveVal(NULL)
                  isoDataFull <- reactiveVal(NULL)
                  isoData <- reactiveVal(NULL)
+                 dataColumns <- reactiveVal(NULL)
 
+                 ## Load Data (isomemo skin) ----
                  observeEvent(input$load, {
                    # reset isoData
                    isoDataRaw(NULL)
                    isoDataFull(NULL)
+                   dataColumns(NULL)
                    isoData(NULL)
 
                    d <- getRemoteData(input$database)
@@ -164,7 +166,7 @@ dataExplorerServer <- function(id) {
                    isoDataRaw(d)
                  })
 
-                 ## Load Data from file
+                 ## Load Data from file (pandora skin) ----
                  importedData <- importDataServer("localData")
 
                  observeEvent(importedData(), {
@@ -173,6 +175,7 @@ dataExplorerServer <- function(id) {
                    # reset isoData
                    isoDataRaw(NULL)
                    isoDataFull(NULL)
+                   dataColumns(NULL)
                    isoData(NULL)
 
                    d <- importedData()[[1]]
@@ -204,7 +207,9 @@ dataExplorerServer <- function(id) {
                    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
                  })
 
+                 # Extract isoDataFull (both skins) ----
                  observe({
+                   req(isoDataRaw())
                    d <- isoDataRaw()
 
                    if (getSkin() == "isomemo") {
@@ -271,7 +276,7 @@ dataExplorerServer <- function(id) {
                  })
 
 
-                 ## Last update
+                 ## Last update (both skins) ----
                  output$lastUpdate <- renderText({
                    if (is.null(isoDataFull()) ||
                        is.null(attr(isoDataFull(), "updated")))
@@ -280,7 +285,7 @@ dataExplorerServer <- function(id) {
                      paste("Data last updated at", attr(isoDataFull(), "updated"))
                  })
 
-                 ## Calibration
+                 ## Calibration (both skins) ----
                  calibrate <- reactive({
                    input$calMethod != "none"
                  })
@@ -294,7 +299,9 @@ dataExplorerServer <- function(id) {
                    input$calMethod
                  })
 
+                 ## Column selection (isomemo skin) ----
                  observe({
+                   req(getSkin() == "isomemo")
                    lapply(categoryChoices(mappingTable()), function(x) {
                      choices <- columnChoices(x, mappingTable(), calibrate())
                      updateSelectizeInput(
@@ -306,24 +313,26 @@ dataExplorerServer <- function(id) {
                    })
                  })
 
-
-                 ## Column selection
-                 dataColumns <- reactive({
+                 observe({
+                  req(isoDataFull())
                    if (getSkin() == "isomemo") {
-                     getDataColumns(mappingTable(), input)
-                   } else{
-                     names(isoDataFull())
+                     dataColumns(getDataColumns(mappingTable(), input))
+                   } else {
+                     dataColumns(names(isoDataFull()))
                    }
                  })
 
-                 observeEvent(isoDataFull(), {
+                 observeEvent(dataColumns(), {
                    if (is.null(isoDataFull())) {
                      isoData(NULL)
                    } else {
-                     isoData(isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dataColumns()])
+                     isoData(isoDataFull()[input$dataTable_rows_all,
+                                           names(isoDataFull()) %in% dataColumns(),
+                                           drop = FALSE])
                    }
                  })
 
+                 # IsoData export ----
                  isoDataExport <- reactive({
                    if (is.null(isoDataFull()))
                      return(NULL)
@@ -391,7 +400,7 @@ dataExplorerServer <- function(id) {
                    }
                  )
 
-                 ## Save / load options
+                 ## Save / load options ----
                  output$saveOptions <- downloadHandler(
                    filename = "options.json",
                    content = function(file) {
@@ -417,12 +426,13 @@ dataExplorerServer <- function(id) {
                  })
 
 
-                 ## Output
+                 ## Output table ----
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),
                      "Please select a database in the sidebar panel."
                    ))
+                   req(dataColumns())
                    datTable(isoDataFull(), columns = dataColumns())
                  })
 
@@ -447,6 +457,7 @@ dataExplorerServer <- function(id) {
                                 )
                               })
 
+                 # Citation export ----
                  observe({
                    if (is.null(isoDataFull()))
                      shinyjs::disable("exportCitation")
@@ -494,6 +505,7 @@ dataExplorerServer <- function(id) {
                    }
                  )
 
+                 # return isoData ----
                  return(isoData)
                })
 }
