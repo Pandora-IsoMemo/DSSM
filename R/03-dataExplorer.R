@@ -135,307 +135,354 @@ combineCheckboxSelectize <- function(x, ns){
 
 #' server funtion of data explorer module
 #'
-#' @param input input
-#' @param output output
-#' @param session session
+#' @param id namespace id
+#' @return reactive dataframe with loaded or imported isoData
 #'
 #' @export
-dataExplorer <- function(input, output, session){
-  ns <- session$ns
+dataExplorerServer <- function(id) {
+  moduleServer(id,
+               function(input, output, session) {
+                 ns <- session$ns
+
+                 mappingTable <- reactive({
+                   getMappingTable()
+                 })
+
+                 ## Load Data
+                 isoDataRaw <- reactiveVal(NULL)
+
+                 observeEvent(input$load, {
+                   d <- getRemoteData(input$database)
+
+                   isoDataRaw(d)
+                 })
+
+                 ## Load Data from file
+                 importedData <- callModule(importData, "localData")
+
+                 observe({
+                   req(length(importedData()) > 0)
+
+                   d <- importedData()[[1]]
+
+                   isoDataRaw(d)
+                   updateSelectInput(
+                     session,
+                     "LongitudePandora",
+                     choices = partialNumericColumns(isoDataRaw()),
+                     selected = ""
+                   )
+                   updateSelectInput(
+                     session,
+                     "LatitudePandora",
+                     choices = partialNumericColumns(isoDataRaw()),
+                     selected = ""
+                   )
+                   updateSelectInput(session, "calibrationDateMean", choices = partialNumericColumns(isoDataRaw()))
+                   updateSelectInput(session,
+                                     "calibrationDateUncertainty",
+                                     choices = partialNumericColumns(isoDataRaw()))
+                   updateSelectInput(session,
+                                     "calibrationDateIntLower",
+                                     choices = partialNumericColumns(isoDataRaw()))
+                   updateSelectInput(session,
+                                     "calibrationDateIntUpper",
+                                     choices = partialNumericColumns(isoDataRaw()))
+
+                   #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
+                 })
+
+                 isoDataFull <- reactive({
+                   d <- isoDataRaw()
+
+                   if (getSkin() == "isomemo") {
+                     dateFields <- list(
+                       "dateMean" = "dateMean",
+                       "dateUncertainty" = "dateUncertainty",
+                       "datingType" = "datingType"
+                     )
+                   } else {
+                     d$source <- "Pandora"
+                     if (input$calibrationDatingType == "Mean + 1SD uncertainty") {
+                       dateFields <- list(
+                         "dateMean" = input$calibrationDateMean,
+                         "dateUncertainty" = input$calibrationDateUncertainty,
+                         "datingType" = "radiocarbon"
+                       )
+                     } else {
+                       dateFields <- list(
+                         "dateLower" = input$calibrationDateIntLower,
+                         "dateUpper" = input$calibrationDateIntUpper,
+                         "datingType" = "radiocarbon"
+                       )
+                     }
+
+                     if (!is.null(input$LongitudePandora) &
+                         !is.null(input$LatitudePandora) &
+                         input$LongitudePandora != "" &
+                         input$LatitudePandora != "") {
+                       dCoord <-
+                         try({
+                           convertLatLong(
+                             d,
+                             CoordType = input$CoordTypePandora,
+                             Latitude = input$LongitudePandora,
+                             Longitude = input$LatitudePandora
+                           )
+                         }, silent = TRUE)
+
+                       if (class(dCoord) == "try-error") {
+                         alert(
+                           "Conversion of coordinates has failed. Please select appropriate longitude / latitude fields and coordinate type."
+                         )
+                       } else {
+                         d <- dCoord
+                         d$longitude <- d[, input$LongitudePandora]
+                         d$latitude <- d[, input$LatitudePandora]
+                         d$id <- as.character(1:nrow(d))
+                       }
+                     }
+
+                   }
+
+                   if (calibrate()) {
+                     d <- showMessage(calibrateRadiocarbon,
+                                      "Calculating calibrated values")(
+                                        d,
+                                        calMethod = calibrateMethod(),
+                                        level = calLevel(),
+                                        dateFields = dateFields
+                                      )
+                   }
+
+                   d
+                 })
 
 
-  ## Load Data
-  updateDataBase <- reactive({input$load})
+                 ## Last update
+                 output$lastUpdate <- renderText({
+                   if (is.null(isoDataFull()) ||
+                       is.null(attr(isoDataFull(), "updated")))
+                     NULL
+                   else
+                     paste("Data last updated at", attr(isoDataFull(), "updated"))
+                 })
 
-  database <- eventReactive(updateDataBase(), ignoreNULL = FALSE, {
-    if (is.null(updateDataBase()))
-      return(NULL)
+                 ## Calibration
+                 calibrate <- reactive({
+                   input$calMethod != "none"
+                 })
 
-    input$database
-  })
-
-  mappingTable <- reactive({
-    getMappingTable()
-  })
-
-  isoDataRaw <- reactiveVal(NULL)
-
-  observe({
-    d <- getRemoteData(database())
-
-    isoDataRaw(d)
-  })
-
-  ## Load Data from file
-  importedData <- callModule(importData, "localData")
-
-  observe({
-    req(length(importedData()) > 0)
-
-    d <- importedData()[[1]]
-
-    isoDataRaw(d)
-    updateSelectInput(session, "LongitudePandora", choices = partialNumericColumns(isoDataRaw()), selected = "")
-    updateSelectInput(session, "LatitudePandora", choices = partialNumericColumns(isoDataRaw()), selected = "")
-    updateSelectInput(session, "calibrationDateMean", choices = partialNumericColumns(isoDataRaw()))
-    updateSelectInput(session, "calibrationDateUncertainty", choices = partialNumericColumns(isoDataRaw()))
-    updateSelectInput(session, "calibrationDateIntLower", choices = partialNumericColumns(isoDataRaw()))
-    updateSelectInput(session, "calibrationDateIntUpper", choices = partialNumericColumns(isoDataRaw()))
-
-    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
-  })
-
-  isoDataFull <- reactive({
-    d <- isoDataRaw()
-
-    if (getSkin() == "isomemo") {
-      dateFields <- list(
-        "dateMean" = "dateMean",
-        "dateUncertainty" = "dateUncertainty",
-        "datingType" = "datingType"
-      )
-    } else {
-      d$source <- "Pandora"
-      if(input$calibrationDatingType == "Mean + 1SD uncertainty"){
-        dateFields <- list(
-          "dateMean" = input$calibrationDateMean,
-          "dateUncertainty" = input$calibrationDateUncertainty,
-          "datingType" = "radiocarbon"
-        )
-      } else {
-        dateFields <- list(
-          "dateLower" = input$calibrationDateIntLower,
-          "dateUpper" = input$calibrationDateIntUpper,
-          "datingType" = "radiocarbon"
-        )
-      }
-
-      if(!is.null(input$LongitudePandora) & !is.null(input$LatitudePandora) & input$LongitudePandora != "" & input$LatitudePandora != ""){
-        dCoord <- try({convertLatLong(d, CoordType = input$CoordTypePandora, Latitude = input$LongitudePandora, Longitude = input$LatitudePandora)}, silent = TRUE)
-
-        if(class(dCoord) == "try-error"){
-          alert("Conversion of coordinates has failed. Please select appropriate longitude / latitude fields and coordinate type.")
-        } else {
-        d <- dCoord
-        d$longitude <- d[,input$LongitudePandora]
-        d$latitude <- d[,input$LatitudePandora]
-        d$id <- as.character(1:nrow(d))
-        }
-      }
-
-    }
-
-    if (calibrate()){
-      d <- showMessage(
-        calibrateRadiocarbon,
-        "Calculating calibrated values")(
-        d, calMethod = calibrateMethod(),
-        level = calLevel(),
-        dateFields = dateFields
-      )
-    }
-
-    d
-  })
+                 calLevel <- reactive({
+                   input$calLevel
+                 })
 
 
-  ## Last update
-  output$lastUpdate <- renderText({
-    if (is.null(isoDataFull()) || is.null(attr(isoDataFull(), "updated"))) NULL
-    else paste("Data last updated at", attr(isoDataFull(), "updated"))
-  })
+                 calibrateMethod <- reactive({
+                   input$calMethod
+                 })
 
-  ## Calibration
-  calibrate <- reactive({
-    input$calMethod != "none"
-  })
-
-  calLevel <- reactive({
-    input$calLevel
-  })
-
-
-  calibrateMethod <- reactive({
-    input$calMethod
-  })
-
-  observe({
-    lapply(categoryChoices(mappingTable()), function(x){
-      choices <- columnChoices(x, mappingTable(), calibrate())
-      updateSelectizeInput(session,
-                           paste0("selectColumns", gsub(" ", "", x)),
-                           choices = choices,
-                           selected = choices)
-    })
-  })
+                 observe({
+                   lapply(categoryChoices(mappingTable()), function(x) {
+                     choices <- columnChoices(x, mappingTable(), calibrate())
+                     updateSelectizeInput(
+                       session,
+                       paste0("selectColumns", gsub(" ", "", x)),
+                       choices = choices,
+                       selected = choices
+                     )
+                   })
+                 })
 
 
-  ## Column selection
-  dataColumns <- reactive({
-    if (getSkin() == "isomemo"){
-      getDataColumns(mappingTable(), input)
-    } else{
-      names(isoDataFull())
-    }
-  })
+                 ## Column selection
+                 dataColumns <- reactive({
+                   if (getSkin() == "isomemo") {
+                     getDataColumns(mappingTable(), input)
+                   } else{
+                     names(isoDataFull())
+                   }
+                 })
 
-  isoData <- reactive({
-    if (is.null(isoDataFull()))
-      return(NULL)
-    isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dataColumns()]
-  })
+                 isoData <- reactive({
+                   if (is.null(isoDataFull()))
+                     return(NULL)
+                   isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dataColumns()]
+                 })
 
-  isoDataExport <- reactive({
-    if (is.null(isoDataFull()))
-      return(NULL)
-    dCols <- dataColumns()
-    if("description" %in% dCols){
-      dCols[dCols == "description"] <- "descriptionFull"
-    }
+                 isoDataExport <- reactive({
+                   if (is.null(isoDataFull()))
+                     return(NULL)
+                   dCols <- dataColumns()
+                   if ("description" %in% dCols) {
+                     dCols[dCols == "description"] <- "descriptionFull"
+                   }
 
-    isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dCols]
-  })
+                   isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dCols]
+                 })
 
-  ## Export
-  colseparator <- reactive({
-    input$colseparator
-   })
+                 ## Export
+                 colseparator <- reactive({
+                   input$colseparator
+                 })
 
-  decseparator <- reactive({
-    input$decseparator
-  })
+                 decseparator <- reactive({
+                   input$decseparator
+                 })
 
-  observeEvent(input$export, {
-    showModal(modalDialog(
-      "Export Data",
-      easyClose = TRUE,
-      footer = modalButton("OK"),
-      selectInput(
-        session$ns("exportType"),
-        "File type",
-        choices = c("csv", "xlsx", "json"),
-        selected = "xlsx"
-      ),
-      conditionalPanel(
-        condition = "input['exportType'] == 'csv'",
-        ns = session$ns,
-        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-            textInput(session$ns("colseparator"), "column separator:", value = ",")),
-        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-            textInput(session$ns("decseparator"), "decimal separator:", value = "."))
-      ),
-      downloadButton(session$ns("exportExecute"), "Export")
-    ))
-  })
+                 observeEvent(input$export, {
+                   showModal(
+                     modalDialog(
+                       "Export Data",
+                       easyClose = TRUE,
+                       footer = modalButton("OK"),
+                       selectInput(
+                         session$ns("exportType"),
+                         "File type",
+                         choices = c("csv", "xlsx", "json"),
+                         selected = "xlsx"
+                       ),
+                       conditionalPanel(
+                         condition = "input['exportType'] == 'csv'",
+                         ns = session$ns,
+                         div(
+                           style = "display: inline-block;horizontal-align:top; width: 80px;",
+                           textInput(session$ns("colseparator"), "column separator:", value = ",")
+                         ),
+                         div(
+                           style = "display: inline-block;horizontal-align:top; width: 80px;",
+                           textInput(
+                             session$ns("decseparator"),
+                             "decimal separator:",
+                             value = "."
+                           )
+                         )
+                       ),
+                       downloadButton(session$ns("exportExecute"), "Export")
+                     )
+                   )
+                 })
 
-  output$exportExecute <- downloadHandler(
-    filename = function(){
-      exportFilename(fileending = input$exportType)
-    },
-    content = function(file){
-      switch(
-        input$exportType,
-        csv = exportCSV(file, isoDataExport(), colseparator(), decseparator()),
-        xlsx = exportXLSX(file, isoDataExport()),
-        json = exportJSON(file, isoDataExport())
-      )
-    }
-  )
+                 output$exportExecute <- downloadHandler(
+                   filename = function() {
+                     exportFilename(fileending = input$exportType)
+                   },
+                   content = function(file) {
+                     switch(
+                       input$exportType,
+                       csv = exportCSV(file, isoDataExport(), colseparator(), decseparator()),
+                       xlsx = exportXLSX(file, isoDataExport()),
+                       json = exportJSON(file, isoDataExport())
+                     )
+                   }
+                 )
 
-  ## Save / load options
-  output$saveOptions <- downloadHandler(
-    filename = "options.json",
-    content = function(file){
-      options <- list(
-        database = input$database,
-        columns = dataColumns(),
-        calibrateMethod = input$calMethod
-      )
-      write(toJSON(options), file = file)
-    }
-  )
+                 ## Save / load options
+                 output$saveOptions <- downloadHandler(
+                   filename = "options.json",
+                   content = function(file) {
+                     options <- list(
+                       database = input$database,
+                       columns = dataColumns(),
+                       calibrateMethod = input$calMethod
+                     )
+                     write(toJSON(options), file = file)
+                   }
+                 )
 
-  observe({
-    optionsFile <- input$optionsFile
+                 observe({
+                   optionsFile <- input$optionsFile
 
-    if (is.null(optionsFile))
-      return(NULL)
+                   if (is.null(optionsFile))
+                     return(NULL)
 
-    opt <- fromJSON(paste0(readLines(optionsFile$datapath)))
+                   opt <-
+                     fromJSON(paste0(readLines(optionsFile$datapath)))
 
-    loadOptions(session, opt, mappingTable())
- })
+                   loadOptions(session, opt, mappingTable())
+                 })
 
 
-  ## Output
-  output$dataTable <- renderDataTable({
-    validate(
-      need(!is.null(isoDataFull()), "Please select a database in the sidebar panel.")
-    )
-    datTable(isoDataFull(), columns = dataColumns())
-  })
+                 ## Output
+                 output$dataTable <- renderDataTable({
+                   validate(need(
+                     !is.null(isoDataFull()),
+                     "Please select a database in the sidebar panel."
+                   ))
+                   datTable(isoDataFull(), columns = dataColumns())
+                 })
 
-  decriptionTableClick <- reactive({
-    getDescriptionCells(input$dataTable_cell_clicked, isoData(), dataColumns())
-  })
+                 decriptionTableClick <- reactive({
+                   getDescriptionCells(input$dataTable_cell_clicked, isoData(), dataColumns())
+                 })
 
-  observeEvent(decriptionTableClick(), ignoreInit = TRUE, ignoreNULL = FALSE, {
+                 observeEvent(decriptionTableClick(),
+                              ignoreInit = TRUE,
+                              ignoreNULL = FALSE,
+                              {
+                                if (length(decriptionTableClick()) == 0)
+                                  return(NULL)
 
-    if (length(decriptionTableClick()) == 0) return(NULL)
+                                showModal(
+                                  modalDialog(
+                                    getDescriptionFull(decriptionTableClick(), isoDataFull()),
+                                    size = "l",
+                                    easyClose = TRUE,
+                                    footer = modalButton("OK")
+                                  )
+                                )
+                              })
 
-    showModal(modalDialog(
-      getDescriptionFull(decriptionTableClick(), isoDataFull()),
-      size = "l",
-      easyClose = TRUE,
-      footer = modalButton("OK")
-    ))
-  })
+                 observe({
+                   if (is.null(isoDataFull()))
+                     shinyjs::disable("exportCitation")
+                   else
+                     shinyjs::enable("exportCitation")
+                 })
 
-  observe({
-    if (is.null(isoDataFull())) shinyjs::disable("exportCitation")
-    else shinyjs::enable("exportCitation")
-  })
-
-  observe({
-    req(isoDataFull())
-    updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
-  })
+                 observe({
+                   req(isoDataFull())
+                   updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
+                 })
 
 
 
-  output$exportCitation <- downloadHandler(
-    filename = function() {
-      paste0("isoMemoCitation.", input$citationType)
-    },
-    content = function(filename) {
-      if (getSkin() == "isomemo"){
-        citationColumns <- c(
-          "databaseReference", "databaseDOI",
-          "compilationReference", "compilationDOI",
-          "originalDataReference", "originalDataDOI"
-        )
-      } else{
-        citationColumns <- input$citationColumns
-      }
+                 output$exportCitation <- downloadHandler(
+                   filename = function() {
+                     paste0("isoMemoCitation.", input$citationType)
+                   },
+                   content = function(filename) {
+                     if (getSkin() == "isomemo") {
+                       citationColumns <- c(
+                         "databaseReference",
+                         "databaseDOI",
+                         "compilationReference",
+                         "compilationDOI",
+                         "originalDataReference",
+                         "originalDataDOI"
+                       )
+                     } else{
+                       citationColumns <- input$citationColumns
+                     }
 
-      if (!all(citationColumns %in% colnames(isoDataFull()))) {
-        alert("You need to select all citation columns from 'References' first")
-        return()
-      }
+                     if (!all(citationColumns %in% colnames(isoDataFull()))) {
+                       alert("You need to select all citation columns from 'References' first")
+                       return()
+                     }
 
-      if (length(citationColumns) != 6) {
-        alert("You need to choose exactly 6 columns for exporting citations.")
-        return()
-      }
+                     if (length(citationColumns) != 6) {
+                       alert("You need to choose exactly 6 columns for exporting citations.")
+                       return()
+                     }
 
-      data <- isoDataFull()[citationColumns]
-      generateCitation(data, input$citationType, file = filename)
-    }
-  )
+                     data <- isoDataFull()[citationColumns]
+                     generateCitation(data, input$citationType, file = filename)
+                   }
+                 )
 
-  return(isoData)
+                 return(isoData)
+               })
 }
-
 
 getDescriptionCells <- function(clickList, isoData, columns){
   if (length(clickList) == 0) return(NULL)

@@ -8,7 +8,7 @@ server <- function(input, output, session) {
   savedMaps <- reactiveVal(list())
   fruitsData <- reactiveVal(list(event = NULL, data = NULL))
 
-  isoData <- callModule(dataExplorer, "dataExplorer")
+  isoData <- dataExplorerServer("dataExplorer")
   callModule(interactiveMap, "interactivemap", isoData = isoData)
   callModule(modelResults2D, "model2D", isoData = isoData, savedMaps = savedMaps,
              fruitsData = fruitsData)
