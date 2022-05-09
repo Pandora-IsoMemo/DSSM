@@ -150,8 +150,15 @@ dataExplorerServer <- function(id) {
 
                  ## Load Data
                  isoDataRaw <- reactiveVal(NULL)
+                 isoDataFull <- reactiveVal(NULL)
+                 isoData <- reactiveVal(NULL)
 
                  observeEvent(input$load, {
+                   # reset isoData
+                   isoDataRaw(NULL)
+                   isoDataFull(NULL)
+                   isoData(NULL)
+
                    d <- getRemoteData(input$database)
 
                    isoDataRaw(d)
@@ -160,8 +167,13 @@ dataExplorerServer <- function(id) {
                  ## Load Data from file
                  importedData <- importDataServer("localData")
 
-                 observe({
+                 observeEvent(importedData(), {
                    req(length(importedData()) > 0)
+
+                   # reset isoData
+                   isoDataRaw(NULL)
+                   isoDataFull(NULL)
+                   isoData(NULL)
 
                    d <- importedData()[[1]]
 
@@ -192,7 +204,7 @@ dataExplorerServer <- function(id) {
                    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
                  })
 
-                 isoDataFull <- reactive({
+                 observe({
                    d <- isoDataRaw()
 
                    if (getSkin() == "isomemo") {
@@ -255,7 +267,7 @@ dataExplorerServer <- function(id) {
                                       )
                    }
 
-                   d
+                   isoDataFull(d)
                  })
 
 
@@ -304,10 +316,12 @@ dataExplorerServer <- function(id) {
                    }
                  })
 
-                 isoData <- reactive({
-                   if (is.null(isoDataFull()))
-                     return(NULL)
-                   isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dataColumns()]
+                 observeEvent(isoDataFull(), {
+                   if (is.null(isoDataFull())) {
+                     isoData(NULL)
+                   } else {
+                     isoData(isoDataFull()[input$dataTable_rows_all, names(isoDataFull()) %in% dataColumns()])
+                   }
                  })
 
                  isoDataExport <- reactive({
