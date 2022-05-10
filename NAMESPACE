@@ -2,7 +2,7 @@
 
 export(allowedSkins)
 export(datTable)
-export(dataExplorer)
+export(dataExplorerServer)
 export(dataExplorerUI)
 export(draw)
 export(estimateMap)

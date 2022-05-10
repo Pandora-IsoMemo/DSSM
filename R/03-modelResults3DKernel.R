@@ -490,6 +490,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     updateSelectInput(session, "savedModel", choices = choices)
   })
 
+  Model <- reactiveVal()
+
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
     if (mapName == ""){
@@ -545,8 +547,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       file = input$CoordType
     )
   })
-
-  Model <- reactiveVal()
 
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
