@@ -437,6 +437,9 @@ dataExplorer <- function(input, output, session){
 
       data <- isoDataFull()[citationColumns]
       generateCitation(data, input$citationType, file = filename)
+
+      # generate DOI
+      data <- generateDOI(data,input$citationtype,input$citationstyle)
     }
   )
 
