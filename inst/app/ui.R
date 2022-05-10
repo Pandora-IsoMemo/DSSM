@@ -2,7 +2,7 @@ library(MpiIsoApp)
 
 tagList(
   shiny::navbarPage(
-    title = paste("IsoMemo app", packageVersion("MpiIsoApp")),
+    title = paste(getAppTitle(), packageVersion("MpiIsoApp")),
     theme = shinythemes::shinytheme("flatly"),
     position = "fixed-top",
     collapsible = TRUE,
