@@ -477,7 +477,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     }
   })
 
-  importedData <- callModule(importData, "localData")
+  importedData <- importDataServer("localData")
 
   callModule(modelDiagnostics, "modelDiag", model = Model, choice = TRUE)
   callModule(dataExport, "exportData", data = dataFun, filename = "modelData")

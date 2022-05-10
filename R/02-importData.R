@@ -15,9 +15,7 @@ importDataUI <- function(id, label = "Import Data") {
 #'
 #' Backend for data import module
 #'
-#' @param input shiny input
-#' @param output shiny output
-#' @param session shiny session
+#' @param id namespace id
 #' @param rowNames (reactive) use this for rownames of imported data
 #' @param colNames (reactive) use this for colnames of imported data
 #' @param customWarningChecks list of reactive functions which will be executed after importing of data.
@@ -25,197 +23,210 @@ importDataUI <- function(id, label = "Import Data") {
 #' @param customErrorChecks list of reactive functions which will be executed after importing of data.
 #'   functions need to return TRUE if check is successful or a character with a warning otherwise.
 #'
-importData <- function(input, output, session,
-                       rowNames = NULL,
-                       colNames = NULL,
-                       customWarningChecks = list(),
-                       customErrorChecks = list()
-                       ) {
+importDataServer <- function(id,
+                             rowNames = NULL,
+                             colNames = NULL,
+                             customWarningChecks = list(),
+                             customErrorChecks = list()) {
+  moduleServer(id,
+               function(input, output, session) {
+                 ns <- session$ns
 
-  ns <- session$ns
+                 values <- reactiveValues(
+                   warnings = list(),
+                   errors = list(),
+                   fileName = NULL,
+                   fileImportSuccess = NULL,
+                   dataImport = NULL,
+                   data = list()
+                 )
 
-  values <- reactiveValues(
-    warnings = list(),
-    errors = list(),
-    fileName = NULL,
-    fileImportSuccess = NULL,
-    dataImport = NULL,
-    data = list()
-  )
+                 ckanFiles <- reactive({
+                   getCKANFiles()
+                 })
 
-  ckanFiles <- reactive({
-    getCKANFiles()
-  })
+                 dataSource <- reactiveVal(NULL)
 
-  observeEvent(input$openPopup, ignoreNULL = TRUE, {
-    reset("file")
-    values$fileImportWarning <- NULL
-    values$fileImportSuccess <- NULL
-    values$dataImport <- NULL
-    values$data <- list()
+                 observeEvent(input$openPopup, ignoreNULL = TRUE, {
+                   reset("file")
+                   values$warnings <- list()
+                   values$errors <- list()
+                   values$fileImportWarning <- NULL
+                   values$fileImportSuccess <- NULL
+                   values$dataImport <- NULL
+                   values$data <- list()
+                   dataSource(NULL)
 
-    showModal(importDataDialog(ns = ns))
+                   showModal(importDataDialog(ns = ns))
 
-    titles <- unlist(lapply(ckanFiles(), `[[`, "title"))
-    updateSelectInput(session, "ckanRecord", choices = titles)
-  })
+                   titles <- unlist(lapply(ckanFiles(), `[[`, "title"))
+                   updateSelectInput(session, "ckanRecord", choices = titles)
+                 })
 
-  ckanRecord <- reactive({
-    req(input$ckanRecord)
-    ckanFiles()[[input$ckanRecord]]
-  })
+                 ckanRecord <- reactive({
+                   req(input$ckanRecord)
+                   ckanFiles()[[input$ckanRecord]]
+                 })
 
-  ckanResources <- reactive({
-    req(ckanRecord())
+                 ckanResources <- reactive({
+                   req(ckanRecord())
 
-    resources <- names(ckanRecord()$resources)
-    labels <- unlist(lapply(ckanRecord()$resources, function(x) {
-      paste(x$name, " (", x$format, ")" )
-    }))
-    setNames(resources, labels)
-  })
+                   resources <- names(ckanRecord()$resources)
+                   labels <- unlist(lapply(ckanRecord()$resources, function(x) {
+                     paste(x$name, " (", x$format, ")")
+                   }))
+                   setNames(resources, labels)
+                 })
 
-  observeEvent(ckanResources(), {
-    choices <- ckanResources()
-    updateSelectizeInput(session, "ckanResource", choices = choices)
-  })
+                 observeEvent(ckanResources(), {
+                   choices <- ckanResources()
+                   updateSelectizeInput(session, "ckanResource", choices = choices)
+                 })
 
-  dataSource <- reactiveVal(NULL)
+                 observe({
+                   req(input$source == "ckan")
+                   resource <- ckanRecord()$resources[[input$ckanResource]]
+                   req(resource)
+                   dataSource(list(file = resource$url, filename = resource$url))
+                 })
 
-  observe({
-    req(input$source == "ckan")
-    resource <- ckanRecord()$resources[[input$ckanResource]]
-    req(resource)
-    dataSource(list(file = resource$url, filename = resource$url))
-  })
+                 observeEvent(input$file, {
+                   inFile <- input$file
+                   filename <- inFile$name
 
-  observeEvent(input$file, {
-    inFile <- input$file
-    filename <- inFile$name
+                   if (is.null(inFile))
+                     return()
 
-    if (is.null(inFile))
-      return()
+                   dataSource(list(file = inFile$datapath, filename = filename))
+                 })
 
-    dataSource(list(file = inFile$datapath, filename = filename))
-  })
+                 observeEvent(input$url, {
+                   req(input$url)
+                   req(trimws(input$url) != "")
 
-  observeEvent(input$url, {
-    req(input$url)
-    req(trimws(input$url) != "")
+                   tmp <- tempfile()
 
-    tmp <- tempfile()
+                   res <- try(download.file(input$url, destfile = tmp))
+                   if (inherits(res, "try-error")) {
+                     alert("Could not load remote file")
+                     return()
+                   }
 
-    res <- try(
-      download.file(input$url, destfile = tmp)
-    )
-    if (inherits(res, "try-error")) {
-      alert("Could not load remote file")
-      return()
-    }
+                   dataSource(list(file = tmp, filename = input$url))
+                 })
 
-    dataSource(list(file = tmp, filename = input$url))
-  })
+                 observeEvent(list(
+                   dataSource(),
+                   input$type,
+                   input$colSep,
+                   input$decSep,
+                   input$rownames#,
+                   #input$includeSd
+                 ),
+                 {
+                   req(dataSource())
 
-  observeEvent(list(
-    dataSource(),
-    input$type,
-    input$colSep,
-    input$decSep,
-    input$rownames#,
-    #input$includeSd
-  ), {
-    req(dataSource())
+                   values$dataImport <- NULL
 
-    values$dataImport <- NULL
+                   filepath <- dataSource()$file
+                   filename <- dataSource()$filename
+                   values$warnings <- list()
+                   values$errors <- list()
+                   values$fileImportSuccess <- NULL
+                   df <- tryCatch(
+                     loadData(
+                       filepath,
+                       input$type,
+                       input$colSep,
+                       input$decSep,
+                       isTRUE(input$rownames)
+                     ),
+                     error = function(e) {
+                       values$warnings <- c(values$warnings, "Could not read in file.")
+                       shinyjs::disable("accept")
+                       NULL
+                     },
+                     warning = function(w) {
+                       values$warnings <- c(values$warnings, "Could not read in file.")
+                       shinyjs::disable("accept")
+                       NULL
+                     }
+                   )
 
-    filepath <- dataSource()$file
-    filename <- dataSource()$filename
-    values$warnings <- list()
-    values$errors <- list()
-    values$fileImportSuccess <- NULL
-    df <- tryCatch(
-      loadData(filepath, input$type, input$colSep, input$decSep,
-               isTRUE(input$rownames)),
-      error = function(e){
-        values$warnings <- c(values$warnings, "Could not read in file.")
-        shinyjs::disable("accept")
-        NULL
-      },
-      warning = function(w){
-        values$warnings <- c(values$warnings, "Could not read in file.")
-        shinyjs::disable("accept")
-        NULL
-      }
-    )
+                   if (is.null(df)) {
+                     values$headData <- NULL
+                     return(NULL)
+                   }
 
-    if (is.null(df)) {
-      values$headData <- NULL
-      return(NULL)
-    }
+                   #attr(df, "includeSd") <- isTRUE(input$includeSd)
 
-    #attr(df, "includeSd") <- isTRUE(input$includeSd)
+                   ## set colnames
+                   if (!is.null(colNames)) {
+                     colnames(df) <- rep("", ncol(df))
+                     mini <- min(length(colNames()), ncol(df))
+                     colnames(df)[seq_len(mini)] <- colNames()[seq_len(mini)]
+                   }
 
-    ## set colnames
-    if (!is.null(colNames)) {
-      colnames(df) <- rep("", ncol(df))
-      mini <- min(length(colNames()), ncol(df))
-      colnames(df)[seq_len(mini)] <- colNames()[seq_len(mini)]
-    }
+                   ## Import technically successful
+                   values$fileName <- filename
+                   values$dataImport <- as.data.frame(df)
 
-    ## Import technically successful
-    values$fileName <- filename
-    values$dataImport <- as.data.frame(df)
+                   values$headData <- lapply(head(as.data.frame(df)), function(z) {
+                     if (is.character(z)) {
+                       substr(z, 1, 50)
+                     } else {
+                       z
+                     }
+                   })[1:min(ncol(df), 5)]
 
-    values$headData <- lapply(head(as.data.frame(df)), function(z){
-      if(is.character(z)){
-        substr(z, 1, 50)
-      } else {
-        z
-      }
-    })[1:min(ncol(df), 5)]
+                   ## Import valid?
+                   lapply(customWarningChecks, function(fun) {
+                     res <- fun()(df)
+                     if (!isTRUE(res)) {
+                       values$warnings <- c(values$warnings, res)
+                     }
+                   })
 
-    ## Import valid?
-    lapply(customWarningChecks, function(fun) {
-      res <- fun()(df)
-      if (!isTRUE(res)) {
-        values$warnings <- c(values$warnings, res)
-      }
-    })
+                   lapply(customErrorChecks, function(fun) {
+                     res <- fun()(df)
+                     if (!isTRUE(res)) {
+                       values$errors <- c(values$errors, res)
+                     }
+                   })
 
-    lapply(customErrorChecks, function(fun) {
-      res <- fun()(df)
-      if (!isTRUE(res)) {
-        values$errors <- c(values$errors, res)
-      }
-    })
+                   if (length(values$errors) > 0) {
+                     shinyjs::disable("accept")
+                     return(NULL)
+                   }
 
-    if (length(values$errors) > 0){
-      shinyjs::disable("accept")
-      return(NULL)
-    }
+                   shinyjs::enable("accept")
+                   values$fileImportSuccess <- "Data import was successful"
+                 })
 
-    shinyjs::enable("accept")
-    values$fileImportSuccess <- "Data import was successful"
-  })
+                 output$warning <-
+                   renderUI(tagList(lapply(values$warnings, tags$p)))
+                 output$error <- renderUI(tagList(lapply(values$errors, tags$p)))
+                 output$success <- renderText(values$fileImportSuccess)
 
-  output$warning <- renderUI(tagList(lapply(values$warnings, tags$p)))
-  output$error <- renderUI(tagList(lapply(values$errors, tags$p)))
-  output$success <- renderText(values$fileImportSuccess)
+                 output$preview <- renderTable(
+                   values$headData,
+                   bordered = TRUE,
+                   rownames = FALSE,
+                   colnames = TRUE
+                 )
 
-  output$preview <- renderTable(values$headData, bordered = TRUE,
-                                rownames = FALSE, colnames = TRUE)
+                 observeEvent(input$cancel, {
+                   removeModal()
+                 })
 
-  observeEvent(input$cancel, {
-    removeModal()
-  })
+                 observeEvent(input$accept, {
+                   removeModal()
 
-  observeEvent(input$accept, {
-    removeModal()
+                   values$data[[values$fileName]] <- values$dataImport
+                 })
 
-    values$data[[values$fileName]] <- values$dataImport
-  })
-
-  reactive(values$data)
+                 reactive(values$data)
+               })
 }
 
 # import data dialog ui
@@ -270,66 +281,90 @@ importDataDialog <- function(ns){
   )
 }
 
-loadData <- function(file, type, sep = ",", dec = ".", rownames = FALSE) {
-  # if(type == "csv" | type == "txt"){
-  #   codepages <- setNames(iconvlist(), iconvlist())
-  #   x <- lapply(codepages, function(enc) try(suppressWarnings({read.csv(file,
-  #                                                     fileEncoding=enc,
-  #                                                     sep = sep, dec = dec,
-  #                                                     stringsAsFactors = FALSE,
-  #                                                     row.names = NULL,
-  #                                                     nrows=3, header=TRUE)}),
-  #                                            silent = TRUE)) # you get lots of errors/warning here
-  #   x <- x[!sapply(x, function(y) class(y) %in% "try-error")]
-  #   maybe_ok <- which(sapply(x, function(y) isTRUE(all.equal(dim(y)[1], c(3)))))
-  #   if(length(maybe_ok) > 0){
-  #     encTry <- names(maybe_ok[1])
-  #   } else {
-  #     encTry <- ""
-  #   }
-  # }
-  encTry <- as.character(guess_encoding(file)[1,1])
-if(type == "xlsx"){
-  xlsSplit <- strsplit(file, split = "\\.")[[1]]
-  if(xlsSplit[length(xlsSplit)] == "xls"){
-    type <- "xls"
+loadData <-
+  function(file,
+           type,
+           sep = ",",
+           dec = ".",
+           rownames = FALSE) {
+    # if(type == "csv" | type == "txt"){
+    #   codepages <- setNames(iconvlist(), iconvlist())
+    #   x <- lapply(codepages, function(enc) try(suppressWarnings({read.csv(file,
+    #                                                     fileEncoding=enc,
+    #                                                     sep = sep, dec = dec,
+    #                                                     stringsAsFactors = FALSE,
+    #                                                     row.names = NULL,
+    #                                                     nrows=3, header=TRUE)}),
+    #                                            silent = TRUE)) # you get lots of errors/warning here
+    #   x <- x[!sapply(x, function(y) class(y) %in% "try-error")]
+    #   maybe_ok <- which(sapply(x, function(y) isTRUE(all.equal(dim(y)[1], c(3)))))
+    #   if(length(maybe_ok) > 0){
+    #     encTry <- names(maybe_ok[1])
+    #   } else {
+    #     encTry <- ""
+    #   }
+    # }
+    encTry <- as.character(guess_encoding(file)[1, 1])
+    if (type == "xlsx") {
+      xlsSplit <- strsplit(file, split = "\\.")[[1]]
+      if (xlsSplit[length(xlsSplit)] == "xls") {
+        type <- "xls"
+      }
+    }
+    data <- switch(
+      type,
+      csv = suppressWarnings({
+        read.csv(
+          file,
+          sep = sep,
+          dec = dec,
+          stringsAsFactors = FALSE,
+          row.names = NULL,
+          fileEncoding = encTry
+        )
+      }),
+      txt = suppressWarnings({
+        read.csv(
+          file,
+          sep = sep,
+          dec = dec,
+          stringsAsFactors = FALSE,
+          row.names = NULL,
+          fileEncoding = encTry
+        )
+      }),
+      xlsx = read.xlsx(file),
+      xls = suppressWarnings({
+        readxl::read_excel(file)
+      }),
+      ods = readODS::read_ods(file)
+    )
+
+    if (is.null(data))
+      return(NULL)
+
+
+    if (any(dim(data) == 1)) {
+      warning("Number of rows or columns equal to 1")
+      return(NULL)
+    }
+
+    if (is.null(dim(data))) {
+      stop("Could not determine dimensions of data")
+      return(NULL)
+    }
+
+    if (any(dim(data) == 0)) {
+      stop("Number of rows or columns equal to 0")
+      return(NULL)
+    }
+
+    if (rownames) {
+      rn <- data[, 1]
+      data <- data[, -1, drop = FALSE]
+      rownames(data) <- rn
+    }
+    data <- convertNumeric(data)
+
+    return(data)
   }
-}
-  data <- switch(
-    type,
-    csv = suppressWarnings({read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, row.names = NULL,
-                   fileEncoding=encTry)}),
-    txt = suppressWarnings({read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, row.names = NULL,
-                   fileEncoding=encTry)}),
-    xlsx = read.xlsx(file),
-    xls = suppressWarnings({readxl::read_excel(file)}),
-    ods = readODS::read_ods(file)
-  )
-
-  if (is.null(data)) return(NULL)
-
-
-  if (any(dim(data) == 1)) {
-    warning("Number of rows or columns equal to 1")
-    return(NULL)
-  }
-
-  if (is.null(dim(data))) {
-    stop("Could not determine dimensions of data")
-    return(NULL)
-  }
-
-  if (any(dim(data) == 0)) {
-    stop("Number of rows or columns equal to 0")
-    return(NULL)
-  }
-
-  if (rownames) {
-    rn <- data[, 1]
-    data <- data[, -1, drop = FALSE]
-    rownames(data) <- rn
-  }
-  data <- convertNumeric(data)
-
-  return(data)
-}

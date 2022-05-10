@@ -1,7 +1,7 @@
 #' Skin helper functions
-#' 
+#'
 #' @param skin one of isomemo / pandora
-#' 
+#'
 #' @export
 #' @rdname skin
 setSkin <- function(skin) {
@@ -13,9 +13,8 @@ setSkin <- function(skin) {
 #' @rdname skin
 getSkin <- function() {
     session <- getDefaultReactiveDomain()
-
     if (!is.null(session$userData$skin)) session$userData$skin
-    else "isomemo"
+    else "pandora"
 }
 
 #' @rdname skin
