@@ -24,7 +24,8 @@ leafletExportButton <- function(id) {
 #' @param height reactive height of map in px
 #' @param zoom map zoom
 #' @param center map center (list of lat and lng)
-#' @param isoData isoData data
+#' @inheritParams addDataToLeafletMap
+#' @inheritParams customizeLeafletMap
 leafletExport <- function(input,
                           output,
                           session,
@@ -33,7 +34,9 @@ leafletExport <- function(input,
                           height,
                           zoom,
                           center,
-                          isoData) {
+                          isoData,
+                          leafletValues,
+                          leafletPointValues) {
   ns <- session$ns
 
   observe({
@@ -74,10 +77,12 @@ leafletExport <- function(input,
                   lat = center()$lat,
                   zoom = zoom())
 
-        if (!is.null(isoData)) {
-          m <- m %>%
-            addCirclesRelativeToZoom(isoData(), newZoom = zoom(), zoom = zoom())
-        }
+        m <- m %>%
+          customizeLeafletMap(leafletValues())
+
+        m <- m %>%
+          addDataToLeafletMap(isoData = isoData(),
+                              leafletPointValues = leafletPointValues())
 
         mapview::mapshot(
           m,
@@ -88,8 +93,7 @@ leafletExport <- function(input,
         )
       },
       value = 0.9,
-      message = "Exporting ..."
-      )
+      message = "Exporting ...")
     }
   )
 }

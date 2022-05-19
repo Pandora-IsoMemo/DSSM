@@ -14,10 +14,10 @@
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers awesomeIcons addCircles addLegend
-#' addMarkers addPopups addRectangles addTiles clearPopups colorFactor fitBounds
-#' leaflet leafletProxy leafletOutput markerClusterOptions popupOptions removeControl removeScaleBar
-#' removeShape renderLeaflet setMaxBounds setView addProviderTiles addScaleBar scaleBarOptions
-#' addControl
+#' addMarkers addPopups addRectangles addTiles clearMarkerClusters clearPopups colorFactor fitBounds
+#' leaflet leafletProxy leafletOutput markerClusterOptions popupOptions removeControl
+#' removeScaleBar removeShape renderLeaflet setMaxBounds setView addProviderTiles
+#' addScaleBar scaleBarOptions addControl
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d

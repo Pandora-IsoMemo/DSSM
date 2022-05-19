@@ -211,9 +211,14 @@ dataExplorerServer <- function(id) {
                    dataColumns(NULL)
                    isoData(NULL)
 
-                   d <- getRemoteData(input$database)
+                   withProgress({
+                     d <- getRemoteData(input$database)
 
-                   isoDataRaw(d)
+                     isoDataRaw(d)
+                   },
+                   value = 0.75,
+                   message = 'Get remote data ...'
+                   )
                  })
 
                  ## Load Data from file (pandora skin) ----
