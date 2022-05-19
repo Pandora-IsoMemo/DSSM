@@ -9,6 +9,18 @@ leafletPointSettingsUI <- function(id) {
     conditionalPanel(
       condition = "input.clusterPoints == false",
       checkboxInput(ns("showLegend"), "Legend", value = TRUE),
+      fluidRow(
+        column(8,
+               checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
+        ),
+        column(4,
+               conditionalPanel(
+                 condition = "input.useJitter == true",
+                 numericInput(ns("jitterMaxKm"), label = NULL,
+                              value = 25, min = 0, max = 100),
+                 ns = ns
+               ))
+      ),
       checkboxInput(ns("customPoints"), "Customize data points"),
       conditionalPanel(
         condition = "input.customPoints == true",
@@ -18,18 +30,6 @@ leafletPointSettingsUI <- function(id) {
                     value = 20,
                     min = 1,
                     max = 100),
-        fluidRow(
-          column(8,
-                 checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
-          ),
-          column(4,
-                 conditionalPanel(
-                   condition = "input.useJitter == true",
-                   numericInput(ns("jitterMaxKm"), label = NULL,
-                                value = 10, min = 0, max = 100),
-                   ns = ns
-                 ))
-        ),
         tags$hr(),
         ns = ns
       ),
