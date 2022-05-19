@@ -11,13 +11,14 @@ leafletSettingsUI <- function(id, title = "") {
       ns("LeafletType"),
       "Map type",
       choices = c(
-        "Type 1" = "1",
-        "Type 2" = "2",
-        "Type 3" = "3",
-        "Type 4" = "4",
-        "Type 5" = "5",
-        "Type 6" = "6",
-        "Type 7" = "7"
+        "CartoDB Positron" = "CartoDB.Positron",
+        "OpenStreetMap Mapnik" = "OpenStreetMap.Mapnik",
+        "OpenStreetMap DE" = "OpenStreetMap.DE",
+        "OpenTopoMap" = "OpenTopoMap",
+        "Stamen TonerLite" = "Stamen.TonerLite",
+        "Esri" = "Esri",
+        "Esri WorldTopoMap" = "Esri.WorldTopoMap",
+        "Esri WorldImagery" = "Esri.WorldImagery"
       )
     ),
     fluidRow(column(6, checkboxInput(
@@ -51,14 +52,14 @@ leafletSettingsUI <- function(id, title = "") {
       sliderInput(
         ns("boundsLat"),
         "Latitude: South - North",
-        value = c(15, 60),
+        value = defaultBounds()$lat,
         min = -90,
         max = 90
       ),
       sliderInput(
         ns("boundsLng"),
         "Longitude: West - East",
-        value = c(-15, 60),
+        value = defaultBounds()$lng,
         min = -180,
         max = 180
       ),
@@ -87,10 +88,10 @@ leafletSettings <- function(input, output, session) {
 
   values$bounds <-
     reactiveValues(
-      north = 60,
-      south = 15,
-      east = 60,
-      west = -15
+      north = defaultBounds()$lat[["north"]],
+      south = defaultBounds()$lat[["south"]],
+      east = defaultBounds()$lng[["east"]],
+      west = defaultBounds()$lng[["west"]]
     )
 
   observeEvent(input$LeafletType, {
@@ -130,4 +131,62 @@ leafletSettings <- function(input, output, session) {
   reactive({
     values
   })
+}
+
+
+#' Customize Leaflet Map
+#'
+#' Customize leaflet map for export
+#'
+#' @param leafletMap leaflet map
+#' @param leafletValues map settings, e.g. scalePosition, show/hide bounds
+customizeLeafletMap <- function(leafletMap, leafletValues) {
+  leafletMap %>%
+    addProviderTiles(
+      leafletValues$leafletType
+      ) %>%
+    drawIcons(
+      scale = !is.na(leafletValues$scalePosition),
+      scalePosition = leafletValues$scalePosition,
+      northArrow = !is.na(leafletValues$northArrowPosition),
+      northArrowPosition = leafletValues$northArrowPosition
+    ) %>%
+    drawFittedBounds(
+      showBounds = leafletValues$showBounds,
+      bounds = leafletValues$bounds
+      )
+
+}
+
+
+#' Draw Fitted Bounds
+#'
+#' @param map leaflet map
+#' @param showBounds logical show/hide fitted bounds
+#' @param bounds list of (west, east, south, north) boundaries to be drawn
+drawFittedBounds <- function(map, showBounds, bounds) {
+  if (showBounds) {
+    map <- map %>%
+      addRectangles(
+        layerId = "mapBoundsFrame",
+        lng1 = bounds$west,
+        lng2 = bounds$east,
+        lat1 = bounds$south,
+        lat2 = bounds$north,
+        color = "grey",
+        weight = 1,
+        fillColor = "transparent"
+      )
+  } else {
+    map <- map %>%
+      removeShape(layerId = "mapBoundsFrame")
+  }
+
+  map
+}
+
+
+defaultBounds <- function(){
+  list(lng = c(west = 0, east = 60),
+       lat = c(south = 33, north = 63))
 }
