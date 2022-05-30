@@ -463,6 +463,8 @@ plotMap <- function(model,
     minq95 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.975)
     minq05 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.025)
 
+    meanEst <- q32 <- q68 <- q95 <- q05 <- NULL
+
     dataSummary <- data.frame(name = unique(dataMinPlotPred$name), meanEst = minMeans[,2], median = minMedians[,2],
                q68 = minq68[,2], q32 = minq32[,2],
                q95 = minq95[,2], q05 = minq05[,2])
