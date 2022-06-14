@@ -454,9 +454,35 @@ plotMap <- function(model,
                                                     round(dataMinPlot$Longitude, 2),") \n Probability = ", prob = probs),
                                              each = nrow(dataMinPlotPred)),
                                              estimate = as.vector(dataMinPlotPred))
+
+
+    minMeans <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=mean)
+    minMedians <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=median)
+    minq68 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.68)
+    minq32 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.32)
+    minq95 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.975)
+    minq05 <- aggregate(dataMinPlotPred$estimate, by=list(name=dataMinPlotPred$name), FUN=quantile, 0.025)
+
+    meanEst <- q32 <- q68 <- q95 <- q05 <- NULL
+
+    dataSummary <- data.frame(name = unique(dataMinPlotPred$name), meanEst = minMeans[,2], median = minMedians[,2],
+               q68 = minq68[,2], q32 = minq32[,2],
+               q95 = minq95[,2], q05 = minq05[,2])
+
     if(showMinOnMap == "1"){
-    g <- ggplot(dataMinPlotPred, aes_(x = ~name, y = ~estimate, col = ~name)) +
-      geom_boxplot() + theme_light() + theme(legend.position="none") + labs(title=paste0("Comparison of local ", MinMax, "ima")) + xlab("")
+      g <- ggplot(dataSummary, aes_(x = ~name, fill = ~name)) + theme_light()
+      g <- g + geom_boxplot(
+        mapping = aes(
+          lower = q32,
+          upper = q68,
+          middle = median,
+          ymin = q05,
+          ymax = q95
+        ),
+        stat = "identity"
+      ) + geom_errorbar(aes(ymin = meanEst, ymax = meanEst), linetype = "dashed", data = dataSummary)+ theme(legend.position="none") +
+        labs(title=paste0("Comparison of local ", MinMax, "ima")) + xlab("")
+
     print(g)
     return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
     }
