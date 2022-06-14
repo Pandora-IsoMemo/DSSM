@@ -15,15 +15,15 @@ isOnlyDataSearchMode <- function() {
 #'
 #' @export
 getAppTitle <- function() {
-  subTitle1 <- "Pandora & IsoMemo Data search"
+  subTitle0 <- "" #"Pandora & IsoMemo &ensp;"
+  subTitle1 <- "Data search"
   version <- packageVersion("MpiIsoApp")
 
-
   if (isOnlyDataSearchMode()) {
-    title <- paste(subTitle1, version)
+    title <- paste(subTitle0, subTitle1, version)
   } else {
-    subTitle2 <- "Spatiotemporal modeling"
-    title <- paste(subTitle1, "and <br/>", subTitle2, version)
+    subTitle2 <- "and Spatiotemporal modeling"
+    title <- paste(subTitle0, subTitle1, subTitle2, version)
   }
 
   HTML(title)
