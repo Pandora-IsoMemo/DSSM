@@ -1,1 +1,8 @@
 API_BASE_URL=https://isomemodb.com/testapi/v1/
+
+# Environment variable to switch to "only-data-search mode". Only use for developement.
+# In production this variable will be defined outside the app. Use isOnlyDataSearchMode() to check
+# the active mode.
+
+# Reload package after uncommenting the next line.
+#ISOMEMO_HIDE_MODELLING=TRUE

@@ -33,7 +33,7 @@ server <- function(input, output, session) {
     hideTab("tab", "fruits")
   }
 
-  if (Sys.getenv("ISOMEMO_HIDE_MODELLING") != "") {
+  if (isOnlyDataSearchMode()) {
     hideTab("tab", "Modeling", session = session)
     appendTab(inputId = "tab",
               modelLinkUI("modelLink", title = "Modeling")

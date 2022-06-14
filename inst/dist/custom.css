@@ -38,7 +38,16 @@ div.map-container {
     overflow-y: auto;
     overflow-x: hidden;
 }
-
+/*
+.navbar-brand{
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    font-size: 15px;
+    background-color: #FFFF00;
+    line-height: 18px;
+}
+*/
 .stats-list {
     width: 270px;
     display: flex;
