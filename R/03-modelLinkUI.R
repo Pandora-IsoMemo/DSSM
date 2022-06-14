@@ -4,24 +4,40 @@
 #' @param title title in tab
 #'
 #' @export
-modelLinkUI <- function(id, title = ""){
-
+modelLinkUI <- function(id, title = "") {
   ns <- NS(id)
   tabPanel(
     title,
     id = id,
     value = id,
-    sidebarLayout(
-      sidebarPanel(width = 3,
-                   tags$h5("Download IsoMemo app with modeling feature as R-Package."),
-                   div(
-                     id = "download-full-package",
-                     tags$button(
-                       onclick = "window.open('https://isomemodb.com/packages/MpiIsoApp.tar.gz','_blank');",
-                       class = "btn btn-default",
-                       "Download")
-                   )),
-      mainPanel()
+    mainPanel(
+      tags$h3("Pandora & IsoMemo Data search with Spatiotemporal modeling"),
+      tags$br(),
+      tags$h5("To use the modeling options please"),
+      tags$ul(tags$li(HTML(
+        paste0("[slow option] visit ", tags$span(
+          tags$a(href = "https://isomemoapp.com/app/iso-memo-app",
+                 "https://isomemoapp.com/app/iso-memo-app")
+        ), ", or")
+      )),
+      tags$li(HTML(
+        paste0(
+          "[fast option] install this app locally by following the instructions given on GitHub:",
+          tags$br(),
+          "app installation: ",
+          tags$span(
+            tags$a(href = "https://github.com/Pandora-IsoMemo/drat/issues/3",
+                   "https://github.com/Pandora-IsoMemo/drat/issues/3")
+          ),
+          " and",
+          tags$br(),
+          "general instructions: ",
+          tags$span(
+            tags$a(href = "https://github.com/Pandora-IsoMemo/drat",
+                   "https://github.com/Pandora-IsoMemo/drat")
+          )
+        )
+      )))
     )
   )
 }
