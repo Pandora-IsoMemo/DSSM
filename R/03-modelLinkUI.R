@@ -11,14 +11,14 @@ modelLinkUI <- function(id, title = "") {
     id = id,
     value = id,
     mainPanel(
-      tags$h3("Pandora & IsoMemo app with modeling feature"),
+      tags$h3("Pandora & IsoMemo Data search with Spatiotemporal modeling"),
       tags$br(),
       tags$h5("To use the modeling options please"),
       tags$ul(tags$li(HTML(
         paste0("[slow option] visit ", tags$span(
           tags$a(href = "https://isomemoapp.com/app/iso-memo-app",
                  "https://isomemoapp.com/app/iso-memo-app")
-        ), tags$br(), "or")
+        ), ", or")
       )),
       tags$li(HTML(
         paste0(
