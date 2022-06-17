@@ -236,8 +236,27 @@ importDataDialog <- function(ns){
     title = "Import Data",
     footer = tagList(
       actionButton(ns("cancel"), "Cancel"),
+      actionButton(ns("addData"), "Add data"),
       actionButton(ns("accept"), "Accept")
     ),
+    tabsetPanel(
+      tabPanel(
+        "Select Data",
+        selectDataUI(ns = ns)
+      ),
+      tabPanel(
+        "Merge Data",
+        mergeDataUI(ns("dataMerger"))
+      )
+    )
+  )
+}
+
+#' Select Data UI
+#'
+#' @param ns namespace
+selectDataUI <- function(ns){
+  tagList(
     selectInput(ns("source"), "Source", choices = c("Pandora Platform" = "ckan","File" = "file", "URL" = "url")),
     conditionalPanel(
       condition = "input.source == 'ckan'",
