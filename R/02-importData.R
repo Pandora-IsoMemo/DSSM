@@ -47,6 +47,7 @@ importDataServer <- function(id,
 
                  dataSource <- reactiveVal(NULL)
 
+                 # select source server ----
                  observeEvent(input$openPopup, ignoreNULL = TRUE, {
                    reset("file")
                    values$warnings <- list()
@@ -115,6 +116,7 @@ importDataServer <- function(id,
                    dataSource(list(file = tmp, filename = input$url))
                  })
 
+                 # specify file server ----
                  observeEvent(list(
                    dataSource(),
                    input$type,
@@ -126,73 +128,24 @@ importDataServer <- function(id,
                  {
                    req(dataSource())
 
+                   # reset values
                    values$dataImport <- NULL
-
-                   filepath <- dataSource()$file
-                   filename <- dataSource()$filename
                    values$warnings <- list()
                    values$errors <- list()
                    values$fileImportSuccess <- NULL
-                   df <- tryCatch(
-                     loadData(
-                       filepath,
-                       input$type,
-                       input$colSep,
-                       input$decSep,
-                       isTRUE(input$rownames)
-                     ),
-                     error = function(e) {
-                       values$warnings <- c(values$warnings, "Could not read in file.")
-                       shinyjs::disable("accept")
-                       NULL
-                     },
-                     warning = function(w) {
-                       values$warnings <- c(values$warnings, "Could not read in file.")
-                       shinyjs::disable("accept")
-                       NULL
-                     }
-                   )
 
-                   if (is.null(df)) {
-                     values$headData <- NULL
-                     return(NULL)
-                   }
-
-                   #attr(df, "includeSd") <- isTRUE(input$includeSd)
-
-                   ## set colnames
-                   if (!is.null(colNames)) {
-                     colnames(df) <- rep("", ncol(df))
-                     mini <- min(length(colNames()), ncol(df))
-                     colnames(df)[seq_len(mini)] <- colNames()[seq_len(mini)]
-                   }
-
-                   ## Import technically successful
-                   values$fileName <- filename
-                   values$dataImport <- as.data.frame(df)
-
-                   values$headData <- lapply(head(as.data.frame(df)), function(z) {
-                     if (is.character(z)) {
-                       substr(z, 1, 50)
-                     } else {
-                       z
-                     }
-                   })[1:min(ncol(df), 5)]
-
-                   ## Import valid?
-                   lapply(customWarningChecks, function(fun) {
-                     res <- fun()(df)
-                     if (!isTRUE(res)) {
-                       values$warnings <- c(values$warnings, res)
-                     }
-                   })
-
-                   lapply(customErrorChecks, function(fun) {
-                     res <- fun()(df)
-                     if (!isTRUE(res)) {
-                       values$errors <- c(values$errors, res)
-                     }
-                   })
+                   values <- loadDataWrapper(
+                     values = values,
+                     filepath = dataSource()$file,
+                     filename = dataSource()$filename,
+                     colNames = colNames,
+                     type = input$type,
+                     sep = input$colSep,
+                     dec = input$decSep,
+                     withRownames = isTRUE(input$rownames),
+                     headOnly = FALSE,
+                     customWarningChecks = customWarningChecks,
+                     customErrorChecks = customErrorChecks)
 
                    if (length(values$errors) > 0) {
                      shinyjs::disable("accept")
@@ -257,6 +210,7 @@ importDataDialog <- function(ns){
 #' @param ns namespace
 selectDataUI <- function(ns){
   tagList(
+    # select source UI ----
     selectInput(ns("source"), "Source", choices = c("Pandora Platform" = "ckan","File" = "file", "URL" = "url")),
     conditionalPanel(
       condition = "input.source == 'ckan'",
@@ -275,6 +229,8 @@ selectDataUI <- function(ns){
       ns = ns,
       textInput(ns("url"), "URL")
     ),
+    tags$hr(),
+    # specify file UI ----
     selectInput(
       ns("type"),
       "File type",
@@ -300,12 +256,94 @@ selectDataUI <- function(ns){
   )
 }
 
+#' Load Data Wrapper
+#'
+#' @inheritParams importDataServer
+#' @param values (list) list with import specifications
+#' @param filepath url or path
+#' @param filename url or file name
+#' @param type (character) file type input
+#' @param sep (character) column separator input
+#' @param dec (character) decimal separator input
+#' @param withRownames (logical) contains rownames input
+#' @param headOnly (logical) load only head (first n rows) of file
+loadDataWrapper <- function(values, filepath, filename, colNames,
+                            type, sep, dec, withRownames, headOnly,
+                            customWarningChecks, customErrorChecks) {
+  df <- tryCatch(
+    loadData(
+      file = filepath,
+      type = type,
+      sep = sep,
+      dec = dec,
+      rownames = withRownames,
+      headOnly = headOnly
+    ),
+    error = function(e) {
+      values$warnings <- c(values$warnings, "Could not read in file.")
+      shinyjs::disable("accept")
+      NULL
+    },
+    warning = function(w) {
+      values$warnings <- c(values$warnings, "Could not read in file.")
+      shinyjs::disable("accept")
+      NULL
+    }
+  )
+
+  if (is.null(df)) {
+    values$headData <- NULL
+    return(NULL)
+  }
+
+  #attr(df, "includeSd") <- isTRUE(input$includeSd)
+
+  ## set colnames
+  if (!is.null(colNames)) {
+    colnames(df) <- rep("", ncol(df))
+    mini <- min(length(colNames()), ncol(df))
+    colnames(df)[seq_len(mini)] <- colNames()[seq_len(mini)]
+  }
+
+  ## Import technically successful
+  values$fileName <- filename
+  values$dataImport <- as.data.frame(df)
+
+  ## create preview data
+  values$headData <- lapply(head(as.data.frame(df)), function(z) {
+    if (is.character(z)) {
+      substr(z, 1, 50)
+    } else {
+      z
+    }
+  })[1:min(ncol(df), 5)]
+
+  ## Import valid?
+  lapply(customWarningChecks, function(fun) {
+    res <- fun()(df)
+    if (!isTRUE(res)) {
+      values$warnings <- c(values$warnings, res)
+    }
+  })
+
+  lapply(customErrorChecks, function(fun) {
+    res <- fun()(df)
+    if (!isTRUE(res)) {
+      values$errors <- c(values$errors, res)
+    }
+  })
+
+  values
+}
+
+
 loadData <-
   function(file,
            type,
            sep = ",",
            dec = ".",
-           rownames = FALSE) {
+           rownames = FALSE,
+           headOnly = FALSE) {
     # if(type == "csv" | type == "txt"){
     #   codepages <- setNames(iconvlist(), iconvlist())
     #   x <- lapply(codepages, function(enc) try(suppressWarnings({read.csv(file,
@@ -339,7 +377,8 @@ loadData <-
           dec = dec,
           stringsAsFactors = FALSE,
           row.names = NULL,
-          fileEncoding = encTry
+          fileEncoding = encTry,
+          nrows = getNrow(headOnly, type)
         )
       }),
       txt = suppressWarnings({
@@ -349,27 +388,27 @@ loadData <-
           dec = dec,
           stringsAsFactors = FALSE,
           row.names = NULL,
-          fileEncoding = encTry
+          fileEncoding = encTry,
+          nrows = getNrow(headOnly, type)
         )
       }),
-      xlsx = read.xlsx(file),
+      xlsx = read.xlsx(file, rows = getNrow(headOnly, type)),
       xls = suppressWarnings({
-        readxl::read_excel(file)
+        readxl::read_excel(file, n_max = getNrow(headOnly, type))
       }),
-      ods = readODS::read_ods(file)
+      ods = readODS::read_ods(file, range = getNrow(headOnly, type))
     )
 
     if (is.null(data))
       return(NULL)
 
-
-    if (any(dim(data) == 1)) {
-      warning("Number of rows or columns equal to 1")
+    if (is.null(dim(data))) {
+      stop("Could not determine dimensions of data")
       return(NULL)
     }
 
-    if (is.null(dim(data))) {
-      stop("Could not determine dimensions of data")
+    if (any(dim(data) == 1)) {
+      warning("Number of rows or columns equal to 1")
       return(NULL)
     }
 
@@ -387,3 +426,20 @@ loadData <-
 
     return(data)
   }
+
+#' get nRow
+#'
+#' @param headOnly (logical) if TRUE, set maximal number of rows to n
+#' @param type (character) file type
+#' @param n (numeric) maximal number of rows if headOnly
+getNrow <- function(headOnly, type, n = 3) {
+  if (headOnly) {
+    if (type == "xlsx") return(1:n) else
+      if (type == "ods") return(paste0("A1:C", n)) else
+        return(n)
+  } else {
+    if (type %in% c("xlsx", "ods")) return(NULL) else
+      if (type == "xls") return(Inf) else
+        return(-999)
+  }
+}

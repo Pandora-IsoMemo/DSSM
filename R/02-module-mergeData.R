@@ -15,6 +15,7 @@ mergeDataUI <- function(id) {
 #' Merge Data Server
 #'
 #' Server function of the merge data module
+#' @param id id of module
 mergeDataServer <- function(id) {
   moduleServer(
     id,
