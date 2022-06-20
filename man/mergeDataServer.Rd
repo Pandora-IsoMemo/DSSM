@@ -6,6 +6,9 @@
 \usage{
 mergeDataServer(id)
 }
+\arguments{
+\item{id}{id of module}
+}
 \description{
 Server function of the merge data module
 }

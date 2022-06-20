@@ -19,6 +19,8 @@ loadDataWrapper(
 )
 }
 \arguments{
+\item{values}{(list) list with import specifications}
+
 \item{filepath}{url or path}
 
 \item{filename}{url or file name}
@@ -40,8 +42,6 @@ functions need to return TRUE if check is successful or a character with a warni
 
 \item{customErrorChecks}{list of reactive functions which will be executed after importing of data.
 functions need to return TRUE if check is successful or a character with a warning otherwise.}
-
-\item{value}{(list) list with import specifications}
 }
 \description{
 Load Data Wrapper

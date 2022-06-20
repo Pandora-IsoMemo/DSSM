@@ -60,7 +60,8 @@ importDataServer <- function(id,
 
                    showModal(importDataDialog(ns = ns))
 
-                   titles <- unlist(lapply(ckanFiles(), `[[`, "title"))
+                   titles <-
+                     unlist(lapply(ckanFiles(), `[[`, "title"))
                    updateSelectInput(session, "ckanRecord", choices = titles)
                  })
 
@@ -73,9 +74,10 @@ importDataServer <- function(id,
                    req(ckanRecord())
 
                    resources <- names(ckanRecord()$resources)
-                   labels <- unlist(lapply(ckanRecord()$resources, function(x) {
-                     paste(x$name, " (", x$format, ")")
-                   }))
+                   labels <-
+                     unlist(lapply(ckanRecord()$resources, function(x) {
+                       paste(x$name, " (", x$format, ")")
+                     }))
                    setNames(resources, labels)
                  })
 
@@ -86,7 +88,8 @@ importDataServer <- function(id,
 
                  observe({
                    req(input$source == "ckan")
-                   resource <- ckanRecord()$resources[[input$ckanResource]]
+                   resource <-
+                     ckanRecord()$resources[[input$ckanResource]]
                    req(resource)
                    dataSource(list(file = resource$url, filename = resource$url))
                  })
@@ -107,7 +110,8 @@ importDataServer <- function(id,
 
                    tmp <- tempfile()
 
-                   res <- try(download.file(input$url, destfile = tmp))
+                   res <-
+                     try(download.file(input$url, destfile = tmp))
                    if (inherits(res, "try-error")) {
                      alert("Could not load remote file")
                      return()
@@ -134,32 +138,42 @@ importDataServer <- function(id,
                    values$errors <- list()
                    values$fileImportSuccess <- NULL
 
-                   values <- loadDataWrapper(
-                     values = values,
-                     filepath = dataSource()$file,
-                     filename = dataSource()$filename,
-                     colNames = colNames,
-                     type = input$type,
-                     sep = input$colSep,
-                     dec = input$decSep,
-                     withRownames = isTRUE(input$rownames),
-                     headOnly = FALSE,
-                     customWarningChecks = customWarningChecks,
-                     customErrorChecks = customErrorChecks)
+                   withProgress({
+                     # load first lines only
+                     values <- loadDataWrapper(
+                       values = values,
+                       filepath = dataSource()$file,
+                       filename = dataSource()$filename,
+                       colNames = colNames,
+                       type = input$type,
+                       sep = input$colSep,
+                       dec = input$decSep,
+                       withRownames = isTRUE(input$rownames),
+                       headOnly = TRUE,
+                       customWarningChecks = customWarningChecks,
+                       customErrorChecks = customErrorChecks
+                     )
+                   },
+                   value = 0.75,
+                   message = 'load preview data ...')
 
                    if (length(values$errors) > 0) {
                      shinyjs::disable("accept")
                      return(NULL)
+                   } else {
+                     shinyjs::enable("accept")
+                     values$fileImportSuccess <-
+                       "Data import was successful"
                    }
 
-                   shinyjs::enable("accept")
-                   values$fileImportSuccess <- "Data import was successful"
                  })
 
                  output$warning <-
                    renderUI(tagList(lapply(values$warnings, tags$p)))
-                 output$error <- renderUI(tagList(lapply(values$errors, tags$p)))
-                 output$success <- renderText(values$fileImportSuccess)
+                 output$error <-
+                   renderUI(tagList(lapply(values$errors, tags$p)))
+                 output$success <-
+                   renderText(values$fileImportSuccess)
 
                  output$preview <- renderTable(
                    values$headData,
@@ -173,9 +187,29 @@ importDataServer <- function(id,
                  })
 
                  observeEvent(input$accept, {
+                   withProgress({
+                     # load full data set
+                     values <- loadDataWrapper(
+                       values = values,
+                       filepath = dataSource()$file,
+                       filename = dataSource()$filename,
+                       colNames = colNames,
+                       type = input$type,
+                       sep = input$colSep,
+                       dec = input$decSep,
+                       withRownames = isTRUE(input$rownames),
+                       headOnly = FALSE,
+                       customWarningChecks = customWarningChecks,
+                       customErrorChecks = customErrorChecks
+                     )
+                   },
+                   value = 0.75,
+                   message = 'import full data ...')
+
                    removeModal()
 
-                   values$data[[values$fileName]] <- values$dataImport
+                   values$data[[values$fileName]] <-
+                     values$dataImport
                  })
 
                  reactive(values$data)
@@ -183,24 +217,20 @@ importDataServer <- function(id,
 }
 
 # import data dialog ui
-importDataDialog <- function(ns){
+importDataDialog <- function(ns) {
   modalDialog(
     useShinyjs(),
     title = "Import Data",
     footer = tagList(
-      actionButton(ns("cancel"), "Cancel"),
       actionButton(ns("addData"), "Add data"),
-      actionButton(ns("accept"), "Accept")
+      actionButton(ns("accept"), "Accept"),
+      actionButton(ns("cancel"), "Cancel")
     ),
     tabsetPanel(
-      tabPanel(
-        "Select Data",
-        selectDataUI(ns = ns)
-      ),
-      tabPanel(
-        "Merge Data",
-        mergeDataUI(ns("dataMerger"))
-      )
+      tabPanel("Select Data",
+               selectDataUI(ns = ns)),
+      tabPanel("Merge Data",
+               mergeDataUI(ns("dataMerger")))
     )
   )
 }
@@ -208,47 +238,64 @@ importDataDialog <- function(ns){
 #' Select Data UI
 #'
 #' @param ns namespace
-selectDataUI <- function(ns){
+selectDataUI <- function(ns) {
   tagList(
-    # select source UI ----
-    selectInput(ns("source"), "Source", choices = c("Pandora Platform" = "ckan","File" = "file", "URL" = "url")),
-    conditionalPanel(
-      condition = "input.source == 'ckan'",
-      ns = ns,
-      selectInput(ns("ckanRecord"), "Pandora dataset", choices = NULL),
-      selectizeInput(ns("ckanResource"), "Pandora dataset resource", choices = NULL
+    fluidRow(
+      column(4,
+             # select source UI ----
+             selectInput(
+               ns("source"),
+               "Source",
+               choices = c(
+                 "Pandora Platform" = "ckan",
+                 "File" = "file",
+                 "URL" = "url"
+               )
+             )),
+      column(
+        8,
+        conditionalPanel(
+          condition = "input.source == 'ckan'",
+          ns = ns,
+          selectInput(ns("ckanRecord"), "Pandora dataset", choices = NULL),
+          selectizeInput(ns("ckanResource"), "Pandora dataset resource", choices = NULL)
+        ),
+        conditionalPanel(condition = "input.source == 'file'",
+                         ns = ns,
+                         fileInput(ns("file"), "File")),
+        conditionalPanel(condition = "input.source == 'url'",
+                         ns = ns,
+                         textInput(ns("url"), "URL"))
       )
-    ),
-    conditionalPanel(
-      condition = "input.source == 'file'",
-      ns = ns,
-      fileInput(ns("file"), "File")
-    ),
-    conditionalPanel(
-      condition = "input.source == 'url'",
-      ns = ns,
-      textInput(ns("url"), "URL")
     ),
     tags$hr(),
     # specify file UI ----
-    selectInput(
-      ns("type"),
-      "File type",
-      choices = c("xls(x)" = "xlsx", "csv", "ods", "txt"),
-      selected = "xlsx"
+    fluidRow(column(
+      4,
+      selectInput(
+        ns("type"),
+        "File type",
+        choices = c("xls(x)" = "xlsx", "csv", "ods", "txt"),
+        selected = "xlsx"
+      )
     ),
-    conditionalPanel(
-      condition = paste0("input.type == 'csv' || input.type == 'txt'"),
-      div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-          textInput(ns("colSep"), "column separator:", value = ",")),
-      div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-          textInput(ns("decSep"), "decimal separator:", value = ".")),
-      ns = ns
-    ),
+    column(
+      8,
+      conditionalPanel(
+        condition = paste0("input.type == 'csv' || input.type == 'txt'"),
+        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
+            textInput(
+              ns("colSep"), "column separator:", value = ","
+            )),
+        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
+            textInput(
+              ns("decSep"), "decimal separator:", value = "."
+            )),
+        ns = ns
+      )
+    )),
     checkboxInput(ns("rownames"), "First column contains rownames"),
-    helpText(
-      "The first row in your file need to contain variable names."
-    ),
+    helpText("The first row in your file need to contain variable names."),
     div(class = "text-danger", uiOutput(ns("warning"))),
     div(class = "text-danger", uiOutput(ns("error"))),
     div(class = "text-success", textOutput(ns("success"))),
@@ -267,9 +314,17 @@ selectDataUI <- function(ns){
 #' @param dec (character) decimal separator input
 #' @param withRownames (logical) contains rownames input
 #' @param headOnly (logical) load only head (first n rows) of file
-loadDataWrapper <- function(values, filepath, filename, colNames,
-                            type, sep, dec, withRownames, headOnly,
-                            customWarningChecks, customErrorChecks) {
+loadDataWrapper <- function(values,
+                            filepath,
+                            filename,
+                            colNames,
+                            type,
+                            sep,
+                            dec,
+                            withRownames,
+                            headOnly,
+                            customWarningChecks,
+                            customErrorChecks) {
   df <- tryCatch(
     loadData(
       file = filepath,
@@ -432,14 +487,22 @@ loadData <-
 #' @param headOnly (logical) if TRUE, set maximal number of rows to n
 #' @param type (character) file type
 #' @param n (numeric) maximal number of rows if headOnly
-getNrow <- function(headOnly, type, n = 3) {
+getNrow <- function(headOnly, type, n = 4) {
   if (headOnly) {
-    if (type == "xlsx") return(1:n) else
-      if (type == "ods") return(paste0("A1:C", n)) else
-        return(n)
+    if (type == "xlsx")
+      return(1:n)
+    else
+      if (type == "ods")
+        return(paste0("A1:C", n))
+    else
+      return(n)
   } else {
-    if (type %in% c("xlsx", "ods")) return(NULL) else
-      if (type == "xls") return(Inf) else
-        return(-999)
+    if (type %in% c("xlsx", "ods"))
+      return(NULL)
+    else
+      if (type == "xls")
+        return(Inf)
+    else
+      return(-999)
   }
 }
