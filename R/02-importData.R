@@ -41,13 +41,24 @@ importDataServer <- function(id,
                    data = list()
                  )
 
+                 valuesPreview <- reactiveValues(
+                   warnings = list(),
+                   errors = list(),
+                   fileName = NULL,
+                   fileImportSuccess = NULL,
+                   dataImport = NULL,
+                   data = list()
+                 )
+
+                 mergeList <- reactiveVal(list())
+
                  ckanFiles <- reactive({
                    getCKANFiles()
                  })
 
                  dataSource <- reactiveVal(NULL)
 
-                 # select source server ----
+                 # select source ----
                  observeEvent(input$openPopup, ignoreNULL = TRUE, {
                    reset("file")
                    values$warnings <- list()
@@ -63,6 +74,18 @@ importDataServer <- function(id,
                    titles <-
                      unlist(lapply(ckanFiles(), `[[`, "title"))
                    updateSelectInput(session, "ckanRecord", choices = titles)
+                 })
+
+                 observeEvent(input$tabImport, {
+                   if (input$tabImport == "Merge Data") {
+                     shinyjs::hide(ns("addData"), asis = TRUE)
+                     shinyjs::hide(ns("accept"), asis = TRUE)
+                     shinyjs::show(ns("mergeData"), asis = TRUE)
+                   } else {
+                     shinyjs::show(ns("addData"), asis = TRUE)
+                     shinyjs::show(ns("accept"), asis = TRUE)
+                     shinyjs::hide(ns("mergeData"), asis = TRUE)
+                   }
                  })
 
                  ckanRecord <- reactive({
@@ -120,7 +143,7 @@ importDataServer <- function(id,
                    dataSource(list(file = tmp, filename = input$url))
                  })
 
-                 # specify file server ----
+                 # specify file ----
                  observeEvent(list(
                    dataSource(),
                    input$type,
@@ -133,15 +156,17 @@ importDataServer <- function(id,
                    req(dataSource())
 
                    # reset values
-                   values$dataImport <- NULL
-                   values$warnings <- list()
-                   values$errors <- list()
-                   values$fileImportSuccess <- NULL
+                   valuesPreview$warnings <- list()
+                   valuesPreview$errors <- list()
+                   valuesPreview$fileImportWarning <- NULL
+                   valuesPreview$fileImportSuccess <- NULL
+                   valuesPreview$dataImport <- NULL
+                   valuesPreview$data <- list()
 
                    withProgress({
                      # load first lines only
-                     values <- loadDataWrapper(
-                       values = values,
+                     valuesPreview <- loadDataWrapper(
+                       values = valuesPreview,
                        filepath = dataSource()$file,
                        filename = dataSource()$filename,
                        colNames = colNames,
@@ -157,28 +182,30 @@ importDataServer <- function(id,
                    value = 0.75,
                    message = 'load preview data ...')
 
-                   if (length(values$errors) > 0 ||
-                       length(values$warnings) > 0) {
+                   if (length(valuesPreview$errors) > 0 ||
+                       length(valuesPreview$warnings) > 0) {
+                     shinyjs::disable(ns("addData"), asis = TRUE)
                      shinyjs::disable(ns("accept"), asis = TRUE)
                    } else {
+                     shinyjs::enable(ns("addData"), asis = TRUE)
                      shinyjs::enable(ns("accept"), asis = TRUE)
-                     values$fileImportSuccess <-
-                       "Data import was successful"
+                     valuesPreview$fileImportSuccess <-
+                       "Data import successful"
                    }
                  })
 
                  output$warning <-
-                   renderUI(tagList(lapply(values$warnings, tags$p)))
+                   renderUI(tagList(lapply(valuesPreview$warnings, tags$p)))
                  output$error <-
-                   renderUI(tagList(lapply(values$errors, tags$p)))
+                   renderUI(tagList(lapply(valuesPreview$errors, tags$p)))
                  output$success <-
-                   renderText(values$fileImportSuccess)
+                   renderText(valuesPreview$fileImportSuccess)
 
                  output$preview <- renderDataTable({
-                   req(values$dataImport)
+                   req(valuesPreview$dataImport)
 
                    previewData <-
-                     cutAllLongStrings(values$dataImport, cutAt = 20)
+                     cutAllLongStrings(valuesPreview$dataImport, cutAt = 20)
                    DT::datatable(
                      previewData,
                      filter = "none",
@@ -195,6 +222,20 @@ importDataServer <- function(id,
                  observeEvent(input$cancel, {
                    removeModal()
                  })
+
+                 observeEvent(input$addData, {
+                   mergeList(c(
+                     mergeList(),
+                     setNames(
+                       list(reactiveValuesToList(valuesPreview)),
+                       valuesPreview$fileName
+                     )
+                   ))
+
+                   shinyjs::disable(ns("addData"), asis = TRUE)
+                 })
+
+                 mergeImportsServer("dataMerger", mergeList = mergeList)
 
                  observeEvent(input$accept, {
                    removeModal()
@@ -222,6 +263,7 @@ importDataServer <- function(id,
                      values$dataImport
                  })
 
+                 # return value for parent module: ----
                  reactive(values$data)
                })
 }
@@ -232,13 +274,17 @@ importDataDialog <- function(ns) {
     shinyjs::useShinyjs(),
     title = "Import Data",
     footer = tagList(
-      #actionButton(ns("addData"), "Add data"),
       actionButton(ns("accept"), "Accept"),
-      actionButton(ns("cancel"), "Cancel")),
-    tabsetPanel(tabPanel("Select Data",
-                         selectDataTab(ns = ns))#,
-                # tabPanel("Merge Data",
-                #          mergeDataUI(ns("dataMerger")))
+      actionButton(ns("addData"), "Add to Merge Data"),
+      actionButton(ns("mergeData"), "Merge Data"),
+      actionButton(ns("cancel"), "Cancel")
+    ),
+    tabsetPanel(
+      id = ns("tabImport"),
+      tabPanel("Select Data",
+               selectDataTab(ns = ns)),
+      tabPanel("Merge Data",
+               mergeImportsUI(ns("dataMerger")))
     )
   )
 }
@@ -308,8 +354,8 @@ selectDataTab <- function(ns) {
     div(class = "text-danger", uiOutput(ns("warning"))),
     div(class = "text-danger", uiOutput(ns("error"))),
     div(class = "text-success", textOutput(ns("success"))),
-    tags$br(),
-    tags$h5("Preview:"),
+    tags$hr(),
+    tags$h5("Preview Data"),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "preview"
@@ -486,20 +532,11 @@ loadData <-
 #' @param df (data.frame) data.frame with character and non-character columns
 #' @param cutAt (numeric) number of characters after which to cut the entries of an character-column
 cutAllLongStrings <- function(df, cutAt = 50) {
-  cutStrings <- function(vec, cutAt) {
-    if (any(nchar(vec) > cutAt, na.rm = TRUE)) {
-      index <- !is.na(vec) & nchar(vec) > cutAt
-      vec[index] <- paste0(substr(vec[index], 1, cutAt), "...")
-    }
-
-    vec
-  }
-
   df <- lapply(df, function(z) {
     if (!is.character(z))
       return(z)
 
-    cutStrings(z, cutAt = cutAt)
+    cutStrings(charVec = z, cutAt = cutAt)
   }) %>%
     as.data.frame()
 
@@ -508,6 +545,20 @@ cutAllLongStrings <- function(df, cutAt = 50) {
   colnames(df) <- dfColNames
 
   df
+}
+
+
+#' Cut All Strings
+#'
+#' @param charVec (character) character vector
+#' @param cutAt (numeric) number of characters after which to cut the entries of an character-column
+cutStrings <- function(charVec, cutAt = 50) {
+  if (any(nchar(charVec) > cutAt, na.rm = TRUE)) {
+    index <- !is.na(charVec) & nchar(charVec) > cutAt
+    charVec[index] <- paste0(substr(charVec[index], 1, cutAt), "...")
+  }
+
+  charVec
 }
 
 
