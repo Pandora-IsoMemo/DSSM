@@ -157,15 +157,14 @@ importDataServer <- function(id,
                    value = 0.75,
                    message = 'load preview data ...')
 
-                   if (length(values$errors) > 0) {
-                     shinyjs::disable("accept")
-                     return(NULL)
+                   if (length(values$errors) > 0 ||
+                       length(values$warnings) > 0) {
+                     shinyjs::disable(ns("accept"), asis = TRUE)
                    } else {
-                     shinyjs::enable("accept")
+                     shinyjs::enable(ns("accept"), asis = TRUE)
                      values$fileImportSuccess <-
                        "Data import was successful"
                    }
-
                  })
 
                  output$warning <-
@@ -175,18 +174,31 @@ importDataServer <- function(id,
                  output$success <-
                    renderText(values$fileImportSuccess)
 
-                 output$preview <- renderTable(
-                   values$headData,
-                   bordered = TRUE,
-                   rownames = FALSE,
-                   colnames = TRUE
-                 )
+                 output$preview <- renderDataTable({
+                   req(values$dataImport)
+
+                   previewData <-
+                     cutAllLongStrings(values$dataImport, cutAt = 20)
+                   DT::datatable(
+                     previewData,
+                     filter = "none",
+                     selection = "none",
+                     rownames = FALSE,
+                     options = list(
+                       dom = "t",
+                       ordering = FALSE,
+                       scrollX = TRUE
+                     )
+                   )
+                 })
 
                  observeEvent(input$cancel, {
                    removeModal()
                  })
 
                  observeEvent(input$accept, {
+                   removeModal()
+
                    withProgress({
                      # load full data set
                      values <- loadDataWrapper(
@@ -206,8 +218,6 @@ importDataServer <- function(id,
                    value = 0.75,
                    message = 'import full data ...')
 
-                   removeModal()
-
                    values$data[[values$fileName]] <-
                      values$dataImport
                  })
@@ -219,18 +229,16 @@ importDataServer <- function(id,
 # import data dialog ui
 importDataDialog <- function(ns) {
   modalDialog(
-    useShinyjs(),
+    shinyjs::useShinyjs(),
     title = "Import Data",
     footer = tagList(
-      actionButton(ns("addData"), "Add data"),
+      #actionButton(ns("addData"), "Add data"),
       actionButton(ns("accept"), "Accept"),
-      actionButton(ns("cancel"), "Cancel")
-    ),
-    tabsetPanel(
-      tabPanel("Select Data",
-               selectDataUI(ns = ns)),
-      tabPanel("Merge Data",
-               mergeDataUI(ns("dataMerger")))
+      actionButton(ns("cancel"), "Cancel")),
+    tabsetPanel(tabPanel("Select Data",
+                         selectDataTab(ns = ns))#,
+                # tabPanel("Merge Data",
+                #          mergeDataUI(ns("dataMerger")))
     )
   )
 }
@@ -238,8 +246,9 @@ importDataDialog <- function(ns) {
 #' Select Data UI
 #'
 #' @param ns namespace
-selectDataUI <- function(ns) {
+selectDataTab <- function(ns) {
   tagList(
+    tags$br(),
     fluidRow(
       column(4,
              # select source UI ----
@@ -283,14 +292,14 @@ selectDataUI <- function(ns) {
       8,
       conditionalPanel(
         condition = paste0("input.type == 'csv' || input.type == 'txt'"),
-        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-            textInput(
-              ns("colSep"), "column separator:", value = ","
-            )),
-        div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-            textInput(
-              ns("decSep"), "decimal separator:", value = "."
-            )),
+        fluidRow(column(
+          width = 5,
+          textInput(ns("colSep"), "column separator:", value = ",")
+        ),
+        column(
+          width = 5,
+          textInput(ns("decSep"), "decimal separator:", value = ".")
+        )),
         ns = ns
       )
     )),
@@ -299,7 +308,12 @@ selectDataUI <- function(ns) {
     div(class = "text-danger", uiOutput(ns("warning"))),
     div(class = "text-danger", uiOutput(ns("error"))),
     div(class = "text-success", textOutput(ns("success"))),
-    tableOutput(ns("preview"))
+    tags$br(),
+    tags$h5("Preview:"),
+    fluidRow(column(12,
+                    dataTableOutput(ns(
+                      "preview"
+                    ))))
   )
 }
 
@@ -335,21 +349,14 @@ loadDataWrapper <- function(values,
       headOnly = headOnly
     ),
     error = function(e) {
-      values$warnings <- c(values$warnings, "Could not read in file.")
-      shinyjs::disable("accept")
+      values$errors <- c(values$errors, "Could not read in file.")
       NULL
     },
     warning = function(w) {
       values$warnings <- c(values$warnings, "Could not read in file.")
-      shinyjs::disable("accept")
       NULL
     }
   )
-
-  if (is.null(df)) {
-    values$headData <- NULL
-    return(NULL)
-  }
 
   #attr(df, "includeSd") <- isTRUE(input$includeSd)
 
@@ -363,15 +370,6 @@ loadDataWrapper <- function(values,
   ## Import technically successful
   values$fileName <- filename
   values$dataImport <- as.data.frame(df)
-
-  ## create preview data
-  values$headData <- lapply(head(as.data.frame(df)), function(z) {
-    if (is.character(z)) {
-      substr(z, 1, 50)
-    } else {
-      z
-    }
-  })[1:min(ncol(df), 5)]
 
   ## Import valid?
   lapply(customWarningChecks, function(fun) {
@@ -481,6 +479,37 @@ loadData <-
 
     return(data)
   }
+
+
+#' Cut All Strings
+#'
+#' @param df (data.frame) data.frame with character and non-character columns
+#' @param cutAt (numeric) number of characters after which to cut the entries of an character-column
+cutAllLongStrings <- function(df, cutAt = 50) {
+  cutStrings <- function(vec, cutAt) {
+    if (any(nchar(vec) > cutAt, na.rm = TRUE)) {
+      index <- !is.na(vec) & nchar(vec) > cutAt
+      vec[index] <- paste0(substr(vec[index], 1, cutAt), "...")
+    }
+
+    vec
+  }
+
+  df <- lapply(df, function(z) {
+    if (!is.character(z))
+      return(z)
+
+    cutStrings(z, cutAt = cutAt)
+  }) %>%
+    as.data.frame()
+
+  dfColNames <- colnames(df) %>%
+    cutStrings(cutAt = max(10, (cutAt - 3)))
+  colnames(df) <- dfColNames
+
+  df
+}
+
 
 #' get nRow
 #'
