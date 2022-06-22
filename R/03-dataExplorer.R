@@ -217,7 +217,7 @@ dataExplorerServer <- function(id) {
                      isoDataRaw(d)
                    },
                    value = 0.75,
-                   message = 'Get remote data ...'
+                   message = 'Get remote data from database ...'
                    )
                  })
 
