@@ -18,7 +18,7 @@ modelResultsDiffUI <- function(id, title = ""){
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create map" = "create",
-                                "View single map" = "model"),
+                                "Load OperatoR map" = "model"),
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'model'",
