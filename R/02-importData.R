@@ -58,7 +58,8 @@ importDataServer <- function(id,
 
                  dataSource <- reactiveVal(NULL)
 
-                 # select source ----
+                 # select source server ----
+
                  observeEvent(input$openPopup, ignoreNULL = TRUE, {
                    reset("file")
                    values$warnings <- list()
@@ -143,7 +144,8 @@ importDataServer <- function(id,
                    dataSource(list(file = tmp, filename = input$url))
                  })
 
-                 # specify file ----
+                 # specify file server ----
+
                  observeEvent(list(
                    dataSource(),
                    input$type,
