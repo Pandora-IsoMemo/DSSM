@@ -237,7 +237,7 @@ importDataServer <- function(id,
                    shinyjs::disable(ns("addData"), asis = TRUE)
                  })
 
-                 mergeImportsServer("dataMerger", mergeList = mergeList)
+                 mergeDataServer("dataMerger", mergeList = mergeList)
 
                  observeEvent(input$accept, {
                    removeModal()
@@ -286,7 +286,7 @@ importDataDialog <- function(ns) {
       tabPanel("Select Data",
                selectDataTab(ns = ns)),
       tabPanel("Merge Data",
-               mergeImportsUI(ns("dataMerger")))
+               mergeDataUI(ns("dataMerger")))
     )
   )
 }

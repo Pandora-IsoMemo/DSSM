@@ -3,7 +3,7 @@
 #' UI of the merge data module
 #'
 #' @param id id of module
-mergeImportsUI <- function(id) {
+mergeDataUI <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -37,7 +37,7 @@ mergeImportsUI <- function(id) {
 #' Server function of the merge data module
 #' @param id id of module
 #' @param mergeList (list) list of data to be merged
-mergeImportsServer <- function(id, mergeList) {
+mergeDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
                  columnMapping <- reactiveVal()
