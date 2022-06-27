@@ -29,6 +29,7 @@
 #' @importFrom readr guess_encoding
 #' @importFrom readxl read_excel
 #' @importFrom Rfast spdinv Crossprod rmvnorm
+#' @importFrom rlang .data
 #' @importFrom shinyjs alert reset runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
