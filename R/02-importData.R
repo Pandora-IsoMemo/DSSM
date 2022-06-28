@@ -182,7 +182,7 @@ importDataServer <- function(id,
                      )
                    },
                    value = 0.75,
-                   message = 'load preview data ...')
+                   message = 'loading preview data ...')
 
                    if (length(valuesPreview$errors) > 0 ||
                        length(valuesPreview$warnings) > 0) {
@@ -221,24 +221,12 @@ importDataServer <- function(id,
                    )
                  })
 
+                 ## button cancel ----
                  observeEvent(input$cancel, {
                    removeModal()
                  })
 
-                 observeEvent(input$addData, {
-                   mergeList(c(
-                     mergeList(),
-                     setNames(
-                       list(reactiveValuesToList(valuesPreview)),
-                       valuesPreview$fileName
-                     )
-                   ))
-
-                   shinyjs::disable(ns("addData"), asis = TRUE)
-                 })
-
-                 mergeDataServer("dataMerger", mergeList = mergeList)
-
+                 ## button accept ----
                  observeEvent(input$accept, {
                    removeModal()
 
@@ -259,10 +247,58 @@ importDataServer <- function(id,
                      )
                    },
                    value = 0.75,
-                   message = 'import full data ...')
+                   message = 'importing full data ...')
 
                    values$data[[values$fileName]] <-
                      values$dataImport
+                 })
+
+                 ## button add data ----
+                 observeEvent(input$addData, {
+                   withProgress({
+                     # load full data set
+                     valuesToMerge <- loadDataWrapper(
+                       values = values,
+                       filepath = dataSource()$file,
+                       filename = dataSource()$filename,
+                       colNames = colNames,
+                       type = input$type,
+                       sep = input$colSep,
+                       dec = input$decSep,
+                       withRownames = isTRUE(input$rownames),
+                       # set headOnly = TRUE to FALSE after developement
+                       #  warning if data becomes too large
+                       headOnly = TRUE,
+                       customWarningChecks = customWarningChecks,
+                       customErrorChecks = customErrorChecks
+                     )
+                   },
+                   value = 0.75,
+                   message = 'loading full data ...')
+
+                   mergeList(c(
+                     mergeList(),
+                     setNames(
+                       list(reactiveValuesToList(valuesToMerge)),
+                       valuesToMerge$fileName
+                     )
+                   ))
+
+                   shinyjs::disable(ns("addData"), asis = TRUE)
+                 })
+
+                 joinedData <- mergeDataServer("dataMerger", mergeList = mergeList)
+
+                 ## button merge data ----
+                 observeEvent(input$mergeData, {
+                   removeModal()
+                   #browser()
+                   # what filename??
+                   # values$errors <-
+                   # values$warnings <-
+                   # values$fileName <-
+
+                   values$data[["mergedData"]] <- joinedData()
                  })
 
                  # return value for parent module: ----
@@ -569,7 +605,7 @@ cutStrings <- function(charVec, cutAt = 50) {
 #' @param headOnly (logical) if TRUE, set maximal number of rows to n
 #' @param type (character) file type
 #' @param n (numeric) maximal number of rows if headOnly
-getNrow <- function(headOnly, type, n = 4) {
+getNrow <- function(headOnly, type, n = 3) {
   if (headOnly) {
     if (type == "xlsx")
       return(1:n)

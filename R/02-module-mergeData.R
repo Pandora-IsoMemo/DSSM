@@ -69,6 +69,7 @@ mergeDataServer <- function(id, mergeList) {
                  observeEvent(input$applyMerge, {
                    req(input$mergeCommand)
 
+                   withProgress({
                    # setup data.frames to merge
                    for (i in 1:length(input$mergeNames)) {
                      tableName <- input$mergeNames[i]
@@ -96,8 +97,14 @@ mergeDataServer <- function(id, mergeList) {
                                                         colNames = get("colNamesTable2"))
                      )
 
-                   joinedData(joinedData)
+                   if (nrow(joinedData) > 100000)
+                     alert(paste0("Merged data is very large and has ", nrow(joinedData), "rows.",
+                                  "The app might be very slow or even crash."))
 
+                   joinedData(joinedData)
+                   },
+                   value = 0.75,
+                   message = 'merging data ...')
                  })
 
                  output$joinedData <- renderDataTable({
@@ -106,6 +113,10 @@ mergeDataServer <- function(id, mergeList) {
                                  rownames = FALSE,
                                  options = list(scrollX = TRUE))
                  })
+
+                 # return value for parent module: ----
+                 return(joinedData)
+
                })
 }
 
