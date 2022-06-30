@@ -1,14 +1,14 @@
-test_that("Test module mergeImportData", {
+testthat::test_that("Test module mergeImportData", {
   testMergeList <-
     readRDS(testthat::test_path("data-module-mergeImports.rds"))
 
-  testServer(mergeDataServer, args = list(mergeList = reactive(testMergeList)),
+  shiny::testServer(mergeDataServer, args = list(mergeList = reactive(testMergeList)),
              {
                # Arrange
                print("test merge import data from ckan")
                # Act
                session$setInputs(
-                 mergeNames = names(testMergeList),
+                 tablesToMerge = names(testMergeList),
                  showColnames = TRUE,
                  mergeCommand = "joinedData <- inner_join(table1, table2, by = c(\"col2\" = \"col2\"), na_matches = \"never\")",
                  applyMerge = TRUE
