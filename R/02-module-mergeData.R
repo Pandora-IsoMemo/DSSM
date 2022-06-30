@@ -9,15 +9,56 @@ mergeDataUI <- function(id) {
   tagList(
     tags$br(),
     selectInput(
-      ns("mergeNames"),
-      "Select datasets",
+      ns("tablesToMerge"),
+      "Select datasets to merge",
       choices = NULL,
       multiple = TRUE
     ),
+    fluidRow(
+      column(
+        4,
+        selectInput(
+          ns("mergeOperation"),
+          "Select operation",
+          choices = c(
+            "all rows in x AND y" = "inner_join",
+            "all rows in x" = "left_join",
+            "all rows in y" = "right_join",
+            "all rows in x OR y" = "full_join"
+          ),
+          selected = "left_join"
+        )
+      ),
+      column(4, selectInput(
+        ns("tableX"), "Select tabel x", choices = 1:3
+      )),
+      column(4, selectInput(
+        ns("tableY"), "Select tabel y", choices = 1:3
+      ))
+    ),
+    fluidRow(column(
+      6,
+      selectInput(
+        ns("xColumnsToJoin"),
+        "Select x colums",
+        choices = 1:6,
+        multiple = TRUE
+      )
+    ),
+    column(
+      6,
+      selectInput(
+        ns("yColumnsToJoin"),
+        "Select y columns",
+        choices = 1:3,
+        multiple = TRUE
+      )
+    )),
     textAreaInput(ns("mergeCommand"),
                   "Merge command",
                   value = "joinedData <- inner_join(table1, table2, by = c(\"col2\" = \"col2\"), na_matches = \"never\")"),
     actionButton(ns("applyMerge"), "Apply"),
+    actionButton(ns("addMerge"), "Add Table"),
     checkboxInput(ns("showColnames"), "Show column names"),
     conditionalPanel(condition = "input.showColnames == true",
                      fluidRow(column(
@@ -47,16 +88,16 @@ mergeDataServer <- function(id, mergeList) {
                    req(length(mergeList()) > 0)
                    updateSelectInput(
                      session,
-                     "mergeNames",
+                     "tablesToMerge",
                      choices = names(mergeList()),
                      selected = names(mergeList())
                    )
                  })
 
-                 observeEvent(input$mergeNames, {
-                   req(length(input$mergeNames) > 1)
+                 observeEvent(input$tablesToMerge, {
+                   req(length(input$tablesToMerge) > 1)
 
-                   columnMapping(getColumNames(mergeList()[input$mergeNames]))
+                   columnMapping(getColumNames(mergeList()[input$tablesToMerge]))
                  })
 
                  output$colNames <- renderDataTable({
@@ -70,38 +111,49 @@ mergeDataServer <- function(id, mergeList) {
                    req(input$mergeCommand)
 
                    withProgress({
-                   # setup data.frames to merge
-                   for (i in 1:length(input$mergeNames)) {
-                     tableName <- input$mergeNames[i]
+                     # setup data.frames to merge
+                     for (i in 1:length(input$tablesToMerge)) {
+                       tableName <- input$tablesToMerge[i]
 
-                     tableDat <- mergeList()[[tableName]]$dataImport
-                     assign(paste0("colNamesTable", i), colnames(tableDat))
+                       tableDat <-
+                         mergeList()[[tableName]]$dataImport
+                       assign(paste0("colNamesTable", i), colnames(tableDat))
 
-                     colnames(tableDat) <-
-                       paste0("col", 1:ncol(tableDat))
-                     assign(paste0("colIdsTable", i), colnames(tableDat))
+                       colnames(tableDat) <-
+                         paste0("col", 1:ncol(tableDat))
+                       assign(paste0("colIdsTable", i), colnames(tableDat))
 
-                     assign(paste0("table", i), tableDat)
-                   }
+                       assign(paste0("table", i), tableDat)
+                     }
 
-                   # merge data
-                   joinedData <- data.frame()
-                   eval(parse(text = input$mergeCommand))
+                     # merge data
+                     joinedData <- data.frame()
+                     eval(parse(text = input$mergeCommand))
 
-                   # rename columns
-                   joinedData <- renameColumnIds(
-                     joinedData = joinedData,
-                                   mappingTable1 = list(colIds = get("colIdsTable1"),
-                                                        colNames = get("colNamesTable1")),
-                                   mappingTable2 = list(colIds = get("colIdsTable2"),
-                                                        colNames = get("colNamesTable2"))
+                     # rename columns
+                     joinedData <- renameColumnIds(
+                       joinedData = joinedData,
+                       mappingTable1 = list(
+                         colIds = get("colIdsTable1"),
+                         colNames = get("colNamesTable1")
+                       ),
+                       mappingTable2 = list(
+                         colIds = get("colIdsTable2"),
+                         colNames = get("colNamesTable2")
+                       )
                      )
 
-                   if (nrow(joinedData) > 100000)
-                     alert(paste0("Merged data is very large and has ", nrow(joinedData), "rows.",
-                                  "The app might be very slow or even crash."))
+                     if (nrow(joinedData) > 100000)
+                       alert(
+                         paste0(
+                           "Merged data is very large and has ",
+                           nrow(joinedData),
+                           "rows.",
+                           "The app might be very slow or even crash."
+                         )
+                       )
 
-                   joinedData(joinedData)
+                     joinedData(joinedData)
                    },
                    value = 0.75,
                    message = 'merging data ...')
@@ -146,54 +198,47 @@ getColumNames <- function(mergeList) {
 }
 
 
-renameColumnIds <- function(joinedData, mappingTable1, mappingTable2) {
-  colIdsTable1 <- mappingTable1$colIds
-  colNamesTable1 <- mappingTable1$colNames
+renameColumnIds <-
+  function(joinedData, mappingTable1, mappingTable2) {
+    colIdsTable1 <- mappingTable1$colIds
+    colNamesTable1 <- mappingTable1$colNames
 
-  colIdsTable2 <- mappingTable2$colIds
-  colNamesTable2 <- mappingTable2$colNames
+    colIdsTable2 <- mappingTable2$colIds
+    colNamesTable2 <- mappingTable2$colNames
 
-  # rename .x columns
-  joinedData <- renameExisting(
-    joinedData,
-    oldNames = paste0(colIdsTable1, ".x"),
-    newNames = colNamesTable1
-  )
+    # rename .x columns
+    joinedData <- renameExisting(joinedData,
+                                 oldNames = paste0(colIdsTable1, ".x"),
+                                 newNames = colNamesTable1)
 
-  # rename joined columns
-  joinedData <- renameExisting(
-    joinedData,
-    oldNames = colIdsTable1,
-    newNames = colNamesTable1
-  )
+    # rename joined columns
+    joinedData <- renameExisting(joinedData,
+                                 oldNames = colIdsTable1,
+                                 newNames = colNamesTable1)
 
-  # rename unique .y columns
-  uniqueYCols <-
-    !(colNamesTable2 %in% colNamesTable1)
-  joinedData <- renameExisting(
-    joinedData,
-    oldNames = paste0(colIdsTable2[uniqueYCols], ".y"),
-    newNames = colNamesTable2[uniqueYCols]
-  )
+    # rename unique .y columns
+    uniqueYCols <-
+      !(colNamesTable2 %in% colNamesTable1)
+    joinedData <- renameExisting(joinedData,
+                                 oldNames = paste0(colIdsTable2[uniqueYCols], ".y"),
+                                 newNames = colNamesTable2[uniqueYCols])
 
-  # rename duplicated .y columns
-  duplicatedYCols <-
-    colNamesTable2 %in% colNamesTable1
-  joinedData <- renameExisting(
-    joinedData,
-    oldNames = paste0(colIdsTable2[duplicatedYCols], ".y"),
-    newNames = paste0(colNamesTable2[duplicatedYCols], ".y")
-  )
+    # rename duplicated .y columns
+    duplicatedYCols <-
+      colNamesTable2 %in% colNamesTable1
+    joinedData <- renameExisting(
+      joinedData,
+      oldNames = paste0(colIdsTable2[duplicatedYCols], ".y"),
+      newNames = paste0(colNamesTable2[duplicatedYCols], ".y")
+    )
 
-  # rename remaining columns from y
-  joinedData <- renameExisting(
-    joinedData,
-    oldNames = colIdsTable2,
-    newNames = colNamesTable2
-  )
+    # rename remaining columns from y
+    joinedData <- renameExisting(joinedData,
+                                 oldNames = colIdsTable2,
+                                 newNames = colNamesTable2)
 
-  joinedData
-}
+    joinedData
+  }
 
 
 renameExisting <- function(df, oldNames, newNames) {
