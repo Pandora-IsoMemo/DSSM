@@ -39,6 +39,7 @@
 #' @importFrom stats aggregate as.formula model.matrix na.exclude na.omit predict quantile dnorm qnorm residuals pnorm var
 #' sd setNames cor density median kmeans
 #' @importFrom stringi stri_escape_unicode
+#' @importFrom templates tmpl
 #' @importFrom utils available.packages compareVersion install.packages head
 #' packageVersion read.csv read.csv2 write.table installed.packages capture.output download.file
 NULL
