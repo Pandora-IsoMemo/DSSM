@@ -20,26 +20,24 @@ mergeDataUI <- function(id) {
       choices = NULL,
       width = "100%"
     ),
-    fluidRow(
-      column(
-        4,
-        selectInput(
-          ns("mergeOperation"),
-          "Select operation",
-          choices = c(
-            "all rows in x and y" = "inner_join",
-            "all rows in x" = "left_join",
-            "all rows in y" = "right_join",
-            "all rows in x or y" = "full_join"
-          ),
-          selected = "left_join"
-        )
-      ),
-      column(
-        8,
-        checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
+    fluidRow(column(
+      4,
+      selectInput(
+        ns("mergeOperation"),
+        "Select operation",
+        choices = c(
+          "all rows in x and y" = "inner_join",
+          "all rows in x" = "left_join",
+          "all rows in y" = "right_join",
+          "all rows in x or y" = "full_join"
+        ),
+        selected = "left_join"
       )
     ),
+    column(
+      8,
+      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
+    )),
     fluidRow(column(
       6,
       selectInput(
@@ -58,10 +56,12 @@ mergeDataUI <- function(id) {
         multiple = TRUE
       )
     )),
-    textAreaInput(ns("mergeCommand"),
-                  "Merge command",
-                  value = NULL,
-                  width = "100%"),
+    textAreaInput(
+      ns("mergeCommand"),
+      "Merge command",
+      value = NULL,
+      width = "100%"
+    ),
     actionButton(ns("applyMerge"), "Apply"),
     actionButton(ns("addMerge"), "Add Table"),
     # checkboxInput(ns("showColnames"), "Show column names"),
@@ -152,12 +152,15 @@ mergeDataServer <- function(id, mergeList) {
 
                    namesOfAllTables <- names(mergeList())
 
-                   joinString <- getJoinString(input$xColumnsToJoin, input$yColumnsToJoin)
-                   tableX <- getTableId(namesOfAllTables)[[input$tableX]]
-                   tableY <- getTableId(namesOfAllTables)[[input$tableY]]
+                   joinString <-
+                     getJoinString(input$xColumnsToJoin, input$yColumnsToJoin)
+                   tableX <-
+                     getTableId(namesOfAllTables)[[input$tableX]]
+                   tableY <-
+                     getTableId(namesOfAllTables)[[input$tableY]]
 
                    if (!is.null(joinString) && (tableX != tableY)) {
-                     mergeCommand <-
+                     mergeCommand(
                        tmpl(
                          paste0(
                            c(
@@ -165,27 +168,28 @@ mergeDataServer <- function(id, mergeList) {
                              "  {{ mergeOperation }}({{ tableY }},",
                              "    by = {{ joinString }})"
                            ),
-                           collapse = "\n"
+                           collapse = ""
                          ),
                          tableX = tableX,
                          mergeOperation = input$mergeOperation,
                          tableY = tableY,
                          joinString = joinString
-                       )
+                       ) %>% as.character()
+                     )
                    } else {
-                     mergeCommand <- ""
+                     mergeCommand("")
 
                      if (tableX == tableY) {
                        alert("Please choose two different table.")
                      }
                    }
 
-                   updateTextAreaInput(session, "mergeCommand", value = mergeCommand)
+                   updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
                  })
 
                  # apply mergeCommand ----
                  observeEvent(input$applyMerge, {
-                   req(input$mergeCommand)
+                   req(input$mergeCommand, input$applyMerge)
 
                    withProgress({
                      # setup data.frames to merge
@@ -204,24 +208,24 @@ mergeDataServer <- function(id, mergeList) {
                      }
 
                      # merge data
-                     joinedData <- #try(eval(parse(text = input$mergeCommand)))
+                     joinedData <-
+                       #try(eval(parse(text = input$mergeCommand)))
                        tryCatch({
                          eval(parse(text = input$mergeCommand))
-                         },
-                         error=function(cond) {
-                           #browser()
-                           alert(cond)
-                           # Choose a return value in case of error
-                           return(NULL)
-                         },
-                         warning=function(cond) {
-                           #browser()
-                           alert(cond)
-                           # Choose a return value in case of warning
-                           return(NULL)
-                         },
-                         finally= NULL
-                       )
+                       },
+                       error = function(cond) {
+                         #browser()
+                         alert(cond)
+                         # Choose a return value in case of error
+                         return(NULL)
+                       },
+                       warning = function(cond) {
+                         #browser()
+                         alert(cond)
+                         # Choose a return value in case of warning
+                         return(NULL)
+                       },
+                       finally = NULL)
                      #browser()
                      if (inherits(joinedData, "try-error")) {
                        browser()
