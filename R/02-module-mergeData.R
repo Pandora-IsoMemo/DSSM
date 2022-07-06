@@ -215,13 +215,13 @@ mergeDataServer <- function(id, mergeList) {
                        },
                        error = function(cond) {
                          #browser()
-                         alert(cond)
+                         alert(cond$message)
                          # Choose a return value in case of error
                          return(NULL)
                        },
                        warning = function(cond) {
                          #browser()
-                         alert(cond)
+                         alert(cond$message)
                          # Choose a return value in case of warning
                          return(NULL)
                        },
@@ -247,7 +247,7 @@ mergeDataServer <- function(id, mergeList) {
                      #   )
                      # )
 
-                     if (nrow(joinedData) > 100000)
+                     if (!is.null(joinedData) && nrow(joinedData) > 100000)
                        alert(
                          paste0(
                            "Merged data is very large and has ",
