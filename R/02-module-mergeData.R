@@ -86,16 +86,19 @@ mergeDataUI <- function(id) {
 mergeDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
+                 tableId <- reactiveValues(tableX = NULL,
+                                           tableY = NULL)
                  commonColumns <- reactiveVal()
-                 #columnMapping <- reactiveVal()
+                 columnsToJoin <- reactiveValues(tableX = NULL,
+                                                 tableY = NULL)
                  mergeCommand <- reactiveVal()
                  joinedData <- reactiveVal()
 
-                 # update choices of tables ----
+                 # update: table selection ----
                  observeEvent(mergeList(), {
                    req(length(mergeList()) > 0)
 
-                   tableChoices <- getTableChoices(mergeList())
+                   tableChoices <- extractMergeChoices(mergeList())
 
                    updateSelectInput(session,
                                      "tableX",
@@ -108,28 +111,23 @@ mergeDataServer <- function(id, mergeList) {
                                      selected = tableChoices[2])
                  })
 
-                 # update choices of columns ----
+                 # update: column selection ----
                  observeEvent(input$tableX, {
                    req(mergeList(), input$tableX)
                    updateSelectInput(session, "xColumnsToJoin",
-                                     choices = getColNames(mergeList()[[input$tableX]]))
+                                     choices = extractColNames(mergeList()[[input$tableX]]))
                  })
 
                  observeEvent(input$tableY, {
                    req(mergeList(), input$tableY)
                    updateSelectInput(session, "yColumnsToJoin",
-                                     choices = getColNames(mergeList()[[input$tableY]]))
+                                     choices = extractColNames(mergeList()[[input$tableY]]))
                  })
 
                  observe({
                    req(mergeList(), input$tableX, input$tableY)
-                   commonColumns(getCommonColumns(mergeList(), input$tableX, input$tableY))
+                   commonColumns(extractCommonColumns(mergeList(), input$tableX, input$tableY))
                  })
-
-                 # output$commonColumns <-
-                 #   renderText({
-                 #     paste(commonColumns(), collapse = ", ")
-                 #   })
 
                  observeEvent(input$addAllCommonColumns, {
                    req(commonColumns())
@@ -146,40 +144,46 @@ mergeDataServer <- function(id, mergeList) {
                    }
                  })
 
-                 # update mergeCommand ----
-                 observeEvent(list(input$xColumnsToJoin, input$yColumnsToJoin), {
+                 # update: mergeCommand ----
+                 observeEvent(list(input$columnsX, input$columnsY), {
                    req(names(mergeList()))
 
-                   namesOfAllTables <- names(mergeList())
+                   tableId$tableX <-
+                     extractTableIds(names(mergeList()))[[input$tableX]]
+                   tableId$tableY <-
+                     extractTableIds(names(mergeList()))[[input$tableY]]
 
-                   joinString <-
-                     getJoinString(input$xColumnsToJoin, input$yColumnsToJoin)
-                   tableX <-
-                     getTableId(namesOfAllTables)[[input$tableX]]
-                   tableY <-
-                     getTableId(namesOfAllTables)[[input$tableY]]
+                   columnsToJoin$tableX <-
+                     equalizeLength(input$columnsX, input$columnsY)$xColumns
+                   columnsToJoin$tableY <-
+                     equalizeLength(input$columnsX, input$columnsY)$yColumns
 
-                   if (!is.null(joinString) && (tableX != tableY)) {
+                   colJoinString <-
+                     extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
+
+
+                   if (!is.null(colJoinString) &&
+                       (tableId$tableX != tableId$tableY)) {
                      mergeCommand(
                        tmpl(
                          paste0(
                            c(
                              "{{ tableX }} %>% ",
                              "  {{ mergeOperation }}({{ tableY }},",
-                             "    by = {{ joinString }})"
+                             "    by = {{ colJoinString }})"
                            ),
                            collapse = ""
                          ),
-                         tableX = tableX,
+                         tableX = tableId$tableX,
                          mergeOperation = input$mergeOperation,
-                         tableY = tableY,
-                         joinString = joinString
+                         tableY = tableId$tableY,
+                         colJoinString = colJoinString
                        ) %>% as.character()
                      )
                    } else {
                      mergeCommand("")
 
-                     if (tableX == tableY) {
+                     if (tableId$tableX == tableId$tableY) {
                        alert("Please choose two different table.")
                      }
                    }
@@ -187,67 +191,57 @@ mergeDataServer <- function(id, mergeList) {
                    updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
                  })
 
-                 # apply mergeCommand ----
+                 # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
                    req(input$mergeCommand, input$applyMerge)
 
                    withProgress({
                      # setup data.frames to merge
-                     for (i in 1:length(mergeList())) {
-                       tableName <- names(mergeList())[i]
+                     for (i in c("tableX", "tableY")) {
+                       tableName <- input[[i]]
 
                        tableDat <-
                          mergeList()[[tableName]]$dataImport
-                       #assign(paste0("colNamesTable", i), colnames(tableDat))
 
-                       # colnames(tableDat) <-
-                       #   paste0("col", 1:ncol(tableDat))
-                       # assign(paste0("colIdsTable", i), colnames(tableDat))
-
-                       assign(paste0("table", i), tableDat)
+                       assign(tableId[[i]], tableDat)
                      }
+
+                     # match column types
+                     assign(
+                       tableId$tableY,
+                       matchColClasses(
+                         df1 = get(tableId$tableX),
+                         df2 = get(tableId$tableY),
+                         xColNames = columnsToJoin$tableX,
+                         yColNames = columnsToJoin$tableY,
+                         df1Id = tableId$tableX
+                       )
+                     )
 
                      # merge data
                      joinedData <-
-                       #try(eval(parse(text = input$mergeCommand)))
                        tryCatch({
                          eval(parse(text = input$mergeCommand))
                        },
                        error = function(cond) {
-                         #browser()
                          alert(cond$message)
                          # Choose a return value in case of error
                          return(NULL)
                        },
                        warning = function(cond) {
-                         #browser()
                          alert(cond$message)
                          # Choose a return value in case of warning
                          return(NULL)
                        },
                        finally = NULL)
-                     #browser()
                      if (inherits(joinedData, "try-error")) {
                        browser()
                        alert("Could not merge data")
                        return()
                      }
 
-                     #browser()
-                     # rename columns
-                     # joinedData <- renameColumnIds(
-                     #   joinedData = joinedData,
-                     #   mappingTable1 = list(
-                     #     colIds = get("colIdsTable1"),
-                     #     colNames = get("colNamesTable1")
-                     #   ),
-                     #   mappingTable2 = list(
-                     #     colIds = get("colIdsTable2"),
-                     #     colNames = get("colNamesTable2")
-                     #   )
-                     # )
-
-                     if (!is.null(joinedData) && nrow(joinedData) > 100000)
+                     if (!is.null(joinedData) &&
+                         nrow(joinedData) > 100000)
                        alert(
                          paste0(
                            "Merged data is very large and has ",
@@ -276,127 +270,106 @@ mergeDataServer <- function(id, mergeList) {
                })
 }
 
-
-getTableChoices <- function(tableList) {
+# helpers: table selection ----
+extractMergeChoices <- function(tableList) {
   tableChoices <- names(tableList)
   names(tableChoices) <-
-    paste0(getTableId(tableChoices), " --- ", tableChoices)
+    paste0(extractTableIds(tableChoices), " --- ", tableChoices)
 
   tableChoices
 }
 
 
-getTableId <- function(namesOfTables) {
-  res <- paste0("table", 1:length(namesOfTables))
-  names(res) <- namesOfTables
+extractTableIds <- function(namesOfTables) {
+  ids <- paste0("table", 1:length(namesOfTables))
+  names(ids) <- namesOfTables
 
-  res
+  ids
 }
 
-
-getCommonColumns <- function(tableList, tableX, tableY) {
-  colnamesX <- getColNames(tableList[[tableX]])
-  colnamesY <- getColNames(tableList[[tableY]])
+# helpers: column selection ----
+extractCommonColumns <- function(tableList, tableX, tableY) {
+  colnamesX <- extractColNames(tableList[[tableX]])
+  colnamesY <- extractColNames(tableList[[tableY]])
 
   intersect(colnamesX, colnamesY)
 }
 
 
-getColNames <- function(tableListElement) {
+extractColNames <- function(tableListElement) {
   colnames(tableListElement$dataImport)
 }
 
 
-
-
-
-getJoinString <- function(xColumns, yColumns) {
+equalizeLength <- function(xColumns, yColumns) {
   minLength <- min(length(xColumns), length(yColumns))
 
   if (minLength == 0) {
     return(NULL)
   }
 
-  xColumns <- paste0("\"", xColumns[1:minLength], "\"")
-  yColumns <- paste0("\"", yColumns[1:minLength], "\"")
+  list(xColumns = xColumns[1:minLength],
+       yColumns = yColumns[1:minLength])
+}
+
+
+extractJoinString <- function(xColumns, yColumns) {
+  xColumns <- paste0("\"", xColumns, "\"")
+  yColumns <- paste0("\"", yColumns, "\"")
 
   res <- paste(xColumns, yColumns, sep = "=")
   res <- paste(res, collapse = ", ")
   paste0("c(", res, ")")
 }
 
+# helpers: class matching----
+matchColClasses <-
+  function(df1,
+           df2,
+           xColNames,
+           yColNames,
+           df1Id = "table1",
+           isTest = FALSE) {
+    colTypesX <- sapply(df1[, xColNames], class)
+    colTypesY <- sapply(df2[, yColNames], class)
 
-# getColumNames <- function(mergeList) {
-#   colNamesForMerge <- lapply(mergeList, function(df) {
-#     data.frame(
-#       column.id = 1:length(df$dataImport),
-#       column.name = colnames(df$dataImport)
-#     )
-#   }) %>%
-#     bind_rows(.id = "table.name")
-#
-#   colNamesForMerge$table.id <- colNamesForMerge %>%
-#     group_by(.data$table.name) %>%
-#     group_indices()
-#
-#   colNamesForMerge$table.id <-
-#     paste0("table", colNamesForMerge$table.id)
-#   colNamesForMerge$column.id <-
-#     paste0("col", colNamesForMerge$column.id)
-#
-#   colNamesForMerge$table.name <- colNamesForMerge$table.name %>%
-#     cutStrings(cutAt = 20)
-#
-#   colNamesForMerge %>% select(.data$table.id, everything())
-# }
+    isAllEqual <- equalColClasses(colTypesX,
+                                  colTypesY,
+                                  df1Id = df1Id,
+                                  isTest = isTest)
 
-
-# renameColumnIds <-
-#   function(joinedData, mappingTable1, mappingTable2) {
-#     colIdsTable1 <- mappingTable1$colIds
-#     colNamesTable1 <- mappingTable1$colNames
-#
-#     colIdsTable2 <- mappingTable2$colIds
-#     colNamesTable2 <- mappingTable2$colNames
-#
-#     # rename .x columns
-#     joinedData <- renameExisting(joinedData,
-#                                  oldNames = paste0(colIdsTable1, ".x"),
-#                                  newNames = colNamesTable1)
-#
-#     # rename joined columns
-#     joinedData <- renameExisting(joinedData,
-#                                  oldNames = colIdsTable1,
-#                                  newNames = colNamesTable1)
-#
-#     # rename unique .y columns
-#     uniqueYCols <-
-#       !(colNamesTable2 %in% colNamesTable1)
-#     joinedData <- renameExisting(joinedData,
-#                                  oldNames = paste0(colIdsTable2[uniqueYCols], ".y"),
-#                                  newNames = colNamesTable2[uniqueYCols])
-#
-#     # rename duplicated .y columns
-#     duplicatedYCols <-
-#       colNamesTable2 %in% colNamesTable1
-#     joinedData <- renameExisting(
-#       joinedData,
-#       oldNames = paste0(colIdsTable2[duplicatedYCols], ".y"),
-#       newNames = paste0(colNamesTable2[duplicatedYCols], ".y")
-#     )
-#
-#     # rename remaining columns from y
-#     joinedData <- renameExisting(joinedData,
-#                                  oldNames = colIdsTable2,
-#                                  newNames = colNamesTable2)
-#
-#     joinedData
-#   }
+    if (!isAllEqual) {
+      for (i in 1:length(yColNames)) {
+        class(df2[, yColNames[i]]) <- colTypesX[i]
+      }
+    }
+    return(df2)
+  }
 
 
-# renameExisting <- function(df, oldNames, newNames) {
-#   existing <- match(oldNames, names(df))
-#   names(df)[na.omit(existing)] <- newNames[which(!is.na(existing))]
-#
-#   df
-# }
+equalColClasses <-
+  function(colTypesX,
+    colTypesY,
+    df1Id = "table1",
+    isTest = FALSE) {
+    typeMismatch <- colTypesX != colTypesY
+
+    if (any(typeMismatch)) {
+      if (!isTest) {
+        shinyjs::alert(
+          paste0(
+            "Column types not matching for: \n",
+            extractJoinString(names(colTypesX)[typeMismatch],
+                              names(colTypesY)[typeMismatch]),
+            ". \n",
+            "Using the type of ",
+            df1Id,
+            " for these columns."
+          )
+        )
+      }
+      return(FALSE)
+    } else {
+      return(TRUE)
+    }
+  }

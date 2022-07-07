@@ -273,7 +273,7 @@ importDataServer <- function(id,
                        customErrorChecks = customErrorChecks
                      )
 
-                     # format column names
+                     ### format column names for merger ----
                      colnames(valuesToMerge$dataImport) <- colnames(valuesToMerge$dataImport) %>%
                        formatColumnNames()
                    },
