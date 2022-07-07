@@ -10,12 +10,19 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    mergeViaUIUI(ns("mergerViaUI")),
-    textAreaInput(
-      ns("mergeCommand"),
-      "Merge command",
-      value = NULL,
-      width = "100%"
+    checkboxInput(ns("useMergeViaCommand"), "Merge via command line"),
+    conditionalPanel(condition = "input.useMergeViaCommand == false",
+                     mergeViaUIUI(ns("mergerViaUI")),
+                     ns = ns),
+    conditionalPanel(
+      condition = "input.useMergeViaCommand == true",
+      textAreaInput(
+        ns("mergeCommand"),
+        "Merge command",
+        value = NULL,
+        width = "100%"
+      ),
+      ns = ns
     ),
     actionButton(ns("applyMerge"), "Apply"),
     actionButton(ns("addMerge"), "Add Table"),
@@ -43,12 +50,13 @@ mergeDataServer <- function(id, mergeList) {
                function(input, output, session) {
                  joinedData <- reactiveVal()
 
-                 mergeCommand <- mergeViaUIServer("mergerViaUI", mergeList = mergeList)
+                 mergeCommand <-
+                   mergeViaUIServer("mergerViaUI", mergeList = mergeList)
 
                  # update: mergeCommand ----
                  observeEvent(mergeCommand(), {
-                     updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
-                   })
+                   updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
+                 })
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
@@ -158,9 +166,9 @@ matchColClasses <-
 
 equalColClasses <-
   function(colTypesX,
-    colTypesY,
-    df1Id = "table1",
-    isTest = FALSE) {
+           colTypesY,
+           df1Id = "table1",
+           isTest = FALSE) {
     typeMismatch <- colTypesX != colTypesY
 
     if (any(typeMismatch)) {
