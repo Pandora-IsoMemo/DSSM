@@ -1,3 +1,5 @@
+# Merge Data Module ----
+
 #' Merge Data UI
 #'
 #' UI of the merge data module
@@ -8,54 +10,7 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    selectInput(
-      ns("tableX"),
-      "Select tabel x",
-      choices = NULL,
-      width = "100%"
-    ),
-    selectInput(
-      ns("tableY"),
-      "Select tabel y",
-      choices = NULL,
-      width = "100%"
-    ),
-    fluidRow(column(
-      4,
-      selectInput(
-        ns("mergeOperation"),
-        "Select operation",
-        choices = c(
-          "all rows in x and y" = "inner_join",
-          "all rows in x" = "left_join",
-          "all rows in y" = "right_join",
-          "all rows in x or y" = "full_join"
-        ),
-        selected = "left_join"
-      )
-    ),
-    column(
-      8,
-      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
-    )),
-    fluidRow(column(
-      6,
-      selectInput(
-        ns("xColumnsToJoin"),
-        "Select x colums",
-        choices = NULL,
-        multiple = TRUE
-      )
-    ),
-    column(
-      6,
-      selectInput(
-        ns("yColumnsToJoin"),
-        "Select y columns",
-        choices = NULL,
-        multiple = TRUE
-      )
-    )),
+    mergeViaUIUI(ns("mergerViaUI")),
     textAreaInput(
       ns("mergeCommand"),
       "Merge command",
@@ -86,110 +41,14 @@ mergeDataUI <- function(id) {
 mergeDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
-                 tableId <- reactiveValues(tableX = NULL,
-                                           tableY = NULL)
-                 commonColumns <- reactiveVal()
-                 columnsToJoin <- reactiveValues(tableX = NULL,
-                                                 tableY = NULL)
-                 mergeCommand <- reactiveVal()
                  joinedData <- reactiveVal()
 
-                 # update: table selection ----
-                 observeEvent(mergeList(), {
-                   req(length(mergeList()) > 0)
-
-                   tableChoices <- extractMergeChoices(mergeList())
-
-                   updateSelectInput(session,
-                                     "tableX",
-                                     choices = tableChoices,
-                                     selected = tableChoices[1])
-
-                   updateSelectInput(session,
-                                     "tableY",
-                                     choices = tableChoices,
-                                     selected = tableChoices[2])
-                 })
-
-                 # update: column selection ----
-                 observeEvent(input$tableX, {
-                   req(mergeList(), input$tableX)
-                   updateSelectInput(session, "xColumnsToJoin",
-                                     choices = extractColNames(mergeList()[[input$tableX]]))
-                 })
-
-                 observeEvent(input$tableY, {
-                   req(mergeList(), input$tableY)
-                   updateSelectInput(session, "yColumnsToJoin",
-                                     choices = extractColNames(mergeList()[[input$tableY]]))
-                 })
-
-                 observe({
-                   req(mergeList(), input$tableX, input$tableY)
-                   commonColumns(extractCommonColumns(mergeList(), input$tableX, input$tableY))
-                 })
-
-                 observeEvent(input$addAllCommonColumns, {
-                   req(commonColumns())
-                   if (input$addAllCommonColumns) {
-                     updateSelectInput(session, "xColumnsToJoin",
-                                       selected = commonColumns())
-                     updateSelectInput(session, "yColumnsToJoin",
-                                       selected = commonColumns())
-                   } else {
-                     updateSelectInput(session, "xColumnsToJoin",
-                                       selected = list())
-                     updateSelectInput(session, "yColumnsToJoin",
-                                       selected = list())
-                   }
-                 })
+                 mergeCommand <- mergeViaUIServer("mergerViaUI", mergeList = mergeList)
 
                  # update: mergeCommand ----
-                 observeEvent(list(input$columnsX, input$columnsY), {
-                   req(names(mergeList()))
-
-                   tableId$tableX <-
-                     extractTableIds(names(mergeList()))[[input$tableX]]
-                   tableId$tableY <-
-                     extractTableIds(names(mergeList()))[[input$tableY]]
-
-                   columnsToJoin$tableX <-
-                     equalizeLength(input$columnsX, input$columnsY)$xColumns
-                   columnsToJoin$tableY <-
-                     equalizeLength(input$columnsX, input$columnsY)$yColumns
-
-                   colJoinString <-
-                     extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
-
-
-                   if (!is.null(colJoinString) &&
-                       (tableId$tableX != tableId$tableY)) {
-                     mergeCommand(
-                       tmpl(
-                         paste0(
-                           c(
-                             "{{ tableX }} %>% ",
-                             "  {{ mergeOperation }}({{ tableY }},",
-                             "    by = {{ colJoinString }})"
-                           ),
-                           collapse = ""
-                         ),
-                         tableX = tableId$tableX,
-                         mergeOperation = input$mergeOperation,
-                         tableY = tableId$tableY,
-                         colJoinString = colJoinString
-                       ) %>% as.character()
-                     )
-                   } else {
-                     mergeCommand("")
-
-                     if (tableId$tableX == tableId$tableY) {
-                       alert("Please choose two different table.")
-                     }
-                   }
-
-                   updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
-                 })
+                 observeEvent(mergeCommand(), {
+                     updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
+                   })
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
@@ -235,7 +94,6 @@ mergeDataServer <- function(id, mergeList) {
                        },
                        finally = NULL)
                      if (inherits(joinedData, "try-error")) {
-                       browser()
                        alert("Could not merge data")
                        return()
                      }
@@ -270,59 +128,10 @@ mergeDataServer <- function(id, mergeList) {
                })
 }
 
-# helpers: table selection ----
-extractMergeChoices <- function(tableList) {
-  tableChoices <- names(tableList)
-  names(tableChoices) <-
-    paste0(extractTableIds(tableChoices), " --- ", tableChoices)
 
-  tableChoices
-}
+# Merge Data Helper Functions ----
 
-
-extractTableIds <- function(namesOfTables) {
-  ids <- paste0("table", 1:length(namesOfTables))
-  names(ids) <- namesOfTables
-
-  ids
-}
-
-# helpers: column selection ----
-extractCommonColumns <- function(tableList, tableX, tableY) {
-  colnamesX <- extractColNames(tableList[[tableX]])
-  colnamesY <- extractColNames(tableList[[tableY]])
-
-  intersect(colnamesX, colnamesY)
-}
-
-
-extractColNames <- function(tableListElement) {
-  colnames(tableListElement$dataImport)
-}
-
-
-equalizeLength <- function(xColumns, yColumns) {
-  minLength <- min(length(xColumns), length(yColumns))
-
-  if (minLength == 0) {
-    return(NULL)
-  }
-
-  list(xColumns = xColumns[1:minLength],
-       yColumns = yColumns[1:minLength])
-}
-
-
-extractJoinString <- function(xColumns, yColumns) {
-  xColumns <- paste0("\"", xColumns, "\"")
-  yColumns <- paste0("\"", yColumns, "\"")
-
-  res <- paste(xColumns, yColumns, sep = "=")
-  res <- paste(res, collapse = ", ")
-  paste0("c(", res, ")")
-}
-
-# helpers: class matching----
+## helpers: class matching----
 matchColClasses <-
   function(df1,
            df2,
