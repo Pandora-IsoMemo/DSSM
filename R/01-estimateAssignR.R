@@ -18,7 +18,7 @@
 # xUncCAT <- matrix(0.1, ncol = ncol(XCAT), nrow = nrow(XCAT))
 
 
-fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10){
+fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10, cat = ""){
   XNUM <- scale(XNUM)
   mRe <- attr(XNUM, "scaled:center")
   sRe <- attr(XNUM, "scaled:scale")
@@ -171,15 +171,14 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
   }
 
 
-
-  for ( k in 1:10) {
-    j <- seq(1, iter, iter / 10)[k]
+  for ( k in 1:5) {
+    j <- seq(1, iter, iter / 5)[k]
     showMessage(
       MCMC_AssignR,
       msg = "Calculating AssignR",
-      detail = paste0("Chain ", nChains),
-      value = k / 10)(
-        start = j, iter = j + iter / 10 - 1
+      detail = paste0("Chain ", nChains, ", Cat: ", cat),
+      value = k / 5)(
+        start = j, iter = j + iter / 5 - 1
       )
     pars <- startPar
     MHPar <- rep(0.1, length(pars))
@@ -203,13 +202,12 @@ normalizePredictions <- function(predictions){
   })
 }
 
-modelAssignRMC <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10){
-
+modelAssignRMC <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10, cat = ""){
   ret <- lapply(1:nChains, function(x){
     fitModelAssignR(XNUM, XCAT, y, yUnc = yUnc,
                     xUncNUM = xUncNUM, xUncCAT = xUncCAT,
                     iter = iter, nChains = x,
-                    burnin = 0.4*iter, thinning = thinning)
+                    burnin = 0.4*iter, thinning = thinning, cat = cat)
   })
   res <- ret[[1]]
   res$beta <- do.call("rbind", lapply(1:length(ret), function(x) ret[[x]]$beta))

@@ -95,11 +95,11 @@ modelResultsAssignUI <- function(id, title = "") {
         sliderInput(
           inputId = ns("Iter"),
           label = "Number of MCMC iterations",
-          min = 100, max = 100000, value = 1000, step = 100
+          min = 100, max = 100000, value = 2000, step = 100
         ),
         sliderInput(
           inputId = ns("burnin"), label = "Number of burnin iterations",
-          value = 500, min = 100, max = 10000, step = 100
+          value = 5000, min = 100, max = 10000, step = 100
         ),
         sliderInput(
           inputId = ns("nChains"), label = "Number of MCMC chains",
@@ -113,31 +113,24 @@ modelResultsAssignUI <- function(id, title = "") {
       ),
       mainPanel(
         width = 8,
-        DT::dataTableOutput(ns("dataTable")),
-        tags$hr(),
-        modelDiagButton(ns("modelDiag")),
-        dataExportButton(ns("exportData"))
-      ),
-      sidebarPanel(
-        width = 2,
         selectInput(ns("estType"),
-          "Estimation type",
-          choices = c(
-            "Mean" = "mean",
-            "SD" = "sd",
-            "Quantile" = "quantile"
-          ),
-          selected = "mean"
+                    "Estimation type",
+                    choices = c(
+                      "Mean" = "mean",
+                      "SD" = "sd",
+                      "Quantile" = "quantile"
+                    ),
+                    selected = "mean"
         ),
         conditionalPanel(
           condition = "input.estType == 'quantile'",
           ns = ns,
           sliderInput(ns("quantile"),
-            "Quantile",
-            min = 0.001,
-            max = 0.999,
-            step = 0.001,
-            value = 0.95
+                      "Quantile",
+                      min = 0.001,
+                      max = 0.999,
+                      step = 0.001,
+                      value = 0.95
           )
         ),
         radioButtons(
@@ -153,8 +146,8 @@ modelResultsAssignUI <- function(id, title = "") {
           condition = "input.aggType == 'single'",
           ns = ns,
           checkboxInput(ns("showData"),
-            "Show original data",
-            value = TRUE
+                        "Show original data",
+                        value = TRUE
           )
         ),
         conditionalPanel(
@@ -175,23 +168,30 @@ modelResultsAssignUI <- function(id, title = "") {
           ns = ns,
           importDataUI(ns("localData"), "Import Prediction Data"),
           checkboxInput(ns("other"),
-            "Include other column",
-            value = FALSE
+                        "Add column",
+                        value = FALSE
           )
         ),
         conditionalPanel(
-          condition = "input.other == true",
+          condition = "input.other == true && input.predType == '2'",
           ns = ns,
           numericInput(ns("prior1"),
-            label = "Beta-Prior 1: probability coming from other location",
-            min = 0, max = 100, value = 2, step = 0.1
+                       label = "Beta-Prior 1: probability of another assignment",
+                       min = 0, max = 100, value = 2, step = 0.1
           ),
           numericInput(ns("prior2"),
-            label = "Beta-Prior 2: probability coming from other location",
-            min = 0, max = 100, value = 2, step = 0.1
+                       label = "Beta-Prior 2: probability of another assignment",
+                       min = 0, max = 100, value = 2, step = 0.1
           )
-        )
-      )
+        ),
+        fluidRow(
+          column(8,
+                 DT::dataTableOutput(ns("dataTable")),
+          )),
+        tags$hr(),
+        modelDiagButton(ns("modelDiag")),
+        dataExportButton(ns("exportData"))
+      ),
     )
   )
 }
@@ -234,7 +234,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
   Model <- eventReactive(input$start, ignoreNULL = FALSE, {
     data <- data()
-    if (!is.null(data) & !is.null(input$catVars) & !is.null(input$numVars) && input$catVars != "" && input$numVars != "") {
+    if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
       if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
         dataAssignR <- data[, c(input$Independent, input$numVars, input$catVars), drop = F]
       } else {
@@ -285,7 +285,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
         yCat <- as.numeric(dataAssignR[, input$Independent] == modelCat)
         model <- modelAssignRMC(
           XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
-          nChains = input$nChains, thinning = input$thinning
+          nChains = input$nChains, thinning = input$thinning, cat = x
         )
         value <- match(x, cats) / (length(cats))
         model
@@ -359,11 +359,12 @@ modelResultsAssign <- function(input, output, session, isoData) {
     )
   })
 
-  output$dataTable <- renderDataTable({
+  output$dataTable <- DT::renderDataTable({
     validate(validInput(Model()))
     estimate <- dataFun()()
     datTable(estimate, columns = colnames(estimate))
-  })
+  },
+  options = list(scrollX = TRUE))
 
   dataFun <- reactive({
     validate(validInput(Model()))
@@ -445,7 +446,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
               estimate
             })
           })
-          if (input$estType == "mean" & input$predType == "1") {
+          if (input$estType == "mean") {
             estimate <- estimate / rowSums(estimate)
           }
           estimate <- data.frame(category = rownames(estimate), (round(estimate, 3)))
@@ -464,7 +465,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
           }
           estimate
         })
-        if (input$estType == "mean" & input$predType == "1") {
+        if (input$estType == "mean") {
           estimate <- estimate / sum(estimate)
         }
         estimate <- round(estimate, 3)
