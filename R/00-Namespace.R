@@ -1,9 +1,9 @@
-#' @rawNamespace import(shiny, except = renderDataTable)
+#' @rawNamespace import(shiny, except = c(renderDataTable, dataTableOutput))
 #' @importFrom animation saveGIF
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
-#' @importFrom DT datatable renderDataTable
+#' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #' geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab
