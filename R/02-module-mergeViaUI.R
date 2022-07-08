@@ -9,18 +9,6 @@ mergeViaUIUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    selectInput(
-      ns("tableX"),
-      "Select tabel x",
-      choices = NULL,
-      width = "100%"
-    ),
-    selectInput(
-      ns("tableY"),
-      "Select tabel y",
-      choices = NULL,
-      width = "100%"
-    ),
     fluidRow(column(
       4,
       selectInput(
@@ -65,59 +53,36 @@ mergeViaUIUI <- function(id) {
 #' Server function of the merge via UI module
 #' @param id id of module
 #' @param mergeList (list) list of data to be merged
-mergeViaUIServer <- function(id, mergeList) {
+mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
   moduleServer(id,
                function(input, output, session) {
-                 tableId <- reactiveValues(tableX = NULL,
-                                           tableY = NULL)
-                 commonColumns <- reactiveVal()
                  columnsToJoin <- reactiveValues(tableX = NULL,
                                                  tableY = NULL)
-                 mergeCommand <- reactiveVal()
-                 #joinedData <- reactiveVal()
-
-                 # update: table selection ----
-                 observeEvent(mergeList(), {
-                   req(length(mergeList()) > 0)
-
-                   tableChoices <- extractMergeChoices(mergeList())
-
-                   updateSelectInput(session,
-                                     "tableX",
-                                     choices = tableChoices,
-                                     selected = tableChoices[1])
-
-                   updateSelectInput(session,
-                                     "tableY",
-                                     choices = tableChoices,
-                                     selected = tableChoices[2])
-                 })
+                 mergeCommandAuto <- reactiveVal()
 
                  # update: column selection ----
-                 observeEvent(input$tableX, {
-                   req(mergeList(), input$tableX)
+                 observeEvent(tableXData(), {
+                   req(tableXData())
                    updateSelectInput(session, "columnsX",
-                                     choices = extractColNames(mergeList()[[input$tableX]]))
+                                     choices = colnames(tableXData()))
                  })
 
-                 observeEvent(input$tableY, {
-                   req(mergeList(), input$tableY)
+                 observeEvent(tableYData(), {
+                   req(tableYData())
                    updateSelectInput(session, "columnsY",
-                                     choices = extractColNames(mergeList()[[input$tableY]]))
-                 })
-
-                 observe({
-                   req(mergeList(), input$tableX, input$tableY)
-                   commonColumns(extractCommonColumns(mergeList(), input$tableX, input$tableY))
+                                     choices = colnames(tableYData()))
                  })
 
                  observeEvent(input$addAllCommonColumns, {
-                   req(commonColumns())
+                   req(tableXData(), tableYData())
+                   commonColumns <- intersect(colnames(tableXData()), colnames(tableYData()))
+
+                   #req(commonColumns())
                    if (input$addAllCommonColumns) {
                      updateSelectInput(session, "columnsX",
-                                       selected = commonColumns())
+                                       selected = commonColumns)
                      updateSelectInput(session, "columnsY",
-                                       selected = commonColumns())
+                                       selected = commonColumns)
                    } else {
                      updateSelectInput(session, "columnsX",
                                        selected = list())
@@ -126,14 +91,9 @@ mergeViaUIServer <- function(id, mergeList) {
                    }
                  })
 
-                 # create: mergeCommand ----
+                 # create: mergeCommandAuto ----
                  observeEvent(list(input$columnsX, input$columnsY), {
-                   req(names(mergeList()))
-
-                   tableId$tableX <-
-                     extractTableIds(names(mergeList()))[[input$tableX]]
-                   tableId$tableY <-
-                     extractTableIds(names(mergeList()))[[input$tableY]]
+                   req(input$columnsX, input$columnsY)
 
                    columnsToJoin$tableX <-
                      equalizeLength(input$columnsX, input$columnsY)$xColNames
@@ -144,8 +104,8 @@ mergeViaUIServer <- function(id, mergeList) {
                      extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
 
                    if (!is.null(colJoinString) &&
-                       (tableId$tableX != tableId$tableY)) {
-                     mergeCommand(
+                       (tableXId() != tableYId())) {
+                     mergeCommandAuto(
                        tmpl(
                          paste0(
                            c(
@@ -155,45 +115,28 @@ mergeViaUIServer <- function(id, mergeList) {
                            ),
                            collapse = ""
                          ),
-                         tableX = tableId$tableX,
+                         tableX = tableXId(),
                          mergeOperation = input$mergeOperation,
-                         tableY = tableId$tableY,
+                         tableY = tableYId(),
                          colJoinString = colJoinString
                        ) %>% as.character()
                      )
                    } else {
-                     mergeCommand("")
+                     mergeCommandAuto("")
 
-                     if (tableId$tableX == tableId$tableY) {
+                     if (tableXId() == tableYId()) {
                        alert("Please choose two different table.")
                      }
                    }
                  })
 
                  # return value for parent module: ----
-                 return(mergeCommand)
+                 return(mergeCommandAuto)
                })
 }
 
 
 # Merge Via UI Helper Functions ----
-
-## helpers: table selection ----
-extractMergeChoices <- function(tableList) {
-  tableChoices <- names(tableList)
-  names(tableChoices) <-
-    paste0(extractTableIds(tableChoices), " --- ", tableChoices)
-
-  tableChoices
-}
-
-
-extractTableIds <- function(namesOfTables) {
-  ids <- paste0("table", 1:length(namesOfTables))
-  names(ids) <- namesOfTables
-
-  ids
-}
 
 ## helpers: column selection ----
 extractCommonColumns <- function(tableList, tableX, tableY) {

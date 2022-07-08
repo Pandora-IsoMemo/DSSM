@@ -268,7 +268,7 @@ importDataServer <- function(id,
                        withRownames = isTRUE(input$rownames),
                        # set headOnly = TRUE to FALSE after developement
                        #  warning if data becomes too large
-                       headOnly = TRUE,
+                       headOnly = FALSE,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
                      )
@@ -318,7 +318,7 @@ importDataDialog <- function(ns) {
     footer = tagList(
       actionButton(ns("accept"), "Accept"),
       actionButton(ns("addData"), "Add to Merge Data"),
-      actionButton(ns("mergeData"), "Merge Data"),
+      actionButton(ns("mergeData"), "Accept"),
       actionButton(ns("cancel"), "Cancel")
     ),
     tabsetPanel(

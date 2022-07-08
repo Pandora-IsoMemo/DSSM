@@ -4,7 +4,7 @@
 \alias{mergeViaUIServer}
 \title{Merge Via UI Server}
 \usage{
-mergeViaUIServer(id, mergeList)
+mergeViaUIServer(id, tableXData, tableYData, tableXId, tableYId)
 }
 \arguments{
 \item{id}{id of module}

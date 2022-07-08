@@ -10,29 +10,30 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    checkboxInput(ns("useMergeViaCommand"), "Merge via command line"),
+    selectInput(
+      ns("tableX"),
+      "Select tabel x",
+      choices = NULL,
+      width = "100%"
+    ),
+    selectInput(
+      ns("tableY"),
+      "Select tabel y",
+      choices = NULL,
+      width = "100%"
+    ),
     conditionalPanel(condition = "input.useMergeViaCommand == false",
                      mergeViaUIUI(ns("mergerViaUI")),
                      ns = ns),
     conditionalPanel(
       condition = "input.useMergeViaCommand == true",
-      textAreaInput(
-        ns("mergeCommand"),
-        "Merge command",
-        value = NULL,
-        width = "100%"
-      ),
+      mergeViaCommandUI(ns("mergerViaCommand")),
       ns = ns
     ),
+    checkboxInput(ns("useMergeViaCommand"),
+                  "Merge via command line"),
     actionButton(ns("applyMerge"), "Apply"),
-    actionButton(ns("addMerge"), "Add Table"),
-    # checkboxInput(ns("showColnames"), "Show column names"),
-    # conditionalPanel(condition = "input.showColnames == true",
-    #                  fluidRow(column(
-    #                    12,
-    #                    dataTableOutput(ns("colNames"))
-    #                  )),
-    #                  ns = ns),
+    #actionButton(ns("addMerge"), "Add Table"),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "joinedData"
@@ -48,47 +49,93 @@ mergeDataUI <- function(id) {
 mergeDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
+                 tableId <- reactiveValues(tableX = NULL,
+                                           tableY = NULL)
+
+                 tableIds <- reactiveVal()
+
+                 tableXData <- reactiveVal()
+                 tableYData <- reactiveVal()
+
                  joinedData <- reactiveVal()
 
-                 mergeCommand <-
-                   mergeViaUIServer("mergerViaUI", mergeList = mergeList)
+                 # update: table selection ----
+                 observeEvent(mergeList(), {
+                   req(length(mergeList()) > 0)
 
-                 # update: mergeCommand ----
-                 observeEvent(mergeCommand(), {
-                   updateTextAreaInput(session, "mergeCommand", value = mergeCommand())
+                   tableIds(extractTableIds(names(mergeList())))
+
+                   tableChoices <- extractMergeChoices(mergeList())
+
+                   updateSelectInput(session,
+                                     "tableX",
+                                     choices = tableChoices,
+                                     selected = tableChoices[1])
+
+                   updateSelectInput(session,
+                                     "tableY",
+                                     choices = tableChoices,
+                                     selected = tableChoices[2])
                  })
+
+                 observeEvent(input$tableX, {
+                   tableXData(mergeList()[[input$tableX]]$dataImport)
+                 })
+
+                 observeEvent(input$tableY, {
+                   tableYData(mergeList()[[input$tableY]]$dataImport)
+                 })
+
+                 mergeCommandAuto <-
+                   mergeViaUIServer(
+                     "mergerViaUI",
+                     tableXData = tableXData,
+                     tableYData = tableYData,
+                     tableXId = reactive(tableIds()[input$tableX]),
+                     tableYId = reactive(tableIds()[input$tableY])
+                   )
+
+                 mergeCommandManual <-
+                   mergeViaCommandServer("mergerViaCommand", mergeCommandAuto)
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
-                   req(input$mergeCommand, input$applyMerge)
+                   req(!is.null(mergeCommandManual()), input$applyMerge)
 
                    withProgress({
-                     # setup data.frames to merge
-                     for (i in c("tableX", "tableY")) {
-                       tableName <- input[[i]]
-
-                       tableDat <-
-                         mergeList()[[tableName]]$dataImport
-
-                       assign(tableId[[i]], tableDat)
+                     browser()
+                     ## create data.frames to merge ----
+                     for (i in c(input$tableX, input$tableY)) {
+                       assign(tableIds()[i],
+                              mergeList()[[i]]$dataImport)
                      }
 
-                     # match column types
+                     ## match column types ----
+                     columsToJoinString <- mergeCommandManual() %>%
+                       gsub(pattern = ".*by = ", replacement = "") %>%
+                       gsub(pattern = ")$", replacement = "")
+
+                     columsToJoin <-
+                       eval(parse(text = columsToJoinString))
+
+                     xColNames <- names(columsToJoin)
+                     yColNames <- unname(columsToJoin)
+
                      assign(
-                       tableId$tableY,
+                       tableIds()[input$tableY],
                        matchColClasses(
-                         df1 = get(tableId$tableX),
-                         df2 = get(tableId$tableY),
-                         xColNames = columnsToJoin$tableX,
-                         yColNames = columnsToJoin$tableY,
-                         df1Id = tableId$tableX
+                         df1 = get(tableIds()[input$tableX]),
+                         df2 = get(tableIds()[input$tableY]),
+                         xColNames = xColNames,
+                         yColNames = yColNames,
+                         df1Id = tableIds()[input$tableX]
                        )
                      )
 
-                     # merge data
+                     ## merge data ----
                      joinedData <-
                        tryCatch({
-                         eval(parse(text = input$mergeCommand))
+                         eval(parse(text = mergeCommandManual()))
                        },
                        error = function(cond) {
                          alert(cond$message)
@@ -138,6 +185,23 @@ mergeDataServer <- function(id, mergeList) {
 
 
 # Merge Data Helper Functions ----
+
+## helpers: table selection ----
+extractMergeChoices <- function(tableList) {
+  tableChoices <- names(tableList)
+  names(tableChoices) <-
+    paste0(extractTableIds(tableChoices), " --- ", tableChoices)
+
+  tableChoices
+}
+
+
+extractTableIds <- function(namesOfTables) {
+  ids <- paste0("table", 1:length(namesOfTables))
+  names(ids) <- namesOfTables
+
+  ids
+}
 
 ## helpers: class matching----
 matchColClasses <-
