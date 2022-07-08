@@ -157,7 +157,7 @@ mergeDataServer <- function(id, mergeList) {
                          nrow(joinedData) > 100000)
                        alert(
                          paste0(
-                           "Merged data is very large and has ",
+                           "Warning: Merged data is very large and has ",
                            nrow(joinedData),
                            "rows.",
                            "The app might be very slow or even crash."
@@ -239,10 +239,10 @@ equalColClasses <-
       if (!isTest) {
         shinyjs::alert(
           paste0(
-            "Column types not matching for: \n",
+            "Warning: Column types not matching for: \n",
             extractJoinString(names(colTypesX)[typeMismatch],
                               names(colTypesY)[typeMismatch]),
-            ". \n",
+            ". \n\n",
             "Using the type of ",
             df1Id,
             " for these columns."

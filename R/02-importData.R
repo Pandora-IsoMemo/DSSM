@@ -637,9 +637,11 @@ getNrow <- function(headOnly, type, n = 3) {
 #' @param vNames (character) names of the imported data's columns
 #' @param isTest (logical) set TRUE if function is used in tests
 formatColumnNames <- function(vNames, isTest = FALSE) {
+  message <- NULL
+
   if (any(grepl("[^[:alnum:] | ^\\.]", vNames))) {
     if (!isTest) {
-      shinyjs::alert("One or more column names contain non-alphanumeric characters, name changed.")
+      message <- "Warning: One or more column names contain non-alphanumeric characters, name changed."
     }
     # replace non-alphanum characters with dot
     vNames <- gsub("[^[:alnum:] | ^\\.]", ".", vNames)
@@ -649,11 +651,17 @@ formatColumnNames <- function(vNames, isTest = FALSE) {
 
   if (any(grepl("^[0-9]{1,}$", substr(vNames, 1, 1)))) {
     if (!isTest) {
-      shinyjs::alert("One or more column names begin with number, name changed.")
+      message <- paste(c(message,
+                         "Warning: One or more column names begin with number, name changed."),
+                       collapse = "\n\n")
     }
     # if name begins with a number paste x before name
     vNames[grepl("^[0-9]{1,}$", substr(vNames, 1, 1))] <-
       paste0("x", vNames[grepl("^[0-9]{1,}$", substr(vNames, 1, 1))])
+  }
+
+  if(!isTest && !is.null(message)) {
+    shinyjs::alert(message)
   }
 
   return(vNames)
