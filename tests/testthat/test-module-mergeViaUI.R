@@ -63,17 +63,21 @@ testthat::test_that("Test module mergeViaUI", {
       "δ18O.Carbonate..VPDB..unc."
     )
 
+  tableXData <- testMergeList[[1]]$dataImport
+  tableYData <- testMergeList[[2]]$dataImport
+
   testMergeCommand <-
     "table1 %>%   left_join(table2,    by = c(\"Submitter.ID\"=\"Submitter.ID\", \"Context.ID\"=\"Context.ID\", \"Individual.ID\"=\"Individual.ID\", \"Sample.ID\"=\"Sample.ID\", \"Sex\"=\"Sex\", \"Age.Category\"=\"Age.Category\", \"Min..Age..yrs.\"=\"Min..Age..yrs.\", \"Max..Age..yrs.\"=\"Max..Age..yrs.\", \"Sampled.Element\"=\"Sampled.Element\", \"Analysed.Component\"=\"Analysed.Component\", \"Modern.Country\"=\"Modern.Country\", \"Site.Name\"=\"Site.Name\", \"Site.Description\"=\"Site.Description\", \"Central.Power..Empire.or.Kingdom.\"=\"Central.Power..Empire.or.Kingdom.\", \"Local.Power..e.g..Vassal..Petty.Kingdom..Tribe..etc..\"=\"Local.Power..e.g..Vassal..Petty.Kingdom..Tribe..etc..\", \"Probable.Cultural.Context\"=\"Probable.Cultural.Context\", \"Culture.Mix..Substratus..Dependence..External.Influence..etc..\"=\"Culture.Mix..Substratus..Dependence..External.Influence..etc..\", \"Latitude\"=\"Latitude\", \"Longitude\"=\"Longitude\", \"Exact.Site.location.\"=\"Exact.Site.location.\", \"unc..Radius..km.\"=\"unc..Radius..km.\", \"Min..Year..95..\"=\"Min..Year..95..\", \"Max..Year..95..\"=\"Max..Year..95..\", \"Dating.Method\"=\"Dating.Method\", \"General.Period.s.\"=\"General.Period.s.\", \"Additional.Chronological.Tags\"=\"Additional.Chronological.Tags\", \"Social.Status.Rank\"=\"Social.Status.Rank\", \"Elite.\"=\"Elite.\", \"Additional.Social.Information\"=\"Additional.Social.Information\", \"Probable.Religious.Culture\"=\"Probable.Religious.Culture\", \"Probable.Religious.Denomination\"=\"Probable.Religious.Denomination\", \"Reference\"=\"Reference\", \"IRMS.Lab.Institution.Stable.Carbon...Nitrogen.Measurement\"=\"IRMS.Lab.Institution.Stable.Carbon...Nitrogen.Measurement\", \"Nr..of.Samples..Collagen.δ13C...δ15N.\"=\"Nr..of.Samples..Collagen.δ13C...δ15N.\", \"IRMS.δ13C.Collagen\"=\"IRMS.δ13C.Collagen\", \"IRMS.δ13C.Collagen.unc\"=\"IRMS.δ13C.Collagen.unc\", \"δ15N.Collagen\"=\"δ15N.Collagen\", \"δ15N.Collagen.unc.\"=\"δ15N.Collagen.unc.\", \"Collagen.Yield\"=\"Collagen.Yield\", \"C\"=\"C\", \"N\"=\"N\", \"Atomic.C.N.Ratio\"=\"Atomic.C.N.Ratio\", \"IRMS.Lab.Institution.Stable.Carbon...Oxygen.Carbonate.Measurement\"=\"IRMS.Lab.Institution.Stable.Carbon...Oxygen.Carbonate.Measurement\", \"Nr..of.Samples..Carbonate.\"=\"Nr..of.Samples..Carbonate.\", \"δ13C.Carbonate\"=\"δ13C.Carbonate\", \"δ13C.Carbonate.unc.\"=\"δ13C.Carbonate.unc.\", \"δ18O.Carbonate..VPDB.\"=\"δ18O.Carbonate..VPDB.\", \"δ18O.Carbonate..VPDB..unc.\"=\"δ18O.Carbonate..VPDB..unc.\"))"
 
-  shiny::testServer(mergeViaUIServer, args = list(mergeList = reactive(testMergeList)),
+  shiny::testServer(mergeViaUIServer, args = list(tableXData = reactive(tableXData),
+                                                  tableYData = reactive(tableYData),
+                                                  tableXId = reactive("table1"),
+                                                  tableYId = reactive("table2")),
                     {
                       # Arrange
                       print("test merge via UI server")
                       # Act
                       session$setInputs(
-                        tableX = extractMergeChoices(testMergeList)[1],
-                        tableY = extractMergeChoices(testMergeList)[2],
                         mergeOperation = "left_join",
                         addAllCommonColumns = TRUE,
                         columnsX = testCommonColumns,
