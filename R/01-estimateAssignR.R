@@ -18,15 +18,23 @@
 # xUncCAT <- matrix(0.1, ncol = ncol(XCAT), nrow = nrow(XCAT))
 
 
-fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10){
-  XNUM <- scale(XNUM)
-  mRe <- attr(XNUM, "scaled:center")
-  sRe <- attr(XNUM, "scaled:scale")
-  if(!is.null(xUncNUM)){
-    xUncNUM <- sweep(xUncNUM, 2, sRe, "/")
-  }
+fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10, cat = ""){
+  X <- cbind(rep(1, length(y)))
 
-  X <- cbind(rep(1, length(y)), XNUM, XCAT)
+  if(!is.null(XNUM)){
+    XNUM <- scale(XNUM)
+    mRe <- attr(XNUM, "scaled:center")
+    sRe <- attr(XNUM, "scaled:scale")
+    if(!is.null(xUncNUM)){
+      xUncNUM <- sweep(xUncNUM, 2, sRe, "/")
+    }
+    X <- cbind(X, XNUM)
+
+  }
+  if(!is.null(XCAT)){
+    X <- cbind(X, XCAT)
+
+  }
 
   nY <- length(y)
   XOrig <- X
@@ -99,7 +107,7 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
       }
       pars <<- pars
       # #MH-step for time
-      if(m %% 10 == 0 && (NCOL(xUncNUM) == NCOL(XNUM))){
+      if(m %% 10 == 0 && !is.null(XNUM) && !is.null(xUncNUM)  && (NCOL(xUncNUM) == NCOL(XNUM))){
         for(l in 1:NCOL(xUncNUM)){
           changeX <- which(xUncNUM[, l] > 0)
 
@@ -124,10 +132,14 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
             }
           }
         }
-        X <- cbind(rep(1, length(y)), XNUM, XCAT)
+        if(!is.null(XCAT)){
+          X <- cbind(rep(1, length(y)), XNUM, XCAT)
+        } else {
+          X <- cbind(rep(1, length(y)), XNUM)
+        }
       }
       #categorical vars
-      if(m %% 10 == 0 && (NCOL(xUncCAT) == NCOL(XCAT))){
+      if(m %% 10 == 0 && !is.null(XCAT) && !is.null(xUncCAT) && (NCOL(xUncCAT) == NCOL(XCAT))){
         for(l in 1:NCOL(xUncCAT)){
           changeX <- which(xUncCAT[, l] > 0)
 
@@ -152,7 +164,11 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
             }
           }
         }
-        X <- cbind(rep(1, length(y)), XNUM, XCatNew)
+        if(!is.null(XNUM)){
+          X <- cbind(rep(1, length(y)), XNUM, XCAT)
+        } else {
+          X <- cbind(rep(1, length(y)), XCAT)
+        }
       }
 
 
@@ -171,15 +187,14 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
   }
 
 
-
-  for ( k in 1:10) {
-    j <- seq(1, iter, iter / 10)[k]
+  for ( k in 1:5) {
+    j <- seq(1, iter, iter / 5)[k]
     showMessage(
       MCMC_AssignR,
       msg = "Calculating AssignR",
-      detail = paste0("Chain ", nChains),
-      value = k / 10)(
-        start = j, iter = j + iter / 10 - 1
+      detail = paste0("Chain ", nChains, ", Cat: ", cat),
+      value = k / 5)(
+        start = j, iter = j + iter / 5 - 1
       )
     pars <- startPar
     MHPar <- rep(0.1, length(pars))
@@ -189,7 +204,7 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
   every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   #Vektor der tatsaechlich benutzten Beobachtungen
   usedsamples <- unlist(sapply(1:nChains, function(k) seq(from = burnin[k], to = iter / nChains * k, by = every)))
-  return(list(beta = betamc[usedsamples, ],
+  return(list(beta = betamc[usedsamples, , drop = F],
               mRe = mRe, sRe = sRe,
               nChains = nChains))
 }
@@ -203,16 +218,15 @@ normalizePredictions <- function(predictions){
   })
 }
 
-modelAssignRMC <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10){
-
+modelAssignRMC <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT = NULL, iter = 1000, nChains = 4, burnin = 0.4*iter, thinning = 10, cat = ""){
   ret <- lapply(1:nChains, function(x){
     fitModelAssignR(XNUM, XCAT, y, yUnc = yUnc,
                     xUncNUM = xUncNUM, xUncCAT = xUncCAT,
                     iter = iter, nChains = x,
-                    burnin = 0.4*iter, thinning = thinning)
+                    burnin = 0.4*iter, thinning = thinning, cat = cat)
   })
   res <- ret[[1]]
-  res$beta <- do.call("rbind", lapply(1:length(ret), function(x) ret[[x]]$beta))
+  res$beta <- as.matrix(do.call("rbind", lapply(1:length(ret), function(x) ret[[x]]$beta)), ncol = NCOL(ret[[x]]$beta))
   return(res)
 }
 
