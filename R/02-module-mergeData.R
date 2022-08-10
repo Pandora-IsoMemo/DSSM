@@ -32,7 +32,7 @@ mergeDataUI <- function(id) {
     ),
     checkboxInput(ns("useMergeViaCommand"),
                   "Merge via command line"),
-    actionButton(ns("applyMerge"), "Apply"),
+    actionButton(ns("applyMerge"), "Preview Merge"),
     #actionButton(ns("addMerge"), "Add Table"),
     fluidRow(column(12,
                     dataTableOutput(ns(
@@ -100,10 +100,9 @@ mergeDataServer <- function(id, mergeList) {
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
-                   req(!is.null(mergeCommandManual()), input$applyMerge)
+                   req(mergeCommandManual(), input$applyMerge)
 
                    withProgress({
-                     browser()
                      ## create data.frames to merge ----
                      for (i in c(input$tableX, input$tableY)) {
                        assign(tableIds()[i],
@@ -172,7 +171,7 @@ mergeDataServer <- function(id, mergeList) {
 
                  output$joinedData <- renderDataTable({
                    req(joinedData())
-                   DT::datatable(joinedData(),
+                   DT::datatable(joinedData()[1:2,],
                                  rownames = FALSE,
                                  options = list(scrollX = TRUE))
                  })

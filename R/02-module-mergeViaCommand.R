@@ -23,7 +23,9 @@ mergeViaCommandUI <- function(id) {
     #   value = NULL,
     #   width = "100%"
     # ),
-    tags$em(paste0("This is experimental and under development. No checks of column types implemented. App crashes easily.")),
+    tags$em(paste0("This is experimental and under development. ",
+                   "No checks of column types implemented. Please ensure that types are matching. ",
+                   "App may crash easily.")),
     textAreaInput(
       ns("mergeCommand"),
       "Merge command",
@@ -49,7 +51,6 @@ mergeViaCommandServer <- function(id, mergeCommandAuto) {
                  })
 
                  observeEvent(input$mergeCommand, {
-                   req(input$mergeCommand)
                    mergeCommandManual(input$mergeCommand)
                  })
 

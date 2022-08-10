@@ -93,8 +93,6 @@ mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
 
                  # create: mergeCommandAuto ----
                  observeEvent(list(input$columnsX, input$columnsY), {
-                   req(input$columnsX, input$columnsY)
-
                    columnsToJoin$tableX <-
                      equalizeLength(input$columnsX, input$columnsY)$xColNames
                    columnsToJoin$tableY <-
@@ -103,8 +101,7 @@ mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
                    colJoinString <-
                      extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
 
-                   if (!is.null(colJoinString) &&
-                       (tableXId() != tableYId())) {
+                   if (isNotEmptyColumnsAndNonEqualTables(colJoinString, tableXId(), tableYId())) {
                      mergeCommandAuto(
                        tmpl(
                          paste0(
@@ -124,8 +121,8 @@ mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
                    } else {
                      mergeCommandAuto("")
 
-                     if (tableXId() == tableYId()) {
-                       alert("Please choose two different table.")
+                     if (isEqualTables(tableXId(), tableYId())) {
+                       alert("Please choose two different tables.")
                      }
                    }
                  })
@@ -171,4 +168,12 @@ extractJoinString <- function(xColumns, yColumns) {
   res <- paste(xColumns, yColumns, sep = "=")
   res <- paste(res, collapse = ", ")
   paste0("c(", res, ")")
+}
+
+isNotEmptyColumnsAndNonEqualTables <- function(colJoinString, tableXId, tableYId) {
+  !(colJoinString == "c(\"\"=\"\")") && (tableXId != tableYId)
+}
+
+isEqualTables <- function(tableXId, tableYId) {
+  !is.null(tableXId) && !is.null(tableYId) && tableXId == tableYId
 }
