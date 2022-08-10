@@ -220,9 +220,11 @@ modelResults3DUI <- function(id, title = ""){
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
+              # extract UI for "Time selection" HERE ----
               sliderInput(inputId = ns("time"),
                           label = "Time selection",
                           min = 0, max = 15000, value = 5000, step = 100, width = "100%"),
+              sliderAndNumericInputUI(ns("timeExtended"), label = "Time selection"),
               div(
                 style = "display:flex;",
                 div(
@@ -1316,3 +1318,46 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(batchModel())
   })
 }
+
+
+# Slider And Input Selection Module ----
+
+#' Slider And Input UI
+#'
+#' UI of the Slider And Input module
+#'
+#' @param id id of module
+#' @param label label
+#' @param min (numeric) minumum
+#' @param max (numeric) maximum
+#' @param value (numeric) default value
+#' @param step (numeric) step
+sliderAndNumericInputUI <- function(id, label, min = 0, max = 15000, value = 5000, step = 100) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(column(
+      9,
+      sliderInput(inputId = ns("sliderInput"),
+                  label = label,
+                  min = min, max = max, value = value, step = step, width = "100%")
+    ),
+    column(
+      3,
+      numericInput(inputId = ns("numInput"),
+                   label = label,
+                   min = min, max = max, value = value, step = step)
+    ))
+  )
+}
+
+#' Slider And Input Server
+#'
+#' Server function of the Slider And Input module
+#' @param id id of module
+sliderAndNumericInputServer <- function(id) {
+  moduleServer(id,
+               function(input, output, session) {
+
+               })
+}
+
