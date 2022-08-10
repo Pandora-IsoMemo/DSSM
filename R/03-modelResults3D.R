@@ -224,7 +224,9 @@ modelResults3DUI <- function(id, title = ""){
               sliderInput(inputId = ns("time"),
                           label = "Time selection",
                           min = 0, max = 15000, value = 5000, step = 100, width = "100%"),
-              sliderAndNumericInputUI(ns("timeExtended"), label = "Time selection"),
+              sliderAndNumericInputUI(ns("timeExtended"),
+                                      label = "Time selection",
+                                      min = 0, max = 15000, value = 5000, step = 100),
               div(
                 style = "display:flex;",
                 div(
@@ -1332,7 +1334,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 #' @param max (numeric) maximum
 #' @param value (numeric) default value
 #' @param step (numeric) step
-sliderAndNumericInputUI <- function(id, label, min = 0, max = 15000, value = 5000, step = 100) {
+sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
   ns <- NS(id)
   tagList(
     fluidRow(column(

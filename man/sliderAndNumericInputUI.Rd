@@ -4,14 +4,7 @@
 \alias{sliderAndNumericInputUI}
 \title{Slider And Input UI}
 \usage{
-sliderAndNumericInputUI(
-  id,
-  label,
-  min = 0,
-  max = 15000,
-  value = 5000,
-  step = 100
-)
+sliderAndNumericInputUI(id, label, min, max, value, step)
 }
 \arguments{
 \item{id}{id of module}
