@@ -9,7 +9,7 @@ mergeViaCommandServer(id, mergeCommandAuto)
 \arguments{
 \item{id}{id of module}
 
-\item{mergeList}{(list) list of data to be merged}
+\item{mergeCommandAuto}{(character) automatically generated command for data merge}
 }
 \description{
 Server function of the merge Command module

@@ -52,7 +52,10 @@ mergeViaUIUI <- function(id) {
 #'
 #' Server function of the merge via UI module
 #' @param id id of module
-#' @param mergeList (list) list of data to be merged
+#' @param tableXData (data.frame) data to be merged
+#' @param tableYData (data.frame) data to be merged
+#' @param tableXId (character) internal table name, see \link{extractTableIds}
+#' @param tableYId (character) internal table name, see \link{extractTableIds}
 mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
   moduleServer(id,
                function(input, output, session) {

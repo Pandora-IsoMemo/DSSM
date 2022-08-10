@@ -195,6 +195,11 @@ extractMergeChoices <- function(tableList) {
 }
 
 
+#' Extract Table IDs
+#'
+#' @param namesOfTables (character) names of loaded tables, often url's to the table file, something
+#'  like "https://pandoradata.earth/dataset/.../download/afriarch-isotopic-dataset.xlsx"
+#' @return (character) short internal table names
 extractTableIds <- function(namesOfTables) {
   ids <- paste0("table", 1:length(namesOfTables))
   names(ids) <- namesOfTables

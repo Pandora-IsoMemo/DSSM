@@ -39,7 +39,7 @@ mergeViaCommandUI <- function(id) {
 #'
 #' Server function of the merge Command module
 #' @param id id of module
-#' @param mergeList (list) list of data to be merged
+#' @param mergeCommandAuto (character) automatically generated command for data merge
 mergeViaCommandServer <- function(id, mergeCommandAuto) {
   moduleServer(id,
                function(input, output, session) {

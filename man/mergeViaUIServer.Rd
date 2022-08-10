@@ -9,7 +9,13 @@ mergeViaUIServer(id, tableXData, tableYData, tableXId, tableYId)
 \arguments{
 \item{id}{id of module}
 
-\item{mergeList}{(list) list of data to be merged}
+\item{tableXData}{(data.frame) data to be merged}
+
+\item{tableYData}{(data.frame) data to be merged}
+
+\item{tableXId}{(character) internal table name, see \link{extractTableIds}}
+
+\item{tableYId}{(character) internal table name, see \link{extractTableIds}}
 }
 \description{
 Server function of the merge via UI module
