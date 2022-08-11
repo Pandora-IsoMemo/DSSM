@@ -728,7 +728,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     min = 0,
     max = 15000,
     mean = 5000,
-    range = c(15000, 0),
+    range = c(0, 15000),
     step = 100
   )
 

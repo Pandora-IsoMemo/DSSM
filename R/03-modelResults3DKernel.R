@@ -168,9 +168,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           conditionalPanel(
             condition = "input.mapType == 'Map'",
             ns = ns,
-            sliderInput(inputId = ns("time"),
-                        label = "Time selection",
-                        min = 0, max = 15000, value = 5000, step = 100, width = "100%"),
+            sliderAndNumericInputUI(ns("timeExtended"),
+                                    label = "Time selection",
+                                    min = 0, max = 15000, value = 5000, step = 100),
             div(
               style = "display:flex;",
               div(
@@ -740,6 +740,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     }
   })
 
+  dateExtent <- reactiveValues(
+    min = 0,
+    max = 15000,
+    mean = 5000,
+    range = c(0, 15000),
+    step = 100
+  )
+
   observe({
     validate(validInput(Model()))
 
@@ -765,27 +773,21 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     if(exists("d")){
       d <- na.omit(d)
-      step <- signif(roundUpNice(diff(range(d)),
-                                 nice = c(1,10)) / 10000, digits = 2)
-      minD <- min(d) - diff(range(d)) * 0.1
-      maxD <- max(d) + diff(range(d)) * 0.1
+
+      dateExtent$mean <- signif(mean(d), digits = 1)
+      dateExtent$range <- signif(range(d), digits = 1)
+      dateExtent$step <- signif(roundUpNice(diff(range(d)),
+                                            nice = c(1,10)) / 10000, digits = 2)
+      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
+      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
 
       updateSliderInput(
         session,
         "trange",
-        value = signif(range(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
-      )
-
-      updateSliderInput(
-        session,
-        "time",
-        value = signif(mean(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
+        value = dateExtent$range,
+        min = dateExtent$min,
+        max = dateExtent$max,
+        step = dateExtent$step
       )
     }
   })
@@ -878,8 +880,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
 
+  userInputTime <- sliderAndNumericInputServer("timeExtended",
+                                               value = reactive(dateExtent$mean),
+                                               min = reactive(dateExtent$min),
+                                               max = reactive(dateExtent$max),
+                                               step = reactive(dateExtent$step))
+
   plotFun <- reactive({
-    function(model, time = input$time, returnPred = FALSE, ...){
+    function(model, time = userInputTime(), returnPred = FALSE, ...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
 
