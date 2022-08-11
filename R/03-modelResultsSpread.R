@@ -422,6 +422,9 @@ modelResultsSpreadUI <- function(id, title = ""){
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+          numericInput(inputId = ns("decimalPlace"),
+                       label = "Input decimal places for map legend",
+                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
           batchPointEstimatesUI(ns("batch"))
         )
       )
@@ -898,8 +901,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
              Please raise the plot resolution or radius such that estimates within the radius are available.")
     }
 
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
+    paste0("Mean: ", round(values$meanCenter, digits = input$decimalPlace),
+           ", Standard error of the mean: ", round(values$sdCenter, digits = input$decimalPlace),
            "  at coordinates ",  "(",
            input$centerY, "\u00B0, " , input$centerX,
            "\u00B0) for a ", round(input$Radius, 3),
