@@ -4,10 +4,18 @@
 \alias{sliderAndNumericInputServer}
 \title{Slider And Input Server}
 \usage{
-sliderAndNumericInputServer(id)
+sliderAndNumericInputServer(id, value, min, max, step)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{value}{value of input}
+
+\item{min}{min of input}
+
+\item{max}{max of input}
+
+\item{step}{step of input}
 }
 \description{
 Server function of the Slider And Input module

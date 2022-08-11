@@ -220,10 +220,6 @@ modelResults3DUI <- function(id, title = ""){
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
-              # extract UI for "Time selection" HERE ----
-              sliderInput(inputId = ns("time"),
-                          label = "Time selection",
-                          min = 0, max = 15000, value = 5000, step = 100, width = "100%"),
               sliderAndNumericInputUI(ns("timeExtended"),
                                       label = "Time selection",
                                       min = 0, max = 15000, value = 5000, step = 100),
@@ -266,6 +262,7 @@ modelResults3DUI <- function(id, title = ""){
               uiOutput(ns("pointInput2D"))
             )
           ),
+          # add input for timerange also ----
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
             ns = ns,
@@ -727,6 +724,14 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$upperLeftLongitude <- input$upperLeftLongitude
   })
 
+  dateExtent <- reactiveValues(
+    min = 0,
+    max = 15000,
+    mean = 5000,
+    range = c(15000, 0),
+    step = 100
+  )
+
   observe({
     validate(validInput(Model()))
 
@@ -752,27 +757,22 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     if(exists("d")){
       d <- na.omit(d)
-      step <- signif(roundUpNice(diff(range(d)),
-                                 nice = c(1,10)) / 10000, digits = 2)
-      minD <- min(d) - diff(range(d)) * 0.1
-      maxD <- max(d) + diff(range(d)) * 0.1
+      dateExtent$mean <- signif(mean(d), digits = 1)
+      dateExtent$range <- signif(range(d), digits = 1)
+      dateExtent$step <- signif(roundUpNice(diff(range(d)),
+                                            nice = c(1,10)) / 10000,
+                                digits = 2)
+      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
+      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
 
+      # time range update ----
       updateSliderInput(
         session,
         "trange",
-        value = signif(range(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
-      )
-
-      updateSliderInput(
-        session,
-        "time",
-        value = signif(mean(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
+        value = dateExtent$range,
+        min = dateExtent$min,
+        max = dateExtent$max,
+        step = dateExtent$step
       )
     }
   })
@@ -864,9 +864,13 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     return(pointDat2D())
   })
 
-
+  userInputTime <- sliderAndNumericInputServer("timeExtended",
+                                               value = reactive(dateExtent$mean),
+                                               min = reactive(dateExtent$min),
+                                               max = reactive(dateExtent$max),
+                                               step = reactive(dateExtent$step))
   plotFun <- reactive({
-    function(model, time = input$time, returnPred = FALSE,...){
+    function(model, time = userInputTime(), returnPred = FALSE,...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
       if(input$fixCol == FALSE){
@@ -1356,10 +1360,39 @@ sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
 #'
 #' Server function of the Slider And Input module
 #' @param id id of module
-sliderAndNumericInputServer <- function(id) {
+#' @param value value of input
+#' @param min min of input
+#' @param max max of input
+#' @param step step of input
+sliderAndNumericInputServer <- function(id,
+                                        value,
+                                        min,
+                                        max,
+                                        step) {
   moduleServer(id,
                function(input, output, session) {
+                 result <- reactiveVal(5000)
 
+                 observeEvent(list(value(), min(), max(), step()), {
+                   updateNumericInput(session = session, "sliderInput", value = value(),
+                                      min = min(), max = max(), step = step())
+                   updateNumericInput(session = session, "numInput", value = value(),
+                                      min = min(), max = max(), step = step())
+                 })
+
+                 observeEvent(input$sliderInput, {
+                   req(input$sliderInput != input$numInput)
+                   updateNumericInput(session = session, "numInput", value = input$sliderInput)
+                   result(input$sliderInput)
+                 })
+
+                 observeEvent(input$numInput, {
+                   req(input$sliderInput != input$numInput)
+                   updateSliderInput(session = session, "sliderInput", value = input$numInput)
+                   result(input$numInput)
+                 })
+
+                 result
                })
 }
 
