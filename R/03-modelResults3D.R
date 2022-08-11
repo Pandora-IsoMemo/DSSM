@@ -1341,18 +1341,20 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
   ns <- NS(id)
   tagList(
-    fluidRow(column(
-      9,
-      sliderInput(inputId = ns("sliderInput"),
-                  label = label,
-                  min = min, max = max, value = value, step = step, width = "100%")
-    ),
-    column(
-      3,
-      numericInput(inputId = ns("numInput"),
-                   label = label,
-                   min = min, max = max, value = value, step = step)
-    ))
+    div(
+      style = "display:flex;",
+      div(
+        class = "zoom-map",
+        sliderInput(inputId = ns("sliderInput"),
+                    label = label,
+                    min = min, max = max, value = value, step = step, width = "100%")
+      ),
+      div(
+        class = "move-map",
+        numericInput(inputId = ns("numInput"),
+                     label = label,
+                     min = min, max = max, value = value, step = step, width = "190px")
+      ))
   )
 }
 
