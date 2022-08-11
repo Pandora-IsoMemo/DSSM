@@ -211,7 +211,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           ns = ns,
           sliderInput(inputId = ns("trange"),
                       label = "Time range",
-                      min = 15000, max = 0, value = c(15000, 0), width = "100%"),
+                      min = 0, max = 15000, value = c(0, 15000), width = "100%"),
           actionButton(ns("add_btn"), "Add data point"),
           actionButton(ns("rm_btn"), "Remove data point"),
           # colourInput(ns("col_btn"), "Select colour of data point"),
