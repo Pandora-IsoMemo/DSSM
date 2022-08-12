@@ -217,6 +217,7 @@ modelResults3DUI <- function(id, title = ""){
             condition = conditionPlot(ns("DistMap")),
             textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             div(plotExportButton(ns("export"))),
+            tags$br(),
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
