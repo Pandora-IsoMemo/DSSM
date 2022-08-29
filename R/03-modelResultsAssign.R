@@ -271,7 +271,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
           xUncNUM <- NULL
         }
         XCAT <- dataAssignR[, input$catVars, drop = FALSE]
-        XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
+        XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
         if(NCOL(XCAT) > 0){
         XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
         if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
@@ -293,9 +293,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
         yCat <- as.numeric(dataAssignR[, input$Independent] == modelCat)
         model <- modelAssignRMC(
           XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
-          nChains = input$nChains, thinning = input$thinning, cat = x
+          nChains = input$nChains, thinning = input$thinning, cat = modelCat
         )
-        value <- match(x, cats) / (length(cats))
+        value <- match(modelCat, cats) / (length(cats))
         model
       })
       names(models) <- cats
