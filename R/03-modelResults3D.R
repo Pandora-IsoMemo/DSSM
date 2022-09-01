@@ -313,7 +313,9 @@ modelResults3DUI <- function(id, title = ""){
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course"),
                        selected = "Map"),
-        #numericInput(ns("timeplotDecimals"))
+          numericInput(inputId = ns("scatterDecPlace"),
+                     label = "Input decimal places for scatter plot",
+                     min = 0, max = 10, value = 2, step = 1, width = "100%"),
         conditionalPanel(
           condition = "input.mapType == 'Time course'",
           selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",
@@ -974,9 +976,14 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       }
 
       if(input$mapType == "Time course"){
+        print(isolate(Independent()))
+        print(input$intTime)
+        print(pointDat)
+        print(input$trange)
+        print(model$data)
         plotTimeCourse(model,
                        trange = input$trange,
-                       independent = isolate(Independent()),
+                       independent = isolate(Independent()), #, digits = input$scatterDecPlace),
                        resolution = input$resolution,
                        centerX = input$centerX,
                        centerY = input$centerY,
@@ -989,6 +996,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
                        limitz = input$limitz,
+                       scatterDecPlace = input$scatterDecPlace,
                        ...)
       } else {
         plotMap3D(

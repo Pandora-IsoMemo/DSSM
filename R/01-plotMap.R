@@ -2168,6 +2168,7 @@ north.arrow = function(x, y, h, c, adj) {
 #' @param intTime should uncertainty intervals of nearby points be plotted?
 #' @param rangePointsTime range of nearby points in km
 #' @param limitz z limit range
+#' @param scatterDecPlace the number of decimal places user specifies for the axis labels
 #'
 #' @export
 plotTimeCourse <- function(model, independent = "", trange = range(model$data$Date),
@@ -2179,7 +2180,8 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
                            returnPred = FALSE,
                            intTime = FALSE,
                            rangePointsTime = 500,
-                           limitz = NULL){
+                           limitz = NULL,
+                           scatterDecPlace = 2){
   sdValue <- 1
   if(as.numeric(seType) > 5){
     sdValue <- 2
@@ -2287,8 +2289,56 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
   if(!is.null(rangey)){
     ylims[!is.na(rangey)] = rangey[!is.na(rangey)]
   }
-  plot(pmax(minVal, pmin(maxVal, XPred$Est)) ~ time, type="l", ylim = ylims,
-       ylab = independent, xlab = "time", main = mainlab)
+#############################################################################
+  #print(pmax(minVal, pmin(maxVal, XPred$Est)) )
+  #print(time)
+
+  #y = pmax(minVal, pmin(maxVal, XPred$Est))
+  y=c(2.3434,2.4342,4.2323)
+  x=c(0.13343,3.222,5.3433)
+  df = as.data.frame(x = cbind(x,y))
+
+
+  #fakedata <- data.frame(
+  #  x = 1:5,
+  #  y = c(0.1, 1.2, 2.4, 2.9, 2.2)
+  #)
+
+  #library(ggplot2)
+
+  # without the accuracy argument, you see .0 decimals
+  #ggplot(df, aes(x = x, y = y)) +
+  #  geom_point() +
+  #  scale_y_continuous(label = ~ scales::comma(.x))
+
+
+
+
+  #ggplot(df,aes(x=x, y=y)) +
+   # geom_line() +
+  #  scale_y_continuous(breaks = function(y) seq(floor(min(y, digits = 4)),
+   #                                             ceiling(max(y, digits = 4)),
+    #                                            by = 0.1))
+
+
+  plot(y ~ time, type="l", ylim = ylims,
+       ylab = independent, xlab = "time", main = mainlab, xaxt = 'n', yaxt = 'n')
+
+ # y <- range(x); y[1]:y[2]
+  y_label = seq(ylim[1], ylim[2])
+
+  x_label <- seq(0,      # Specify axis positions of labels
+                           100000 ,
+                            length = 5)
+
+  axis(1,                                     # Manually add axis tick labels
+       at = x_label,
+       labels = round(x_label,3))
+  axis(2,                                     # Manually add axis tick labels
+       at = my_label_positions,
+       labels = round(y_labels,3))
+
+  ##################
   if(seType %in% c("2", "4", "6", "9")){
     polygon(c(rev(time), time), pmax(minVal, pmin(maxVal, c(rev(XPred$IntUpper), XPred$IntLower))),
             col = 'grey90', border = NA)
