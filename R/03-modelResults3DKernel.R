@@ -246,6 +246,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by cluster"),
                        selected = "Map"),
+          numericInput(inputId = ns("scatterDecPlace"),
+                       label = "Input decimal places for scatter plot",
+                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
             selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",

@@ -313,6 +313,7 @@ modelResults3DUI <- function(id, title = ""){
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course"),
                        selected = "Map"),
+        #numericInput(ns("timeplotDecimals"))
         conditionalPanel(
           condition = "input.mapType == 'Time course'",
           selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",
