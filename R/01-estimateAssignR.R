@@ -226,7 +226,7 @@ modelAssignRMC <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT =
                     burnin = 0.4*iter, thinning = thinning, cat = cat)
   })
   res <- ret[[1]]
-  res$beta <- as.matrix(do.call("rbind", lapply(1:length(ret), function(x) ret[[x]]$beta)), ncol = NCOL(ret[[x]]$beta))
+  res$beta <- as.matrix(do.call("rbind", lapply(1:length(ret), function(x) ret[[x]]$beta)), ncol = NCOL(res$beta))
   return(res)
 }
 
