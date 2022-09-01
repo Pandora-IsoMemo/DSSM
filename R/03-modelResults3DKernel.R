@@ -246,11 +246,11 @@ modelResults3DKernelUI <- function(id, title = ""){
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by cluster"),
                        selected = "Map"),
-          #########
+
           numericInput(inputId = ns("scatterDecPlace"),
                        label = "Input decimal places for scatter plot",
                        min = 0, max = 10, value = 2, step = 1, width = "100%"),
-          #########
+
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
             selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",
@@ -459,6 +459,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           numericInput(inputId = ns("centerX"),
                        label = "Center point longitude",
                        min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
+          numericInput(inputId = ns("decimalPlace"),
+                       label = "Input decimal places for map legend",
+                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
           conditionalPanel(
             condition = "input.timeCourse != 'mapType'",
             sliderInput(inputId = ns("Radius"),
@@ -471,9 +474,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
-          numericInput(inputId = ns("decimalPlace"),
-                       label = "Input decimal places for map legend",
-                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
+
           batchPointEstimatesUI(ns("batch"))
         )
     )

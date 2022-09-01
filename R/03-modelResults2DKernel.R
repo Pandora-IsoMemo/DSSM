@@ -364,6 +364,9 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           numericInput(inputId = ns("centerX"),
                        label = "Center point longitude",
                        min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
+          numericInput(inputId = ns("decimalPlace"),
+                       label = "Input decimal places for map legend",
+                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
           sliderInput(inputId = ns("Radius"),
                       label = "Radius (km)",
                       min = 10, max = 300, value = 100, step = 10, width = "100%"),
@@ -373,9 +376,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
-          numericInput(inputId = ns("decimalPlace"),
-                       label = "Input decimal places for map legend",
-                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
+
           batchPointEstimatesUI(ns("batch"))
         )
       )
