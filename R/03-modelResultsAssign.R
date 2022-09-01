@@ -95,15 +95,15 @@ modelResultsAssignUI <- function(id, title = "") {
         sliderInput(
           inputId = ns("Iter"),
           label = "Number of MCMC iterations",
-          min = 100, max = 100000, value = 2000, step = 100
+          min = 100, max = 100000, value = 3000, step = 100
         ),
         sliderInput(
           inputId = ns("burnin"), label = "Number of burnin iterations",
-          value = 5000, min = 100, max = 10000, step = 100
+          value = 1000, min = 100, max = 10000, step = 100
         ),
         sliderInput(
           inputId = ns("nChains"), label = "Number of MCMC chains",
-          value = 1, min = 1, max = 16, step = 1
+          value = 2, min = 1, max = 16, step = 1
         ),
         sliderInput(
           inputId = ns("thinning"), label = "MCMC thinning (keep every x-th sample)",
@@ -270,6 +270,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
         } else {
           xUncNUM <- NULL
         }
+        XCAT <- dataAssignR[, input$catVars, drop = FALSE]
+        XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
+        if(NCOL(XCAT) > 0){
         XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
         if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
           XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
@@ -277,25 +280,52 @@ modelResultsAssign <- function(input, output, session, isoData) {
           xUncCAT <- lapply(1:length(XCAT), function(z) {
             xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
           })
-          XCAT <- do.call("cbind", XCAT)
+          #XCAT <- do.call("cbind", XCAT)
           xUncCAT <- do.call("cbind", xUncCAT)
         } else {
           xUncCAT <- NULL
         }
+        } else {
+          XCAT <- NULL
+          xUncCAT <- NULL
+        }
+
         yCat <- as.numeric(dataAssignR[, input$Independent] == modelCat)
         model <- modelAssignRMC(
           XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
-          nChains = input$nChains, thinning = input$thinning, cat = x
+          nChains = input$nChains, thinning = input$thinning, cat = modelCat
         )
-        value <- match(x, cats) / (length(cats))
+        value <- match(modelCat, cats) / (length(cats))
         model
       })
       names(models) <- cats
       X <- lapply(cats, function(x) {
         XNUM <- dataAssignR[, input$numVars, drop = F]
+
+        XCAT <- dataAssignR[, input$catVars, drop = FALSE]
+        XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
+        if(NCOL(XCAT) > 0){
         XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
-        X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
-          matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+        } else {
+          XCAT <- NULL
+        }
+        if(NCOL(XNUM) > 0){
+          if(!is.null(XCAT)){
+            X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+          } else {
+            X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)))
+          }
+        } else {
+          if(!is.null(XCAT)){
+            X <- as.matrix(cbind(rep(1, length(y)), XCAT))
+
+          } else {
+            X <- as.matrix(cbind(rep(1, length(y))))
+
+          }
+        }
         X
       })
       names(X) <- cats
@@ -333,9 +363,31 @@ modelResultsAssign <- function(input, output, session, isoData) {
       }
       X <- lapply(cats, function(x) {
         XNUM <- dataPred[, input$numVars, drop = F]
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataPred)
-        X <- as.matrix(cbind(rep(1, NROW(XNUM)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
-          matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+
+        XCAT <- dataPred[, input$catVars, drop = FALSE]
+        XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
+        if(NCOL(XCAT) > 0){
+          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataPred)
+        } else {
+          XCAT <- NULL
+        }
+        if(NCOL(XNUM) > 0){
+          if(!is.null(XCAT)){
+            X <- as.matrix(cbind(rep(1, NROW(dataPred)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+          } else {
+            X <- as.matrix(cbind(rep(1, NROW(dataPred)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)))
+          }
+        } else {
+          if(!is.null(XCAT)){
+            X <- as.matrix(cbind(rep(1, NROW(dataPred)), XCAT))
+
+          } else {
+            X <- as.matrix(cbind(rep(1, NROW(dataPred))))
+
+          }
+        }
         X
       })
       names(X) <- cats
@@ -421,6 +473,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
         estimate <- as.data.frame(round(do.call("cbind", lapply(predictions, function(z) apply(z, 1, quantile, input$quantile))), 3))
       }
       if (input$aggType == "cat") {
+        if(length(unique(data[, input$catAgg])) < 2){
+          stop("At least two different categories needed in category variable!")
+        }
         if (!is.null(input$catAgg) && input$catAgg != "") {
           data2 <- data
           data1$rnames <- rownames(data1)
@@ -433,7 +488,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
             estimate <- data.frame(estimate, data2)
             estimateSplit <- split(estimate, estimate[, NCOL(estimate)])
             estimate <- sapply(estimateSplit, function(y) {
-              y <- y[, -NCOL(y)]
+              y <- y[, -NCOL(y), drop = F]
               if (input$estType == "mean") {
                 estimate <- mean(exp(rowMeans(log(y))))
               }
