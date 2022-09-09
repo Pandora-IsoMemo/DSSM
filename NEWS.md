@@ -5,7 +5,7 @@
 ### New Features
 
 - export a time series of _spatio-temporal-average_ plots in the selected file format condensed
-in a zip file
+into a zip file
 
 ## MpiIsoApp 22.09.1
 
