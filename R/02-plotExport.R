@@ -22,14 +22,18 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
         numericInput(session$ns("width"), "Width (px)", value = 1280),
         numericInput(session$ns("height"), "Height (px)", value = 800)
       ),
-      checkboxInput(session$ns("isTimeSeries"), "Export time series"),
       conditionalPanel(
-        condition = "input.isTimeSeries",
+        condition = paste0("'", type, "' == 'spatio-temporal-average'"),
         ns = session$ns,
-        numericInput(session$ns("minTime"), "Time begin of series", value = 0),
-        numericInput(session$ns("maxTime"), "Time end of series", value = 5000),
-        #checkboxInput(session$ns("reverseGif"), "Reverse time order of animation"),
-        numericInput(session$ns("intTime"), "Time interval length of series", value = 1000)
+        checkboxInput(session$ns("isTimeSeries"), "Export time series"),
+        conditionalPanel(
+          condition = "input.isTimeSeries",
+          ns = session$ns,
+          numericInput(session$ns("minTime"), "Time begin of series", value = 0),
+          numericInput(session$ns("maxTime"), "Time end of series", value = 5000),
+          #checkboxInput(session$ns("reverseGif"), "Reverse time order of animation"),
+          numericInput(session$ns("intTime"), "Time interval length of series", value = 1000)
+        )
       ),
       downloadButton(session$ns("exportExecute"), "Export"),
       easyClose = TRUE
