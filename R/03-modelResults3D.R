@@ -216,6 +216,8 @@ modelResults3DUI <- function(id, title = ""){
           conditionalPanel(
             condition = conditionPlot(ns("DistMap")),
             textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+            tags$br(),
+            tags$br(),
             div(plotExportButton(ns("export"))),
             conditionalPanel(
               condition = "input.mapType == 'Map'",
@@ -492,16 +494,8 @@ modelResults3DUI <- function(id, title = ""){
           colourInput(inputId = ns("fontCol"),
                       label = "Colour of font",
                       value = "#2C2161")
-          , ns = ns),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("decimalPlace"),
-                     label = "Input decimal places for map legend",
-                     min = 0, max = 10, value = 2, step = 1, width = "100%"),
+                      , ns = ns),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("Radius"),
                         label = "Radius (km)",
                         min = 10, max = 300, value = 100, step = 10, width = "100%"),
@@ -559,19 +553,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
 
   output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius) | input$mapType == "Time course") return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", round(values$meanCenter, digits = input$decimalPlace),
-           ", Standard error of the mean: ", round(values$sdCenter, digits = input$decimalPlace),
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+    centerEstimate$text()
   })
 
 
@@ -867,7 +849,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     return(pointDat2D())
   })
 
-
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         meanCenter = reactive(values$meanCenter),
+                                         sdCenter = reactive(values$sdCenter))
   plotFun <- reactive({
     function(model, time = input$time, returnPred = FALSE,...){
       pointDat = pointDat()
@@ -981,9 +965,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        trange = input$trange,
                        independent = isolate(Independent()),
                        resolution = input$resolution,
-                       centerX = input$centerX,
-                       centerY = input$centerY,
-                       Radius = input$Radius,
+                       centerX = centerEstimate$centerX(),
+                       centerY = centerEstimate$centerY(),
+                       Radius = centerEstimate$radius(),
                        rangey = rangez,
                        seType = input$intervalType,
                        pointDat = pointDat,
@@ -1024,9 +1008,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           resolution = input$resolution,
           interior = as.numeric(input$interior),
           ncol = values$ncol,
-          centerX = input$centerX,
-          centerY = input$centerY,
-          Radius = input$Radius,
+          centerX = centerEstimate$centerX(),
+          centerY = centerEstimate$centerY(),
+          Radius = centerEstimate$radius(),
           terrestrial = input$terrestrial,
           colors = input$Colours,
           reverseColors = input$reverseCols,

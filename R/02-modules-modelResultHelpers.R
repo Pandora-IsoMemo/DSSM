@@ -53,6 +53,60 @@ centerEstimateUI <- function(id, title = "") {
   )
 }
 
+#' Place decimal points for TimeCourseplot
+#'
+#' UI function of for decimal place
+#'
+#' @param id namespace
+#' @param title title in tab
+defineDecimalPlace <- function(id, title = "") {
+  ns <- NS(id)
+
+  tagList(
+    numericInput(
+      inputId = ns("centerY"),
+      label = "Center point latitude",
+      min = -180,
+      max = 180,
+      value = c(),
+      step = 0.5,
+      width = "100%"
+    ),
+    numericInput(
+      inputId = ns("centerX"),
+      label = "Center point longitude",
+      min = -90,
+      max = 90,
+      value = c(),
+      step = 0.5,
+      width = "100%"
+    ),
+    conditionalPanel(
+      condition = "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != ''",
+      numericInput(
+        inputId = ns("decimalPlace"),
+        label = "Decimal places for Mean/Error at the Center point",
+        min = 0,
+        max = 10,
+        value = 2,
+        step = 1,
+        width = "100%"
+      ),
+      ns = ns
+    ),
+    sliderInput(
+      inputId = ns("Radius"),
+      label = "Radius (km)",
+      min = 10,
+      max = 300,
+      value = 100,
+      step = 10,
+      width = "100%"
+    )
+  )
+}
+
+
 
 #' Center Estimate Server
 #'

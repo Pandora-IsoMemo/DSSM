@@ -134,6 +134,8 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          tags$br(),
+          tags$br(),
           div(
             style = "display:flex;",
             div(
@@ -358,18 +360,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("decimalPlace"),
-                       label = "Input decimal places for map legend",
-                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
-          sliderInput(inputId = ns("Radius"),
-                      label = "Radius (km)",
-                      min = 10, max = 300, value = 100, step = 10, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -661,6 +652,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     return(pointDat2D())
   })
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         meanCenter = reactive(values$meanCenter),
+                                         sdCenter = reactive(values$sdCenter))
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -776,9 +770,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = input$centerX,
-        centerY = input$centerY,
-        Radius = input$Radius,
+        centerX = centerEstimate$centerX(),
+        centerY = centerEstimate$centerY(),
+        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -833,19 +827,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   )
 
   output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius)) return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", round(values$meanCenter, digits = input$decimalPlace),
-           ", Standard error of the mean: ", round(values$sdCenter, digits = input$decimalPlace),
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+    centerEstimate$text()
   })
 
   observe({
