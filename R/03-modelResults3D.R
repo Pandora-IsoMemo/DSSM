@@ -851,7 +851,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         sdCenter = reactive(values$sdCenter),
+                                         mapType = reactive(input$mapType))
   plotFun <- reactive({
     function(model, time = input$time, returnPred = FALSE,...){
       pointDat = pointDat()

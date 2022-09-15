@@ -123,18 +123,23 @@ centerEstimateServer <-
                  function(input, output, session) {
                    centerEstimateText <- reactiveVal("")
 
+                   centerEstimateMaps <- c("Map", "Spread")
+                   # check which maps have the text in the previous version:
+                   # currently not included: "Time course", "Time intervals by cluster", "Speed",
+                   # "Minima/Maxima"
+
                    observeEvent(list(meanCenter(), sdCenter(), input$decimalPlace), {
                      if (is.na(input$centerY) |
                          is.na(input$centerX) |
                          is.na(input$Radius) |
-                         mapType() != "Map") {
+                         !(mapType() %in% centerEstimateMaps)) {
                        centerEstimateText("")
                      }
 
                      req(input$centerX,
                          input$centerY,
                          input$Radius,
-                         (mapType() == "Map"))
+                         (mapType() %in% centerEstimateMaps))
 
                      if (is.na(meanCenter()) | is.na(sdCenter())) {
                        centerEstimateText(

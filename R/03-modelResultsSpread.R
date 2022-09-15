@@ -721,7 +721,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         sdCenter = reactive(values$sdCenter),
+                                         mapType = reactive(input$mapType))
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
