@@ -53,60 +53,6 @@ centerEstimateUI <- function(id, title = "") {
   )
 }
 
-#' Place decimal points for TimeCourseplot
-#'
-#' UI function of for decimal place
-#'
-#' @param id namespace
-#' @param title title in tab
-defineDecimalPlace <- function(id, title = "") {
-  ns <- NS(id)
-
-  tagList(
-    numericInput(
-      inputId = ns("centerY"),
-      label = "Center point latitude",
-      min = -180,
-      max = 180,
-      value = c(),
-      step = 0.5,
-      width = "100%"
-    ),
-    numericInput(
-      inputId = ns("centerX"),
-      label = "Center point longitude",
-      min = -90,
-      max = 90,
-      value = c(),
-      step = 0.5,
-      width = "100%"
-    ),
-    conditionalPanel(
-      condition = "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != ''",
-      numericInput(
-        inputId = ns("decimalPlace"),
-        label = "Decimal places for Mean/Error at the Center point",
-        min = 0,
-        max = 10,
-        value = 2,
-        step = 1,
-        width = "100%"
-      ),
-      ns = ns
-    ),
-    sliderInput(
-      inputId = ns("Radius"),
-      label = "Radius (km)",
-      min = 10,
-      max = 300,
-      value = 100,
-      step = 10,
-      width = "100%"
-    )
-  )
-}
-
-
 
 #' Center Estimate Server
 #'
@@ -115,8 +61,8 @@ defineDecimalPlace <- function(id, title = "") {
 #' @param id namespace id
 #' @param meanCenter (reactive) mean for center
 #' @param sdCenter (reactive) error for center
-#' @param mapType (reactive) type of plot, either "Map", "Time course" or
-#'  "Time intervals by cluster"
+#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by cluster",
+#'  "Spread", "Speed", "Minima/Maxima"
 centerEstimateServer <-
   function(id, meanCenter, sdCenter, mapType = reactiveVal("Map")) {
     moduleServer(id,
@@ -136,10 +82,12 @@ centerEstimateServer <-
                        centerEstimateText("")
                      }
 
-                     req(input$centerX,
-                         input$centerY,
-                         input$Radius,
-                         (mapType() %in% centerEstimateMaps))
+                     req(
+                       input$centerX,
+                       input$centerY,
+                       input$Radius,
+                       (mapType() %in% centerEstimateMaps)
+                     )
 
                      if (is.na(meanCenter()) | is.na(sdCenter())) {
                        centerEstimateText(
@@ -174,5 +122,70 @@ centerEstimateServer <-
                      radius = reactive(input$Radius),
                      text = centerEstimateText
                    )
+                 })
+  }
+
+
+#' Format Time Course UI
+#'
+#' UI function for formatting of the time course plot
+#'
+#' @param id namespace
+#' @param title title in tab
+formatTimeCourseUI <- function(id, title = "") {
+  ns <- NS(id)
+
+  tagList(
+    numericInput(
+      inputId = ns("axesDecPlace"),
+      label = "Decimal places for axes",
+      min = 0,
+      max = 10,
+      value = 0,
+      step = 1,
+      width = "100%"
+    ),
+    fluidRow(
+      column(width = 6,
+             numericInput(
+               inputId = ns("nLabelsX"),
+               label = "N labels of x axis",
+               min = 0,
+               max = 20,
+               value = 7,
+               step = 1,
+               width = "100%"
+             )
+      ),
+      column(width = 6,
+             numericInput(
+               inputId = ns("nLabelsY"),
+               label = "N labels of y axis",
+               min = 0,
+               max = 20,
+               value = 7,
+               step = 1,
+               width = "100%"
+             )
+      )
+    )
+  )
+}
+
+
+#' Format Time Course Server
+#'
+#' Backend for formatting of the time course plot
+#'
+#' @param id namespace id
+formatTimeCourseServer <-
+  function(id) {
+    moduleServer(id,
+                 function(input, output, session) {
+                   reactive(list(
+                     axesDecPlace = input$axesDecPlace,
+                     nLabelsX = input$nLabelsX,
+                     nLabelsY = input$nLabelsY
+                   ))
                  })
   }

@@ -20,7 +20,7 @@ plotTimeCourse(
   intTime = FALSE,
   rangePointsTime = 500,
   limitz = NULL,
-  scatterDecPlace = 2
+  formatTimeCourse = NULL
 )
 }
 \arguments{
@@ -54,7 +54,7 @@ plotTimeCourse(
 
 \item{limitz}{z limit range}
 
-\item{scatterDecPlace}{the number of decimal places user specifies for the axis labels}
+\item{formatTimeCourse}{parameters for the plot format, e.g. axesDecPlace, nLabelsX, nLabelsY}
 }
 \description{
 Plots time course map of a spatio-temporal model from estimateMap3D() function

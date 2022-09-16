@@ -248,32 +248,34 @@ modelResults3DKernelUI <- function(id, title = ""){
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by cluster"),
                        selected = "Map"),
-
-          numericInput(inputId = ns("scatterDecPlace"),
-                       label = "Input decimal places for scatter plot",
-                       min = 0, max = 10, value = 2, step = 1, width = "100%"),
-
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
+            ns = ns,
+            tags$hr(),
             selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",
                         choices = list("none" = "1",
                                        "1 SE" = "2",
                                        "2 SE" = "6"), selected = "2"),
-          checkboxInput(inputId = ns("pointsTime"),
-                        label = "Show nearby points",
-                        value = TRUE, width = "100%"),
-          conditionalPanel(
-            condition = "input.pointsTime == true",
-            checkboxInput(inputId = ns("intTime"),
-                          label = "Show nearby points unc. intervals",
-                          value = FALSE, width = "100%"),
-            sliderInput(inputId = ns("rangePointsTime"),
-                        label = "Show nearby points / intervals range in km",
-                        min = 10, max = 2500, value = 250, step = 10),
-            ns = ns),
-          ns = ns),
+            checkboxInput(inputId = ns("pointsTime"),
+                          label = "Show nearby points",
+                          value = TRUE, width = "100%"),
+            conditionalPanel(
+              condition = "input.pointsTime == true",
+              ns = ns,
+              checkboxInput(inputId = ns("intTime"),
+                            label = "Show nearby points unc. intervals",
+                            value = FALSE, width = "100%"),
+              sliderInput(inputId = ns("rangePointsTime"),
+                          label = "Show nearby points / intervals range in km",
+                          min = 10, max = 2500, value = 250, step = 10)
+              ),
+            formatTimeCourseUI(ns("timeCourseFormat")),
+            tags$hr()
+            ),
           conditionalPanel(
             condition = "input.mapType != 'Time course'",
+            ns = ns,
+            tags$hr(),
             radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                          choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                          selected = 1),
@@ -421,7 +423,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("ncol"),
                         label = "Approximate number of colour levels",
                         min = 4, max = 50, value = 50, step = 2, width = "100%"),
-            ns = ns),
+            conditionalPanel(
+              condition = "input.mapType == 'Map'",
+              ns = ns,
+              centerEstimateUI(ns("centerEstimateParams"))
+            ),
+            tags$hr()
+            ),
           checkboxInput(inputId = ns("smoothCols"),
                         label = "Smooth color transition",
                         value = FALSE, width = "100%"),
@@ -455,11 +463,6 @@ modelResults3DKernelUI <- function(id, title = ""){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          conditionalPanel(
-            condition = "input.mapType == 'Map'",
-            ns = ns,
-            centerEstimateUI(ns("centerEstimateParams"))
-          ),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -871,6 +874,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                          sdCenter = reactive(values$sdCenter),
                                          mapType = reactive(input$mapType))
 
+  formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
+
   plotFun <- reactive({
     function(model, time = input$time, returnPred = FALSE, ...){
       pointDat = pointDat()
@@ -978,7 +983,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
                        limitz = NULL,
-                       scatterDecPlace = input$scatterDecPlace,
+                       formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
       if(input$mapType == "Time intervals by cluster"){
