@@ -71,7 +71,8 @@ centerEstimateServer <-
 
                    centerEstimateMaps <- c("Map", "Spread")
                    # check which maps have the text in the previous version:
-                   # currently not included: "Time course", "Time intervals by cluster", "Speed",
+                   # currently not included: "Time course", "Time intervals by cluster",
+                   # "Speed" (a map but no meanCenter, sdCenter in the output available),
                    # "Minima/Maxima"
 
                    observeEvent(list(meanCenter(), sdCenter(), input$decimalPlace), {
