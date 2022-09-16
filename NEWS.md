@@ -1,5 +1,11 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.09.2
+
+### New Features
+- option to adjust the format of the axes in time course plots (decimal places and number of labels)
+- option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
+
 ## MpiIsoApp 22.09.1
 
 ### Enhancements

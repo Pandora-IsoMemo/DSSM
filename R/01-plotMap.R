@@ -2168,6 +2168,7 @@ north.arrow = function(x, y, h, c, adj) {
 #' @param intTime should uncertainty intervals of nearby points be plotted?
 #' @param rangePointsTime range of nearby points in km
 #' @param limitz z limit range
+#' @param formatTimeCourse parameters for the plot format, e.g. axesDecPlace, nLabelsX, nLabelsY
 #'
 #' @export
 plotTimeCourse <- function(model, independent = "", trange = range(model$data$Date),
@@ -2179,7 +2180,8 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
                            returnPred = FALSE,
                            intTime = FALSE,
                            rangePointsTime = 500,
-                           limitz = NULL){
+                           limitz = NULL,
+                           formatTimeCourse = NULL){
   sdValue <- 1
   if(as.numeric(seType) > 5){
     sdValue <- 2
@@ -2287,8 +2289,37 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
   if(!is.null(rangey)){
     ylims[!is.na(rangey)] = rangey[!is.na(rangey)]
   }
-  plot(pmax(minVal, pmin(maxVal, XPred$Est)) ~ time, type="l", ylim = ylims,
-       ylab = independent, xlab = "time", main = mainlab)
+
+  plot(
+    pmax(minVal, pmin(maxVal, XPred$Est)) ~ time,
+    type = "l",
+    ylim = ylims,
+    xlim = c(min(time), max(time)),
+    ylab = independent,
+    xlab = "time",
+    main = mainlab,
+    xaxt = 'n',
+    yaxt = 'n'
+  )
+
+  if (!is.null(formatTimeCourse)) {
+    addFormattedAxis(
+      axis = "x",
+      min = min(time),
+      max = max(time),
+      nLabels = formatTimeCourse$nLabelsX,
+      decPlace = formatTimeCourse$axesDecPlace
+    )
+
+    addFormattedAxis(
+      axis = "y",
+      min = ylims[1],
+      max = ylims[2],
+      nLabels = formatTimeCourse$nLabelsY,
+      decPlace = formatTimeCourse$axesDecPlace
+    )
+  }
+
   if(seType %in% c("2", "4", "6", "9")){
     polygon(c(rev(time), time), pmax(minVal, pmin(maxVal, c(rev(XPred$IntUpper), XPred$IntLower))),
             col = 'grey90', border = NA)
@@ -2356,6 +2387,25 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
     return(pointPlotData)
   }
   return(NULL)
+}
+
+#' Add Formatted Axis
+#'
+#' @param axis (character) axis to add, either "x" or "y"
+#' @param min (numeric) position of 1st label
+#' @param max (numeric) position of last label
+#' @param nLabels (numeric) number of displayed labels
+#' @param decPlace (numeric) number of the label's decimal places
+addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
+  labelPositions <- seq(min, max, length.out = nLabels)
+
+  axisType <- switch(axis,
+                     "x" = 1,
+                     "y" = 2)
+
+  axis(axisType,
+       at = labelPositions,
+       labels = sprintf(paste('%1.', decPlace, 'f', sep = ""), labelPositions))
 }
 
 plotTimeIntervals <- function(Model,
