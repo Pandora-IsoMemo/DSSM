@@ -222,9 +222,12 @@ modelResults3DUI <- function(id, title = ""){
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
+              tags$hr(),
               sliderAndNumericInputUI(ns("timeExtended"),
-                                      label = "Time selection",
+                                      label = "Time",
                                       min = 0, max = 15000, value = 5000, step = 100),
+              # map section start -> ----
+              tags$h4("Map Section"),
               div(
                 style = "display:flex;",
                 div(
@@ -246,7 +249,14 @@ modelResults3DUI <- function(id, title = ""){
               numericInput(inputId = ns("zoomSet"),
                           label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
                           min = 0.1, max = 360, value = 50, width = "20%"),
-              actionButton( ns("set"), "Set"),
+              # map section end <- ----
+              #mapSectionUI(ns("sectionOfMap"), label = "Map Section"),
+              fluidRow(column(
+                  width = 3,
+                  offset = 9,
+                  actionButton(ns("set"), "Set Time and Map Section")
+                )),
+              tags$hr(),
               div(div(
                 style = 'display:inline-block',
                 class = "save-plot-container",
@@ -667,6 +677,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
+  # map section inputs -> ----
   observeEvent(input$zoom, {
     zoom <- input$zoom
     values$zoom <- input$zoom
@@ -718,6 +729,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$upperLeftLatitude <- input$upperLeftLatitude
     values$upperLeftLongitude <- input$upperLeftLongitude
   })
+  # map section inputs <- ----
+
+  #mapSection <- mapSectionServer("sectionOfMap", applyButton = reactive(input$set))
 
   dateExtent <- reactiveValues(
     min = 0,
@@ -1328,77 +1342,3 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(batchModel())
   })
 }
-
-
-# Slider And Input Selection Module ----
-
-#' Slider And Input UI
-#'
-#' UI of the Slider And Input module
-#'
-#' @param id id of module
-#' @param label label
-#' @param min (numeric) minumum
-#' @param max (numeric) maximum
-#' @param value (numeric) default value
-#' @param step (numeric) step
-sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
-  ns <- NS(id)
-  tagList(
-    div(
-      style = "display:flex;",
-      div(
-        class = "zoom-map",
-        sliderInput(inputId = ns("sliderInput"),
-                    label = label,
-                    min = min, max = max, value = value, step = step, width = "100%")
-      ),
-      div(
-        class = "move-map",
-        numericInput(inputId = ns("numInput"),
-                     label = label,
-                     min = min, max = max, value = value, step = step, width = "190px")
-      ))
-  )
-}
-
-#' Slider And Input Server
-#'
-#' Server function of the Slider And Input module
-#' @param id id of module
-#' @param value value of input
-#' @param min min of input
-#' @param max max of input
-#' @param step step of input
-sliderAndNumericInputServer <- function(id,
-                                        value,
-                                        min,
-                                        max,
-                                        step) {
-  moduleServer(id,
-               function(input, output, session) {
-                 result <- reactiveVal(5000)
-
-                 observeEvent(list(value(), min(), max(), step()), {
-                   updateNumericInput(session = session, "sliderInput", value = value(),
-                                      min = min(), max = max(), step = step())
-                   updateNumericInput(session = session, "numInput", value = value(),
-                                      min = min(), max = max(), step = step())
-                 })
-
-                 observeEvent(input$sliderInput, {
-                   req(input$sliderInput != input$numInput)
-                   updateNumericInput(session = session, "numInput", value = input$sliderInput)
-                   result(input$sliderInput)
-                 })
-
-                 observeEvent(input$numInput, {
-                   req(input$sliderInput != input$numInput)
-                   updateSliderInput(session = session, "sliderInput", value = input$numInput)
-                   result(input$numInput)
-                 })
-
-                 result
-               })
-}
-

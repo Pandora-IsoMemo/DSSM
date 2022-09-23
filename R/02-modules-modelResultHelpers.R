@@ -1,4 +1,6 @@
-# Collection of helper modules
+# Collection of helper modules ----
+
+## Formatting of decimal places ----
 
 #' Center Estimate UI
 #'
@@ -190,3 +192,192 @@ formatTimeCourseServer <-
                    ))
                  })
   }
+
+
+## Time and Map Section ----
+
+
+#' Slider And Input UI
+#'
+#' UI of the Slider And Input module
+#'
+#' @param id id of module
+#' @param label label
+#' @param min (numeric) minumum
+#' @param max (numeric) maximum
+#' @param value (numeric) default value
+#' @param step (numeric) step
+sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
+  ns <- NS(id)
+  tagList(
+    tags$h4(label),
+    div(
+      style = "display:flex;",
+      div(
+        class = "zoom-map",
+        sliderInput(inputId = ns("sliderInput"),
+                    label = NULL,
+                    min = min, max = max, value = value, step = step, width = "100%")
+      ),
+      div(
+        class = "move-map",
+        numericInput(inputId = ns("numInput"),
+                     label = NULL,
+                     min = min, max = max, value = value, step = step, width = "190px")
+      ))
+  )
+}
+
+#' Slider And Input Server
+#'
+#' Server function of the Slider And Input module
+#' @param id id of module
+#' @param value value of input
+#' @param min min of input
+#' @param max max of input
+#' @param step step of input
+sliderAndNumericInputServer <- function(id,
+                                        value,
+                                        min,
+                                        max,
+                                        step) {
+  moduleServer(id,
+               function(input, output, session) {
+                 result <- reactiveVal(5000)
+
+                 observeEvent(list(value(), min(), max(), step()), {
+                   updateNumericInput(session = session, "sliderInput", value = value(),
+                                      min = min(), max = max(), step = step())
+                   updateNumericInput(session = session, "numInput", value = value(),
+                                      min = min(), max = max(), step = step())
+                 })
+
+                 observeEvent(input$sliderInput, {
+                   req(input$sliderInput != input$numInput)
+                   updateNumericInput(session = session, "numInput", value = input$sliderInput)
+                   result(input$sliderInput)
+                 })
+
+                 observeEvent(input$numInput, {
+                   req(input$sliderInput != input$numInput)
+                   updateSliderInput(session = session, "sliderInput", value = input$numInput)
+                   result(input$numInput)
+                 })
+
+                 result
+               })
+}
+
+
+#' Map Section UI
+#'
+#' UI of the Map Section module
+#'
+#' @param id id of module
+#' @param label label
+mapSectionUI <- function(id, label) {
+  ns <- NS(id)
+  tagList(
+    tags$h4(label),
+    div(
+      style = "display:flex;",
+      div(
+        class = "zoom-map",
+        sliderInput(inputId = ns("zoom"),
+                    label = "Zoom/x-Range in degrees Longitude",
+                    min = 0.1, max = 360, value = 50, width = "100%")
+      ),
+      div(
+        class = "move-map",
+        uiOutput(ns("move"))
+      )),
+    fluidRow(
+      column(
+        width = 3,
+        numericInput(inputId = ns("upperLeftLatitude"),
+                     label = "Set Latitude of upper left corner",
+                     min = -90, max = 90, value = c(), width = "20%")
+      ),
+      column(
+        width = 3,
+        numericInput(inputId = ns("upperLeftLongitude"),
+                     label = "Set Longitude of upper left corner",
+                     min = -180, max = 180, value = c(), width = "20%")
+      ),
+      column(
+        width = 3,
+        numericInput(inputId = ns("zoomSet"),
+                     label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
+                     min = 0.1, max = 360, value = 50, width = "20%")
+      )
+    )
+  )
+}
+
+
+#' Map Section Server
+#'
+#' Server function of the Map Section module
+#' @param id id of module
+mapSectionServer <- function(id, applyButton) {
+  moduleServer(id,
+               function(input, output, session) {
+                 result <- reactiveVal()
+
+
+                 # observeEvent(input$zoom, {
+                 #   zoom <- input$zoom
+                 #   values$zoom <- input$zoom
+                 # })
+                 #
+                 # observeEvent(input$up, {
+                 #   if(values$set > 0){
+                 #     zoom <- values$zoom
+                 #   } else {
+                 #     zoom <- input$zoom
+                 #   }
+                 #   values$up <- values$up + zoom / 40
+                 # })
+                 #
+                 # observeEvent(input$down, {
+                 #   if(values$set > 0){
+                 #     zoom <- values$zoom
+                 #   } else {
+                 #     zoom <- input$zoom
+                 #   }
+                 #   values$up <- values$up - zoom / 40
+                 # })
+                 # observeEvent(input$left, {
+                 #   if(values$set > 0){
+                 #     zoom <- values$zoom
+                 #   } else {
+                 #     zoom <- input$zoom
+                 #   }
+                 #   values$right <- values$right - zoom / 40
+                 # })
+                 # observeEvent(input$right, {
+                 #   if(values$set > 0){
+                 #     zoom <- values$zoom
+                 #   } else {
+                 #     zoom <- input$zoom
+                 #   }
+                 #   values$right <- values$right + zoom / 40
+                 # })
+                 # observeEvent(input$center, {
+                 #   values$up <- 0
+                 #   values$right <- 0
+                 # })
+                 #
+                 # observeEvent(applyButton(), {
+                 #   values$set <- 1
+                 #   values$up <- 0
+                 #   values$right <- 0
+                 #   values$zoom <- input$zoomSet
+                 #   values$upperLeftLatitude <- input$upperLeftLatitude
+                 #   values$upperLeftLongitude <- input$upperLeftLongitude
+                 # })
+
+
+                 result
+               })
+}
