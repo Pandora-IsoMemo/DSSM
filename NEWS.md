@@ -1,11 +1,16 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.09.3
+
+### New Features
+- export a time series of _spatio-temporal-average_ plots in the selected file format condensed
+into a zip file
+
 ## MpiIsoApp 22.09.2
 
 ### New Features
-
-- export a time series of _spatio-temporal-average_ plots in the selected file format condensed
-into a zip file
+- option to adjust the format of the axes in time course plots (decimal places and number of labels)
+- option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
 
 ## MpiIsoApp 22.09.1
 

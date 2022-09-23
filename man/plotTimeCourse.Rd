@@ -19,7 +19,8 @@ plotTimeCourse(
   returnPred = FALSE,
   intTime = FALSE,
   rangePointsTime = 500,
-  limitz = NULL
+  limitz = NULL,
+  formatTimeCourse = NULL
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ plotTimeCourse(
 \item{rangePointsTime}{range of nearby points in km}
 
 \item{limitz}{z limit range}
+
+\item{formatTimeCourse}{parameters for the plot format, e.g. axesDecPlace, nLabelsX, nLabelsY}
 }
 \description{
 Plots time course map of a spatio-temporal model from estimateMap3D() function
