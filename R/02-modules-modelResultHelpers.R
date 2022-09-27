@@ -210,7 +210,7 @@ formatTimeCourseServer <-
 sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
   ns <- NS(id)
   tagList(
-    tags$h4(label),
+    tags$h5(label),
     div(
       style = "display:flex;",
       div(
@@ -274,11 +274,9 @@ sliderAndNumericInputServer <- function(id,
 #' UI of the Map Section module
 #'
 #' @param id id of module
-#' @param label label
-mapSectionUI <- function(id, label) {
+mapSectionUI <- function(id) {
   ns <- NS(id)
   tagList(
-    tags$h4(label),
     div(
       style = "display:flex;",
       div(
@@ -286,29 +284,25 @@ mapSectionUI <- function(id, label) {
         sliderInput(inputId = ns("zoom"),
                     label = "Zoom/x-Range in degrees Longitude",
                     min = 0.1, max = 360, value = 50, width = "100%")
-      ),
-      div(
-        class = "move-map",
-        uiOutput(ns("move"))
       )),
     fluidRow(
       column(
         width = 3,
         numericInput(inputId = ns("upperLeftLatitude"),
-                     label = "Set Latitude of upper left corner",
-                     min = -90, max = 90, value = c(), width = "20%")
+                     label = "Latitude of upper left corner",
+                     min = -90, max = 90, value = c())
       ),
       column(
         width = 3,
         numericInput(inputId = ns("upperLeftLongitude"),
-                     label = "Set Longitude of upper left corner",
-                     min = -180, max = 180, value = c(), width = "20%")
+                     label = "Longitude of upper left corner",
+                     min = -180, max = 180, value = c())
       ),
       column(
         width = 3,
         numericInput(inputId = ns("zoomSet"),
-                     label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                     min = 0.1, max = 360, value = 50, width = "20%")
+                     label = "Zoom/x-Range in degrees Longitude",
+                     min = 0.1, max = 360, value = 50)
       )
     )
   )
@@ -322,62 +316,22 @@ mapSectionUI <- function(id, label) {
 mapSectionServer <- function(id, applyButton) {
   moduleServer(id,
                function(input, output, session) {
-                 result <- reactiveVal()
+                 mapParams <- reactiveValues(
+                   upperLeftLongitude = NA,
+                   upperLeftLatitude = NA,
+                   zoom = 50
+                 )
 
+                 observeEvent(input$zoom, {
+                   mapParams$zoom <- input$zoom
+                 })
 
-                 # observeEvent(input$zoom, {
-                 #   zoom <- input$zoom
-                 #   values$zoom <- input$zoom
-                 # })
-                 #
-                 # observeEvent(input$up, {
-                 #   if(values$set > 0){
-                 #     zoom <- values$zoom
-                 #   } else {
-                 #     zoom <- input$zoom
-                 #   }
-                 #   values$up <- values$up + zoom / 40
-                 # })
-                 #
-                 # observeEvent(input$down, {
-                 #   if(values$set > 0){
-                 #     zoom <- values$zoom
-                 #   } else {
-                 #     zoom <- input$zoom
-                 #   }
-                 #   values$up <- values$up - zoom / 40
-                 # })
-                 # observeEvent(input$left, {
-                 #   if(values$set > 0){
-                 #     zoom <- values$zoom
-                 #   } else {
-                 #     zoom <- input$zoom
-                 #   }
-                 #   values$right <- values$right - zoom / 40
-                 # })
-                 # observeEvent(input$right, {
-                 #   if(values$set > 0){
-                 #     zoom <- values$zoom
-                 #   } else {
-                 #     zoom <- input$zoom
-                 #   }
-                 #   values$right <- values$right + zoom / 40
-                 # })
-                 # observeEvent(input$center, {
-                 #   values$up <- 0
-                 #   values$right <- 0
-                 # })
-                 #
-                 # observeEvent(applyButton(), {
-                 #   values$set <- 1
-                 #   values$up <- 0
-                 #   values$right <- 0
-                 #   values$zoom <- input$zoomSet
-                 #   values$upperLeftLatitude <- input$upperLeftLatitude
-                 #   values$upperLeftLongitude <- input$upperLeftLongitude
-                 # })
+                 observeEvent(applyButton(), {
+                   mapParams$zoom <- input$zoomSet
+                   mapParams$upperLeftLatitude <- input$upperLeftLatitude
+                   mapParams$upperLeftLongitude <- input$upperLeftLongitude
+                 })
 
-
-                 result
+                 return(mapParams)
                })
 }
