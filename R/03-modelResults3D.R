@@ -229,7 +229,7 @@ modelResults3DUI <- function(id, title = ""){
                             ),
                      column(width = 2,
                             offset = 7,
-                            div(style = "margin-top: 64px; margin-left: 20px;",
+                            div(style = "margin-left: 20px;",
                                 plotExportButton(ns("export")))
                             )),
             conditionalPanel(
