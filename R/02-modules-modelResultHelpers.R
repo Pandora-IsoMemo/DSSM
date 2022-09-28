@@ -210,21 +210,18 @@ formatTimeCourseServer <-
 sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
   ns <- NS(id)
   tagList(
-    tags$h5(label),
-    div(
-      style = "display:flex;",
-      div(
-        class = "zoom-map",
-        sliderInput(inputId = ns("sliderInput"),
-                    label = NULL,
-                    min = min, max = max, value = value, step = step, width = "100%")
-      ),
-      div(
-        class = "move-map",
-        numericInput(inputId = ns("numInput"),
-                     label = NULL,
-                     min = min, max = max, value = value, step = step, width = "190px")
-      ))
+    fluidRow(column(width = 10,
+                    sliderInput(inputId = ns("sliderInput"),
+                                label = label,
+                                min = min, max = max, value = value, step = step, width = "100%")
+                    ),
+             column(width = 2,
+                    style = "margin-top: 30px;",
+                    numericInput(inputId = ns("numInput"),
+                                 label = NULL,
+                                 min = min, max = max, value = value, step = step)
+                    )
+    )
   )
 }
 
@@ -246,8 +243,9 @@ sliderAndNumericInputServer <- function(id,
                  result <- reactiveVal(5000)
 
                  observeEvent(list(value(), min(), max(), step()), {
-                   updateNumericInput(session = session, "sliderInput", value = value(),
-                                      min = min(), max = max(), step = step())
+                   req(value(), min(), max(), step())
+                   updateSliderInput(session = session, "sliderInput", value = value(),
+                                     min = min(), max = max(), step = step())
                    updateNumericInput(session = session, "numInput", value = value(),
                                       min = min(), max = max(), step = step())
                  })
@@ -274,17 +272,18 @@ sliderAndNumericInputServer <- function(id,
 #' UI of the Map Section module
 #'
 #' @param id id of module
-mapSectionUI <- function(id) {
+#' @param label label
+mapSectionUI <- function(id, label) {
   ns <- NS(id)
   tagList(
-    div(
-      style = "display:flex;",
-      div(
-        class = "zoom-map",
-        sliderInput(inputId = ns("zoom"),
-                    label = "Zoom/x-Range in degrees Longitude",
-                    min = 0.1, max = 360, value = 50, width = "100%")
-      )),
+    tags$hr(),
+    tags$h4(label),
+    sliderAndNumericInputUI(ns("timeExtended"),
+                            label = "Time",
+                            min = 0, max = 15000, value = 5000, step = 100),
+    sliderAndNumericInputUI(ns("zoom"),
+                            label = "Zoom/x-Range in degrees Longitude",
+                            min = 0.1, max = 360, value = 50, step = 1),
     fluidRow(
       column(
         width = 3,
@@ -300,11 +299,12 @@ mapSectionUI <- function(id) {
       ),
       column(
         width = 3,
-        numericInput(inputId = ns("zoomSet"),
-                     label = "Zoom/x-Range in degrees Longitude",
-                     min = 0.1, max = 360, value = 50)
+        offset = 3,
+        style = "margin-top: 25px;",
+        actionButton(ns("set"), "Set Time and Map Section")
       )
-    )
+    ),
+    tags$hr(),
   )
 }
 
@@ -313,21 +313,32 @@ mapSectionUI <- function(id) {
 #'
 #' Server function of the Map Section module
 #' @param id id of module
-mapSectionServer <- function(id, applyButton) {
+#' @param dateExtent (reactiveValues) date range parameters
+mapSectionServer <- function(id, dateExtent) {
   moduleServer(id,
                function(input, output, session) {
                  mapParams <- reactiveValues(
+                   time = 5000,
                    upperLeftLongitude = NA,
                    upperLeftLatitude = NA,
                    zoom = 50
                  )
 
-                 observeEvent(input$zoom, {
-                   mapParams$zoom <- input$zoom
-                 })
+                 userInputTime <- sliderAndNumericInputServer("timeExtended",
+                                                              value = reactive(dateExtent$mean),
+                                                              min = reactive(dateExtent$min),
+                                                              max = reactive(dateExtent$max),
+                                                              step = reactive(dateExtent$step))
 
-                 observeEvent(applyButton(), {
-                   mapParams$zoom <- input$zoomSet
+                 zoomInput <- sliderAndNumericInputServer("zoom",
+                                                          value = reactive(NULL),
+                                                          min = reactive(NULL),
+                                                          max = reactive(NULL),
+                                                          step = reactive(NULL))
+
+                 observeEvent(input$set, {
+                   mapParams$time <- userInputTime()
+                   mapParams$zoom <- zoomInput()
                    mapParams$upperLeftLatitude <- input$upperLeftLatitude
                    mapParams$upperLeftLongitude <- input$upperLeftLongitude
                  })

@@ -4,10 +4,12 @@
 \alias{mapSectionUI}
 \title{Map Section UI}
 \usage{
-mapSectionUI(id)
+mapSectionUI(id, label)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{label}{label}
 }
 \description{
 UI of the Map Section module

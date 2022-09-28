@@ -229,23 +229,13 @@ modelResults3DUI <- function(id, title = ""){
                             ),
                      column(width = 2,
                             offset = 7,
-                            div(plotExportButton(ns("export")))
+                            div(style = "margin-top: 64px; margin-left: 20px;",
+                                plotExportButton(ns("export")))
                             )),
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
-              tags$hr(),
-              tags$h4("Time and Map Section"),
-              sliderAndNumericInputUI(ns("timeExtended"),
-                                      label = "Time",
-                                      min = 0, max = 15000, value = 5000, step = 100),
-              mapSectionUI(ns("sectionOfMap")),
-              fluidRow(column(
-                  width = 3,
-                  offset = 9,
-                  actionButton(ns("set"), "Set Time and Map Section")
-                )),
-              tags$hr(),
+              mapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
               div(div(
                 style = 'display:inline-block',
                 class = "save-plot-container",
@@ -696,14 +686,13 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # map section inputs <- ----
 
-  mapSection <- mapSectionServer("sectionOfMap", applyButton = reactive(input$set))
+  mapSection <- mapSectionServer("sectionOfMap", dateExtent = dateExtent)
 
   observe({
     for (i in names(mapSection)) {
       values[[i]] <- mapSection[[i]]
     }
   })
-
 
   dateExtent <- reactiveValues(
     min = 0,
@@ -852,14 +841,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
 
-  userInputTime <- sliderAndNumericInputServer("timeExtended",
-                                               value = reactive(dateExtent$mean),
-                                               min = reactive(dateExtent$min),
-                                               max = reactive(dateExtent$max),
-                                               step = reactive(dateExtent$step))
-
   plotFun <- reactive({
-    function(model, time = userInputTime(), returnPred = FALSE,...){
+    function(model, time = values$time, returnPred = FALSE,...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
       if(input$fixCol == FALSE){

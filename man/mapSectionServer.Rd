@@ -4,10 +4,12 @@
 \alias{mapSectionServer}
 \title{Map Section Server}
 \usage{
-mapSectionServer(id, applyButton)
+mapSectionServer(id, dateExtent)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{dateExtent}{(reactiveValues) date range parameters}
 }
 \description{
 Server function of the Map Section module
