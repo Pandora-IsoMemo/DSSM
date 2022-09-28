@@ -149,27 +149,29 @@ formatTimeCourseUI <- function(id, title = "") {
       width = "100%"
     ),
     fluidRow(
-      column(width = 6,
-             numericInput(
-               inputId = ns("nLabelsX"),
-               label = "N labels of x axis",
-               min = 0,
-               max = 20,
-               value = 7,
-               step = 1,
-               width = "100%"
-             )
+      column(
+        width = 6,
+        numericInput(
+          inputId = ns("nLabelsX"),
+          label = "N labels of x axis",
+          min = 0,
+          max = 20,
+          value = 7,
+          step = 1,
+          width = "100%"
+        )
       ),
-      column(width = 6,
-             numericInput(
-               inputId = ns("nLabelsY"),
-               label = "N labels of y axis",
-               min = 0,
-               max = 20,
-               value = 7,
-               step = 1,
-               width = "100%"
-             )
+      column(
+        width = 6,
+        numericInput(
+          inputId = ns("nLabelsY"),
+          label = "N labels of y axis",
+          min = 0,
+          max = 20,
+          value = 7,
+          step = 1,
+          width = "100%"
+        )
       )
     )
   )
@@ -185,11 +187,13 @@ formatTimeCourseServer <-
   function(id) {
     moduleServer(id,
                  function(input, output, session) {
-                   reactive(list(
-                     axesDecPlace = input$axesDecPlace,
-                     nLabelsX = input$nLabelsX,
-                     nLabelsY = input$nLabelsY
-                   ))
+                   reactive(
+                     list(
+                       axesDecPlace = input$axesDecPlace,
+                       nLabelsX = input$nLabelsX,
+                       nLabelsY = input$nLabelsY
+                     )
+                   )
                  })
   }
 
@@ -207,23 +211,36 @@ formatTimeCourseServer <-
 #' @param max (numeric) maximum
 #' @param value (numeric) default value
 #' @param step (numeric) step
-sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
-  ns <- NS(id)
-  tagList(
-    fluidRow(column(width = 10,
-                    sliderInput(inputId = ns("sliderInput"),
-                                label = label,
-                                min = min, max = max, value = value, step = step, width = "100%")
-                    ),
-             column(width = 2,
-                    style = "margin-top: 30px;",
-                    numericInput(inputId = ns("numInput"),
-                                 label = NULL,
-                                 min = min, max = max, value = value, step = step)
-                    )
-    )
-  )
-}
+sliderAndNumericInputUI <-
+  function(id, label, min, max, value, step) {
+    ns <- NS(id)
+    tagList(fluidRow(
+      column(
+        width = 10,
+        sliderInput(
+          inputId = ns("sliderInput"),
+          label = label,
+          min = min,
+          max = max,
+          value = value,
+          step = step,
+          width = "100%"
+        )
+      ),
+      column(
+        width = 2,
+        style = "margin-top: 30px;",
+        numericInput(
+          inputId = ns("numInput"),
+          label = NULL,
+          min = min,
+          max = max,
+          value = value,
+          step = step
+        )
+      )
+    ))
+  }
 
 #' Slider And Input Server
 #'
@@ -244,21 +261,37 @@ sliderAndNumericInputServer <- function(id,
 
                  observeEvent(list(value(), min(), max(), step()), {
                    req(value(), min(), max(), step())
-                   updateSliderInput(session = session, "sliderInput", value = value(),
-                                     min = min(), max = max(), step = step())
-                   updateNumericInput(session = session, "numInput", value = value(),
-                                      min = min(), max = max(), step = step())
+                   updateSliderInput(
+                     session = session,
+                     "sliderInput",
+                     value = value(),
+                     min = min(),
+                     max = max(),
+                     step = step()
+                   )
+                   updateNumericInput(
+                     session = session,
+                     "numInput",
+                     value = value(),
+                     min = min(),
+                     max = max(),
+                     step = step()
+                   )
                  })
 
                  observeEvent(input$sliderInput, {
                    req(input$sliderInput != input$numInput)
-                   updateNumericInput(session = session, "numInput", value = input$sliderInput)
+                   updateNumericInput(session = session,
+                                      "numInput",
+                                      value = input$sliderInput)
                    result(input$sliderInput)
                  })
 
                  observeEvent(input$numInput, {
                    req(input$sliderInput != input$numInput)
-                   updateSliderInput(session = session, "sliderInput", value = input$numInput)
+                   updateSliderInput(session = session,
+                                     "sliderInput",
+                                     value = input$numInput)
                    result(input$numInput)
                  })
 
@@ -278,24 +311,42 @@ mapSectionUI <- function(id, label) {
   tagList(
     tags$hr(),
     tags$h4(label),
-    sliderAndNumericInputUI(ns("timeExtended"),
-                            label = "Time",
-                            min = 0, max = 15000, value = 5000, step = 100),
-    sliderAndNumericInputUI(ns("zoom"),
-                            label = "Zoom/x-Range in degrees Longitude",
-                            min = 0.1, max = 360, value = 50, step = 1),
+    sliderAndNumericInputUI(
+      ns("timeExtended"),
+      label = "Time",
+      min = 0,
+      max = 15000,
+      value = 5000,
+      step = 100
+    ),
+    sliderAndNumericInputUI(
+      ns("zoom"),
+      label = "Zoom/x-Range in degrees Longitude",
+      min = 0.1,
+      max = 360,
+      value = 50,
+      step = 1
+    ),
     fluidRow(
       column(
         width = 3,
-        numericInput(inputId = ns("upperLeftLatitude"),
-                     label = "Latitude of upper left corner",
-                     min = -90, max = 90, value = c())
+        numericInput(
+          inputId = ns("upperLeftLatitude"),
+          label = "Latitude of upper left corner",
+          min = -90,
+          max = 90,
+          value = c()
+        )
       ),
       column(
         width = 3,
-        numericInput(inputId = ns("upperLeftLongitude"),
-                     label = "Longitude of upper left corner",
-                     min = -180, max = 180, value = c())
+        numericInput(
+          inputId = ns("upperLeftLongitude"),
+          label = "Longitude of upper left corner",
+          min = -180,
+          max = 180,
+          value = c()
+        )
       ),
       column(
         width = 3,
@@ -324,23 +375,30 @@ mapSectionServer <- function(id, dateExtent) {
                    zoom = 50
                  )
 
-                 userInputTime <- sliderAndNumericInputServer("timeExtended",
-                                                              value = reactive(dateExtent$mean),
-                                                              min = reactive(dateExtent$min),
-                                                              max = reactive(dateExtent$max),
-                                                              step = reactive(dateExtent$step))
+                 userInputTime <-
+                   sliderAndNumericInputServer(
+                     "timeExtended",
+                     value = reactive(dateExtent$mean),
+                     min = reactive(dateExtent$min),
+                     max = reactive(dateExtent$max),
+                     step = reactive(dateExtent$step)
+                   )
 
-                 zoomInput <- sliderAndNumericInputServer("zoom",
-                                                          value = reactive(NULL),
-                                                          min = reactive(NULL),
-                                                          max = reactive(NULL),
-                                                          step = reactive(NULL))
+                 zoomInput <- sliderAndNumericInputServer(
+                   "zoom",
+                   value = reactive(NULL),
+                   min = reactive(NULL),
+                   max = reactive(NULL),
+                   step = reactive(NULL)
+                 )
 
                  observeEvent(input$set, {
                    mapParams$time <- userInputTime()
                    mapParams$zoom <- zoomInput()
-                   mapParams$upperLeftLatitude <- input$upperLeftLatitude
-                   mapParams$upperLeftLongitude <- input$upperLeftLongitude
+                   mapParams$upperLeftLatitude <-
+                     input$upperLeftLatitude
+                   mapParams$upperLeftLongitude <-
+                     input$upperLeftLongitude
                  })
 
                  return(mapParams)
