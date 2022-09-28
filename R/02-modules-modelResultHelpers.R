@@ -300,13 +300,13 @@ sliderAndNumericInputServer <- function(id,
 }
 
 
-#' Map Section UI
+#' Time And Map Section UI
 #'
-#' UI of the Map Section module
+#' UI of the module
 #'
 #' @param id id of module
 #' @param label label
-mapSectionUI <- function(id, label) {
+timeAndMapSectionUI <- function(id, label) {
   ns <- NS(id)
   tagList(
     tags$hr(),
@@ -360,12 +360,12 @@ mapSectionUI <- function(id, label) {
 }
 
 
-#' Map Section Server
+#' Time And Map Section Server
 #'
-#' Server function of the Map Section module
+#' Server function of the module
 #' @param id id of module
 #' @param dateExtent (reactiveValues) date range parameters
-mapSectionServer <- function(id, dateExtent) {
+timeAndMapSectionServer <- function(id, dateExtent) {
   moduleServer(id,
                function(input, output, session) {
                  mapParams <- reactiveValues(

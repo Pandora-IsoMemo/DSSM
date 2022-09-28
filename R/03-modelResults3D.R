@@ -235,7 +235,7 @@ modelResults3DUI <- function(id, title = ""){
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
-              mapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
+              timeAndMapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
               div(div(
                 style = 'display:inline-block',
                 class = "save-plot-container",
@@ -686,7 +686,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # map section inputs <- ----
 
-  mapSection <- mapSectionServer("sectionOfMap", dateExtent = dateExtent)
+  mapSection <- timeAndMapSectionServer("sectionOfMap", dateExtent = dateExtent)
 
   observe({
     for (i in names(mapSection)) {
