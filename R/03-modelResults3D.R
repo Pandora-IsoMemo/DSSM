@@ -219,6 +219,7 @@ modelResults3DUI <- function(id, title = ""){
             tags$br(),
             tags$br(),
             div(plotExportButton(ns("export"))),
+            tags$br(),
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
