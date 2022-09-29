@@ -31,7 +31,6 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
           ns = session$ns,
           numericInput(session$ns("minTime"), "Time begin of series", value = 0),
           numericInput(session$ns("maxTime"), "Time end of series", value = 5000),
-          #checkboxInput(session$ns("reverseGif"), "Reverse time order of animation"),
           numericInput(session$ns("intTime"), "Time interval length of series", value = 1000)
         )
       ),
@@ -71,12 +70,6 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
       minTime <- input$minTime
       maxTime <- input$maxTime
       intTime <- abs(input$intTime)
-
-      # if(input$reverseGif){
-      #   minTime <- input$maxTime
-      #   maxTime <- input$minTime
-      #   intTime <- sign(-1) * abs(input$intTime)
-      # }
 
       withProgress(message = "Generating series ...", value = 0, {
         times <- seq(minTime, maxTime, by = intTime)
