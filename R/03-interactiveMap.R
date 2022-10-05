@@ -158,7 +158,7 @@ interactiveMap <- function(input, output, session, isoData) {
       } else {
         # add data with default point values
         leafletMap() %>%
-          addDataToLeafletMap(isoData = isoData(),
+          updateDataOnLeafletMap(isoData = isoData(),
                               leafletPointValues = leafletPointValues())
       }
     })
@@ -176,6 +176,15 @@ interactiveMap <- function(input, output, session, isoData) {
         lat1 = leafletValues()$bounds$south,
         lat2 = leafletValues()$bounds$north
       )
+  })
+
+  observeEvent(leafletValues()$centerMapButton, {
+    req(leafletValues()$centerMapButton, isoData()$longitude, isoData()$latitude)
+
+    leafletProxy("map") %>%
+      setView(lng = mean(isoData()$longitude),
+              lat = mean(isoData()$latitude),
+              zoom = input$map_zoom)
   })
 
 
@@ -215,9 +224,11 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # Add data
   observe({
-    req(isoData())
+    req(isoData(), isoData()$longitude, isoData()$latitude)
+
+    # -> remove points is missing ----
     leafletProxy("map") %>%
-      addDataToLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
+      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
   })
 
   # When map is clicked, show a popup with info

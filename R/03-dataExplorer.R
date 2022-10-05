@@ -352,7 +352,7 @@ dataExplorerServer <- function(id) {
                    }
                  })
 
-                 observeEvent(list(dataColumns(), input$dataTable_rows_all), {
+                 observe({
                    if (is.null(isoDataFull()) || is.null(input$dataTable_rows_all)) {
                      isoData(NULL)
                    } else {

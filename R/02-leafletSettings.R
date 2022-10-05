@@ -45,7 +45,12 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    checkboxInput(ns("fitBounds"), "Fit boundaries"),
+    fluidRow(column(width = 6,
+                    checkboxInput(ns("fitBounds"), "Fit boundaries")
+                    ),
+             column(width = 6,
+                    actionButton(ns("centerMapButton"), "Center map")
+                    )),
     conditionalPanel(
       condition = "input.fitBounds == true",
       tags$hr(),
@@ -120,6 +125,10 @@ leafletSettings <- function(input, output, session) {
         east = input$boundsLng[[2]],
         west = input$boundsLng[[1]]
       )
+  })
+
+  observeEvent(input$centerMapButton, {
+    values$centerMapButton <- input$centerMapButton
   })
 
   observeEvent({
