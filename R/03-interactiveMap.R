@@ -466,7 +466,16 @@ addCirclesRelativeToZoom <-
       radius * (zoom / newZoom) ^ 3
     }
 
-    addCirclesToMap(
+    if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+
+    isoData <- isoData[(!is.na(isoData$longitude) & !is.na(isoData$latitude)), ]
+    map <- map %>%
+      cleanDataFromMap()
+
+    if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
+    if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
+
+    drawCirclesOnMap(
       map = map,
       isoData = isoData,
       pointRadius = relateToZoom(radius = 20)
