@@ -49,24 +49,7 @@ dataExplorerUI <- function(id, title = "") {
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          tags$hr(),
-          tags$h4("Location Fields"),
-          selectInput(ns("LongitudePandora"), "Longitude", choices = NULL),
-          selectInput(ns("LatitudePandora"), "Latitude", choices = NULL),
-          radioButtons(
-            inputId = ns("CoordTypePandora"),
-            label = "Coordinate format",
-            choiceNames = c(
-              "decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-              "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-              "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"
-            ),
-            choiceValues = c(
-              "decimal degrees",
-              "degrees decimal minutes",
-              "degrees minutes seconds"
-            )
-          ),
+          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
           tags$h4("Radiocarbon Calibration Fields"),
           selectInput(
             ns("calibrationDatingType"),
@@ -236,19 +219,9 @@ dataExplorerServer <- function(id) {
                    d <- importedData()[[1]]
 
                    isoDataRaw(d)
-                   updateSelectInput(
-                     session,
-                     "LongitudePandora",
-                     choices = partialNumericColumns(isoDataRaw()),
-                     selected = ""
-                   )
-                   updateSelectInput(
-                     session,
-                     "LatitudePandora",
-                     choices = partialNumericColumns(isoDataRaw()),
-                     selected = ""
-                   )
-                   updateSelectInput(session, "calibrationDateMean", choices = partialNumericColumns(isoDataRaw()))
+
+                   updateSelectInput(session, "calibrationDateMean",
+                                     choices = partialNumericColumns(isoDataRaw()))
                    updateSelectInput(session,
                                      "calibrationDateUncertainty",
                                      choices = partialNumericColumns(isoDataRaw()))
@@ -261,6 +234,8 @@ dataExplorerServer <- function(id) {
 
                    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
                  })
+
+                 locationFields <- locationFieldsServer("locationFieldsId", dataRaw = isoDataRaw)
 
                  # Extract isoDataFull (both skins) ----
                  observe({
@@ -289,17 +264,17 @@ dataExplorerServer <- function(id) {
                        )
                      }
 
-                     if (!is.null(input$LongitudePandora) &
-                         !is.null(input$LatitudePandora) &
-                         input$LongitudePandora != "" &
-                         input$LatitudePandora != "") {
+                     if (!is.null(locationFields$longitude()) &
+                         !is.null(locationFields$latitude()) &
+                         locationFields$longitude() != "" &
+                         locationFields$latitude() != "") {
                        dCoord <-
                          try({
                            convertLatLong(
                              d,
-                             CoordType = input$CoordTypePandora,
-                             Latitude = input$LongitudePandora,
-                             Longitude = input$LatitudePandora
+                             CoordType = locationFields$coordType(),
+                             Latitude = locationFields$longitude(),
+                             Longitude = locationFields$latitude()
                            )
                          }, silent = TRUE)
 
@@ -309,8 +284,8 @@ dataExplorerServer <- function(id) {
                          )
                        } else {
                          d <- dCoord
-                         d$longitude <- d[, input$LongitudePandora]
-                         d$latitude <- d[, input$LatitudePandora]
+                         d$longitude <- d[, locationFields$longitude()]
+                         d$latitude <- d[, locationFields$latitude()]
                          d$id <- as.character(1:nrow(d))
                        }
                      }
