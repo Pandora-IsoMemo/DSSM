@@ -53,16 +53,20 @@ locationFieldsServer <-
                      defaultLongCol <- getDefaultCoordColumn(
                        columnNames = colnames(dataRaw()),
                        tryPattern = c("longitude", "^long$", "^lng$")
-                       )
+                     )
 
                      defaultLatCol <- getDefaultCoordColumn(
                        columnNames = colnames(dataRaw()),
                        tryPattern = c("latitude", "^lat$")
-                       )
+                     )
 
-                     updateSelectInput(session, "longitude", choices = latLongChoices,
+                     updateSelectInput(session,
+                                       "longitude",
+                                       choices = latLongChoices,
                                        selected = defaultLongCol)
-                     updateSelectInput(session, "latitude", choices = latLongChoices,
+                     updateSelectInput(session,
+                                       "latitude",
+                                       choices = latLongChoices,
                                        selected = defaultLatCol)
                    })
 
@@ -80,18 +84,20 @@ locationFieldsServer <-
 #' @param columnNames (character) column names of loaded data
 #' @param tryPattern (character) pattern that should be matched with column names ordered after
 #'  priority
-getDefaultCoordColumn <- function(columnNames, tryPattern = c("latitude", "^lat$")) {
-  defaultColumn <- ""
+getDefaultCoordColumn <-
+  function(columnNames,
+           tryPattern = c("latitude", "^lat$")) {
+    defaultColumn <- ""
 
-  while (length(tryPattern) > 0) {
-    isLatitude <- grepl(tryPattern[1], tolower(columnNames))
-    if (any(isLatitude)) {
-      defaultColumn <- columnNames[isLatitude][[1]]
-      tryPattern <- c()
-    } else {
-      tryPattern <- tryPattern[-1]
+    while (length(tryPattern) > 0) {
+      isLatitude <- grepl(tryPattern[1], tolower(columnNames))
+      if (any(isLatitude)) {
+        defaultColumn <- columnNames[isLatitude][[1]]
+        tryPattern <- c()
+      } else {
+        tryPattern <- tryPattern[-1]
+      }
     }
-  }
 
-  defaultColumn
-}
+    defaultColumn
+  }
