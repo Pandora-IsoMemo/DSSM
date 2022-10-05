@@ -253,7 +253,8 @@ importDataDialog <- function(ns) {
     tabsetPanel(tabPanel("Select Data",
                          selectDataTab(ns = ns))#,
                 # tabPanel("Merge Data",
-                #          mergeDataUI(ns("dataMerger"))))
+                #          mergeDataUI(ns("dataMerger")))
+                )
     )
 }
 
