@@ -1,14 +1,27 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.10.1
+
+## New features
+- specify the sheet of an xlsx/xls file in the import dialog
+- new button "Center Map" in the _Interactive map_ section that centers the map at the mean 
+longitude and latitude of the displayed data
+
+## Bug fixes
+- fix failing of import of xlsx files with sheets (-> option to select the sheet)
+- fix missing columns in the selection of `Longitude` and `Latitude` if `Coordinate format` was not
+equal "decimal degrees" (#62)
+- fix in the removal of points on the interactive map after using filters (#63)
+
 ## MpiIsoApp 22.09.3
 
-### New Features
+### New features
 - export a time series of _spatio-temporal-average_ plots in the selected file format condensed
 into a zip file
 
 ## MpiIsoApp 22.09.2
 
-### New Features
+### New features
 - option to adjust the format of the axes in time course plots (decimal places and number of labels)
 - option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
 
