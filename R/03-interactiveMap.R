@@ -159,7 +159,7 @@ interactiveMap <- function(input, output, session, isoData) {
         # add data with default point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
-                              leafletPointValues = leafletPointValues())
+                                 leafletPointValues = leafletPointValues())
       }
     })
   })
@@ -222,11 +222,8 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # Add data
+  # Update data
   observe({
-    req(isoData(), isoData()$longitude, isoData()$latitude)
-
-    # -> remove points is missing ----
     leafletProxy("map") %>%
       updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
   })

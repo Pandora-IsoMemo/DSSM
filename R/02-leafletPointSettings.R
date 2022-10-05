@@ -78,13 +78,13 @@ leafletPointSettingsServer <- function(id){
 #' @param isoData reactive isoData data
 #' @param leafletPointValues reactive settings for points on map
 updateDataOnLeafletMap <- function(map, isoData, leafletPointValues) {
+  map <- map %>%
+    cleanDataFromMap()
+
   if (is.null(isoData) || is.null(isoData$latitude) || all(is.na(isoData$latitude)) ||
       is.null(isoData$longitude) || all(is.na(isoData$longitude))) return(map)
 
   isoData <- isoData[(!is.na(isoData$longitude) & !is.na(isoData$latitude)), ]
-
-  map <- map %>%
-    cleanDataFromMap()
 
   if (leafletPointValues$clusterPoints) {
     return(drawClustersOnMap(map, isoData))
