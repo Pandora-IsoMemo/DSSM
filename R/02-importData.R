@@ -87,7 +87,7 @@ importDataServer <- function(id,
                  })
 
                  observe({
-                   req(input$source == "ckan")
+                   req(input$source == "ckan", input$ckanResource)
                    resource <-
                      ckanRecord()$resources[[input$ckanResource]]
                    req(resource)
@@ -120,14 +120,24 @@ importDataServer <- function(id,
                    dataSource(list(file = tmp, filename = input$url))
                  })
 
+                 observeEvent(list(input$type, dataSource()$file), {
+                   req(dataSource()$file)
+
+                   if (input$type %in% c("xls", "xlsx")) {
+                     updateSelectInput(session, "sheet",
+                                       choices = getSheetSelection(dataSource()$file))
+                   }
+                 })
+
                  # specify file server ----
                  observeEvent(list(
                    dataSource(),
                    input$type,
                    input$colSep,
                    input$decSep,
-                   input$rownames#,
+                   input$rownames,
                    #input$includeSd
+                   input$sheet
                  ),
                  {
                    req(dataSource())
@@ -149,6 +159,7 @@ importDataServer <- function(id,
                        sep = input$colSep,
                        dec = input$decSep,
                        withRownames = isTRUE(input$rownames),
+                       sheetId = as.numeric(input$sheet),
                        headOnly = TRUE,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
@@ -210,6 +221,7 @@ importDataServer <- function(id,
                        sep = input$colSep,
                        dec = input$decSep,
                        withRownames = isTRUE(input$rownames),
+                       sheetId = as.numeric(input$sheet),
                        headOnly = FALSE,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
@@ -292,6 +304,7 @@ selectDataTab <- function(ns) {
       8,
       conditionalPanel(
         condition = paste0("input.type == 'csv' || input.type == 'txt'"),
+        ns = ns,
         fluidRow(column(
           width = 5,
           textInput(ns("colSep"), "column separator:", value = ",")
@@ -299,9 +312,16 @@ selectDataTab <- function(ns) {
         column(
           width = 5,
           textInput(ns("decSep"), "decimal separator:", value = ".")
-        )),
-        ns = ns
-      )
+        ))
+      ),
+      conditionalPanel(
+        condition = paste0("input.type == 'xlsx' || input.type == 'xlsx'"),
+        ns = ns,
+        fluidRow(column(
+          width = 5,
+          selectInput(ns("sheet"), "Sheet", selected = 1, choices = 1:10)
+        )
+      ))
     )),
     checkboxInput(ns("rownames"), "First column contains rownames"),
     helpText("The first row in your file need to contain variable names."),
@@ -321,12 +341,13 @@ selectDataTab <- function(ns) {
 #'
 #' @inheritParams importDataServer
 #' @param values (list) list with import specifications
-#' @param filepath url or path
-#' @param filename url or file name
+#' @param filepath (character) url or path
+#' @param filename (character) url or file name
 #' @param type (character) file type input
 #' @param sep (character) column separator input
 #' @param dec (character) decimal separator input
 #' @param withRownames (logical) contains rownames input
+#' @param sheetId (numeric) sheet id
 #' @param headOnly (logical) load only head (first n rows) of file
 loadDataWrapper <- function(values,
                             filepath,
@@ -336,6 +357,7 @@ loadDataWrapper <- function(values,
                             sep,
                             dec,
                             withRownames,
+                            sheetId,
                             headOnly,
                             customWarningChecks,
                             customErrorChecks) {
@@ -346,6 +368,7 @@ loadDataWrapper <- function(values,
       sep = sep,
       dec = dec,
       rownames = withRownames,
+      sheetId = sheetId,
       headOnly = headOnly
     ),
     error = function(e) {
@@ -396,6 +419,7 @@ loadData <-
            sep = ",",
            dec = ".",
            rownames = FALSE,
+           sheetId = 1,
            headOnly = FALSE) {
     # if(type == "csv" | type == "txt"){
     #   codepages <- setNames(iconvlist(), iconvlist())
@@ -414,6 +438,7 @@ loadData <-
     #     encTry <- ""
     #   }
     # }
+
     encTry <- as.character(guess_encoding(file)[1, 1])
     if (type == "xlsx") {
       xlsSplit <- strsplit(file, split = "\\.")[[1]]
@@ -421,6 +446,7 @@ loadData <-
         type <- "xls"
       }
     }
+
     data <- switch(
       type,
       csv = suppressWarnings({
@@ -445,11 +471,11 @@ loadData <-
           nrows = getNrow(headOnly, type)
         )
       }),
-      xlsx = read.xlsx(file, rows = getNrow(headOnly, type)),
+      xlsx = read.xlsx(file, sheet = sheetId, rows = getNrow(headOnly, type)),
       xls = suppressWarnings({
-        readxl::read_excel(file, n_max = getNrow(headOnly, type))
+        readxl::read_excel(file, sheet = sheetId, n_max = getNrow(headOnly, type))
       }),
-      ods = readODS::read_ods(file, range = getNrow(headOnly, type))
+      ods = readODS::read_ods(file, sheet = sheetId, range = getNrow(headOnly, type))
     )
 
     if (is.null(data))
@@ -534,4 +560,29 @@ getNrow <- function(headOnly, type, n = 4) {
     else
       return(-999)
   }
+}
+
+
+#' Get Sheet Selection
+#'
+#' @param filepath (character) url or path
+getSheetSelection <- function(filepath) {
+  fileSplit <- strsplit(filepath, split = "\\.")[[1]]
+  typeOfFile <- fileSplit[length(fileSplit)]
+
+  if (!(typeOfFile %in% c("xls", "xlsx"))) return(NULL)
+
+  if (typeOfFile == "xlsx") {
+    # loadWorkbook() is also able to handle url's
+    sheetNames <- loadWorkbook(filepath) %>% names()
+  } else if (typeOfFile == "xls") {
+    sheetNames <- excel_sheets(filepath)
+  }
+
+  if (length(sheetNames) == 0) return(NULL)
+
+  sheets <- 1:length(sheetNames)
+  names(sheets) <- sheetNames
+
+  sheets
 }

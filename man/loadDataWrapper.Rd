@@ -13,6 +13,7 @@ loadDataWrapper(
   sep,
   dec,
   withRownames,
+  sheetId,
   headOnly,
   customWarningChecks,
   customErrorChecks
@@ -21,9 +22,9 @@ loadDataWrapper(
 \arguments{
 \item{values}{(list) list with import specifications}
 
-\item{filepath}{url or path}
+\item{filepath}{(character) url or path}
 
-\item{filename}{url or file name}
+\item{filename}{(character) url or file name}
 
 \item{colNames}{(reactive) use this for colnames of imported data}
 
@@ -34,6 +35,8 @@ loadDataWrapper(
 \item{dec}{(character) decimal separator input}
 
 \item{withRownames}{(logical) contains rownames input}
+
+\item{sheetId}{(numeric) sheet id}
 
 \item{headOnly}{(logical) load only head (first n rows) of file}
 

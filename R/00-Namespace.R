@@ -22,11 +22,11 @@
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
-#' @importFrom openxlsx read.xlsx write.xlsx
+#' @importFrom openxlsx loadWorkbook read.xlsx write.xlsx
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom readr guess_encoding
-#' @importFrom readxl read_excel
+#' @importFrom readxl excel_sheets read_excel
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom shinyjs alert reset runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
