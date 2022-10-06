@@ -13,8 +13,7 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
         session$ns("exportType"), "Filetype",
         choices = c(
           "png", "pdf", "svg", "tiff",
-          if(!is.null(predictions())) "geo-tiff" else NULL,
-          if(type == "spatio-temporal-average") "gif" else NULL
+          if(!is.null(predictions())) "geo-tiff" else NULL
         )
       ),
       conditionalPanel(
@@ -24,12 +23,16 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
         numericInput(session$ns("height"), "Height (px)", value = 800)
       ),
       conditionalPanel(
-        condition = "input.exportType == 'gif'",
+        condition = paste0("'", type, "' == 'spatio-temporal-average'"),
         ns = session$ns,
-        numericInput(session$ns("minTime"), "Time begin of animation", value = 0),
-        numericInput(session$ns("maxTime"), "Time end of animation", value = 5000),
-        checkboxInput(session$ns("reverseGif"), "Reverse time order of animation"),
-        numericInput(session$ns("intTime"), "Time interval length of animation", value = 1000)
+        checkboxInput(session$ns("isTimeSeries"), "Export time series"),
+        conditionalPanel(
+          condition = "input.isTimeSeries",
+          ns = session$ns,
+          numericInput(session$ns("minTime"), "Time begin of series", value = 0),
+          numericInput(session$ns("maxTime"), "Time end of series", value = 5000),
+          numericInput(session$ns("intTime"), "Time interval length of series", value = 1000)
+        )
       ),
       downloadButton(session$ns("exportExecute"), "Export"),
       easyClose = TRUE
@@ -42,51 +45,93 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      if (input$exportType == 'geo-tiff')
-        return(paste0(type, ".", "tif"))
-
-      paste0(type, ".", input$exportType)
+      nameFile(plotType = type, exportType = input$exportType, isTimeSeries = input$isTimeSeries)
     },
     content = function(file){
-      if (input$exportType == "geo-tiff"){
-        writeGeoTiff(predictions(), file)
-        return()
-      }
-
-      if (input$exportType == "gif"){
-        minTime <- input$minTime
-        maxTime <- input$maxTime
-        intTime <- abs(input$intTime)
-        if(input$reverseGif){
-          minTime <- input$maxTime
-          maxTime <- input$minTime
-          intTime <- sign(-1) * abs(input$intTime)
+      if (!input$isTimeSeries) {
+        if (input$exportType == "geo-tiff"){
+          writeGeoTiff(predictions(), file)
+          return()
         }
-        withProgress(message = "Generating gif ...", value = 0, {
-          saveGIF({
-            times <- seq(minTime, maxTime, by = intTime)
-            for (i in times) {
-              incProgress(1 / length(times), detail = paste("time: ", i))
-              plotFun()(model = Model(), time = i, plotRetNull = TRUE)
-            }
-          }, movie.name = file, ani.width = input$width, ani.height = input$height)
-        })
+
+        switch(
+          input$exportType,
+          png = png(file, width = input$width, height = input$height),
+          pdf = pdf(file, width = input$width / 72, height = input$height / 72),
+          tiff = tiff(file, width = input$width, height = input$height),
+          svg = svg(file, width = input$width / 72, height = input$height / 72)
+        )
+        replayPlot(plotObj())
+
+        dev.off()
         return()
       }
 
-      switch(
-        input$exportType,
-        png = png(file, width = input$width, height = input$height),
-        pdf = pdf(file, width = input$width / 72, height = input$height / 72),
-        tiff = tiff(file, width = input$width, height = input$height),
-        svg = svg(file, width = input$width / 72, height = input$height / 72)
-      )
-      replayPlot(plotObj())
+      minTime <- input$minTime
+      maxTime <- input$maxTime
+      intTime <- abs(input$intTime)
 
-      dev.off()
+      withProgress(message = "Generating series ...", value = 0, {
+        times <- seq(minTime, maxTime, by = intTime)
+        for (i in times) {
+          incProgress(1 / length(times), detail = paste("time: ", i))
+          figFilename <- nameFile(plotType = type, exportType = input$exportType,
+                                  isTimeSeries = input$isTimeSeries, i = i)
+
+          if (input$exportType == "geo-tiff"){
+            writeGeoTiff(predictions(), figFilename)
+          } else {
+            switch(
+              input$exportType,
+              png = png(figFilename, width = input$width, height = input$height),
+              pdf = pdf(figFilename, width = input$width / 72, height = input$height / 72),
+              tiff = tiff(figFilename, width = input$width, height = input$height),
+              svg = svg(figFilename, width = input$width / 72, height = input$height / 72)
+            )
+            plotFun()(model = Model(), time = i, plotRetNull = TRUE)
+            dev.off()
+          }
+        }
+
+        zipr(
+          file,
+          sapply(times, function(i) {
+            nameFile(plotType = type, exportType = input$exportType,
+                     isTimeSeries = input$isTimeSeries, i = i)
+          })
+        )
+
+        unlink(sapply(times, function(i) {
+          nameFile(plotType = type, exportType = input$exportType,
+                   isTimeSeries = input$isTimeSeries, i = i)
+        }))
+
+      })
     }
   )
 }
+
+
+#' Name File
+#'
+#' @param plotType (character) plot specification
+#' @param exportType (character) file type of exported plot
+#' @param isTimeSeries (logical) if TRUE, set file names for a series of plots
+#' @param i (numeric) number of i-th plot of a series of plots
+nameFile <- function(plotType, exportType, isTimeSeries, i = NULL) {
+  if (exportType == 'geo-tiff') {
+    exportType <- "tif"
+  }
+
+  if (!isTimeSeries) return(paste0(plotType, ".", exportType))
+
+  if (!is.null(i)) {
+    paste0(plotType, "_", i, ".", exportType)
+  } else {
+    paste0(plotType, ".zip")
+  }
+}
+
 
 writeGeoTiff <- function(XPred, file){
   if(is.null(XPred)) return()

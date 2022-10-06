@@ -888,7 +888,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           } else {
             rangex <- rangex + c( - zoom / 2, zoom / 2)
           }
-          }
+        }
+
         if(rangex[2] > 180){
           rangex <- c(180 - zoom, 180)
         }
