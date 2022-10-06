@@ -7,6 +7,10 @@
 - new button "Center Map" in the _Interactive map_ section that centers the map at the mean 
 longitude and latitude of the displayed data
 
+### Enhancements
+- for Pandora skin: set default Latitude and Longitude columns after data load if match was 
+found (#67)
+
 ### Bug fixes
 - fix failing of import of xlsx files with sheets (-> option to select the sheet)
 - fix missing columns in the selection of `Longitude` and `Latitude` if `Coordinate format` was not
