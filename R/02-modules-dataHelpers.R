@@ -12,9 +12,11 @@ locationFieldsUI <- function(id, title = "") {
   tagList(
     tags$hr(),
     tags$h4(title),
-    conditionalPanel(
-      condition = "output.dataSource == 'file'",
-      ns = ns,
+    # DISABLE CONDITION on dataSource as long as this module is not used in the
+    # modelling tabs
+    # conditionalPanel(
+    #   condition = "output.dataSource == 'file'",
+    #   ns = ns,
       radioButtons(
         inputId = ns("coordType"),
         label = "Coordinate format",
@@ -29,8 +31,8 @@ locationFieldsUI <- function(id, title = "") {
           "degrees minutes seconds"
         ),
         selected = "decimal degrees"
-      )
-    ),
+      ),
+    #),
     selectInput(ns("longitude"), "Longitude", choices = NULL),
     selectInput(ns("latitude"), "Latitude", choices = NULL),
     tags$hr()
@@ -50,8 +52,15 @@ locationFieldsServer <-
   function(id, dataRaw, dataSource) {
     moduleServer(id,
                  function(input, output, session) {
-                   # possibly necessary later, if input$coordType not available from beginning on,
-                   # because of the conditionalInput:
+                   # DISABLE CONDITION on dataSource as long as this module is not used in the
+                   # modelling tabs
+                   # output$dataSource <- renderText({
+                   #   dataSource()
+                   # })
+                   # outputOptions(output, "dataSource", suspendWhenHidden = FALSE)
+
+                   # POSSIBLY (please test) necessary later, if input$coordType not available from
+                   # beginning on, because of the conditionalInput:
                    # coordinateType <- reactiveVal("decimal degrees")
                    #
                    # observeEvent(input$coordType, {
@@ -59,10 +68,6 @@ locationFieldsServer <-
                    #   coordinateType(input$coordType)
                    # })
 
-                   output$dataSource <- renderText({
-                     dataSource()
-                   })
-                   outputOptions(output, "dataSource", suspendWhenHidden = FALSE)
 
                    observeEvent(list(input$coordType, dataRaw()), {
                      req(dataRaw())

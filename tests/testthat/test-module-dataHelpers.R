@@ -84,8 +84,8 @@ test_that("Test module locationFields", {
                                  longitude = "Longitude",
                                  latitude = "Latitude")
 
-
-               expect_equal(output$dataSource, "file")
+               # DISABLE TEST for dataSource as long as the condition on datasource is disabled
+               #expect_equal(output$dataSource, "file")
                expect_equal(
                  names(session$returned),
                  c("coordType", "longitudeColname", "latitudeColname")
