@@ -10,6 +10,7 @@ longitude and latitude of the displayed data
 ### Enhancements
 - for Pandora skin: set default Latitude and Longitude columns after data load if match was 
 found (#67)
+  - note: the default format is "decimal degrees", here we still apply the check for numeric columns
 
 ### Bug fixes
 - fix failing of import of xlsx files with sheets (-> option to select the sheet)
