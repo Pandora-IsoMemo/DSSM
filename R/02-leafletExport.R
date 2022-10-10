@@ -24,7 +24,7 @@ leafletExportButton <- function(id) {
 #' @param height reactive height of map in px
 #' @param zoom map zoom
 #' @param center map center (list of lat and lng)
-#' @inheritParams addDataToLeafletMap
+#' @inheritParams updateDataOnLeafletMap
 #' @inheritParams customizeLeafletMap
 leafletExport <- function(input,
                           output,
@@ -81,7 +81,7 @@ leafletExport <- function(input,
           customizeLeafletMap(leafletValues())
 
         m <- m %>%
-          addDataToLeafletMap(isoData = isoData(),
+          updateDataOnLeafletMap(isoData = isoData(),
                               leafletPointValues = leafletPointValues())
 
         mapview::mapshot(
