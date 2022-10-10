@@ -4,12 +4,15 @@
 \alias{locationFieldsServer}
 \title{Location Fields Server}
 \usage{
-locationFieldsServer(id, dataRaw)
+locationFieldsServer(id, dataRaw, dataSource)
 }
 \arguments{
 \item{id}{namespace id}
 
 \item{dataRaw}{(reactive) raw data import}
+
+\item{dataSource}{(reactive) source of loaded data, either "db" or "file" for database or
+file upload, respectively.}
 }
 \description{
 Backend for the module

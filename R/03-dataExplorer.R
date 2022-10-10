@@ -235,7 +235,14 @@ dataExplorerServer <- function(id) {
                    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
                  })
 
-                 locationFields <- locationFieldsServer("locationFieldsId", dataRaw = isoDataRaw)
+                 locationFields <- locationFieldsServer(
+                   "locationFieldsId",
+                   dataRaw = isoDataRaw,
+                   dataSource = reactive(switch(getSkin(),
+                                                "pandora" = "file",
+                                                "isomemo" = "db",
+                                                "file"))
+                 )
 
                  # Extract isoDataFull (both skins) ----
                  observe({

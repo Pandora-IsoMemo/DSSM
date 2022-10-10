@@ -40,11 +40,13 @@ loadDataWrapper(
 
 \item{headOnly}{(logical) load only head (first n rows) of file}
 
-\item{customWarningChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customWarningChecks}{list of reactive functions which will be executed after importing
+of data.
+ functions need to return TRUE if check is successful or a character with a warning otherwise.}
 
-\item{customErrorChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customErrorChecks}{list of reactive functions which will be executed after importing
+of data.
+  functions need to return TRUE if check is successful or a character with a warning otherwise.}
 }
 \description{
 Load Data Wrapper
