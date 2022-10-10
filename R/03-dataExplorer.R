@@ -49,7 +49,9 @@ dataExplorerUI <- function(id, title = "") {
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
+          tags$hr(),
           locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
+          tags$hr(),
           tags$h4("Radiocarbon Calibration Fields"),
           selectInput(
             ns("calibrationDatingType"),

@@ -10,7 +10,7 @@ locationFieldsUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
-    tags$hr(),
+    #tags$hr(),
     tags$h4(title),
     conditionalPanel(
       condition = "output.dataSource == 'file'",
@@ -32,8 +32,8 @@ locationFieldsUI <- function(id, title = "") {
       )
     ),
     selectInput(ns("longitude"), "Longitude", choices = NULL),
-    selectInput(ns("latitude"), "Latitude", choices = NULL),
-    tags$hr()
+    selectInput(ns("latitude"), "Latitude", choices = NULL)#,
+    #tags$hr()
   )
 }
 
@@ -65,8 +65,6 @@ locationFieldsServer <-
                    outputOptions(output, "dataSource", suspendWhenHidden = FALSE)
 
                    observeEvent(list(input$coordType, dataRaw()), {
-                     req(dataRaw())
-
                      # get possible column names for lat long
                      latLongChoices <- switch(input$coordType,
                                               "decimal degrees" = partialNumericColumns(dataRaw()),

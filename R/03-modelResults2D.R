@@ -37,13 +37,13 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           helpText(
             "The first row in your file needs to contain variable names."
           ),
-          radioButtons(inputId = ns("coordType"),
-                       label = "Coordinate format",
-                       choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-                                       "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-                                       "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
-                       choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
-                       fileInput(ns("file"), "Upload file"),
+          # radioButtons(inputId = ns("coordType"),
+          #              label = "Coordinate format",
+          #              choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
+          #                              "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
+          #                              "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
+          #              choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
+          fileInput(ns("file"), "Upload file"),
           tags$hr(),
           ns = ns
         ),
@@ -60,21 +60,23 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         conditionalPanel(
           condition = "input.dataSource != 'model'",
           ns = ns,
+          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
+          selectInput(inputId = ns("Site"),
+                      label = "Site/ID (optional):",
+                      choices = c("")),
+          tags$hr(),
           selectInput(inputId = ns("Independent"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
           selectInput(inputId = ns("IndependentUnc"),
                       label = "Uncertainty(optional) of dep. var.:",
                       choices = c("")),
-          selectInput(inputId = ns("Longitude"),
-                      label = "Longitude variable:",
-                      choices = c("Longitude")),
-          selectInput(inputId = ns("Latitude"),
-                      label = "Latitude variable:",
-                      choices = c("Latitude")),
-          selectInput(inputId = ns("Site"),
-                      label = "Site/ID (optional):",
-                      choices = c("")),
+          # selectInput(inputId = ns("Longitude"),
+          #             label = "Longitude variable:",
+          #             choices = c("Longitude")),
+          # selectInput(inputId = ns("Latitude"),
+          #             label = "Latitude variable:",
+          #             choices = c("Latitude")),
           radioButtons(inputId = ns("SplineType"),
                        label = "Smooth type",
                        choices = c("planar" = "1", "spherical" = "2"),
@@ -459,17 +461,23 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     )
   })
 
-  coordType <- reactive({
-    switch(
-      input$dataSource,
-      db = "decimal degrees",
-      file = input$coordType
-    )
-  })
+  # coordType <- reactive({
+  #   switch(
+  #     input$dataSource,
+  #     db = "decimal degrees",
+  #     file = input$coordType
+  #   )
+  # })
 
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL
   })
+
+  locationFields <- locationFieldsServer(
+    "locationFieldsId",
+    dataRaw = data,
+    dataSource = reactive(input$dataSource)
+  )
 
   Model <- reactiveVal(NULL)
 
@@ -481,14 +489,16 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
     values$set <- 0
-    if (input$Independent == "" | input$Latitude == "" | input$Longitude == "") {
+    if (input$Independent == "" | locationFields$latitude() == "" | locationFields$longitude() == "") {
       Model(NULL)
       return()
     }
 
     params <- reactiveValuesToList(input)
 
-    params$coordType <- coordType()
+    params$coordType <- locationFields$coordType()#coordType()
+    params$Latitude <- locationFields$latitude()
+    params$Longitude <- locationFields$longitude()
 
     model <- estimateMapWrapper(data(), params)
 
@@ -910,14 +920,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       selectedIndependentUnc <- "sd"
     }
 
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    # selectedLongitude <- NULL
+    # if (input$dataSource == "db" & ("longitude" %in% names(data()))){
+    #   selectedLongitude <- "longitude"
+    # }
+    # selectedLatitude <- NULL
+    # if (input$dataSource == "db" & ("latitude" %in% names(data()))){
+    #   selectedLatitude <- "latitude"
+    # }
     selectedSite <- NULL
     if (input$dataSource == "db" & ("site" %in% names(data()))){
       selectedSite <- "site"
@@ -928,10 +938,10 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       selected = selectedIndependent)
     updateSelectInput(session, "IndependentUnc", choices = c("", numVars),
                       selected = selectedIndependentUnc)
-    updateSelectInput(session, "Longitude", choices = c("", names(data())),
-                      selected = selectedLongitude)
-    updateSelectInput(session, "Latitude", choices = c("", names(data())),
-                      selected = selectedLatitude)
+    # updateSelectInput(session, "Longitude", choices = c("", names(data())),
+    #                   selected = selectedLongitude)
+    # updateSelectInput(session, "Latitude", choices = c("", names(data())),
+    #                   selected = selectedLatitude)
     updateSelectInput(session, "Site", choices = c("", names(data())),
                       selected = selectedSite)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
