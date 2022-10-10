@@ -13,6 +13,7 @@ loadDataWrapper(
   sep,
   dec,
   withRownames,
+  sheetId,
   headOnly,
   customWarningChecks,
   customErrorChecks
@@ -21,9 +22,9 @@ loadDataWrapper(
 \arguments{
 \item{values}{(list) list with import specifications}
 
-\item{filepath}{url or path}
+\item{filepath}{(character) url or path}
 
-\item{filename}{url or file name}
+\item{filename}{(character) url or file name}
 
 \item{colNames}{(reactive) use this for colnames of imported data}
 
@@ -35,13 +36,17 @@ loadDataWrapper(
 
 \item{withRownames}{(logical) contains rownames input}
 
+\item{sheetId}{(numeric) sheet id}
+
 \item{headOnly}{(logical) load only head (first n rows) of file}
 
-\item{customWarningChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customWarningChecks}{list of reactive functions which will be executed after importing
+of data.
+ functions need to return TRUE if check is successful or a character with a warning otherwise.}
 
-\item{customErrorChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customErrorChecks}{list of reactive functions which will be executed after importing
+of data.
+  functions need to return TRUE if check is successful or a character with a warning otherwise.}
 }
 \description{
 Load Data Wrapper

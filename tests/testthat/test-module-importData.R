@@ -19,9 +19,11 @@ test_that("Test module importData", {
                  ckanRecord = "CIMA: Compendium Isotoporum Medii Aevi",
                  ckanResource = "CIMA Humans 29.05.2021",
                  type = "xlsx",
+                 sheet = "1",
                  rownames = FALSE,
                  accept = TRUE
                )
+
                expect_equal(
                  names(session$returned()),
                  "https://pandoradata.earth/dataset/cbbc35e0-af60-4224-beea-181be10f7f71/resource/f7581eb1-b2b8-4926-ba77-8bc92ddb4fdb/download/cima-humans.xlsx"

@@ -77,3 +77,27 @@ testthat::test_that("function getDataColumns", {
 
 
 })
+
+testthat::test_that("getDefaultCoordColumn", {
+
+  testCols <- c("source", "id", "description", "d13C", "d15N",
+                "longitude", "site", "dateMean", "dateLower", "dateUpper", "dateUncertainty",
+                "datingType", "calibratedDate", "calibratedDateLower", "calibratedDateUpper",
+                "compilationDOI", "compilationDOIAuto", "compilationReference",
+                "databaseDOI", "databaseDOIAuto", "databaseReference", "measure",
+                "originalDataDOI", "originalDataDOIAuto", "originalDataReference",
+                "descriptionFull", "Latitude", "Lat")
+
+  testthat::expect_setequal(getDefaultCoordColumn(testCols, tryPattern = c("latitude", "^lat$")),
+                            "Latitude")
+  testthat::expect_setequal(getDefaultCoordColumn(testCols, tryPattern = c("^lat$")),
+                            "Lat")
+  testthat::expect_setequal(getDefaultCoordColumn(testCols,
+                                                  tryPattern = c("longitude", "^long$", "^lng$")),
+                            "longitude")
+  testthat::expect_setequal(getDefaultCoordColumn(testCols, tryPattern = c("^long$")),
+                            "")
+  testthat::expect_setequal(getDefaultCoordColumn(testCols,
+                                                  tryPattern = c("kjsdlgdlvgsdl", "^kdfj$")),
+                            "")
+})

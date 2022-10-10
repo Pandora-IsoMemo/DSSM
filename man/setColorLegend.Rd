@@ -2,7 +2,7 @@
 % Please edit documentation in R/02-leafletPointSettings.R
 \name{setColorLegend}
 \alias{setColorLegend}
-\title{Add Colour Legend}
+\title{Set Colour Legend}
 \usage{
 setColorLegend(map, showLegend, values)
 }
@@ -14,5 +14,5 @@ setColorLegend(map, showLegend, values)
 \item{values}{possible values that can be mapped, e.g. isoData$source}
 }
 \description{
-Add Colour Legend
+Set Colour Legend
 }

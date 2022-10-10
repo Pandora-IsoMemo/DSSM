@@ -72,48 +72,51 @@ leafletPointSettingsServer <- function(id){
   )
 }
 
-#' Add Data To Map
+#' Update Data On Map
 #'
 #' @param map reactive leaflet map object
 #' @param isoData reactive isoData data
 #' @param leafletPointValues reactive settings for points on map
-addDataToLeafletMap <- function(map, isoData, leafletPointValues) {
-  if (is.null(isoData)) return(map)
+updateDataOnLeafletMap <- function(map, isoData, leafletPointValues) {
+  map <- map %>%
+    cleanDataFromMap()
+
+  if (is.null(isoData) || is.null(isoData$latitude) || all(is.na(isoData$latitude)) ||
+      is.null(isoData$longitude) || all(is.na(isoData$longitude))) return(map)
+
+  isoData <- isoData[(!is.na(isoData$longitude) & !is.na(isoData$latitude)), ]
 
   if (leafletPointValues$clusterPoints) {
-    return(addClustersToMap(map, isoData))
+    return(drawClustersOnMap(map, isoData))
   }
 
   plotData <- setJitterCoords(isoData,
                               km = leafletPointValues$jitterMaxKm)
 
-  addCirclesToMap(map, plotData,
-                  pointRadius = leafletPointValues$pointRadius) %>%
+  if (!is.null(plotData$Latitude_jit)) plotData$latitude <- plotData$Latitude_jit
+  if (!is.null(plotData$Longitude_jit)) plotData$longitude <- plotData$Longitude_jit
+
+  drawCirclesOnMap(map, plotData,
+                   pointRadius = leafletPointValues$pointRadius) %>%
     setColorLegend(showLegend = leafletPointValues$showLegend,
                    values = isoData$source)
 }
 
 
-addClustersToMap <- function(map, isoData){
-  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
-
-  isoData <- isoData[!is.na(isoData$longitude), ]
-
-  map <- map %>%
-    cleanDataFromMap(layerId = isoData$id)
-
+drawClustersOnMap <- function(map, isoData){
   map %>%
     addMarkers(
       data = isoData,
       lat = ~ latitude,
       lng =  ~ longitude,
-      layerId = ~ id,
+      group = "dataPoints",
       clusterOptions = markerClusterOptions()
     )
 }
 
 
 setJitterCoords <- function(dat, km) {
+  # no jitter should be used: km == NA
   if (is.na(km)) return(dat)
 
   withProgress({
@@ -129,29 +132,17 @@ setJitterCoords <- function(dat, km) {
 }
 
 
-addCirclesToMap <- function(map, isoData, pointRadius){
-  if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
-
-  isoData <- isoData[!is.na(isoData$longitude), ]
-
+drawCirclesOnMap <- function(map, isoData, pointRadius) {
   numColors <- length(unique(isoData$source))
-
   colors <- appColors(c("red", "green", "purple", "black"),
                       names = FALSE)[1:numColors]
-
   pal <- colorFactor(colors, isoData$Source)
-
-  if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
-  if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
-
-  map <- map %>%
-    cleanDataFromMap(layerId = isoData$id)
 
   map %>%
     addCircles(data = isoData,
                lat = ~ latitude,
                lng =  ~ longitude,
-               layerId = ~ id,
+               group = "dataPoints",
                stroke = F,
                fillOpacity = 0.7,
                color = pal(isoData$source),
@@ -161,15 +152,15 @@ addCirclesToMap <- function(map, isoData, pointRadius){
 }
 
 
-cleanDataFromMap <- function(map, layerId){
+cleanDataFromMap <- function(map){
   map %>%
-    removeShape(layerId = layerId) %>%
+    clearGroup("dataPoints") %>%
     clearMarkerClusters() %>%
     removeControl("colorLegend")
 }
 
 
-#' Add Colour Legend
+#' Set Colour Legend
 #'
 #' @param map leaflet map
 #' @param showLegend logical show/hide legend
