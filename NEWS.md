@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.10.2
+
+### Bug fixes
+- fixing the point radius changing with latitude, now set radius in pixel (#44)
+
 ## MpiIsoApp 22.10.1
 
 ### New features
