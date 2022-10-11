@@ -4,10 +4,20 @@
 \alias{timeAndMapSectionServer}
 \title{Time And Map Section Server}
 \usage{
-timeAndMapSectionServer(id, dateExtent)
+timeAndMapSectionServer(id, dateMin, dateMax, dateValue, dateStep, zoomValue)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{dateMin}{(reactive) min date}
+
+\item{dateMax}{(reactive) max date}
+
+\item{dateValue}{(reactive) value date}
+
+\item{dateStep}{(reactive) step date}
+
+\item{zoomValue}{(reactive) default zoom given by model output}
 
 \item{dateExtent}{(reactiveValues) date range parameters}
 }

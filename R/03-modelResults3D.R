@@ -686,14 +686,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # map section inputs <- ----
 
-  mapSection <- timeAndMapSectionServer("sectionOfMap", dateExtent = dateExtent)
-
-  observe({
-    for (i in names(mapSection)) {
-      values[[i]] <- mapSection[[i]]
-    }
-  })
-
   dateExtent <- reactiveValues(
     min = 0,
     max = 15000,
@@ -701,6 +693,20 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     range = c(0, 15000),
     step = 100
   )
+
+  mapSection <- timeAndMapSectionServer("sectionOfMap",
+                                        dateMin = reactive(dateExtent$min),
+                                        dateMax = reactive(dateExtent$max),
+                                        dateValue = reactive(dateExtent$mean),
+                                        dateStep = reactive(dateExtent$step),
+                                        zoomValue = reactive(50))
+
+  observe({
+    values$time <- mapSection$time
+    values$upperLeftLongitude <- mapSection$upperLeftLongitude
+    values$upperLeftLatitude <- mapSection$upperLeftLatitude
+    values$zoom <- mapSection$zoom
+  })
 
   observe({
     validate(validInput(Model()))

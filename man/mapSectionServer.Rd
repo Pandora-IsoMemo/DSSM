@@ -4,10 +4,12 @@
 \alias{mapSectionServer}
 \title{Map Section Server}
 \usage{
-mapSectionServer(id)
+mapSectionServer(id, zoomValue)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{zoomValue}{(reactive) default zoom given by model output}
 }
 \description{
 Server function of the module

@@ -239,7 +239,17 @@ timeAndMapSectionUI <- function(id, label) {
 #' Server function of the module
 #' @param id id of module
 #' @param dateExtent (reactiveValues) date range parameters
-timeAndMapSectionServer <- function(id, dateExtent) {
+#' @param dateMin (reactive) min date
+#' @param dateMax (reactive) max date
+#' @param dateValue (reactive) value date
+#' @param dateStep (reactive) step date
+#' @param zoomValue (reactive) default zoom given by model output
+timeAndMapSectionServer <- function(id,
+                                    dateMin,
+                                    dateMax,
+                                    dateValue,
+                                    dateStep,
+                                    zoomValue) {
   moduleServer(id,
                function(input, output, session) {
                  mapParams <- reactiveValues(
@@ -252,14 +262,26 @@ timeAndMapSectionServer <- function(id, dateExtent) {
                  userInputTime <-
                    sliderAndNumericInputServer(
                      "timeExtended",
-                     value = reactive(dateExtent$mean),
-                     min = reactive(dateExtent$min),
-                     max = reactive(dateExtent$max),
-                     step = reactive(dateExtent$step)
+                     value = dateValue,
+                     min = dateMin,
+                     max = dateMax,
+                     step = dateStep
                    )
 
-                 mapSectionParams <- mapSectionServer("mapSection")
+                 mapSectionParams <- mapSectionServer("mapSection",
+                                                      zoomValue = zoomValue)
 
+                 # default values depend on model output
+                 observeEvent(dateValue(), {
+                   mapParams$time <- dateValue()
+                   mapParams$zoom <- mapSectionParams$zoom
+                   mapParams$upperLeftLatitude <-
+                     mapSectionParams$upperLeftLatitude
+                   mapParams$upperLeftLongitude <-
+                     mapSectionParams$upperLeftLongitude
+                 })
+
+                 # values given by the user pressing button
                  observeEvent(input$set, {
                    mapParams$time <- userInputTime()
                    mapParams$zoom <- mapSectionParams$zoom
@@ -320,7 +342,9 @@ mapSectionUI <- function(id) {
 #'
 #' Server function of the module
 #' @param id id of module
-mapSectionServer <- function(id) {
+#' @param zoomValue (reactive) default zoom given by model output
+mapSectionServer <- function(id,
+                             zoomValue) {
   moduleServer(id,
                function(input, output, session) {
                  mapParams <- reactiveValues(
@@ -331,10 +355,10 @@ mapSectionServer <- function(id) {
 
                  zoomInput <- sliderAndNumericInputServer(
                    "zoom",
-                   value = reactive(NULL),
-                   min = reactive(NULL),
-                   max = reactive(NULL),
-                   step = reactive(NULL)
+                   value = zoomValue,
+                   min = reactive(0.1),
+                   max = reactive(360),
+                   step = reactive(1)
                  )
 
                  observe({
@@ -367,7 +391,7 @@ sliderAndNumericInputUI <-
       column(
         width = 10,
         sliderInput(
-          inputId = ns("sliderInput"),
+          inputId = ns("sliderIn"),
           label = label,
           min = min,
           max = max,
@@ -380,7 +404,7 @@ sliderAndNumericInputUI <-
         width = 2,
         style = "margin-top: 30px;",
         numericInput(
-          inputId = ns("numInput"),
+          inputId = ns("numIn"),
           label = NULL,
           min = min,
           max = max,
@@ -408,11 +432,11 @@ sliderAndNumericInputServer <- function(id,
                function(input, output, session) {
                  result <- reactiveVal(5000)
 
-                 observeEvent(list(value(), min(), max(), step()), {
+                 observe({
                    req(value(), min(), max(), step())
                    updateSliderInput(
                      session = session,
-                     "sliderInput",
+                     "sliderIn",
                      value = value(),
                      min = min(),
                      max = max(),
@@ -420,30 +444,31 @@ sliderAndNumericInputServer <- function(id,
                    )
                    updateNumericInput(
                      session = session,
-                     "numInput",
+                     "numIn",
                      value = value(),
                      min = min(),
                      max = max(),
                      step = step()
                    )
+                   result(value())
                  })
 
-                 observeEvent(input$sliderInput, {
-                   req(input$sliderInput != input$numInput)
+                 observeEvent(input$sliderIn, {
+                   req(input$sliderIn != input$numIn)
                    updateNumericInput(session = session,
-                                      "numInput",
-                                      value = input$sliderInput)
-                   result(input$sliderInput)
+                                      "numIn",
+                                      value = input$sliderIn)
+                   result(input$sliderIn)
                  })
 
-                 observeEvent(input$numInput, {
-                   req(input$sliderInput != input$numInput)
+                 observeEvent(input$numIn, {
+                   req(input$sliderIn != input$numIn)
                    updateSliderInput(session = session,
-                                     "sliderInput",
-                                     value = input$numInput)
-                   result(input$numInput)
+                                     "sliderIn",
+                                     value = input$numIn)
+                   result(input$numIn)
                  })
 
-                 result
+                 return(result)
                })
 }
