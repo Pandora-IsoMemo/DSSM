@@ -13,7 +13,7 @@
 #'  cm.colors pdfFonts
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
-#' @importFrom leaflet addAwesomeMarkers awesomeIcons addCircles addLegend
+#' @importFrom leaflet addAwesomeMarkers awesomeIcons addCircleMarkers addLegend
 #'  addMarkers addPopups addRectangles addTiles clearMarkerClusters clearGroup clearPopups
 #'  colorFactor fitBounds leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet setMaxBounds setView addProviderTiles
