@@ -580,24 +580,22 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     else input$Independent
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+      )
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -620,22 +618,18 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   observeEvent(input$up, {
-    values$upperLeftLatitude <- NA
     values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    values$upperLeftLatitude <- NA
     values$up <- values$up - values$zoom / 40
   })
 
   observeEvent(input$left, {
-    values$upperLeftLongitude <- NA
     values$right <- values$right - values$zoom / 40
   })
 
   observeEvent(input$right, {
-    values$upperLeftLongitude <- NA
     values$right <- values$right + values$zoom / 40
   })
 
@@ -659,13 +653,16 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                         dateMax = reactive(dateExtent$max),
                                         dateValue = reactive(dateExtent$mean),
                                         dateStep = reactive(dateExtent$step),
-                                        zoomValue = reactive(50))
+                                        zoomValue = zoomFromModel)
 
-  observe({
-    values$time <- mapSection$time
-    values$upperLeftLongitude <- mapSection$upperLeftLongitude
-    values$upperLeftLatitude <- mapSection$upperLeftLatitude
-    values$zoom <- mapSection$zoom
+  observeEvent(mapSection$set, {
+    mapSectionVars <- names(mapSection)
+    for (i in mapSectionVars[mapSectionVars != "set"]) {
+      values[[i]] <- mapSection[[i]]
+    }
+
+    values$up <- 0
+    values$right <- 0
   })
 
   observe({

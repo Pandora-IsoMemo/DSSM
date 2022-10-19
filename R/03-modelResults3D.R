@@ -655,7 +655,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
-  # map section inputs -> ----
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
   })
@@ -678,8 +677,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$up <- 0
     values$right <- 0
   })
-
-  # map section inputs <- ----
 
   dateExtent <- reactiveValues(
     min = 0,
