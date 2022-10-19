@@ -251,11 +251,12 @@ timeAndMapSectionServer <- function(id,
                                     zoomValue) {
   moduleServer(id,
                function(input, output, session) {
-                 mapParams <- reactiveValues(
+                 mapAndTimeSettings <- reactiveValues(
                    time = 5000,
                    upperLeftLongitude = NA,
                    upperLeftLatitude = NA,
-                   zoom = 50
+                   zoom = 50,
+                   set = 0
                  )
 
                  userInputTime <-
@@ -273,25 +274,26 @@ timeAndMapSectionServer <- function(id,
                  # default values depend on model output
                  observeEvent(list(dateValue(),
                                    zoomValue()), {
-                   mapParams$time <- dateValue()
-                   mapParams$zoom <- zoomValue()
-                   mapParams$upperLeftLatitude <-
+                   mapAndTimeSettings$time <- dateValue()
+                   mapAndTimeSettings$zoom <- zoomValue()
+                   mapAndTimeSettings$upperLeftLatitude <-
                      mapSectionParams$upperLeftLatitude
-                   mapParams$upperLeftLongitude <-
+                   mapAndTimeSettings$upperLeftLongitude <-
                      mapSectionParams$upperLeftLongitude
                  })
 
                  # values given by the user pressing button
                  observeEvent(input$set, {
-                   mapParams$time <- userInputTime()
-                   mapParams$zoom <- mapSectionParams$zoom
-                   mapParams$upperLeftLatitude <-
+                   mapAndTimeSettings$time <- userInputTime()
+                   mapAndTimeSettings$zoom <- mapSectionParams$zoom
+                   mapAndTimeSettings$upperLeftLatitude <-
                      mapSectionParams$upperLeftLatitude
-                   mapParams$upperLeftLongitude <-
+                   mapAndTimeSettings$upperLeftLongitude <-
                      mapSectionParams$upperLeftLongitude
+                   mapAndTimeSettings$set <- input$set
                  })
 
-                 return(mapParams)
+                 return(mapAndTimeSettings)
                })
 }
 
@@ -347,7 +349,7 @@ mapSectionServer <- function(id,
                              zoomValue) {
   moduleServer(id,
                function(input, output, session) {
-                 mapParams <- reactiveValues(
+                 mapSettings <- reactiveValues(
                    upperLeftLongitude = NA,
                    upperLeftLatitude = NA,
                    zoom = 50
@@ -364,14 +366,14 @@ mapSectionServer <- function(id,
                  # update upperLeftLatitude/upperLeftLongitude if values$up/... change ----
 
                  observe({
-                   mapParams$zoom <- zoomInput()
-                   mapParams$upperLeftLatitude <-
+                   mapSettings$zoom <- zoomInput()
+                   mapSettings$upperLeftLatitude <-
                      input$upperLeftLatitude
-                   mapParams$upperLeftLongitude <-
+                   mapSettings$upperLeftLongitude <-
                      input$upperLeftLongitude
                  })
 
-                 return(mapParams)
+                 return(mapSettings)
                })
 }
 

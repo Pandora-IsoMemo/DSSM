@@ -657,22 +657,18 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # map section inputs -> ----
   observeEvent(input$up, {
-    values$upperLeftLatitude <- NA
     values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    values$upperLeftLatitude <- NA
     values$up <- values$up - values$zoom / 40
   })
 
   observeEvent(input$left, {
-    values$upperLeftLongitude <- NA
     values$right <- values$right - values$zoom / 40
   })
 
   observeEvent(input$right, {
-    values$upperLeftLongitude <- NA
     values$right <- values$right + values$zoom / 40
   })
 
@@ -700,19 +696,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                         dateStep = reactive(dateExtent$step),
                                         zoomValue = zoomFromModel)
 
-  observeEvent(
-    list(
-      mapSection$time,
-      mapSection$upperLeftLongitude,
-      mapSection$upperLeftLatitude,
-      mapSection$zoom
-    ),
-    {
-      for (i in names(mapSection)) {
-        values[[i]] <- mapSection[[i]]
-      }
+  observeEvent(mapSection$set, {
+    mapSectionVars <- names(mapSection)
+    for (i in mapSectionVars[mapSectionVars != "set"]) {
+      values[[i]] <- mapSection[[i]]
     }
-  )
+
+    values$up <- 0
+    values$right <- 0
+  })
 
   observe({
     validate(validInput(Model()))
