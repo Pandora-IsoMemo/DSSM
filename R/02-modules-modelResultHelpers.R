@@ -496,5 +496,5 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
     rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
   }
 
-  pmin(360, pmax(0, rangeLong, na.rm = TRUE))
+  pmin(360, pmax(0, rangeLong, na.rm = TRUE)) %>% round()
 }

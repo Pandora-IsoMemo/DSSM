@@ -200,6 +200,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         conditionalPanel(
           condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by cluster'",
           ns = ns,
+          # possibly add input for timerange also later ----
           sliderInput(inputId = ns("trange"),
                       label = "Time range",
                       min = 0, max = 15000, value = c(0, 15000), width = "100%"),
@@ -749,6 +750,10 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
       dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
 
+      # update plot time
+      values$time <- dateExtent$mean
+
+      # time range update ----
       updateSliderInput(
         session,
         "trange",

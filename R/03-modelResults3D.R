@@ -253,7 +253,7 @@ modelResults3DUI <- function(id, title = ""){
               uiOutput(ns("pointInput2D"))
             )
           ),
-          # add input for timerange also ? ----
+          # possibly add input for timerange also later ----
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
             ns = ns,
@@ -735,6 +735,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                 digits = 2)
       dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
       dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+
+      # update plot time
+      values$time <- dateExtent$mean
 
       # time range update ----
       updateSliderInput(
