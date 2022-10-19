@@ -603,6 +603,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     names(Model()$data)[1]
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
@@ -610,19 +612,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       updateSliderInput(session, "StdErr", value = signif(5 * val, 2),
                         min = 0, max = signif(5 * val, 2),
                         step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+        )
+
+      zoomFromModel(newZoom)
+
+      values$zoom <- newZoom
       values$up <- 0
       values$right <- 0
     }
@@ -699,9 +697,12 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                         dateMax = reactive(dateExtent$max),
                                         dateValue = reactive(dateExtent$mean),
                                         dateStep = reactive(dateExtent$step),
-                                        zoomValue = reactive(50))
+                                        zoomValue = zoomFromModel)
 
-  observe({
+  observeEvent(list(mapSection$time,
+                    mapSection$upperLeftLongitude,
+                    mapSection$upperLeftLatitude,
+                    mapSection$zoom), {
     values$time <- mapSection$time
     values$upperLeftLongitude <- mapSection$upperLeftLongitude
     values$upperLeftLatitude <- mapSection$upperLeftLatitude

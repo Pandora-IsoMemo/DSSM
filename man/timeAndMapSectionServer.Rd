@@ -18,8 +18,6 @@ timeAndMapSectionServer(id, dateMin, dateMax, dateValue, dateStep, zoomValue)
 \item{dateStep}{(reactive) step date}
 
 \item{zoomValue}{(reactive) default zoom given by model output}
-
-\item{dateExtent}{(reactiveValues) date range parameters}
 }
 \description{
 Server function of the module

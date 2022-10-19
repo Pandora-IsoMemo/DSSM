@@ -238,7 +238,6 @@ timeAndMapSectionUI <- function(id, label) {
 #'
 #' Server function of the module
 #' @param id id of module
-#' @param dateExtent (reactiveValues) date range parameters
 #' @param dateMin (reactive) min date
 #' @param dateMax (reactive) max date
 #' @param dateValue (reactive) value date
@@ -361,6 +360,8 @@ mapSectionServer <- function(id,
                    step = reactive(1)
                  )
 
+                 # update upperLeftLatitude/upperLeftLongitude if values$up/... change ----
+
                  observe({
                    mapParams$zoom <- zoomInput()
                    mapParams$upperLeftLatitude <-
@@ -434,6 +435,7 @@ sliderAndNumericInputServer <- function(id,
 
                  observe({
                    req(value(), min(), max(), step())
+
                    updateSliderInput(
                      session = session,
                      "sliderIn",
@@ -450,6 +452,7 @@ sliderAndNumericInputServer <- function(id,
                      max = max(),
                      step = step()
                    )
+
                    result(value())
                  })
 
@@ -471,4 +474,24 @@ sliderAndNumericInputServer <- function(id,
 
                  return(result)
                })
+}
+
+
+# Collection of helper functions for the modelling tabs ----
+
+#' Extract Zoom From Long Range
+#'
+#' @param rangeLongitude (numeric) range of longitude vector
+#' @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
+extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
+  if(mapCentering == "Europe"){
+    rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))
+  } else {
+    longRange <- rangeLongitude
+    longRange[rangeLongitude < -20] <- longRange[rangeLongitude < -20] + 200
+    longRange[rangeLongitude >= -20] <- (- 160 + longRange[rangeLongitude >= -20])
+    rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
+  }
+
+  pmin(360, pmax(0, rangeLong, na.rm = TRUE))
 }
