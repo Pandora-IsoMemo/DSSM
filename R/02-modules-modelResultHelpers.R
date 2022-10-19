@@ -271,9 +271,10 @@ timeAndMapSectionServer <- function(id,
                                                       zoomValue = zoomValue)
 
                  # default values depend on model output
-                 observeEvent(dateValue(), {
+                 observeEvent(list(dateValue(),
+                                   zoomValue()), {
                    mapParams$time <- dateValue()
-                   mapParams$zoom <- mapSectionParams$zoom
+                   mapParams$zoom <- zoomValue()
                    mapParams$upperLeftLatitude <-
                      mapSectionParams$upperLeftLatitude
                    mapParams$upperLeftLongitude <-

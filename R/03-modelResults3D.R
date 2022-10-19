@@ -618,11 +618,12 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         mapCentering = input$Centering
         )
 
-      zoomFromModel(newZoom)
-
-      values$zoom <- newZoom
-      values$up <- 0
-      values$right <- 0
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -699,15 +700,19 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                         dateStep = reactive(dateExtent$step),
                                         zoomValue = zoomFromModel)
 
-  observeEvent(list(mapSection$time,
-                    mapSection$upperLeftLongitude,
-                    mapSection$upperLeftLatitude,
-                    mapSection$zoom), {
-    values$time <- mapSection$time
-    values$upperLeftLongitude <- mapSection$upperLeftLongitude
-    values$upperLeftLatitude <- mapSection$upperLeftLatitude
-    values$zoom <- mapSection$zoom
-  })
+  observeEvent(
+    list(
+      mapSection$time,
+      mapSection$upperLeftLongitude,
+      mapSection$upperLeftLatitude,
+      mapSection$zoom
+    ),
+    {
+      for (i in names(mapSection)) {
+        values[[i]] <- mapSection[[i]]
+      }
+    }
+  )
 
   observe({
     validate(validInput(Model()))
