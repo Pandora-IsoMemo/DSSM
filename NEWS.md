@@ -1,5 +1,21 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.10.3
+
+### Updates
+- new UI to specify the section of maps of modelling tabs (_AverageR, TimeR, SpreadR, KernelR,
+KernelTimeR, OperatorR, LocateR_)
+  - dynamically use the buttons up, down, center, ...
+  - apply a button "Set (Time and) Map Section" to set
+    - time (only for _TimeR_ and _KernelTimeR_),
+    - zoom in degrees of longitude, or
+    - lat/long of upper left corner
+- new modules that encapsulate the functionality behind the new UI
+- applying the new modules in all modelling tabs and removing copy-paste code
+
+### Bug fixes
+- removes the slow **automatic** updates for inputs of time and zoom (#8)
+
 ## MpiIsoApp 22.10.2
 
 ### Bug fixes
