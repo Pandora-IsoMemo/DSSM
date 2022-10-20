@@ -187,10 +187,10 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                             uiOutput(ns("move"))
                           )
           ),
-          column(width = 2,
-                 offset = 7,
-                 div(style = "margin-left: 20px;",
-                     plotExportButton(ns("export")))
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
           )),
           tags$hr(),
           tags$h4("Map Section"),

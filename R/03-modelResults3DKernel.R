@@ -12,6 +12,7 @@ modelResults3DKernelUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -156,6 +157,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           batchModelingUI(ns("batchModeling"))
         )
       ),
+      # main panel ----
       mainPanel(
         width = 8,
         div(class = "aspect-16-9", div(
@@ -175,10 +177,10 @@ modelResults3DKernelUI <- function(id, title = ""){
                               uiOutput(ns("move"))
                             ))
           ),
-          column(width = 2,
-                 offset = 7,
-                 div(style = "margin-left: 20px;",
-                     plotExportButton(ns("export")))
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
           )),
           conditionalPanel(
             condition = "input.mapType == 'Map'",

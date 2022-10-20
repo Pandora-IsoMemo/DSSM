@@ -144,10 +144,10 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                             uiOutput(ns("move"))
                           )
           ),
-          column(width = 2,
-                 offset = 7,
-                 div(style = "margin-left: 20px;",
-                     plotExportButton(ns("export")))
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
           )),
           tags$hr(),
           tags$h4("Map Section"),
@@ -169,7 +169,6 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
               textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
               actionButton(ns("saveMap"), "Save map")
             ) else NULL,
-            div(style = 'display:inline-block', plotExportButton(ns("export"))),
             dataExportButton(ns("exportData"))
           ),
           actionButton(ns("add_btn2D"), "Add data point"),
