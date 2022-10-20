@@ -1,5 +1,26 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.10.3
+
+### Updates
+- new UI to specify the section of maps of modelling tabs (_AverageR, TimeR, SpreadR, KernelR,
+KernelTimeR, OperatorR, LocateR_)
+  - dynamically use the buttons up, down, center, ...
+  - apply a button "Set (Time and) Map Section" to set
+    - time (only for _TimeR_ and _KernelTimeR_),
+    - zoom in degrees of longitude, or
+    - lat/long of upper left corner
+- new modules that encapsulate the functionality behind the new UI
+- applying the new modules in all modelling tabs and removing copy-paste code
+
+### Bug fixes
+- removes the slow **automatic** updates for inputs of time and zoom (#8)
+
+## MpiIsoApp 22.10.2
+
+### Bug fixes
+- fixing the point radius changing with latitude, now set radius in pixel (#44)
+
 ## MpiIsoApp 22.10.1
 
 ### New features
@@ -10,6 +31,7 @@ longitude and latitude of the displayed data
 ### Enhancements
 - for Pandora skin: set default Latitude and Longitude columns after data load if match was 
 found (#67)
+  - note: the default format is "decimal degrees", here we still apply the check for numeric columns
 
 ### Bug fixes
 - fix failing of import of xlsx files with sheets (-> option to select the sheet)

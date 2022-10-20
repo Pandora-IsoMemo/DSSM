@@ -25,11 +25,12 @@ leafletPointSettingsUI <- function(id) {
       conditionalPanel(
         condition = "input.customPoints == true",
         tags$hr(),
-        sliderInput(ns("pointRadiusKm"),
-                    "Point radius in km",
-                    value = 20,
+        sliderInput(ns("pointRadiusPxl"),
+                    "Point radius in pixel",
+                    value = 4,
                     min = 1,
-                    max = 100),
+                    max = 20,
+                    step = 1),
         tags$hr(),
         ns = ns
       ),
@@ -55,8 +56,8 @@ leafletPointSettingsServer <- function(id){
         values$showLegend <- input$showLegend
       })
 
-      observeEvent(input$pointRadiusKm, {
-        values$pointRadius <- input$pointRadiusKm * 1000
+      observeEvent(input$pointRadiusPxl, {
+        values$pointRadius <- input$pointRadiusPxl
       })
 
       observe({
@@ -139,15 +140,16 @@ drawCirclesOnMap <- function(map, isoData, pointRadius) {
   pal <- colorFactor(colors, isoData$Source)
 
   map %>%
-    addCircles(data = isoData,
-               lat = ~ latitude,
-               lng =  ~ longitude,
-               group = "dataPoints",
-               stroke = F,
-               fillOpacity = 0.7,
-               color = pal(isoData$source),
-               fillColor = pal(isoData$source),
-               radius = pointRadius
+    addCircleMarkers(
+      data = isoData,
+      lat = ~ latitude,
+      lng =  ~ longitude,
+      group = "dataPoints",
+      stroke = F,
+      fillOpacity = 0.7,
+      color = pal(isoData$source),
+      fillColor = pal(isoData$source),
+      radius = pointRadius
     )
 }
 
