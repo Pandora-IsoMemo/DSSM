@@ -12,6 +12,7 @@ modelResults3DUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -208,6 +209,7 @@ modelResults3DUI <- function(id, title = ""){
             batchModelingUI(ns("batchModeling"))
           )
         ),
+      # main panel ----
         mainPanel(
           width = 8,
           div(class = "aspect-16-9", div(

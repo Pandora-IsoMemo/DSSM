@@ -200,6 +200,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
               width = 3,
               offset = 9,
               style = "margin-top: -60px;",
+              align = "right",
               actionButton(ns("set"), "Set Map Section")
             )
           ),
@@ -223,6 +224,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           uiOutput(ns("pointInput2D"))
         )
       ),
+      # right sidebar ----
         sidebarPanel(
           width = 2,
           radioButtons(inputId = ns("Centering"),
@@ -482,7 +484,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
       return()
     }
-    values$set <- 0
+
     if (input$Independent == "" | input$Latitude == "" | input$Longitude == "") {
       Model(NULL)
       return()
@@ -553,7 +555,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
-  # -> new ----
   mapSettings <- mapSectionServer("mapSection",
                                   zoomValue = zoomFromModel)
 

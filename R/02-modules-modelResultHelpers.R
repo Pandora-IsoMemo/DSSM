@@ -223,9 +223,10 @@ timeAndMapSectionUI <- function(id, label) {
     mapSectionUI(ns("mapSection")),
     fluidRow(
       column(
-        width = 3,
-        offset = 9,
+        width = 4,
+        offset = 8,
         style = "margin-top: -60px;",
+        align = "right",
         actionButton(ns("set"), "Set Time and Map Section")
       )
     ),
