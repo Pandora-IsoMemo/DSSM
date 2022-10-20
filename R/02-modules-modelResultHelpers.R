@@ -269,19 +269,19 @@ timeAndMapSectionServer <- function(id,
                      step = dateStep
                    )
 
-                 mapSectionParams <- mapSectionServer("mapSection",
-                                                      zoomValue = zoomValue)
+                 mapSectionParams <-
+                   mapSectionServer("mapSection", zoomValue = zoomValue)
 
                  # default values depend on model output
                  observeEvent(list(dateValue(),
                                    zoomValue()), {
-                   mapAndTimeSettings$time <- dateValue()
-                   mapAndTimeSettings$zoom <- zoomValue()
-                   mapAndTimeSettings$upperLeftLatitude <-
-                     mapSectionParams$upperLeftLatitude
-                   mapAndTimeSettings$upperLeftLongitude <-
-                     mapSectionParams$upperLeftLongitude
-                 })
+                                     mapAndTimeSettings$time <- dateValue()
+                                     mapAndTimeSettings$zoom <- zoomValue()
+                                     mapAndTimeSettings$upperLeftLatitude <-
+                                       mapSectionParams$upperLeftLatitude
+                                     mapAndTimeSettings$upperLeftLongitude <-
+                                       mapSectionParams$upperLeftLongitude
+                                   })
 
                  # values given by the user pressing button
                  observeEvent(input$set, {
@@ -488,12 +488,14 @@ sliderAndNumericInputServer <- function(id,
 #' @param rangeLongitude (numeric) range of longitude vector
 #' @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
 extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
-  if(mapCentering == "Europe"){
+  if (mapCentering == "Europe") {
     rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))
   } else {
     longRange <- rangeLongitude
-    longRange[rangeLongitude < -20] <- longRange[rangeLongitude < -20] + 200
-    longRange[rangeLongitude >= -20] <- (- 160 + longRange[rangeLongitude >= -20])
+    longRange[rangeLongitude < -20] <-
+      longRange[rangeLongitude < -20] + 200
+    longRange[rangeLongitude >= -20] <-
+      (-160 + longRange[rangeLongitude >= -20])
     rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
   }
 
