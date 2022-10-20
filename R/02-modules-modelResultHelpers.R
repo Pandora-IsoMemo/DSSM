@@ -461,7 +461,7 @@ sliderAndNumericInputServer <- function(id,
                  })
 
                  observeEvent(input$sliderIn, {
-                   req(input$sliderIn != input$numIn)
+                   req(!identical(input$sliderIn, input$numIn))
                    updateNumericInput(session = session,
                                       "numIn",
                                       value = input$sliderIn)
@@ -469,7 +469,7 @@ sliderAndNumericInputServer <- function(id,
                  })
 
                  observeEvent(input$numIn, {
-                   req(input$sliderIn != input$numIn)
+                   req(input$numIn, !identical(input$sliderIn, input$numIn))
                    updateSliderInput(session = session,
                                      "sliderIn",
                                      value = input$numIn)
