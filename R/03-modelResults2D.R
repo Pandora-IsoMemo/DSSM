@@ -555,8 +555,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
-  mapSettings <- mapSectionServer("mapSection",
-                                  zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40

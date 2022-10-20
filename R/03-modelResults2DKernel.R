@@ -510,8 +510,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
   })
 
-  mapSettings <- mapSectionServer("mapSection",
-                                  zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
