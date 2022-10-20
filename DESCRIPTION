@@ -1,6 +1,6 @@
 Package: MpiIsoApp
 Title: Shiny App for Isotopes data base
-Version: 22.09.4
+Version: 22.10.4
 Author: INWT Statistics GmbH
 Maintainer: INWT <marcus.gross@inwt-statistics.de>
 Description: Shiny App contains: a data explorer tab, an interactive map and a static map, which should present model results.
@@ -45,7 +45,7 @@ Imports:
   sp (>= 1.2.7),
   stringi (>= 1.1.7),
   templates,
-  webshot
+  webshot,
   zip
 Suggests:
   lintr (>= 1.0.2),

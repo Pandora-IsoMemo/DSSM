@@ -1,20 +1,59 @@
 # MpiIsoApp development version
 
-# MpiIsoApp 22.09.4
+# MpiIsoApp 22.10.4
 
 ## New features
 
 - when using _Pandora_ skin, in _Import Data_: option to merge two data tables before the import (#42)
 
+## MpiIsoApp 22.10.3
+
+### Updates
+- new UI to specify the section of maps of modelling tabs (_AverageR, TimeR, SpreadR, KernelR,
+KernelTimeR, OperatorR, LocateR_)
+  - dynamically use the buttons up, down, center, ...
+  - apply a button "Set (Time and) Map Section" to set
+    - time (only for _TimeR_ and _KernelTimeR_),
+    - zoom in degrees of longitude, or
+    - lat/long of upper left corner
+- new modules that encapsulate the functionality behind the new UI
+- applying the new modules in all modelling tabs and removing copy-paste code
+
+### Bug fixes
+- removes the slow **automatic** updates for inputs of time and zoom (#8)
+
+## MpiIsoApp 22.10.2
+
+### Bug fixes
+- fixing the point radius changing with latitude, now set radius in pixel (#44)
+
+## MpiIsoApp 22.10.1
+
+### New features
+- specify the sheet of an xlsx/xls file in the import dialog
+- new button "Center Map" in the _Interactive map_ section that centers the map at the mean 
+longitude and latitude of the displayed data
+
+### Enhancements
+- for Pandora skin: set default Latitude and Longitude columns after data load if match was 
+found (#67)
+  - note: the default format is "decimal degrees", here we still apply the check for numeric columns
+
+### Bug fixes
+- fix failing of import of xlsx files with sheets (-> option to select the sheet)
+- fix missing columns in the selection of `Longitude` and `Latitude` if `Coordinate format` was not
+equal "decimal degrees" (#62)
+- fix in the removal of points on the interactive map after using filters (#63)
+
 ## MpiIsoApp 22.09.3
 
-### New Features
+### New features
 - export a time series of _spatio-temporal-average_ plots in the selected file format condensed
 into a zip file
 
 ## MpiIsoApp 22.09.2
 
-### New Features
+### New features
 - option to adjust the format of the axes in time course plots (decimal places and number of labels)
 - option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
 

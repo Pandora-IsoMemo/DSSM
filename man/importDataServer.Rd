@@ -19,11 +19,13 @@ importDataServer(
 
 \item{colNames}{(reactive) use this for colnames of imported data}
 
-\item{customWarningChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customWarningChecks}{list of reactive functions which will be executed after importing
+of data.
+ functions need to return TRUE if check is successful or a character with a warning otherwise.}
 
-\item{customErrorChecks}{list of reactive functions which will be executed after importing of data.
-functions need to return TRUE if check is successful or a character with a warning otherwise.}
+\item{customErrorChecks}{list of reactive functions which will be executed after importing
+of data.
+  functions need to return TRUE if check is successful or a character with a warning otherwise.}
 }
 \description{
 Backend for data import module

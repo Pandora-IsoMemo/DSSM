@@ -12,6 +12,7 @@ modelResults3DUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -208,6 +209,7 @@ modelResults3DUI <- function(id, title = ""){
             batchModelingUI(ns("batchModeling"))
           )
         ),
+      # main panel ----
         mainPanel(
           width = 8,
           div(class = "aspect-16-9", div(
@@ -218,36 +220,24 @@ modelResults3DUI <- function(id, title = ""){
             textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             tags$br(),
             tags$br(),
-            div(plotExportButton(ns("export"))),
-            tags$br(),
+            fluidRow(column(width = 3,
+                            conditionalPanel(
+                              condition = "input.mapType == 'Map'",
+                              ns = ns,
+                              div(
+                                class = "move-map",
+                                uiOutput(ns("move"))
+                              ))
+                            ),
+                     column(width = 3,
+                            offset = 6,
+                            align = "right",
+                            plotExportButton(ns("export"))
+                            )),
             conditionalPanel(
               condition = "input.mapType == 'Map'",
               ns = ns,
-              sliderAndNumericInputUI(ns("timeExtended"),
-                                      label = "Time selection",
-                                      min = 0, max = 15000, value = 5000, step = 100),
-              div(
-                style = "display:flex;",
-                div(
-                  class = "zoom-map",
-                  sliderInput(inputId = ns("zoom"),
-                              label = "Zoom/x-Range in degrees Longitude",
-                              min = 0.1, max = 360, value = 50, width = "100%")
-                ),
-                div(
-                  class = "move-map",
-                  uiOutput(ns("move"))
-                )),
-              numericInput(inputId = ns("upperLeftLatitude"),
-                          label = "Set Latitude of upper left corner",
-                          min = -90, max = 90, value = c(), width = "20%"),
-              numericInput(inputId = ns("upperLeftLongitude"),
-                          label = "Set Longitude of upper left corner",
-                          min = -180, max = 180, value = c(), width = "20%"),
-              numericInput(inputId = ns("zoomSet"),
-                          label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                          min = 0.1, max = 360, value = 50, width = "20%"),
-              actionButton( ns("set"), "Set"),
+              timeAndMapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
               div(div(
                 style = 'display:inline-block',
                 class = "save-plot-container",
@@ -265,7 +255,7 @@ modelResults3DUI <- function(id, title = ""){
               uiOutput(ns("pointInput2D"))
             )
           ),
-          # add input for timerange also ? ----
+          # possibly add input for timerange also later ----
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
             ns = ns,
@@ -615,6 +605,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     names(Model()$data)[1]
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
@@ -622,21 +614,18 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       updateSliderInput(session, "StdErr", value = signif(5 * val, 2),
                         min = 0, max = signif(5 * val, 2),
                         step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+        )
+
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -668,56 +657,27 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
-  observeEvent(input$zoom, {
-    zoom <- input$zoom
-    values$zoom <- input$zoom
-  })
-
   observeEvent(input$up, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up + zoom / 40
+    values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up - zoom / 40
-  })
-  observeEvent(input$left, {
-    if(values$set > 0){
-    zoom <- values$zoom
-  } else {
-    zoom <- input$zoom
-  }
-    values$right <- values$right - zoom / 40
-  })
-  observeEvent(input$right, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right + zoom / 40
-  })
-  observeEvent(input$center, {
-    values$up <- 0
-    values$right <- 0
+    values$up <- values$up - values$zoom / 40
   })
 
-  observeEvent(input$set, {
-    values$set <- 1
+  observeEvent(input$left, {
+    values$right <- values$right - values$zoom / 40
+  })
+
+  observeEvent(input$right, {
+    values$right <- values$right + values$zoom / 40
+  })
+
+  observeEvent(input$center, {
+    values$upperLeftLatitude <- NA
+    values$upperLeftLongitude <- NA
     values$up <- 0
     values$right <- 0
-    values$zoom <- input$zoomSet
-    values$upperLeftLatitude <- input$upperLeftLatitude
-    values$upperLeftLongitude <- input$upperLeftLongitude
   })
 
   dateExtent <- reactiveValues(
@@ -727,6 +687,23 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     range = c(0, 15000),
     step = 100
   )
+
+  mapSection <- timeAndMapSectionServer("sectionOfMap",
+                                        dateMin = reactive(dateExtent$min),
+                                        dateMax = reactive(dateExtent$max),
+                                        dateValue = reactive(dateExtent$mean),
+                                        dateStep = reactive(dateExtent$step),
+                                        zoomValue = zoomFromModel)
+
+  observeEvent(mapSection$set, {
+    mapSectionVars <- names(mapSection)
+    for (i in mapSectionVars[mapSectionVars != "set"]) {
+      values[[i]] <- mapSection[[i]]
+    }
+
+    values$up <- 0
+    values$right <- 0
+  })
 
   observe({
     validate(validInput(Model()))
@@ -760,6 +737,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                 digits = 2)
       dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
       dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+
+      # update plot time
+      values$time <- dateExtent$mean
 
       # time range update ----
       updateSliderInput(
@@ -867,35 +847,24 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
 
-  userInputTime <- sliderAndNumericInputServer("timeExtended",
-                                               value = reactive(dateExtent$mean),
-                                               min = reactive(dateExtent$min),
-                                               max = reactive(dateExtent$max),
-                                               step = reactive(dateExtent$step))
-
   plotFun <- reactive({
-    function(model, time = userInputTime(), returnPred = FALSE,...){
+    function(model, time = values$time, returnPred = FALSE,...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
       if(input$fixCol == FALSE){
-        if(values$set > 0){
-          zoom <- values$zoom
-        } else {
-          zoom <- input$zoom
-        }
+        zoom <- values$zoom
         rangey <- - diff(range(model$data$Latitude, na.rm = TRUE)) / 2 +
           max(model$data$Latitude, na.rm = TRUE) + values$up
-        if(!is.na(values$upperLeftLatitude) & values$set > 0){
-          rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0) + values$up
+        if(!is.na(values$upperLeftLatitude)){
+          rangey <- values$upperLeftLatitude + values$up + c(- zoom / 2 , 0)
         } else {
           rangey <- rangey + c( - zoom / 4, zoom / 4)
         }
         if(input$Centering == "Europe"){
           rangex <- - diff(range(model$data$Longitude, na.rm = TRUE)) / 2 +
             max(model$data$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
-            rangex <- values$upperLeftLongitude + values$right
-            rangex <- rangex + c(0, zoom)
+          if(!is.na(values$upperLeftLongitude)){
+            rangex <- values$upperLeftLongitude + values$right + c(0, zoom)
           } else {
             rangex <- rangex + c( - zoom / 2, zoom / 2)
           }
@@ -905,7 +874,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           dataPac$Longitude[model$data$Longitude >= -20] <- (- 160 + dataPac$Longitude[model$data$Longitude >= -20])
           rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
             max(dataPac$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
+          if(!is.na(values$upperLeftLongitude)){
             rangex <- values$upperLeftLongitude + values$right
             if(rangex < -20) rangex <- rangex + 200
             if(rangex >= -20) rangex <- rangex - 160
@@ -1329,77 +1298,3 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(batchModel())
   })
 }
-
-
-# Slider And Input Selection Module ----
-
-#' Slider And Input UI
-#'
-#' UI of the Slider And Input module
-#'
-#' @param id id of module
-#' @param label label
-#' @param min (numeric) minumum
-#' @param max (numeric) maximum
-#' @param value (numeric) default value
-#' @param step (numeric) step
-sliderAndNumericInputUI <- function(id, label, min, max, value, step) {
-  ns <- NS(id)
-  tagList(
-    div(
-      style = "display:flex;",
-      div(
-        class = "zoom-map",
-        sliderInput(inputId = ns("sliderInput"),
-                    label = label,
-                    min = min, max = max, value = value, step = step, width = "100%")
-      ),
-      div(
-        class = "move-map",
-        numericInput(inputId = ns("numInput"),
-                     label = label,
-                     min = min, max = max, value = value, step = step, width = "190px")
-      ))
-  )
-}
-
-#' Slider And Input Server
-#'
-#' Server function of the Slider And Input module
-#' @param id id of module
-#' @param value value of input
-#' @param min min of input
-#' @param max max of input
-#' @param step step of input
-sliderAndNumericInputServer <- function(id,
-                                        value,
-                                        min,
-                                        max,
-                                        step) {
-  moduleServer(id,
-               function(input, output, session) {
-                 result <- reactiveVal(5000)
-
-                 observeEvent(list(value(), min(), max(), step()), {
-                   updateNumericInput(session = session, "sliderInput", value = value(),
-                                      min = min(), max = max(), step = step())
-                   updateNumericInput(session = session, "numInput", value = value(),
-                                      min = min(), max = max(), step = step())
-                 })
-
-                 observeEvent(input$sliderInput, {
-                   req(input$sliderInput != input$numInput)
-                   updateNumericInput(session = session, "numInput", value = input$sliderInput)
-                   result(input$sliderInput)
-                 })
-
-                 observeEvent(input$numInput, {
-                   req(input$sliderInput != input$numInput)
-                   updateSliderInput(session = session, "sliderInput", value = input$numInput)
-                   result(input$numInput)
-                 })
-
-                 result
-               })
-}
-

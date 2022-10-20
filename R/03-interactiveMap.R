@@ -158,8 +158,8 @@ interactiveMap <- function(input, output, session, isoData) {
       } else {
         # add data with default point values
         leafletMap() %>%
-          addDataToLeafletMap(isoData = isoData(),
-                              leafletPointValues = leafletPointValues())
+          updateDataOnLeafletMap(isoData = isoData(),
+                                 leafletPointValues = leafletPointValues())
       }
     })
   })
@@ -176,6 +176,15 @@ interactiveMap <- function(input, output, session, isoData) {
         lat1 = leafletValues()$bounds$south,
         lat2 = leafletValues()$bounds$north
       )
+  })
+
+  observeEvent(leafletValues()$centerMapButton, {
+    req(leafletValues()$centerMapButton, isoData()$longitude, isoData()$latitude)
+
+    leafletProxy("map") %>%
+      setView(lng = mean(isoData()$longitude),
+              lat = mean(isoData()$latitude),
+              zoom = input$map_zoom)
   })
 
 
@@ -213,11 +222,10 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # Add data
+  # Update data
   observe({
-    req(isoData())
     leafletProxy("map") %>%
-      addDataToLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
+      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
   })
 
   # When map is clicked, show a popup with info
@@ -455,7 +463,16 @@ addCirclesRelativeToZoom <-
       radius * (zoom / newZoom) ^ 3
     }
 
-    addCirclesToMap(
+    if (is.null(isoData$latitude) || all(is.na(isoData$latitude))) return(map)
+
+    isoData <- isoData[(!is.na(isoData$longitude) & !is.na(isoData$latitude)), ]
+    map <- map %>%
+      cleanDataFromMap()
+
+    if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
+    if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
+
+    drawCirclesOnMap(
       map = map,
       isoData = isoData,
       pointRadius = relateToZoom(radius = 20)

@@ -12,6 +12,7 @@ modelResults3DKernelUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -156,6 +157,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           batchModelingUI(ns("batchModeling"))
         )
       ),
+      # main panel ----
       mainPanel(
         width = 8,
         div(class = "aspect-16-9", div(
@@ -166,35 +168,24 @@ modelResults3DKernelUI <- function(id, title = ""){
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
-          div(plotExportButton(ns("export"))),
+          fluidRow(column(width = 3,
+                          conditionalPanel(
+                            condition = "input.mapType == 'Map'",
+                            ns = ns,
+                            div(
+                              class = "move-map",
+                              uiOutput(ns("move"))
+                            ))
+          ),
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
+          )),
           conditionalPanel(
             condition = "input.mapType == 'Map'",
             ns = ns,
-            sliderAndNumericInputUI(ns("timeExtended"),
-                                    label = "Time selection",
-                                    min = 0, max = 15000, value = 5000, step = 100),
-            div(
-              style = "display:flex;",
-              div(
-                class = "zoom-map",
-                sliderInput(inputId = ns("zoom"),
-                            label = "Zoom/x-Range in degrees Longitude",
-                            min = 0.1, max = 360, value = 50, width = "100%")
-              ),
-              div(
-                class = "move-map",
-                uiOutput(ns("move"))
-              )),
-            numericInput(inputId = ns("upperLeftLatitude"),
-                         label = "Set Latitude of upper left corner",
-                         min = -90, max = 90, value = c(), width = "20%"),
-            numericInput(inputId = ns("upperLeftLongitude"),
-                         label = "Set Longitude of upper left corner",
-                         min = -180, max = 180, value = c(), width = "20%"),
-            numericInput(inputId = ns("zoomSet"),
-                        label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                        min = 0.1, max = 360, value = 50, width = "20%"),
-            actionButton( ns("set"), "Set"),
+            timeAndMapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
             div(div(
               style = 'display:inline-block',
               class = "save-plot-container",
@@ -211,6 +202,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         conditionalPanel(
           condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by cluster'",
           ns = ns,
+          # possibly add input for timerange also later ----
           sliderInput(inputId = ns("trange"),
                       label = "Time range",
                       min = 0, max = 15000, value = c(0, 15000), width = "100%"),
@@ -591,24 +583,22 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     else input$Independent
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+      )
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -630,55 +620,52 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
   })
 
-  observeEvent(input$zoom, {
-    zoom <- input$zoom
-    values$zoom <- input$zoom
-  })
-
   observeEvent(input$up, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up + zoom / 40
+    values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up - zoom / 40
+    values$up <- values$up - values$zoom / 40
   })
+
   observeEvent(input$left, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right - zoom / 40
+    values$right <- values$right - values$zoom / 40
   })
+
   observeEvent(input$right, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right + zoom / 40
+    values$right <- values$right + values$zoom / 40
   })
+
   observeEvent(input$center, {
+    values$upperLeftLatitude <- NA
+    values$upperLeftLongitude <- NA
     values$up <- 0
     values$right <- 0
   })
-  observeEvent(input$set, {
-    values$set <- 1
+
+  dateExtent <- reactiveValues(
+    min = 0,
+    max = 15000,
+    mean = 5000,
+    range = c(0, 15000),
+    step = 100
+  )
+
+  mapSection <- timeAndMapSectionServer("sectionOfMap",
+                                        dateMin = reactive(dateExtent$min),
+                                        dateMax = reactive(dateExtent$max),
+                                        dateValue = reactive(dateExtent$mean),
+                                        dateStep = reactive(dateExtent$step),
+                                        zoomValue = zoomFromModel)
+
+  observeEvent(mapSection$set, {
+    mapSectionVars <- names(mapSection)
+    for (i in mapSectionVars[mapSectionVars != "set"]) {
+      values[[i]] <- mapSection[[i]]
+    }
+
     values$up <- 0
     values$right <- 0
-    values$zoom <- input$zoomSet
-    values$upperLeftLatitude <- input$upperLeftLatitude
-    values$upperLeftLongitude <- input$upperLeftLongitude
   })
 
   observe({
@@ -732,14 +719,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     }
   })
 
-  dateExtent <- reactiveValues(
-    min = 0,
-    max = 15000,
-    mean = 5000,
-    range = c(0, 15000),
-    step = 100
-  )
-
   observe({
     validate(validInput(Model()))
 
@@ -773,6 +752,10 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
       dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
 
+      # update plot time
+      values$time <- dateExtent$mean
+
+      # time range update ----
       updateSliderInput(
         session,
         "trange",
@@ -878,27 +861,17 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
 
-  userInputTime <- sliderAndNumericInputServer("timeExtended",
-                                               value = reactive(dateExtent$mean),
-                                               min = reactive(dateExtent$min),
-                                               max = reactive(dateExtent$max),
-                                               step = reactive(dateExtent$step))
-
   plotFun <- reactive({
-    function(model, time = userInputTime(), returnPred = FALSE, ...){
+    function(model, time = values$time, returnPred = FALSE, ...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
 
       if(input$fixCol == FALSE){
-        if(values$set > 0){
-          zoom <- values$zoom
-        } else {
-          zoom <- input$zoom
-        }
+        zoom <- values$zoom
 
         rangey <- - diff(range(model$data$Latitude, na.rm = TRUE)) / 2 +
           max(model$data$Latitude, na.rm = TRUE) + values$up
-        if(!is.na(values$upperLeftLatitude) & values$set > 0){
+        if(!is.na(values$upperLeftLatitude)){
           rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0)  + values$up
         } else {
           rangey <- rangey + c( - zoom / 4, zoom / 4)
@@ -906,9 +879,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         if(input$Centering == "Europe"){
           rangex <- - diff(range(model$data$Longitude, na.rm = TRUE)) / 2 +
             max(model$data$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
-            rangex <- values$upperLeftLongitude + values$right
-            rangex <- rangex + c(0, zoom)
+          if(!is.na(values$upperLeftLongitude)){
+            rangex <- values$upperLeftLongitude + values$right + c(0, zoom)
           } else {
             rangex <- rangex + c( - zoom / 2, zoom / 2)
           }
@@ -918,7 +890,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           dataPac$Longitude[model$data$Longitude >= -20] <- (- 160 + dataPac$Longitude[model$data$Longitude >= -20])
           rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
             max(dataPac$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
+          if(!is.na(values$upperLeftLongitude)){
             rangex <- values$upperLeftLongitude + values$right
             if(rangex < -20) rangex <- rangex + 200
             if(rangex >= -20) rangex <- rangex - 160

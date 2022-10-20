@@ -13,6 +13,7 @@ modelResultsDiffUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -55,6 +56,7 @@ modelResultsDiffUI <- function(id, title = ""){
         ns = ns
         )
       ),
+      # main panel ----
       mainPanel(
         width = 8,
         div(class = "aspect-16-9", div(
@@ -63,28 +65,32 @@ modelResultsDiffUI <- function(id, title = ""){
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
-          div(
-            style = "display:flex;",
-            div(
-              class = "zoom-map",
-              sliderInput(inputId = ns("zoom"),
-                          label = "Zoom/x-Range in degrees Longitude",
-                          min = 0.1, max = 360, value = 50, width = "100%")
-            ),
-            div(
-              class = "move-map",
-              uiOutput(ns("move"))
-            )),
-          numericInput(inputId = ns("upperLeftLatitude"),
-                       label = "Set Latitude of upper left corner",
-                       min = -90, max = 90, value = c(), width = "20%"),
-          numericInput(inputId = ns("upperLeftLongitude"),
-                       label = "Set Longitude of upper left corner",
-                       min = -180, max = 180, value = c(), width = "20%"),
-          numericInput(inputId = ns("zoomSet"),
-                      label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                      min = 0.1, max = 360, value = 50, width = "20%"),
-          actionButton( ns("set"), "Set"),
+          tags$br(),
+          tags$br(),
+          fluidRow(column(width = 3,
+                          div(
+                            class = "move-map",
+                            uiOutput(ns("move"))
+                          )
+          ),
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
+          )),
+          tags$hr(),
+          tags$h4("Map Section"),
+          mapSectionUI(ns("mapSection")),
+          fluidRow(
+            column(
+              width = 3,
+              offset = 9,
+              style = "margin-top: -60px;",
+              align = "right",
+              actionButton(ns("set"), "Set Map Section")
+            )
+          ),
+          tags$hr(),
           div(
             div(
               style = 'display:inline-block',
@@ -92,7 +98,6 @@ modelResultsDiffUI <- function(id, title = ""){
               textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
               actionButton(ns("saveMap"), "Save map")
             ),
-            div(style = 'display:inline-block', plotExportButton(ns("export")))
           ),
           actionButton(ns("add_btn2D"), "Add data point"),
           actionButton(ns("rm_btn2D"), "Remove data point"),
@@ -100,6 +105,7 @@ modelResultsDiffUI <- function(id, title = ""){
           uiOutput(ns("pointInput2D"))
         )
       ),
+      # right sidebar ----
         sidebarPanel(
           width = 2,
           radioButtons(inputId = ns("Centering"),
@@ -267,6 +273,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     MapDiff(savedMaps()[[as.numeric(input$savedModel)]]$model)
   })
 
+  zoomFromModel <- reactiveVal(50)
 
   observe({
     validate(validInput(MapDiff()))
@@ -275,21 +282,18 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       updateSliderInput(session, "StdErr", value = signif(val * 5, 2),
                         min = 0, max = signif(val * 5, 2),
                         step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(MapDiff()$Longitude, na.rm = TRUE) + c(-1, 1))
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- MapDiff()$Longitude
-        longRange[MapDiff()$Longitude < -20] <- longRange[MapDiff()$Longitude < -20] + 200
-        longRange[MapDiff()$Longitude >= -20] <- (- 160 + longRange[MapDiff()$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(MapDiff()$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+      )
+
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -297,57 +301,40 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     moveButtons(ns = session$ns)
   })
 
-  observeEvent(input$zoom, {
-    zoom <- input$zoom
-    values$zoom <- input$zoom
-  })
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
   observeEvent(input$up, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up + zoom / 40
+    values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up - zoom / 40
+    values$up <- values$up - values$zoom / 40
   })
+
   observeEvent(input$left, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right - zoom / 40
+    values$right <- values$right - values$zoom / 40
   })
+
   observeEvent(input$right, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right + zoom / 40
+    values$right <- values$right + values$zoom / 40
   })
+
   observeEvent(input$center, {
+    values$upperLeftLatitude <- NA
+    values$upperLeftLongitude <- NA
     values$up <- 0
     values$right <- 0
   })
 
   observeEvent(input$set, {
-    values$set <- 1
+    values$zoom <- mapSettings$zoom
+    values$upperLeftLatitude <- mapSettings$upperLeftLatitude
+    values$upperLeftLongitude <- mapSettings$upperLeftLongitude
+
     values$up <- 0
     values$right <- 0
-    values$zoom <- input$zoomSet
-    values$upperLeftLatitude <- input$upperLeftLatitude
-    values$upperLeftLongitude <- input$upperLeftLongitude
   })
+
   ### Add Points
   pointDat2D <- reactiveVal({
     data.frame(
@@ -464,15 +451,11 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     pointDatOK = pointDatOK()
 
     if(input$fixCol == FALSE){
-      if(values$set > 0){
-        zoom <- values$zoom
-      } else {
-        zoom <- input$zoom
-      }
+      zoom <- values$zoom
 
       rangey <- - diff(range(MapDiff()$Latitude, na.rm = TRUE)) / 2 +
         max(MapDiff()$Latitude, na.rm = TRUE) + values$up
-      if(!is.na(values$upperLeftLatitude) & values$set > 0){
+      if(!is.na(values$upperLeftLatitude)){
         rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0) + values$up
       } else {
         rangey <- rangey + c( - zoom / 4, zoom / 4)
@@ -480,7 +463,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       if(input$Centering == "Europe"){
         rangex <- - diff(range(MapDiff()$Longitude, na.rm = TRUE)) / 2 +
           max(MapDiff()$Longitude, na.rm = TRUE) + values$right
-        if(!is.na(values$upperLeftLongitude) & values$set > 0){
+        if(!is.na(values$upperLeftLongitude)){
           rangex <- values$upperLeftLongitude + values$right
           rangex <- rangex + c(0, zoom)
         } else {
@@ -492,7 +475,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         dataPac$Longitude[MapDiff()$Longitude >= -20] <- (- 160 + dataPac$Longitude[MapDiff()$Longitude >= -20])
         rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
           max(dataPac$Longitude, na.rm = TRUE) + values$right
-        if(!is.na(values$upperLeftLongitude) & values$set > 0){
+        if(!is.na(values$upperLeftLongitude)){
           rangex <- values$upperLeftLongitude+ values$right
           if(rangex < -20) rangex <- rangex + 200
           if(rangex >= -20) rangex <- rangex - 160
