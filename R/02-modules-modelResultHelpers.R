@@ -1,4 +1,6 @@
-# Collection of helper modules for the modelling tabs
+# Collection of helper modules for the modelling tabs ----
+
+## Formatting of decimal places ----
 
 #' Center Estimate UI
 #'
@@ -147,27 +149,29 @@ formatTimeCourseUI <- function(id, title = "") {
       width = "100%"
     ),
     fluidRow(
-      column(width = 6,
-             numericInput(
-               inputId = ns("nLabelsX"),
-               label = "N labels of x axis",
-               min = 0,
-               max = 20,
-               value = 7,
-               step = 1,
-               width = "100%"
-             )
+      column(
+        width = 6,
+        numericInput(
+          inputId = ns("nLabelsX"),
+          label = "N labels of x axis",
+          min = 0,
+          max = 20,
+          value = 7,
+          step = 1,
+          width = "100%"
+        )
       ),
-      column(width = 6,
-             numericInput(
-               inputId = ns("nLabelsY"),
-               label = "N labels of y axis",
-               min = 0,
-               max = 20,
-               value = 7,
-               step = 1,
-               width = "100%"
-             )
+      column(
+        width = 6,
+        numericInput(
+          inputId = ns("nLabelsY"),
+          label = "N labels of y axis",
+          min = 0,
+          max = 20,
+          value = 7,
+          step = 1,
+          width = "100%"
+        )
       )
     )
   )
@@ -183,10 +187,317 @@ formatTimeCourseServer <-
   function(id) {
     moduleServer(id,
                  function(input, output, session) {
-                   reactive(list(
-                     axesDecPlace = input$axesDecPlace,
-                     nLabelsX = input$nLabelsX,
-                     nLabelsY = input$nLabelsY
-                   ))
+                   reactive(
+                     list(
+                       axesDecPlace = input$axesDecPlace,
+                       nLabelsX = input$nLabelsX,
+                       nLabelsY = input$nLabelsY
+                     )
+                   )
                  })
   }
+
+
+## Time and Map Section ----
+
+
+#' Time And Map Section UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+#' @param label label
+timeAndMapSectionUI <- function(id, label) {
+  ns <- NS(id)
+  tagList(
+    tags$hr(),
+    tags$h4(label),
+    sliderAndNumericInputUI(
+      ns("timeExtended"),
+      label = "Time",
+      min = 0,
+      max = 15000,
+      value = 5000,
+      step = 100
+    ),
+    mapSectionUI(ns("mapSection")),
+    fluidRow(
+      column(
+        width = 4,
+        offset = 8,
+        style = "margin-top: -60px;",
+        align = "right",
+        actionButton(ns("set"), "Set Time and Map Section")
+      )
+    ),
+    tags$hr(),
+  )
+}
+
+
+#' Time And Map Section Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param dateMin (reactive) min date
+#' @param dateMax (reactive) max date
+#' @param dateValue (reactive) value date
+#' @param dateStep (reactive) step date
+#' @param zoomValue (reactive) default zoom given by model output
+timeAndMapSectionServer <- function(id,
+                                    dateMin,
+                                    dateMax,
+                                    dateValue,
+                                    dateStep,
+                                    zoomValue) {
+  moduleServer(id,
+               function(input, output, session) {
+                 mapAndTimeSettings <- reactiveValues(
+                   time = 5000,
+                   upperLeftLongitude = NA,
+                   upperLeftLatitude = NA,
+                   zoom = 50,
+                   set = 0
+                 )
+
+                 userInputTime <-
+                   sliderAndNumericInputServer(
+                     "timeExtended",
+                     value = dateValue,
+                     min = dateMin,
+                     max = dateMax,
+                     step = dateStep
+                   )
+
+                 mapSectionParams <-
+                   mapSectionServer("mapSection", zoomValue = zoomValue)
+
+                 # default values depend on model output
+                 observeEvent(list(dateValue(),
+                                   zoomValue()), {
+                                     mapAndTimeSettings$time <- dateValue()
+                                     mapAndTimeSettings$zoom <- zoomValue()
+                                     mapAndTimeSettings$upperLeftLatitude <-
+                                       mapSectionParams$upperLeftLatitude
+                                     mapAndTimeSettings$upperLeftLongitude <-
+                                       mapSectionParams$upperLeftLongitude
+                                   })
+
+                 # values given by the user pressing button
+                 observeEvent(input$set, {
+                   mapAndTimeSettings$time <- userInputTime()
+                   mapAndTimeSettings$zoom <- mapSectionParams$zoom
+                   mapAndTimeSettings$upperLeftLatitude <-
+                     mapSectionParams$upperLeftLatitude
+                   mapAndTimeSettings$upperLeftLongitude <-
+                     mapSectionParams$upperLeftLongitude
+                   mapAndTimeSettings$set <- input$set
+                 })
+
+                 return(mapAndTimeSettings)
+               })
+}
+
+
+#' Map Section UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+mapSectionUI <- function(id) {
+  ns <- NS(id)
+  tagList(
+    sliderAndNumericInputUI(
+      ns("zoom"),
+      label = "Zoom/x-Range in degrees Longitude",
+      min = 0.1,
+      max = 360,
+      value = 50,
+      step = 1
+    ),
+    fluidRow(
+      column(
+        width = 3,
+        numericInput(
+          inputId = ns("upperLeftLatitude"),
+          label = "Latitude of upper left corner",
+          min = -90,
+          max = 90,
+          value = c()
+        )
+      ),
+      column(
+        width = 3,
+        numericInput(
+          inputId = ns("upperLeftLongitude"),
+          label = "Longitude of upper left corner",
+          min = -180,
+          max = 180,
+          value = c()
+        )
+      )
+    )
+  )
+}
+
+
+#' Map Section Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param zoomValue (reactive) default zoom given by model output
+mapSectionServer <- function(id,
+                             zoomValue) {
+  moduleServer(id,
+               function(input, output, session) {
+                 mapSettings <- reactiveValues(
+                   upperLeftLongitude = NA,
+                   upperLeftLatitude = NA,
+                   zoom = 50
+                 )
+
+                 zoomInput <- sliderAndNumericInputServer(
+                   "zoom",
+                   value = zoomValue,
+                   min = reactive(0.1),
+                   max = reactive(360),
+                   step = reactive(1)
+                 )
+
+                 # update upperLeftLatitude/upperLeftLongitude if values$up/... change ----
+
+                 observe({
+                   mapSettings$zoom <- zoomInput()
+                   mapSettings$upperLeftLatitude <-
+                     input$upperLeftLatitude
+                   mapSettings$upperLeftLongitude <-
+                     input$upperLeftLongitude
+                 })
+
+                 return(mapSettings)
+               })
+}
+
+
+#' Slider And Input UI
+#'
+#' UI of the Slider And Input module
+#'
+#' @param id id of module
+#' @param label label
+#' @param min (numeric) minumum
+#' @param max (numeric) maximum
+#' @param value (numeric) default value
+#' @param step (numeric) step
+sliderAndNumericInputUI <-
+  function(id, label, min, max, value, step) {
+    ns <- NS(id)
+    tagList(fluidRow(
+      column(
+        width = 10,
+        sliderInput(
+          inputId = ns("sliderIn"),
+          label = label,
+          min = min,
+          max = max,
+          value = value,
+          step = step,
+          width = "100%"
+        )
+      ),
+      column(
+        width = 2,
+        style = "margin-top: 30px;",
+        numericInput(
+          inputId = ns("numIn"),
+          label = NULL,
+          min = min,
+          max = max,
+          value = value,
+          step = step
+        )
+      )
+    ))
+  }
+
+#' Slider And Input Server
+#'
+#' Server function of the Slider And Input module
+#' @param id id of module
+#' @param value value of input
+#' @param min min of input
+#' @param max max of input
+#' @param step step of input
+sliderAndNumericInputServer <- function(id,
+                                        value,
+                                        min,
+                                        max,
+                                        step) {
+  moduleServer(id,
+               function(input, output, session) {
+                 result <- reactiveVal(5000)
+
+                 observe({
+                   req(value(), min(), max(), step())
+
+                   updateSliderInput(
+                     session = session,
+                     "sliderIn",
+                     value = value(),
+                     min = min(),
+                     max = max(),
+                     step = step()
+                   )
+                   updateNumericInput(
+                     session = session,
+                     "numIn",
+                     value = value(),
+                     min = min(),
+                     max = max(),
+                     step = step()
+                   )
+
+                   result(value())
+                 })
+
+                 observeEvent(input$sliderIn, {
+                   req(!identical(input$sliderIn, input$numIn))
+                   updateNumericInput(session = session,
+                                      "numIn",
+                                      value = input$sliderIn)
+                   result(input$sliderIn)
+                 })
+
+                 observeEvent(input$numIn, {
+                   req(input$numIn, !identical(input$sliderIn, input$numIn))
+                   updateSliderInput(session = session,
+                                     "sliderIn",
+                                     value = input$numIn)
+                   result(input$numIn)
+                 })
+
+                 return(result)
+               })
+}
+
+
+# Collection of helper functions for the modelling tabs ----
+
+#' Extract Zoom From Long Range
+#'
+#' @param rangeLongitude (numeric) range of longitude vector
+#' @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
+extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
+  if (mapCentering == "Europe") {
+    rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))
+  } else {
+    longRange <- rangeLongitude
+    longRange[rangeLongitude < -20] <-
+      longRange[rangeLongitude < -20] + 200
+    longRange[rangeLongitude >= -20] <-
+      (-160 + longRange[rangeLongitude >= -20])
+    rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
+  }
+
+  pmin(360, pmax(0, rangeLong, na.rm = TRUE)) %>% round()
+}
