@@ -1,5 +1,11 @@
 # MpiIsoApp development version
 
+# MpiIsoApp 22.08.2.1
+
+## Updates
+
+- text update of the modeling tab for the _pandora / isomemo search app_
+
 # MpiIsoApp 22.08.2
 
 ## Enhancements
@@ -8,4 +14,4 @@
 
 ## Bug fixes
 
-- fixes in the modelling tab _AssignR_: (#46)
+- fixes in the modeling tab _AssignR_: (#46)
