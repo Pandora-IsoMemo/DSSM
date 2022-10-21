@@ -4,7 +4,7 @@
 
 ## Updates
 
-- text update of the modeling tab for the _pandora / isomemo search app_
+- text update of the modeling tab for the _pandora / isomemo search app_ (#9)
 
 # MpiIsoApp 22.08.2
 
