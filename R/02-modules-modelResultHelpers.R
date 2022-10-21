@@ -276,7 +276,8 @@ timeAndMapSectionServer <- function(id,
                  observeEvent(list(dateValue(),
                                    zoomValue()), {
                                      mapAndTimeSettings$time <- dateValue()
-                                     mapAndTimeSettings$zoom <- zoomValue()
+                                     mapAndTimeSettings$zoom <-
+                                       zoomValue()
                                      mapAndTimeSettings$upperLeftLatitude <-
                                        mapSectionParams$upperLeftLatitude
                                      mapAndTimeSettings$upperLeftLongitude <-
@@ -378,6 +379,220 @@ mapSectionServer <- function(id,
                })
 }
 
+## Z-scale settings ----
+
+#' Z Scale UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+#' @param label label
+zScaleUI <-
+  function(id, label) {
+    ns <- NS(id)
+    tagList(
+      selectInput(
+        inputId = ns("estType"),
+        label = "Estimation type",
+        choices = c(
+          "Mean" = "Mean",
+          "1 SEM" = "1 SE",
+          "1 Total_Error" = "1 SETOTAL",
+          "2 SEM" = "2 SE",
+          "2 Total_Error" = "2 SETOTAL",
+          "1 SD" = "1 SD Population",
+          "2 SD" = "2 SD Population",
+          "Quantile_Mean" = "Quantile",
+          "Quantile_Total" = "QuantileTOTAL"
+        ),
+        selected = "Mean"
+      ),
+      conditionalPanel(
+        ns = ns,
+        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+        sliderInput(
+          inputId = ns("Quantile"),
+          label = "Estimation quantile",
+          min = 0.01,
+          max = 0.99,
+          value = c(0.9),
+          width = "100%"
+        )
+      ),
+      checkboxInput(
+        inputId = ns("showModel"),
+        label = "Show model estimates",
+        value = T
+      ),
+      tags$hr(),
+      tags$b("Range of dependent variable:"),
+      fluidRow(
+        column(width = 6,
+               numericInput(
+                 inputId = ns("min"),
+                 label = "Min",
+                 value = 0
+               )),
+        column(width = 6,
+               numericInput(
+                 inputId = ns("max"),
+                 label = "Max",
+                 value = 10
+               ))
+      ),
+      selectInput(
+        inputId = ns("limit"),
+        label = "Restriction",
+        choices = list(
+          "No restriction" = "No restriction",
+          "0-1" = "0-1",
+          "0-100" = "0-100"
+        )
+      ),
+      tags$hr(),
+    )
+  }
+
+#' Z Scale Server
+#'
+#' Server function of the module
+#' @param id id of module
+zScaleServer <- function(id, Model, fixCol) {
+  moduleServer(id,
+               function(input, output, session) {
+                 observeEvent(list(input$estType, Model()), {
+                   validate(validInput(Model()))
+
+                   if (fixCol() == FALSE) {
+                     if (input$estType %in% c("1 SETOTAL",
+                                              "2 SETOTAL",
+                                              "1 SD Population",
+                                              "2 SD Population")) {
+                       val <- getDefaultZError(input$estType, Model()$model$range$seTotal)
+                       updateNumericInput(
+                         session,
+                         "min",
+                         value = 0,
+                         min = 0,
+                         max = val * 3
+                       )
+                       updateNumericInput(
+                         session,
+                         "max",
+                         value = val,
+                         min = 0,
+                         max = val * 3
+                       )
+                     }
+
+                     if (input$estType %in% c("1 SE", "2 SE")) {
+                       val <- getDefaultZError(input$estType, Model()$model$range$se)
+                       updateNumericInput(
+                         session,
+                         "min",
+                         value = 0,
+                         min = 0,
+                         max = val * 3
+                       )
+                       updateNumericInput(
+                         session,
+                         "max",
+                         value = val,
+                         min = 0,
+                         max = val * 3
+                       )
+                     }
+
+                     if (!(
+                       input$estType %in% c(
+                         "1 SE",
+                         "1 SETOTAL",
+                         "2 SE",
+                         "2 SETOTAL",
+                         "1 SD Population",
+                         "2 SD Population"
+                       )
+                     )) {
+                       minValue <- getDefaultZMin(Model()$model$range$mean)
+                       maxValue <-
+                         getDefaultZMax(Model()$model$range$mean)
+                       updateNumericInput(
+                         session,
+                         "min",
+                         value = minValue,
+                         min = minValue,
+                         max = maxValue
+                       )
+                       updateNumericInput(
+                         session,
+                         "max",
+                         value = maxValue,
+                         min = minValue,
+                         max = maxValue
+                       )
+                     }
+                   }
+                 })
+
+                 observeEvent(input$limit, {
+                   rangez = c(input$min, input$max)
+                   if (identical(input$limitz, "0-1")) {
+                     rangez <- pmax(0, pmin(1, rangez))
+                     if (rangez[1] == rangez[2]) {
+                       rangez <- c(0, 1)
+                     }
+                     updateNumericInput(session, "min", value = min(rangez))
+                     updateNumericInput(session, "max", value = max(rangez))
+                   }
+
+                   if (identical(input$limitz, "0-100")) {
+                     rangez <- pmax(0, pmin(100, rangez))
+                     if (rangez[1] == rangez[2]) {
+                       rangez <- c(0, 100)
+                     }
+                     updateNumericInput(session, "min", value = min(rangez))
+                     updateNumericInput(session, "max", value = max(rangez))
+                   }
+                 })
+
+                 list(
+                   estType = reactive(input$estType),
+                   Quantile = reactive(input$Quantile),
+                   showModel = reactive(input$showModel),
+                   range = reactive(c(input$min, input$max)),
+                   limit = reactive(input$limit)
+                 )
+               })
+}
+
+#' Get Default Z Error
+#'
+#' @param estType (character) type of estimate
+#' @param range (numeric) range from model output
+getDefaultZError <- function(estType, range) {
+  sdVal <- ifelse(grepl("2", estType), 2, 1)
+  3 * signif(1.1 * max(range) * sdVal, 2)
+}
+
+#' Get Default Z Min
+#'
+#' @param mean mean from model output
+getDefaultZMin <- function(mean) {
+  signif(mean[1] - 0.1 * diff(mean), which(round(abs(
+    diff(mean) / mean[1] * 10 ^ (0:10)
+  ), 0) > 1)[1])
+}
+
+#' Get Default Z Max
+#'
+#' @param mean mean from model output
+getDefaultZMax <- function(mean) {
+  signif(mean[2] + 0.1 * diff(mean), which(round(abs(
+    diff(mean) / mean[2] * 10 ^ (0:10)
+  ), 0) > 1)[1])
+}
+
+## Combined Input ----
 
 #' Slider And Input UI
 #'
