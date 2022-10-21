@@ -460,6 +460,56 @@ zScaleUI <-
 zScaleServer <- function(id, Model, fixCol) {
   moduleServer(id,
                function(input, output, session) {
+                 # prepare refactoring ----
+                 # minVals <- reactiveVal(list(value = 0,
+                 #                             min = 0,
+                 #                             max = 1))
+                 #
+                 # maxVals <- reactiveVal(list(value = 1,
+                 #                             min = 0,
+                 #                             max = 1))
+                 #
+                 # SETotalType <- c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population")
+                 # SEType <- c("1 SE", "2 SE")
+
+                 # observeEvent(list(input$estType, Model()), {
+                 #   req(Model())
+                 #
+                 #   if (input$estType %in% SETotalType) {
+                 #     val <- getDefaultZError(input$estType, Model()$model$range$seTotal)
+                 #     minVals(list(value = 0, min = 0, max = val * 3))
+                 #     maxVals(list(value = val, min = 0, max = val * 3))
+                 #   } else if (input$estType %in% SEType) {
+                 #     val <- getDefaultZError(input$estType, Model()$model$range$se)
+                 #     minVals(list(value = 0, min = 0, max = val * 3))
+                 #     maxVals(list(value = val, min = 0, max = val * 3))
+                 #   } else {
+                 #     minValue <- getDefaultZMin(Model()$model$range$mean)
+                 #     maxValue <- getDefaultZMax(Model()$model$range$mean)
+                 #     minVals(list(value = minValue, min = minValue, max = maxValue))
+                 #     maxVals(list(value = maxValue, min = minValue, max = maxValue))
+                 #   }
+                 # })
+
+                 # observeEvent(list(minVals(), maxVals()), {
+                 #   req(fixCol() == FALSE)
+                 #
+                 #   updateNumericInput(
+                 #     session,
+                 #     "min",
+                 #     value = minVals()$value,
+                 #     min = minVals()$min,
+                 #     max = minVals()$max
+                 #   )
+                 #   updateNumericInput(
+                 #     session,
+                 #     "max",
+                 #     value = maxVals()$value,
+                 #     min = maxVals()$min,
+                 #     max = maxVals()$max
+                 #   )
+                 # })
+
                  observeEvent(list(input$estType, Model()), {
                    validate(validInput(Model()))
 
@@ -535,8 +585,9 @@ zScaleServer <- function(id, Model, fixCol) {
                  })
 
                  observeEvent(input$limit, {
-                   rangez = c(input$min, input$max)
-                   if (identical(input$limitz, "0-1")) {
+                   rangez <- c(input$min, input$max)
+
+                   if (identical(input$limit, "0-1")) {
                      rangez <- pmax(0, pmin(1, rangez))
                      if (rangez[1] == rangez[2]) {
                        rangez <- c(0, 1)
@@ -545,7 +596,7 @@ zScaleServer <- function(id, Model, fixCol) {
                      updateNumericInput(session, "max", value = max(rangez))
                    }
 
-                   if (identical(input$limitz, "0-100")) {
+                   if (identical(input$limit, "0-100")) {
                      rangez <- pmax(0, pmin(100, rangez))
                      if (rangez[1] == rangez[2]) {
                        rangez <- c(0, 100)
