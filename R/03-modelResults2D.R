@@ -507,7 +507,20 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     moveButtons(ns = session$ns)
   })
 
-  zSettings <- zScaleServer("zScale", Model = Model, fixCol = reactive(input$fixCol))
+  zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices = reactive(c(
+                              "Mean" = "Mean",
+                              "1 SEM" = "1 SE",
+                              "1 Total_Error" = "1 SETOTAL",
+                              "2 SEM" = "2 SE",
+                              "2 Total_Error" = "2 SETOTAL",
+                              "1 SD" = "1 SD Population",
+                              "2 SD" = "2 SD Population",
+                              "Quantile_Mean" = "Quantile",
+                              "Quantile_Total" = "QuantileTOTAL"
+                            )))
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 

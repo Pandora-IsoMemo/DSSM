@@ -4,10 +4,16 @@
 \alias{zScaleServer}
 \title{Z Scale Server}
 \usage{
-zScaleServer(id, Model, fixCol)
+zScaleServer(id, Model, fixCol, estimationTypeChoices)
 }
 \arguments{
 \item{id}{id of module}
+
+\item{Model}{(reactive) model output}
+
+\item{fixCol}{(reactive) user input if columns should be fixed, TRUE or FALSE}
+
+\item{estimationTypeChoices}{(reactive) named characters of choices of estimation types}
 }
 \description{
 Server function of the module

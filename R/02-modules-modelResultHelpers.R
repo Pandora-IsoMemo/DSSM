@@ -394,18 +394,7 @@ zScaleUI <-
       selectInput(
         inputId = ns("estType"),
         label = "Estimation type",
-        choices = c(
-          "Mean" = "Mean",
-          "1 SEM" = "1 SE",
-          "1 Total_Error" = "1 SETOTAL",
-          "2 SEM" = "2 SE",
-          "2 Total_Error" = "2 SETOTAL",
-          "1 SD" = "1 SD Population",
-          "2 SD" = "2 SD Population",
-          "Quantile_Mean" = "Quantile",
-          "Quantile_Total" = "QuantileTOTAL"
-        ),
-        selected = "Mean"
+        choices = NULL
       ),
       conditionalPanel(
         ns = ns,
@@ -457,7 +446,10 @@ zScaleUI <-
 #'
 #' Server function of the module
 #' @param id id of module
-zScaleServer <- function(id, Model, fixCol) {
+#' @param Model (reactive) model output
+#' @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
+#' @param estimationTypeChoices (reactive) named characters of choices of estimation types
+zScaleServer <- function(id, Model, fixCol, estimationTypeChoices) {
   moduleServer(id,
                function(input, output, session) {
                  # prepare refactoring ----
@@ -509,6 +501,13 @@ zScaleServer <- function(id, Model, fixCol) {
                  #     max = maxVals()$max
                  #   )
                  # })
+
+                 observeEvent(estimationTypeChoices(), {
+                   updateSelectInput(session,
+                                     "estType",
+                                     choices = estimationTypeChoices(),
+                                     selected = "Mean")
+                 })
 
                  observeEvent(list(input$estType, Model()), {
                    validate(validInput(Model()))
