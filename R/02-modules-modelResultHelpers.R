@@ -472,9 +472,9 @@ zScaleServer <- function(id,
                  })
 
                  observeEvent(list(input$estType, Model()), {
-                   req(Model())
+                   validate(validInput(Model()))
 
-                   if(!fixCol()) zValuesFun(input$estType, Model()$model) else
+                   if(!fixCol()) zValues(zValuesFun(input$estType, Model()$model)) else
                      zValues(NULL)
                  })
 
