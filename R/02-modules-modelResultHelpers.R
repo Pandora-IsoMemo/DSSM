@@ -386,28 +386,10 @@ mapSectionServer <- function(id,
 #' UI of the module
 #'
 #' @param id id of module
-#' @param label label
 zScaleUI <-
-  function(id, label) {
+  function(id) {
     ns <- NS(id)
     tagList(
-      selectInput(
-        inputId = ns("estType"),
-        label = "Estimation type",
-        choices = NULL
-      ),
-      conditionalPanel(
-        ns = ns,
-        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
-        sliderInput(
-          inputId = ns("Quantile"),
-          label = "Estimation quantile",
-          min = 0.01,
-          max = 0.99,
-          value = c(0.9),
-          width = "100%"
-        )
-      ),
       checkboxInput(
         inputId = ns("showModel"),
         label = "Show model estimates",
@@ -429,13 +411,17 @@ zScaleUI <-
                  value = 10
                ))
       ),
-      selectInput(
-        inputId = ns("limit"),
-        label = "Restriction",
-        choices = list(
-          "No restriction" = "No restriction",
-          "0-1" = "0-1",
-          "0-100" = "0-100"
+      conditionalPanel(
+        ns = ns,
+        condition = "output.restrictOption == 'show'",
+        selectInput(
+          inputId = ns("limit"),
+          label = "Restriction",
+          choices = list(
+            "No restriction" = "No restriction",
+            "0-1" = "0-1",
+            "0-100" = "0-100"
+          )
         )
       ),
       tags$hr(),
@@ -446,144 +432,44 @@ zScaleUI <-
 #'
 #' Server function of the module
 #' @param id id of module
-#' @param Model (reactive) model output
-#' @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
-#' @param estimationTypeChoices (reactive) named characters of choices of estimation types
-zScaleServer <- function(id, Model, fixCol, estimationTypeChoices) {
+#' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
+#' restrict the z scale.
+#' @param zValues (reactive) list with default values for valueMin, valueMax, min, max
+zScaleServer <- function(id,
+                         restrictOption,
+                         zValues
+                         ) {
   moduleServer(id,
                function(input, output, session) {
-                 # prepare refactoring ----
-                 # minVals <- reactiveVal(list(value = 0,
-                 #                             min = 0,
-                 #                             max = 1))
-                 #
-                 # maxVals <- reactiveVal(list(value = 1,
-                 #                             min = 0,
-                 #                             max = 1))
-                 #
-                 # SETotalType <- c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population")
-                 # SEType <- c("1 SE", "2 SE")
 
-                 # observeEvent(list(input$estType, Model()), {
-                 #   req(Model())
-                 #
-                 #   if (input$estType %in% SETotalType) {
-                 #     val <- getDefaultZError(input$estType, Model()$model$range$seTotal)
-                 #     minVals(list(value = 0, min = 0, max = val * 3))
-                 #     maxVals(list(value = val, min = 0, max = val * 3))
-                 #   } else if (input$estType %in% SEType) {
-                 #     val <- getDefaultZError(input$estType, Model()$model$range$se)
-                 #     minVals(list(value = 0, min = 0, max = val * 3))
-                 #     maxVals(list(value = val, min = 0, max = val * 3))
-                 #   } else {
-                 #     minValue <- getDefaultZMin(Model()$model$range$mean)
-                 #     maxValue <- getDefaultZMax(Model()$model$range$mean)
-                 #     minVals(list(value = minValue, min = minValue, max = maxValue))
-                 #     maxVals(list(value = maxValue, min = minValue, max = maxValue))
-                 #   }
-                 # })
+                 observeEvent(zValues(), {
+                   req(zValues())
 
-                 # observeEvent(list(minVals(), maxVals()), {
-                 #   req(fixCol() == FALSE)
-                 #
-                 #   updateNumericInput(
-                 #     session,
-                 #     "min",
-                 #     value = minVals()$value,
-                 #     min = minVals()$min,
-                 #     max = minVals()$max
-                 #   )
-                 #   updateNumericInput(
-                 #     session,
-                 #     "max",
-                 #     value = maxVals()$value,
-                 #     min = maxVals()$min,
-                 #     max = maxVals()$max
-                 #   )
-                 # })
+                   updateNumericInput(
+                     session,
+                     "min",
+                     value = zValues()$valueMin,
+                     min = zValues()$min,
+                     max = zValues()$max
+                   )
 
-                 observeEvent(estimationTypeChoices(), {
-                   updateSelectInput(session,
-                                     "estType",
-                                     choices = estimationTypeChoices(),
-                                     selected = "Mean")
+                   updateNumericInput(
+                     session,
+                     "max",
+                     value = zValues()$valueMax,
+                     min = zValues()$min,
+                     max = zValues()$max
+                   )
                  })
 
-                 observeEvent(list(input$estType, Model()), {
-                   validate(validInput(Model()))
+                 output$restrictOption <- renderText({restrictOption()})
+                 outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
 
-                   if (fixCol() == FALSE) {
-                     if (input$estType %in% c("1 SETOTAL",
-                                              "2 SETOTAL",
-                                              "1 SD Population",
-                                              "2 SD Population")) {
-                       val <- getDefaultZError(input$estType, Model()$model$range$seTotal)
-                       updateNumericInput(
-                         session,
-                         "min",
-                         value = 0,
-                         min = 0,
-                         max = val * 3
-                       )
-                       updateNumericInput(
-                         session,
-                         "max",
-                         value = val,
-                         min = 0,
-                         max = val * 3
-                       )
-                     }
-
-                     if (input$estType %in% c("1 SE", "2 SE")) {
-                       val <- getDefaultZError(input$estType, Model()$model$range$se)
-                       updateNumericInput(
-                         session,
-                         "min",
-                         value = 0,
-                         min = 0,
-                         max = val * 3
-                       )
-                       updateNumericInput(
-                         session,
-                         "max",
-                         value = val,
-                         min = 0,
-                         max = val * 3
-                       )
-                     }
-
-                     if (!(
-                       input$estType %in% c(
-                         "1 SE",
-                         "1 SETOTAL",
-                         "2 SE",
-                         "2 SETOTAL",
-                         "1 SD Population",
-                         "2 SD Population"
-                       )
-                     )) {
-                       minValue <- getDefaultZMin(Model()$model$range$mean)
-                       maxValue <-
-                         getDefaultZMax(Model()$model$range$mean)
-                       updateNumericInput(
-                         session,
-                         "min",
-                         value = minValue,
-                         min = minValue,
-                         max = maxValue
-                       )
-                       updateNumericInput(
-                         session,
-                         "max",
-                         value = maxValue,
-                         min = minValue,
-                         max = maxValue
-                       )
-                     }
-                   }
-                 })
+                 scaleLimit <- reactiveVal(NULL)
 
                  observeEvent(input$limit, {
+                   req(restrictOption() == "show")
+
                    rangez <- c(input$min, input$max)
 
                    if (identical(input$limit, "0-1")) {
@@ -603,23 +489,90 @@ zScaleServer <- function(id, Model, fixCol, estimationTypeChoices) {
                      updateNumericInput(session, "min", value = min(rangez))
                      updateNumericInput(session, "max", value = max(rangez))
                    }
+
+                   scaleLimit(input$limit)
                  })
 
                  list(
-                   estType = reactive(input$estType),
-                   Quantile = reactive(input$Quantile),
                    showModel = reactive(input$showModel),
                    range = reactive(c(input$min, input$max)),
-                   limit = reactive(input$limit)
+                   limit = scaleLimit
                  )
                })
 }
 
+
+#' Get Z Values Kernel
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+getZValuesKernel <- function(estimationType, model) {
+  if (is.null(model)) return(NULL)
+  browser()
+  if(estimationType %in% c("1 SE", "2 SE")){
+    sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+    zValues <- as.vector(apply(sapply(1:length(model), function(x) model[[x]]$estimate), 1, sd)) * sdVal
+  } else {
+    zValues <- as.vector(rowMeans(sapply(1:length(model), function(x) model[[x]]$estimate))) * 1.25
+  }
+  minValue <- 0
+  maxValue <- signif(max(zValues, na.rm = TRUE), 2)
+
+  list(valueMin = minValue,
+       valueMax = maxValue,
+       min = minValue,
+       max = maxValue)
+
+}
+
+
+#' Get Z Values
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+getZvalues <- function(estimationType, model) {
+  if (is.null(model)) return(NULL)
+  browser()
+  if (estimationType %in% c("1 SETOTAL",
+                           "2 SETOTAL",
+                           "1 SD Population",
+                           "2 SD Population")) {
+    val <- getDefaultZError(estimationType, model$range$seTotal)
+
+    defaultMin <- 0
+    defaultMax <- val * 3
+    defaultValueMin <- 0
+    defaultValueMax <- val
+  }
+
+  if (estimationType %in% c("1 SE", "2 SE")) {
+    val <- getDefaultZError(estimationType, model$range$se)
+
+    defaultMin <- 0
+    defaultMax <- val * 3
+    defaultValueMin <- 0
+    defaultValueMax <- val
+  }
+
+  if (estimationType %in% c("Mean", "Quantile", "QuantileTotal")
+  ) {
+    defaultMin <- getDefaultZMin(model$range$mean)
+    defaultMax <- getDefaultZMax(model$range$mean)
+    defaultValueMin <- defaultMin
+    defaultValueMax <- defaultMax
+  }
+
+  list(valueMin = defaultValueMin,
+       valueMax = defaultValueMax,
+       min = defaultMin,
+       max = defaultMax)
+}
+
+
 #' Get Default Z Error
 #'
-#' @param estType (character) type of estimate
 #' @param range (numeric) range from model output
-getDefaultZError <- function(estType, range) {
+getDefaultZError <- function(range) {
   sdVal <- ifelse(grepl("2", estType), 2, 1)
   3 * signif(1.1 * max(range) * sdVal, 2)
 }

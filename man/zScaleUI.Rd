@@ -4,12 +4,10 @@
 \alias{zScaleUI}
 \title{Z Scale UI}
 \usage{
-zScaleUI(id, label)
+zScaleUI(id)
 }
 \arguments{
 \item{id}{id of module}
-
-\item{label}{label}
 }
 \description{
 UI of the module

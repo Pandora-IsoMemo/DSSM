@@ -180,6 +180,9 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
       # right sidebar ----
         sidebarPanel(
           width = 2,
+          radioButtons(inputId = ns("Centering"),
+                       label = "Map Centering",
+                       choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
           selectInput(inputId = ns("estType"), label = "Estimation type",
                        choices = c("Mean", "1 SE", "2 SE", "Quantile"),
                        selected = "Mean"),
@@ -190,13 +193,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Estimation quantile",
                         min = 0.01, max = 0.99, value = c(0.9), width = "100%")
           ),
-          radioButtons(inputId = ns("Centering"),
-                       label = "Map Centering",
-                       choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                        selected = 1),
@@ -496,19 +493,11 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-        if(input$estType %in% c("1 SE", "2 SE")){
-          sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-          zValues <- as.vector(apply(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate), 1, sd)) * sdVal
-        } else {
-          zValues <- as.vector(rowMeans(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate))) * 1.25
-        }
-        minValue <- 0
-        maxValue <- signif(max(zValues, na.rm = TRUE), 2)
-        updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-  })
+  zSettings <- zScaleServer("zScale",
+                            restrictOption = reactive("hide"),
+                            zValues = reactive({
+                              if(!input$fixCol) getZValuesKernel(input$estType, Model()$model) else NULL
+                              }))
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
@@ -721,8 +710,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         pointSize = input$pointSize,
         rangex = values$rangex,
         rangey = values$rangey,
-        rangez = c(input$rangezMin, input$rangezMax),
-        limitz = input$limitz,
+        rangez = zSettings$range(),#c(input$rangezMin, input$rangezMax),
+        limitz = zSettings$limit(),#input$limitz,
         resolution = input$resolution,
         interior = input$interior,
         mask = input$mask,
@@ -730,7 +719,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         ncol = values$ncol,
         pColor = input$pointCol,
         estType = input$estType,
-        showModel = input$showModel,
+        showModel = zSettings$showModel(),#input$showModel,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
         pointLabels = pointLabels,

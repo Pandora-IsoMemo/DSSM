@@ -4,16 +4,15 @@
 \alias{zScaleServer}
 \title{Z Scale Server}
 \usage{
-zScaleServer(id, Model, fixCol, estimationTypeChoices)
+zScaleServer(id, restrictOption, zValues)
 }
 \arguments{
 \item{id}{id of module}
 
-\item{Model}{(reactive) model output}
+\item{restrictOption}{(reactive) either "hide" or "show". If "show" than add user input to
+restrict the z scale.}
 
-\item{fixCol}{(reactive) user input if columns should be fixed, TRUE or FALSE}
-
-\item{estimationTypeChoices}{(reactive) named characters of choices of estimation types}
+\item{zValues}{(reactive) list with default values for valueMin, valueMax, min, max}
 }
 \description{
 Server function of the module

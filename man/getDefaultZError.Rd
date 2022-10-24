@@ -4,11 +4,9 @@
 \alias{getDefaultZError}
 \title{Get Default Z Error}
 \usage{
-getDefaultZError(estType, range)
+getDefaultZError(range)
 }
 \arguments{
-\item{estType}{(character) type of estimate}
-
 \item{range}{(numeric) range from model output}
 }
 \description{

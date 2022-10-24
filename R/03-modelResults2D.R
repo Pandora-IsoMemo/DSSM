@@ -230,6 +230,34 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          selectInput(
+            inputId = ns("estType"),
+            label = "Estimation type",
+            choices = c(
+              "Mean" = "Mean",
+              "1 SEM" = "1 SE",
+              "1 Total_Error" = "1 SETOTAL",
+              "2 SEM" = "2 SE",
+              "2 Total_Error" = "2 SETOTAL",
+              "1 SD" = "1 SD Population",
+              "2 SD" = "2 SD Population",
+              "Quantile_Mean" = "Quantile",
+              "Quantile_Total" = "QuantileTOTAL"
+            ),
+            selected = "Mean"
+          ),
+          conditionalPanel(
+            ns = ns,
+            condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+            sliderInput(
+              inputId = ns("Quantile"),
+              label = "Estimation quantile",
+              min = 0.01,
+              max = 0.99,
+              value = c(0.9),
+              width = "100%"
+            )
+          ),
           zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                       choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -508,19 +536,11 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   zSettings <- zScaleServer("zScale",
-                            Model = Model,
-                            fixCol = reactive(input$fixCol),
-                            estimationTypeChoices = reactive(c(
-                              "Mean" = "Mean",
-                              "1 SEM" = "1 SE",
-                              "1 Total_Error" = "1 SETOTAL",
-                              "2 SEM" = "2 SE",
-                              "2 Total_Error" = "2 SETOTAL",
-                              "1 SD" = "1 SD Population",
-                              "2 SD" = "2 SD Population",
-                              "Quantile_Mean" = "Quantile",
-                              "Quantile_Total" = "QuantileTOTAL"
-                            )))
+                            restrictOption = reactive("show"),
+                            zValues = reactive({
+                              if(!input$fixCol) getZvalues(input$estType, Model()$model) else NULL
+                              })
+                            )
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
@@ -738,8 +758,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       plotMap(
         model,
-        estType = zSettings$estType(),
-        estQuantile = zSettings$Quantile(),
+        estType = input$estType,
+        estQuantile = input$Quantile,
         points = input$points,
         pointSize = input$pointSize,
         StdErr = input$StdErr,
