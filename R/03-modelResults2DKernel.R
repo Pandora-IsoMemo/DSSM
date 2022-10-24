@@ -183,16 +183,6 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          selectInput(inputId = ns("estType"), label = "Estimation type",
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -494,10 +484,13 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices =
+                              reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
                             restrictOption = reactive("hide"),
-                            zValues = reactive({
-                              if(!input$fixCol) getZValuesKernel(input$estType, Model()$model) else NULL
-                              }))
+                            zValuesFun = getZValuesKernel
+                            )
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
@@ -718,7 +711,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         maskRadius = input$maskRadius,
         ncol = values$ncol,
         pColor = input$pointCol,
-        estType = input$estType,
+        estType = zSettings$estType(),
         showModel = zSettings$showModel(),
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,

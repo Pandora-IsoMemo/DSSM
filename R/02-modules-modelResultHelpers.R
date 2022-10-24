@@ -390,6 +390,23 @@ zScaleUI <-
   function(id) {
     ns <- NS(id)
     tagList(
+      selectInput(
+        inputId = ns("estType"),
+        label = "Estimation type",
+        choices = NULL,
+      ),
+      conditionalPanel(
+        ns = ns,
+        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+        sliderInput(
+          inputId = ns("Quantile"),
+          label = "Estimation quantile",
+          min = 0.01,
+          max = 0.99,
+          value = c(0.9),
+          width = "100%"
+        )
+      ),
       checkboxInput(
         inputId = ns("showModel"),
         label = "Show model estimates",
@@ -432,14 +449,35 @@ zScaleUI <-
 #'
 #' Server function of the module
 #' @param id id of module
+#' @param Model (reactive) model output
+#' @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
+#' @param estimationTypeChoices (reactive) named characters of choices of estimation types
 #' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
 #' restrict the z scale.
-#' @param zValues (reactive) list with default values for valueMin, valueMax, min, max
 zScaleServer <- function(id,
+                         Model,
+                         fixCol,
+                         estimationTypeChoices,
                          restrictOption,
-                         zValues) {
+                         zValuesFun) {
   moduleServer(id,
                function(input, output, session) {
+                 zValues <- reactiveVal(NULL)
+
+                 observeEvent(estimationTypeChoices(), {
+                   updateSelectInput(session,
+                                     "estType",
+                                     choices = estimationTypeChoices(),
+                                     selected = "Mean")
+                 })
+
+                 observeEvent(list(input$estType, Model()), {
+                   req(Model())
+
+                   if(!fixCol()) zValuesFun(input$estType, Model()$model) else
+                     zValues(NULL)
+                 })
+
                  observeEvent(zValues(), {
                    req(zValues())
 
@@ -495,6 +533,8 @@ zScaleServer <- function(id,
                  })
 
                  list(
+                   estType = reactive(input$estType),
+                   Quantile = reactive(input$Quantile),
                    showModel = reactive(input$showModel),
                    range = reactive(c(input$min, input$max)),
                    limit = scaleLimit
