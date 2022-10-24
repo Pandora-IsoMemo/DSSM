@@ -437,11 +437,9 @@ zScaleUI <-
 #' @param zValues (reactive) list with default values for valueMin, valueMax, min, max
 zScaleServer <- function(id,
                          restrictOption,
-                         zValues
-                         ) {
+                         zValues) {
   moduleServer(id,
                function(input, output, session) {
-
                  observeEvent(zValues(), {
                    req(zValues())
 
@@ -462,7 +460,10 @@ zScaleServer <- function(id,
                    )
                  })
 
-                 output$restrictOption <- renderText({restrictOption()})
+                 output$restrictOption <-
+                   renderText({
+                     restrictOption()
+                   })
                  outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
 
                  scaleLimit <- reactiveVal(NULL)
@@ -507,22 +508,28 @@ zScaleServer <- function(id,
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
 getZValuesKernel <- function(estimationType, model) {
-  if (is.null(model)) return(NULL)
-  browser()
-  if(estimationType %in% c("1 SE", "2 SE")){
+  if (is.null(model))
+    return(NULL)
+
+  if (estimationType %in% c("1 SE", "2 SE")) {
     sdVal <- ifelse(grepl("2", estimationType), 2, 1)
-    zValues <- as.vector(apply(sapply(1:length(model), function(x) model[[x]]$estimate), 1, sd)) * sdVal
+    zValues <-
+      as.vector(apply(sapply(1:length(model), function(x)
+        model[[x]]$estimate), 1, sd)) * sdVal
   } else {
-    zValues <- as.vector(rowMeans(sapply(1:length(model), function(x) model[[x]]$estimate))) * 1.25
+    zValues <-
+      as.vector(rowMeans(sapply(1:length(model), function(x)
+        model[[x]]$estimate))) * 1.25
   }
-  minValue <- 0
+
   maxValue <- signif(max(zValues, na.rm = TRUE), 2)
 
-  list(valueMin = minValue,
-       valueMax = maxValue,
-       min = minValue,
-       max = maxValue)
-
+  return(list(
+    valueMin = 0,
+    valueMax = maxValue,
+    min = 0,
+    max = maxValue
+  ))
 }
 
 
@@ -531,48 +538,45 @@ getZValuesKernel <- function(estimationType, model) {
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
 getZvalues <- function(estimationType, model) {
-  if (is.null(model)) return(NULL)
-  browser()
-  if (estimationType %in% c("1 SETOTAL",
-                           "2 SETOTAL",
-                           "1 SD Population",
-                           "2 SD Population")) {
-    val <- getDefaultZError(estimationType, model$range$seTotal)
+  if (is.null(model))
+    return(NULL)
 
-    defaultMin <- 0
-    defaultMax <- val * 3
-    defaultValueMin <- 0
-    defaultValueMax <- val
+  if (estimationType %in% c("Mean", "Quantile", "QuantileTotal")) {
+    defaultMin <- getDefaultZMin(model$range$mean)
+    defaultMax <- getDefaultZMax(model$range$mean)
+
+    return(
+      list(
+        valueMin = defaultMin,
+        valueMax = defaultMax,
+        min = defaultMin,
+        max = defaultMax
+      )
+    )
+  }
+
+  if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population")) {
+    val <- getDefaultZError(estimationType, model$range$seTotal)
   }
 
   if (estimationType %in% c("1 SE", "2 SE")) {
     val <- getDefaultZError(estimationType, model$range$se)
-
-    defaultMin <- 0
-    defaultMax <- val * 3
-    defaultValueMin <- 0
-    defaultValueMax <- val
   }
 
-  if (estimationType %in% c("Mean", "Quantile", "QuantileTotal")
-  ) {
-    defaultMin <- getDefaultZMin(model$range$mean)
-    defaultMax <- getDefaultZMax(model$range$mean)
-    defaultValueMin <- defaultMin
-    defaultValueMax <- defaultMax
-  }
-
-  list(valueMin = defaultValueMin,
-       valueMax = defaultValueMax,
-       min = defaultMin,
-       max = defaultMax)
+  return(list(
+    valueMin = 0,
+    valueMax = val,
+    min = 0,
+    max = val * 3
+  ))
 }
 
 
 #' Get Default Z Error
 #'
+#' @param estType (character) type of estimate
 #' @param range (numeric) range from model output
-getDefaultZError <- function(range) {
+getDefaultZError <- function(estType, range) {
   sdVal <- ifelse(grepl("2", estType), 2, 1)
   3 * signif(1.1 * max(range) * sdVal, 2)
 }
