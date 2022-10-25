@@ -10,7 +10,8 @@ zScaleServer(
   fixCol,
   estimationTypeChoices,
   restrictOption,
-  zValuesFun
+  zValuesFun,
+  mapType = reactive("Map")
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ zScaleServer(
 
 \item{restrictOption}{(reactive) either "hide" or "show". If "show" than add user input to
 restrict the z scale.}
+
+\item{zValuesFun}{(reactive) function to extract zValues, either getZValues or getZValuesKernel}
+
+\item{mapType}{(reactive) type of map, either "Map" or "Time course"}
 }
 \description{
 Server function of the module

@@ -454,12 +454,15 @@ zScaleUI <-
 #' @param estimationTypeChoices (reactive) named characters of choices of estimation types
 #' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
 #' restrict the z scale.
+#' @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
+#' @param mapType (reactive) type of map, either "Map" or "Time course"
 zScaleServer <- function(id,
                          Model,
                          fixCol,
                          estimationTypeChoices,
                          restrictOption,
-                         zValuesFun) {
+                         zValuesFun,
+                         mapType = reactive("Map")) {
   moduleServer(id,
                function(input, output, session) {
                  zValues <- reactiveVal(NULL)
@@ -483,7 +486,12 @@ zScaleServer <- function(id,
                    req(input$estType)
                    validate(validInput(Model()))
 
-                   if(!fixCol()) zValues(zValuesFun(input$estType, Model()$model)) else
+                   if (!fixCol())
+                     zValues(zValuesFun(estimationType = input$estType,
+                                        model = Model()$model,
+                                        mapType = mapType()
+                                        ))
+                   else
                      zValues(NULL)
                  })
 
@@ -507,7 +515,8 @@ zScaleServer <- function(id,
                    )
 
                    values$estType <- input$estType
-                   values$range <- c(zValues()$valueMin, zValues()$valueMax)
+                   values$range <-
+                     c(zValues()$valueMin, zValues()$valueMax)
 
                    req(input$Quantile)
                    values$Quantile <- input$Quantile
@@ -563,7 +572,8 @@ zScaleServer <- function(id,
 #'
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
-getZValuesKernel <- function(estimationType, model) {
+#' @param mapType (character) type of map, either "Map" or "Time course"
+getZValuesKernel <- function(estimationType, model, mapType) {
   if (is.null(model))
     return(NULL)
 
@@ -593,9 +603,32 @@ getZValuesKernel <- function(estimationType, model) {
 #'
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
-getZvalues <- function(estimationType, model) {
+#' @param mapType (character) type of map, either "Map" or "Time course"
+getZvalues <- function(estimationType, model, mapType) {
   if (is.null(model))
     return(NULL)
+
+  if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") &&
+      mapType != "Time course") {
+    val <- getDefaultZError(estimationType, model$range$seTotal)
+    return(list(
+      valueMin = 0,
+      valueMax = val,
+      min = 0,
+      max = val * 3
+    ))
+  }
+
+  if (estimationType %in% c("1 SE", "2 SE")  &&
+      mapType != "Time course") {
+    val <- getDefaultZError(estimationType, model$range$se)
+    return(list(
+      valueMin = 0,
+      valueMax = val,
+      min = 0,
+      max = val * 3
+    ))
+  }
 
   if (estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
     defaultMin <- getDefaultZMin(model$range$mean)
@@ -610,21 +643,6 @@ getZvalues <- function(estimationType, model) {
       )
     )
   }
-
-  if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population")) {
-    val <- getDefaultZError(estimationType, model$range$seTotal)
-  }
-
-  if (estimationType %in% c("1 SE", "2 SE")) {
-    val <- getDefaultZError(estimationType, model$range$se)
-  }
-
-  return(list(
-    valueMin = 0,
-    valueMax = val,
-    min = 0,
-    max = val * 3
-  ))
 }
 
 

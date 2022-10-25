@@ -4,12 +4,14 @@
 \alias{getZValuesKernel}
 \title{Get Z Values Kernel}
 \usage{
-getZValuesKernel(estimationType, model)
+getZValuesKernel(estimationType, model, mapType)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
 
 \item{model}{(list) model output}
+
+\item{mapType}{(character) type of map, either "Map" or "Time course"}
 }
 \description{
 Get Z Values Kernel
