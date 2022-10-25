@@ -739,20 +739,22 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         }
       }
 
+      req(zSettings$estType, zSettings$showModel)
+
       plotMap(
         model,
-        estType = zSettings$estType(),
-        estQuantile = zSettings$Quantile(),
+        estType = zSettings$estType,
+        estQuantile = zSettings$Quantile,
         points = input$points,
         pointSize = input$pointSize,
         StdErr = input$StdErr,
         rangex = values$rangex,
         rangey = values$rangey,
-        rangez = zSettings$range(),
+        rangez = zSettings$range,
         mask = input$mask,
         maskRadius = input$maskRadius,
-        showModel = zSettings$showModel(),
-        limitz = zSettings$limit(),
+        showModel = zSettings$showModel,
+        limitz = zSettings$limit,
         resolution = input$resolution,
         interior = input$interior,
         ncol = values$ncol,

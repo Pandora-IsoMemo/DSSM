@@ -697,22 +697,24 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         }
       }
 
+      req(zSettings$estType, zSettings$showModel)
+
       plotMap(
         model,
         points = input$points,
         pointSize = input$pointSize,
         rangex = values$rangex,
         rangey = values$rangey,
-        rangez = zSettings$range(),
-        limitz = zSettings$limit(),
+        rangez = zSettings$range,
+        limitz = zSettings$limit,
         resolution = input$resolution,
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
         ncol = values$ncol,
         pColor = input$pointCol,
-        estType = zSettings$estType(),
-        showModel = zSettings$showModel(),
+        estType = zSettings$estType,
+        showModel = zSettings$showModel,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
         pointLabels = pointLabels,

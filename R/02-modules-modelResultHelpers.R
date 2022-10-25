@@ -464,6 +464,14 @@ zScaleServer <- function(id,
                function(input, output, session) {
                  zValues <- reactiveVal(NULL)
 
+                 values <- reactiveValues(
+                   estType = NULL,
+                   Quantile = NULL,
+                   showModel = NULL,
+                   range = NULL,
+                   limit = NULL
+                 )
+
                  observeEvent(estimationTypeChoices(), {
                    updateSelectInput(session,
                                      "estType",
@@ -472,6 +480,7 @@ zScaleServer <- function(id,
                  })
 
                  observeEvent(list(input$estType, Model()), {
+                   req(input$estType)
                    validate(validInput(Model()))
 
                    if(!fixCol()) zValues(zValuesFun(input$estType, Model()$model)) else
@@ -496,6 +505,12 @@ zScaleServer <- function(id,
                      min = zValues()$min,
                      max = zValues()$max
                    )
+
+                   values$estType <- input$estType
+                   values$range <- c(zValues()$valueMin, zValues()$valueMax)
+
+                   req(input$Quantile)
+                   values$Quantile <- input$Quantile
                  })
 
                  output$restrictOption <-
@@ -503,8 +518,6 @@ zScaleServer <- function(id,
                      restrictOption()
                    })
                  outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
-
-                 scaleLimit <- reactiveVal(NULL)
 
                  observeEvent(input$limit, {
                    req(restrictOption() == "show")
@@ -516,8 +529,6 @@ zScaleServer <- function(id,
                      if (rangez[1] == rangez[2]) {
                        rangez <- c(0, 1)
                      }
-                     updateNumericInput(session, "min", value = min(rangez))
-                     updateNumericInput(session, "max", value = max(rangez))
                    }
 
                    if (identical(input$limit, "0-100")) {
@@ -525,20 +536,25 @@ zScaleServer <- function(id,
                      if (rangez[1] == rangez[2]) {
                        rangez <- c(0, 100)
                      }
-                     updateNumericInput(session, "min", value = min(rangez))
-                     updateNumericInput(session, "max", value = max(rangez))
                    }
 
-                   scaleLimit(input$limit)
+                   updateNumericInput(session, "min", value = min(rangez))
+                   updateNumericInput(session, "max", value = max(rangez))
+
+                   values$range <- c(min(rangez), max(rangez))
+                   values$limit <- input$limit
                  })
 
-                 list(
-                   estType = reactive(input$estType),
-                   Quantile = reactive(input$Quantile),
-                   showModel = reactive(input$showModel),
-                   range = reactive(c(input$min, input$max)),
-                   limit = scaleLimit
-                 )
+                 observeEvent(input$Quantile, {
+                   values$estType <- input$estType
+                   values$Quantile <- input$Quantile
+                 })
+
+                 observeEvent(input$showModel, {
+                   values$showModel <- input$showModel
+                 })
+
+                 values
                })
 }
 
