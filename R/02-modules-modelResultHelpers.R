@@ -597,7 +597,7 @@ getZvalues <- function(estimationType, model) {
   if (is.null(model))
     return(NULL)
 
-  if (estimationType %in% c("Mean", "Quantile", "QuantileTotal")) {
+  if (estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
     defaultMin <- getDefaultZMin(model$range$mean)
     defaultMax <- getDefaultZMax(model$range$mean)
 
