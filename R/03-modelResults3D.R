@@ -610,21 +610,43 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     moveButtons(ns = session$ns)
   })
 
+  estimationTypeChoices <- reactiveVal(c(
+    "Mean" = "Mean",
+    "1 SEM" = "1 SE",
+    "1 Total_Error" = "1 SETOTAL",
+    "2 SEM" = "2 SE",
+    "2 Total_Error" = "2 SETOTAL",
+    "1 SD" = "1 SD Population",
+    "2 SD" = "2 SD Population",
+    "Quantile_Mean" = "Quantile",
+    "Quantile_Total" = "QuantileTOTAL"
+  ))
+
+  observeEvent(input$mapType, {
+    choices <- switch(
+      input$mapType,
+      "Map" = c("Mean" = "Mean",
+                "1 SEM" = "1 SE",
+                "1 Total_Error" = "1 SETOTAL",
+                "2 SEM" = "2 SE",
+                "2 Total_Error" = "2 SETOTAL",
+                "1 SD" = "1 SD Population",
+                "2 SD" = "2 SD Population",
+                "Quantile_Mean" = "Quantile",
+                "Quantile_Total" = "QuantileTOTAL"),
+      "Time course" = c("Mean" = "Mean",
+                        "Quantile_Mean" = "Quantile",
+                        "Quantile_Total" = "QuantileTOTAL")
+    )
+
+    estimationTypeChoices(choices)
+  })
+
   zSettings <- zScaleServer("zScale",
                             mapType = reactive(input$mapType),
                             Model = Model,
                             fixCol = reactive(input$fixCol),
-                            estimationTypeChoices = reactive(c(
-                              "Mean" = "Mean",
-                              "1 SEM" = "1 SE",
-                              "1 Total_Error" = "1 SETOTAL",
-                              "2 SEM" = "2 SE",
-                              "2 Total_Error" = "2 SETOTAL",
-                              "1 SD" = "1 SD Population",
-                              "2 SD" = "2 SD Population",
-                              "Quantile_Mean" = "Quantile",
-                              "Quantile_Total" = "QuantileTOTAL"
-                            )),
+                            estimationTypeChoices = estimationTypeChoices,
                             restrictOption = reactive("show"),
                             zValuesFun = getZvalues
   )
