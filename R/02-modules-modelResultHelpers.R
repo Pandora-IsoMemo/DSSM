@@ -412,7 +412,7 @@ zScaleUI <-
         label = "Show model estimates",
         value = TRUE
       ),
-      tags$b("Range of colour scale:"),
+      htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
       numericInput(
         inputId = ns("max"),
         label = "Max range",
@@ -435,8 +435,7 @@ zScaleUI <-
             "0-100" = "0-100"
           )
         )
-      ),
-      tags$hr(),
+      )
     )
   }
 
@@ -472,6 +471,13 @@ zScaleServer <- function(id,
                    limit = NULL
                  )
 
+                 output$titleScaleInput <- renderText({
+                   switch(mapType(),
+                          "Time course" = "Range of y axis:",
+                          "Minima/Maxima" = "Range of y axis:",
+                          "Range of colour scale:")
+                 })
+
                  observeEvent(estimationTypeChoices(), {
                    updateSelectInput(session,
                                      "estType",
@@ -479,7 +485,7 @@ zScaleServer <- function(id,
                                      selected = "Mean")
                  })
 
-                 observeEvent(list(input$estType, Model()), {
+                 observeEvent(list(input$estType, Model(), mapType()), {
                    req(input$estType)
                    validate(validInput(Model()))
 
@@ -494,32 +500,32 @@ zScaleServer <- function(id,
                      )
                    else
                      zModelValues(NULL)
-                 })
 
-                 observeEvent(zModelValues(), {
                    req(zModelValues())
+                   values$estType <- input$estType
+                   values$range <-
+                     c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
 
                    updateNumericInput(
                      session,
                      "min",
-                     value = zModelValues()$valueMin,
-                     min = zModelValues()$min,
-                     max = zModelValues()$max
+                     value = zModelValues()$minInput$value,
+                     min = zModelValues()$minInput$min,
+                     max = zModelValues()$minInput$max
                    )
-
-                   values$estType <- input$estType
-                   values$range <-
-                     c(zModelValues()$valueMin, zModelValues()$valueMax)
 
                    updateNumericInput(
                      session,
                      "max",
-                     value = zModelValues()$valueMax,
-                     min = zModelValues()$min,
-                     max = zModelValues()$max
+                     value = zModelValues()$maxInput$value,
+                     min = zModelValues()$maxInput$min,
+                     max = zModelValues()$maxInput$max
                    )
 
-                   req(input$Quantile)
+                   # reset Quantile
+                   values$Quantile <- NULL
+
+                   req(input$estType %in% c("Quantile", "QuantileTOTAL"))
                    values$Quantile <- input$Quantile
                  })
 
@@ -529,16 +535,20 @@ zScaleServer <- function(id,
                    })
                  outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
 
-                 observeEvent(list(input$min, input$max), {
-                   req(zModelValues(), (values$range[1] != input$min |
-                                          values$range[2] != input$max))
-                   values$range <- c(input$min, input$max)
+                 # react slower on user input
+                 zRange <- reactive(c(input$min, input$max))
+                 zRange_d <- zRange %>% debounce(1000)
+
+                 observeEvent(zRange_d(), {
+                   req(zModelValues(), (values$range[1] != zRange_d()[1] |
+                                          values$range[2] != zRange_d()[2]))
+                   values$range <- zRange_d()
                  })
 
                  observeEvent(input$limit, {
                    req(restrictOption() == "show", zModelValues())
 
-                   rangez <- c(zModelValues()$min, zModelValues()$max)
+                   rangez <- c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
 
                    if (identical(input$limit, "0-1")) {
                      rangez <- pmax(0, pmin(1, rangez))
@@ -588,25 +598,27 @@ getZValuesKernel <-
     if (is.null(model))
       return(NULL)
 
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
     if (estimationType %in% c("1 SE", "2 SE")) {
       sdVal <- ifelse(grepl("2", estimationType), 2, 1)
-      zValues <-
+      zRange <-
         as.vector(apply(sapply(1:length(model), function(x)
           model[[x]]$estimate), 1, sd)) * sdVal
     } else {
-      zValues <-
+      zRange <-
         as.vector(rowMeans(sapply(1:length(model), function(x)
           model[[x]]$estimate))) * factor
     }
 
-    maxValue <- signif(max(zValues, na.rm = TRUE), 2)
+    maxValue <- signif(max(zRange, na.rm = TRUE), 2)
 
-    return(list(
-      valueMin = 0,
-      valueMax = maxValue,
-      min = 0,
-      max = maxValue
-    ))
+    zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+    return(zValues)
   }
 
 
@@ -620,41 +632,41 @@ getZvalues <- function(estimationType, model, mapType, factor = 3) {
   if (is.null(model))
     return(NULL)
 
+  zValues <- list(
+    minInput = list(value = 0, min = 0, max = 10),
+    maxInput = list(value = 10, min = 0, max = 10)
+  )
+
+  if(mapType == "Speed"){
+    maxValue <- signif(50000 / diff(model$range$mean), 1)
+
+    zValues$minInput <- list(value = 1,        min = 0, max = maxValue)
+    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue * 100)
+    return(zValues)
+  }
+
+  if (mapType == "Time course" || estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
+    defaultMin <- getDefaultZMin(model$range$mean)
+    defaultMax <- getDefaultZMax(model$range$mean)
+    zValues$minInput <- list(value = defaultMin, min = defaultMin, max = defaultMax)
+    zValues$maxInput <- list(value = defaultMax, min = defaultMin, max = defaultMax)
+    return(zValues)
+  }
+
+  val <- 10   # default value
   if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") &&
       mapType != "Time course") {
     val <- getDefaultZError(estimationType, model$range$seTotal)
-    return(list(
-      valueMin = 0,
-      valueMax = val,
-      min = 0,
-      max = val * factor
-    ))
   }
 
   if (estimationType %in% c("1 SE", "2 SE")  &&
       mapType != "Time course") {
     val <- getDefaultZError(estimationType, model$range$se)
-    return(list(
-      valueMin = 0,
-      valueMax = val,
-      min = 0,
-      max = val * factor
-    ))
   }
 
-  if (estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
-    defaultMin <- getDefaultZMin(model$range$mean)
-    defaultMax <- getDefaultZMax(model$range$mean)
-
-    return(
-      list(
-        valueMin = defaultMin,
-        valueMax = defaultMax,
-        min = defaultMin,
-        max = defaultMax
-      )
-    )
-  }
+  zValues$minInput <- list(value = 0,   min = 0, max = val * factor)
+  zValues$maxInput <- list(value = val, min = 0, max = val * factor)
+  return(zValues)
 }
 
 

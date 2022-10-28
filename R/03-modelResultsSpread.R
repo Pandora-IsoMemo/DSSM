@@ -236,19 +236,7 @@ modelResultsSpreadUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          selectInput(inputId = ns("estType"), label = "Estimation type",
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Spread", "Speed", "Minima/Maxima"),
                        selected = "Spread"),
@@ -547,29 +535,14 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-    if(input$fixCol == FALSE){
-      if(input$mapType == "Speed"){
-        maxValue <- signif(50000 / diff(Model()$model$range$mean), 1)
-        updateNumericInput(session, "rangezMin", value = 1, min = 0, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = 0, max = maxValue * 100)
-      } else {
-      if(input$estType %in% c("1 SE", "2 SE")){
-        sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-        val <- signif(1.1 * max(Model()$model$range$se) * sdVal, 2)
-        updateNumericInput(session, "rangezMin", value = 0, min = 0, max = val * 3)
-        updateNumericInput(session, "rangezMax", value = val, min = 0, max = val * 3)
-      }
-      if(!(input$estType %in% c("1 SE", "2 SE"))){
-        minValue <- signif(Model()$model$range$mean[1] - 0.1 * diff(Model()$model$range$mean), which(round(abs(diff(Model()$model$range$mean) / Model()$model$range$mean[1] * 10^(0:10)), 0) > 1)[1])
-        maxValue <- signif(Model()$model$range$mean[2] + 0.1 * diff(Model()$model$range$mean), which(round(abs(diff(Model()$model$range$mean) / Model()$model$range$mean[2] * 10^(0:10)), 0) > 1)[1])
-        updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-      }
-      }
-    }
-  })
+  zSettings <- zScaleServer("zScale",
+                            mapType = reactive(input$mapType),
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices = reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZvalues,
+                            zValuesFactor = 3)
 
   observe({
     if(input$DateType == "Interval"){
@@ -795,22 +768,24 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         }
       }
 
+      req(zSettings$estType)
+
       plotMap(
         model,
-        estType = input$estType,
-        estQuantile = input$Quantile,
         points = input$points,
         pointSize = input$pointSize,
         StdErr = input$StdErr,
         rangex = values$rangex,
         rangey = values$rangey,
-        rangez = c(input$rangezMin, input$rangezMax),
+        estType = zSettings$estType,
+        estQuantile = zSettings$Quantile,
+        rangez = zSettings$range,
+        showModel = zSettings$showModel,
         resolution = input$resolution,
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
         ncol = values$ncol,
-        showModel = input$showModel,
         pColor = input$pointCol,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
