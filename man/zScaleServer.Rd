@@ -31,7 +31,8 @@ restrict the z scale.}
 
 \item{zValuesFactor}{(numeric) factor applied to zValues}
 
-\item{mapType}{(reactive) type of map, either "Map" or "Time course"}
+\item{mapType}{(reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
+"Minima/Maxima"}
 }
 \description{
 Server function of the module

@@ -449,7 +449,8 @@ zScaleUI <-
 #' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
 #' restrict the z scale.
 #' @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
-#' @param mapType (reactive) type of map, either "Map" or "Time course"
+#' @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
+#'  "Minima/Maxima"
 #' @param zValuesFactor (numeric) factor applied to zValues
 zScaleServer <- function(id,
                          Model,
@@ -493,7 +494,7 @@ zScaleServer <- function(id,
                      zModelValues(
                        zValuesFun(
                          estimationType = input$estType,
-                         model = Model()$model,
+                         model = Model(),
                          mapType = mapType(),
                          factor = zValuesFactor
                        )
@@ -536,7 +537,14 @@ zScaleServer <- function(id,
                  outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
 
                  # react slower on user input
-                 zRange <- reactive(c(input$min, input$max))
+                 zRange <- reactive({
+                   if(input$estType == "Significance (p-value)"){
+                     pmax(0, pmin(1, c(input$min, input$max)))
+                   } else {
+                     c(input$min, input$max)
+                   }
+                 })
+
                  zRange_d <- zRange %>% debounce(1000)
 
                  observeEvent(zRange_d(), {
@@ -587,6 +595,52 @@ zScaleServer <- function(id,
 }
 
 
+#' Get Z Values Map Diff
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZValuesMapDiff <-
+  function(estimationType, model, mapType, factor = 1) {
+    if (is.null(model))
+      return(NULL)
+
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
+    if (estimationType %in% c("Mean", "Quantile", "Significance (p-value)", "Significance (z-value)")) {
+      zRange <- model$Est
+      minValue <- min(zRange, na.rm = TRUE)
+      maxValue <- max(zRange, na.rm = TRUE) * factor
+
+      minValue <- signif(minValue,
+                         which(round(abs(diff(zRange) / minValue * 10^(0:10)), 0) > 1)[1])
+      maxValue <- signif(maxValue,
+                         which(round(abs(diff(zRange) / maxValue * 10^(0:10)), 0) > 1)[1])
+
+      minValue[is.na(minValue)] <- 0
+      maxValue[is.na(maxValue)] <- 0
+
+      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      return(zValues)
+    }
+
+    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+      sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+      zRange <- model$Sd
+      maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
+
+      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      return(zValues)
+    }
+  }
+
+
 #' Get Z Values Kernel
 #'
 #' @param estimationType (character) type of estimate
@@ -595,6 +649,7 @@ zScaleServer <- function(id,
 #' @param factor (numeric) factor applied to estimates
 getZValuesKernel <-
   function(estimationType, model, mapType, factor = 1.25) {
+    model <- model$model
     if (is.null(model))
       return(NULL)
 
@@ -629,6 +684,7 @@ getZValuesKernel <-
 #' @param mapType (character) type of map, either "Map" or "Time course"
 #' @param factor (numeric) factor applied to estimates
 getZvalues <- function(estimationType, model, mapType, factor = 3) {
+  model <- model$model
   if (is.null(model))
     return(NULL)
 

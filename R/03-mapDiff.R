@@ -111,19 +111,7 @@ modelResultsDiffUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          radioButtons(inputId = ns("estType"), label = "Estimation type", inline = TRUE,
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile", "Significance (p-value)", "Significance (z-value)"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                        selected = 1),
@@ -226,7 +214,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   })
 
   observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference", "similarity", "kernel2d", "kernel3d", "user"))
+    choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
+                                            "similarity", "kernel2d", "kernel3d", "user"))
 
     updateSelectInput(session, "targetMap1", choices = choices)
     updateSelectInput(session, "targetMap2", choices = choices)
@@ -422,29 +411,20 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     return(pointDat2D())
   })
 
-  observe({
-    validate(validInput(MapDiff()))
-    if(input$fixCol == FALSE){
-      zValues <- MapDiff()$Est
-      minValue <- signif(min(zValues, na.rm = TRUE), which(round(abs(diff(zValues) / min(zValues, na.rm = TRUE) * 10^(0:10)), 0) > 1)[1])
-      maxValue <- signif(max(zValues, na.rm = TRUE), which(round(abs(diff(zValues) / max(zValues, na.rm = TRUE) * 10^(0:10)), 0) > 1)[1])
-      if(is.na(minValue)){
-        minValue <- 0
-      }
-      if(is.na(maxValue)){
-        maxValue <- 0
-      }
-      updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-      updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-      if(input$estType %in% c("1 SE", "2 SE", "SE")){
-        sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-        zValues <- MapDiff()$Sd
-        maxValue <- signif(max(zValues, na.rm = TRUE) * sdVal, 2)
-        updateNumericInput(session, "rangezMin", value = 0, min = 0, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = 0, max = maxValue)
-      }
-    }
-  })
+  zSettings <- zScaleServer("zScale",
+                            Model = MapDiff,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices = reactive(c(
+                              "Mean",
+                              "1 SE",
+                              "2 SE",
+                              "Quantile",
+                              "Significance (p-value)",
+                              "Significance (z-value)"
+                            )),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZValuesMapDiff,
+                            zValuesFactor = 1)
 
   plotFun <-  reactive({
     validate(validInput(MapDiff()))
@@ -508,19 +488,19 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         values$ncol <- input$ncol
       }
     }
-    rangez <- c(input$rangezMin, input$rangezMax)
-    if(input$estType == "Significance (p-value)"){
-      rangez <- pmax(0, pmin(1, rangez))
-    }
+
+    req(zSettings$estType)
 
     function(...){
       plotDS(MapDiff(),
-             estType = input$estType,
-             estQuantile = input$Quantile,
-             type = "difference", independent = "",
+             type = "difference",
+             independent = "",
              rangex = values$rangex,
              rangey = values$rangey,
-             rangez = rangez,
+             estType = zSettings$estType,
+             estQuantile = zSettings$Quantile,
+             rangez = zSettings$range,
+             showModel = zSettings$showModel,
              colors = input$Colours,
              ncol = values$ncol,
              centerMap = input$Centering,
