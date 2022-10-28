@@ -11,6 +11,7 @@ zScaleServer(
   estimationTypeChoices,
   restrictOption,
   zValuesFun,
+  zValuesFactor,
   mapType = reactive("Map")
 )
 }
@@ -27,6 +28,8 @@ zScaleServer(
 restrict the z scale.}
 
 \item{zValuesFun}{(reactive) function to extract zValues, either getZValues or getZValuesKernel}
+
+\item{zValuesFactor}{(numeric) factor applied to zValues}
 
 \item{mapType}{(reactive) type of map, either "Map" or "Time course"}
 }

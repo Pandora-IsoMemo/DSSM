@@ -219,24 +219,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             ns = ns)
         )
       ),
+      # right sidebar ----
         sidebarPanel(
           width = 2,
-          selectInput(inputId = ns("estType"), label = "Estimation type",
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by cluster"),
                        selected = "Map"),
@@ -606,19 +595,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-    if(input$estType %in% c("1 SE", "2SE")){
-      sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-      zValues <- as.vector(apply(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate), 1, sd)) * sdVal
-    } else {
-      zValues <- as.vector(rowMeans(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate))) * 1.5
-    }
-    minValue <- 0
-    maxValue <- signif(max(zValues, na.rm = TRUE), 2)
-    updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-    updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-  })
+  zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices =
+                              reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZValuesKernel,
+                            zValuesFactor = 1.5)
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -980,6 +964,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         )
       }
 
+        req(zSettings$estType, zSettings$showModel)
+
       if(input$mapType == "Map"){
         plotMap3D(
           model,
@@ -988,17 +974,17 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           pointSize = input$pointSize,
           rangex = values$rangex,
           rangey = values$rangey,
-          rangez = c(input$rangezMin, input$rangezMax),
-          limitz = input$limitz,
+          estType = zSettings$estType,
+          showModel = zSettings$showModel,
+          rangez = zSettings$range,
+          limitz = zSettings$limit,
           addU = input$AddU,
-          estType = input$estType,
           centerMap = input$Centering,
           resolution = input$resolution,
           interior = as.numeric(input$interior),
           mask = input$mask,
           maskRadius = input$maskRadius,
           ncol = values$ncol,
-          showModel = input$showModel,
           pColor = input$pointCol,
           pointShape = as.numeric(input$pointShape),
           textLabels = textLabels,

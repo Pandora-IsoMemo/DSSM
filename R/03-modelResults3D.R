@@ -648,7 +648,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                             fixCol = reactive(input$fixCol),
                             estimationTypeChoices = estimationTypeChoices,
                             restrictOption = reactive("show"),
-                            zValuesFun = getZvalues
+                            zValuesFun = getZvalues,
+                            zValuesFactor = 3
   )
 
   observeEvent(input$up, {
@@ -935,13 +936,13 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        centerY = centerEstimate$centerY(),
                        Radius = centerEstimate$radius(),
                        rangey = zSettings$range,
+                       limitz = zSettings$limit,
                        seType = input$intervalType,
                        pointDat = pointDat,
                        pointsTime = input$pointsTime,
                        returnPred = returnPred,
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
-                       limitz = zSettings$limit,
                        formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
@@ -950,17 +951,17 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           time = time,
           estType = zSettings$estType,
           estQuantile = zSettings$Quantile,
+          rangez = zSettings$range,
+          limitz = zSettings$limit,
+          showModel = zSettings$showModel,
           points = input$points,
           pointSize = input$pointSize,
           StdErr = input$StdErr,
           rangex = values$rangex,
           rangey = values$rangey,
-          rangez = zSettings$range,
-          limitz = zSettings$limit,
           mask = input$mask,
           maskRadius = input$maskRadius,
           addU = input$AddU,
-          showModel = zSettings$showModel,
           pColor = input$pointCol,
           pointShape = as.numeric(input$pointShape),
           textLabels = textLabels,

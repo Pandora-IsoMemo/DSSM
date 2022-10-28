@@ -456,12 +456,14 @@ zScaleUI <-
 #' restrict the z scale.
 #' @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
 #' @param mapType (reactive) type of map, either "Map" or "Time course"
+#' @param zValuesFactor (numeric) factor applied to zValues
 zScaleServer <- function(id,
                          Model,
                          fixCol,
                          estimationTypeChoices,
                          restrictOption,
                          zValuesFun,
+                         zValuesFactor,
                          mapType = reactive("Map")) {
   moduleServer(id,
                function(input, output, session) {
@@ -489,7 +491,8 @@ zScaleServer <- function(id,
                    if (!fixCol())
                      zValues(zValuesFun(estimationType = input$estType,
                                         model = Model()$model,
-                                        mapType = mapType()
+                                        mapType = mapType(),
+                                        factor = zValuesFactor
                                         ))
                    else
                      zValues(NULL)
@@ -573,7 +576,8 @@ zScaleServer <- function(id,
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
 #' @param mapType (character) type of map, either "Map" or "Time course"
-getZValuesKernel <- function(estimationType, model, mapType) {
+#' @param factor (numeric) factor applied to estimates
+getZValuesKernel <- function(estimationType, model, mapType, factor = 1.25) {
   if (is.null(model))
     return(NULL)
 
@@ -585,7 +589,7 @@ getZValuesKernel <- function(estimationType, model, mapType) {
   } else {
     zValues <-
       as.vector(rowMeans(sapply(1:length(model), function(x)
-        model[[x]]$estimate))) * 1.25
+        model[[x]]$estimate))) * factor
   }
 
   maxValue <- signif(max(zValues, na.rm = TRUE), 2)
@@ -604,7 +608,8 @@ getZValuesKernel <- function(estimationType, model, mapType) {
 #' @param estimationType (character) type of estimate
 #' @param model (list) model output
 #' @param mapType (character) type of map, either "Map" or "Time course"
-getZvalues <- function(estimationType, model, mapType) {
+#' @param factor (numeric) factor applied to estimates
+getZvalues <- function(estimationType, model, mapType, factor = 3) {
   if (is.null(model))
     return(NULL)
 
@@ -615,7 +620,7 @@ getZvalues <- function(estimationType, model, mapType) {
       valueMin = 0,
       valueMax = val,
       min = 0,
-      max = val * 3
+      max = val * factor
     ))
   }
 
@@ -626,7 +631,7 @@ getZvalues <- function(estimationType, model, mapType) {
       valueMin = 0,
       valueMax = val,
       min = 0,
-      max = val * 3
+      max = val * factor
     ))
   }
 

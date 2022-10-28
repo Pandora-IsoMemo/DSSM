@@ -489,7 +489,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                             estimationTypeChoices =
                               reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
                             restrictOption = reactive("hide"),
-                            zValuesFun = getZValuesKernel
+                            zValuesFun = getZValuesKernel,
+                            zValuesFactor = 1.25
                             )
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
@@ -705,6 +706,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         pointSize = input$pointSize,
         rangex = values$rangex,
         rangey = values$rangey,
+        estType = zSettings$estType,
+        showModel = zSettings$showModel,
         rangez = zSettings$range,
         limitz = zSettings$limit,
         resolution = input$resolution,
@@ -713,8 +716,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         maskRadius = input$maskRadius,
         ncol = values$ncol,
         pColor = input$pointCol,
-        estType = zSettings$estType,
-        showModel = zSettings$showModel,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
         pointLabels = pointLabels,

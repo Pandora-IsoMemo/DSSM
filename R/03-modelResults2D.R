@@ -522,7 +522,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                               "Quantile_Total" = "QuantileTOTAL"
                             )),
                             restrictOption = reactive("show"),
-                            zValuesFun = getZvalues
+                            zValuesFun = getZvalues,
+                            zValuesFactor = 3
                             )
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
@@ -743,18 +744,18 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       plotMap(
         model,
-        estType = zSettings$estType,
-        estQuantile = zSettings$Quantile,
         points = input$points,
         pointSize = input$pointSize,
         StdErr = input$StdErr,
         rangex = values$rangex,
         rangey = values$rangey,
+        estType = zSettings$estType,
+        estQuantile = zSettings$Quantile,
         rangez = zSettings$range,
-        mask = input$mask,
-        maskRadius = input$maskRadius,
         showModel = zSettings$showModel,
         limitz = zSettings$limit,
+        mask = input$mask,
+        maskRadius = input$maskRadius,
         resolution = input$resolution,
         interior = input$interior,
         ncol = values$ncol,

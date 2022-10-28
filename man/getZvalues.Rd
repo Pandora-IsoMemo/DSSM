@@ -4,7 +4,7 @@
 \alias{getZvalues}
 \title{Get Z Values}
 \usage{
-getZvalues(estimationType, model, mapType)
+getZvalues(estimationType, model, mapType, factor = 3)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -12,6 +12,8 @@ getZvalues(estimationType, model, mapType)
 \item{model}{(list) model output}
 
 \item{mapType}{(character) type of map, either "Map" or "Time course"}
+
+\item{factor}{(numeric) factor applied to estimates}
 }
 \description{
 Get Z Values
