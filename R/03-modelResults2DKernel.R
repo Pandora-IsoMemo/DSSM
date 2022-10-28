@@ -698,7 +698,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         }
       }
 
-      req(zSettings$estType, zSettings$showModel)
+      req(zSettings$estType)
 
       plotMap(
         model,

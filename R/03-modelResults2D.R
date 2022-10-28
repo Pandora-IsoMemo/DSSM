@@ -740,7 +740,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         }
       }
 
-      req(zSettings$estType, zSettings$showModel)
+      req(zSettings$estType)
 
       plotMap(
         model,

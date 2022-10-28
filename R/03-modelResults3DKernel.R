@@ -964,7 +964,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         )
       }
 
-        req(zSettings$estType, zSettings$showModel)
+        req(zSettings$estType)
 
       if(input$mapType == "Map"){
         plotMap3D(

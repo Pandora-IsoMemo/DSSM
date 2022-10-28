@@ -946,6 +946,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
+        req(zSettings$estType)
         plotMap3D(
           model,
           time = time,
