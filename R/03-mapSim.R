@@ -116,19 +116,7 @@ modelResultsSimUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          radioButtons(inputId = ns("estType"), label = "Estimation type", inline = TRUE,
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                        selected = 1),
@@ -492,14 +480,18 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       }
     }
 
+    req(zSettings$estType)
+
     function(...){
       plotDS(Model(),
-             estType = input$estType,
-             estQuantile = input$Quantile,
-             type = "similarity", independent = "",
+             type = "similarity",
+             independent = "",
              rangex = values$rangex,
              rangey = values$rangey,
-             rangez = c(input$rangezMin, input$rangezMax),
+             estType = zSettings$estType,
+             estQuantile = zSettings$Quantile,
+             rangez = zSettings$range,
+             showModel = zSettings$showModel,
              colors = input$Colours,
              ncol = values$ncol,
              reverseColors = input$reverseCols,
@@ -617,24 +609,15 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-    if(input$fixCol == FALSE){
-      zValues <- Model()$Est
-      minValue <- 0
-      maxValue <- signif(max(zValues, na.rm = TRUE), 2)
-
-      updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-      updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-      if(input$estType %in% c("SE", "1 SE", "2 SE")){
-        sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-        zValues <- Model()$Sd
-        maxValue <- signif(max(zValues, na.rm = TRUE) * sdVal, 2)
-        updateNumericInput(session, "rangezMin", value = 0, min = 0, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = 0, max = maxValue)
-      }
-    }
-  })
+  zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices = reactive(c(
+                              "Mean", "1 SE", "2 SE", "Quantile"
+                            )),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZValuesMapSim,
+                            zValuesFactor = 1)
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 

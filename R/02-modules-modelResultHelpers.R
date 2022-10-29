@@ -595,6 +595,44 @@ zScaleServer <- function(id,
 }
 
 
+#' Get Z Values Map Sim
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZValuesMapSim <-
+  function(estimationType, model, mapType, factor = 1) {
+    if (is.null(model))
+      return(NULL)
+
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
+    if (estimationType %in% c("Mean", "Quantile")) {
+      zRange <- model$Est
+      minValue <- 0
+      maxValue <- signif(max(zRange, na.rm = TRUE) * factor, 2)
+
+      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      return(zValues)
+    }
+
+    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+      sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+      zRange <- model$Sd
+      maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
+
+      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      return(zValues)
+    }
+  }
+
+
 #' Get Z Values Map Diff
 #'
 #' @param estimationType (character) type of estimate
