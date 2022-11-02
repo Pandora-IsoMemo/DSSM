@@ -34,6 +34,9 @@ mergeDataUI <- function(id) {
                   "Merge via command line"),
     actionButton(ns("applyMerge"), "Apply Merge"),
     #actionButton(ns("addMerge"), "Add Table"),
+    tags$hr(),
+    tags$h5("Preview Data"),
+    tags$h5("(Long character entries might be cutted in the preview.)"),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "joinedData"
@@ -109,6 +112,19 @@ mergeDataServer <- function(id, mergeList) {
                               mergeList()[[i]]$dataImport)
                      }
 
+                     ## remove duplicated column names ----
+                     assign(
+                       tableIds()[input$tableX],
+                       removeDuplicatedCols(
+                         df = get(tableIds()[input$tableX]))
+                     )
+
+                     assign(
+                       tableIds()[input$tableY],
+                       removeDuplicatedCols(
+                         df = get(tableIds()[input$tableY]))
+                     )
+
                      ## match column types ----
                      columsToJoinString <- mergeCommandManual() %>%
                        gsub(pattern = ".*by = ", replacement = "") %>%
@@ -171,7 +187,11 @@ mergeDataServer <- function(id, mergeList) {
 
                  output$joinedData <- renderDataTable({
                    req(joinedData())
-                   DT::datatable(joinedData()[1:2,],
+
+                   previewData <-
+                     cutAllLongStrings(joinedData()[1:2,], cutAt = 20)
+
+                   DT::datatable(previewData,
                                  rownames = FALSE,
                                  options = list(scrollX = TRUE))
                  })
@@ -207,7 +227,8 @@ extractTableIds <- function(namesOfTables) {
   ids
 }
 
-## helpers: class matching----
+## helpers: ----
+### class matching ----
 matchColClasses <-
   function(df1,
            df2,
@@ -257,4 +278,31 @@ equalColClasses <-
     } else {
       return(TRUE)
     }
+  }
+
+### remove columns with duplicated column names ----
+#' Remove Duplicated Cols
+#'
+#' Skip columns whose column names occur twice, keep only that column of the first occurrence of
+#' the column name.
+#'
+#' @param df (data.frame) dataframe with column names
+#' @param isTest (logical) if TRUE no alert will pop up
+removeDuplicatedCols <- function(df, isTest = FALSE) {
+    if( is.null(df) || ncol(df) < 2) return(df)
+
+    isDuplicate <- duplicated(colnames(df))
+
+    if (any(isDuplicate)) {
+      if (!isTest) {
+        shinyjs::alert(
+          paste0(
+            "Warning: Duplicated column names found, keeping only first occurrence of: \n",
+            paste(colnames(df)[isDuplicate], collapse = ", ")
+          )
+        )
+      }
+    }
+
+    return(df[, !isDuplicate])
   }

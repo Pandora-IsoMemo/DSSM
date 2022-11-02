@@ -2,7 +2,7 @@
 % Please edit documentation in R/02-importData.R
 \name{cutStrings}
 \alias{cutStrings}
-\title{Cut All Strings}
+\title{Cut Strings}
 \usage{
 cutStrings(charVec, cutAt = 50)
 }
@@ -12,5 +12,5 @@ cutStrings(charVec, cutAt = 50)
 \item{cutAt}{(numeric) number of characters after which to cut the entries of an character-column}
 }
 \description{
-Cut All Strings
+Cut Strings
 }

@@ -26,7 +26,7 @@ test_that("Test module importData", {
 
                expect_equal(
                  names(session$returned()),
-                 "https://pandoradata.earth/dataset/cbbc35e0-af60-4224-beea-181be10f7f71/resource/f7581eb1-b2b8-4926-ba77-8bc92ddb4fdb/download/cima-humans.xlsx"
+                 "cima-humans.xlsx"
                )
                expect_true(all(
                  c("Entry.ID", "Reference", "Link", "DOI") %in% names(session$returned()[[1]])

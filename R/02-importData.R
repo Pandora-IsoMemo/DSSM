@@ -334,11 +334,6 @@ importDataServer <- function(id,
                  ## button merge data ----
                  observeEvent(input$acceptMerged, {
                    removeModal()
-                   #browser()
-                   # what filename??
-                   # values$errors <-
-                   # values$warnings <-
-                   # values$fileName <-
 
                    values$data[["mergedData"]] <- joinedData()
                  })
@@ -451,6 +446,7 @@ selectDataTab <- function(ns) {
     div(class = "text-success", textOutput(ns("success"))),
     tags$hr(),
     tags$h5("Preview Data"),
+    tags$h5("(Long character entries might be cutted in the preview.)"),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "preview"
