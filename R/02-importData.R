@@ -274,6 +274,10 @@ importDataServer <- function(id,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
                      )
+
+                     ### format column names for import ----
+                     colnames(values$dataImport) <- colnames(values$dataImport) %>%
+                       formatColumnNames()
                    },
                    value = 0.75,
                    message = 'importing full data ...')
@@ -696,7 +700,8 @@ formatColumnNames <- function(vNames, isTest = FALSE) {
 
   if (any(grepl("[^[:alnum:] | ^\\.]", vNames))) {
     if (!isTest) {
-      message <- "Warning: One or more column names contain non-alphanumeric characters, name changed."
+      message <- paste("Warning: One or more column names contain non-alphanumeric characters,",
+      "replacing with a dot.")
     }
     # replace non-alphanum characters with dot
     vNames <- gsub("[^[:alnum:] | ^\\.]", ".", vNames)
@@ -706,13 +711,34 @@ formatColumnNames <- function(vNames, isTest = FALSE) {
 
   if (any(grepl("^[0-9]{1,}$", substr(vNames, 1, 1)))) {
     if (!isTest) {
-      message <- paste(c(message,
-                         "Warning: One or more column names begin with number, name changed."),
-                       collapse = "\n\n")
+      message <- paste(
+        c(message, "Warning: One or more column names begin with a number, adding prefix 'x'."),
+        collapse = "\n\n")
     }
+
     # if name begins with a number paste x before name
     vNames[grepl("^[0-9]{1,}$", substr(vNames, 1, 1))] <-
       paste0("x", vNames[grepl("^[0-9]{1,}$", substr(vNames, 1, 1))])
+  }
+
+  if (any(duplicated(vNames))) {
+    isDuplicate <- duplicated(vNames)
+
+    if (!isTest) {
+      message <- paste(
+        c(message,
+          paste0("Warning: Duplicated column names found, number added to second occurrence of: \n",
+                 paste(vNames[isDuplicate], collapse = ", "))),
+        collapse = "\n\n")
+    }
+
+    # add number if duplicated names
+    inc <- 1
+    while(any(isDuplicate)) {
+      vNames <- addIncIfDuplicate(vNames, isDuplicate, inc = inc)
+      isDuplicate <- duplicated(vNames)
+      inc <- inc + 1
+    }
   }
 
   if(!isTest && !is.null(message)) {
@@ -720,6 +746,12 @@ formatColumnNames <- function(vNames, isTest = FALSE) {
   }
 
   return(vNames)
+}
+
+
+addIncIfDuplicate <- function(vNames, isDuplicate, inc = 1) {
+  vNames[isDuplicate] <- paste0(vNames[isDuplicate], ".", inc)
+  vNames
 }
 
 
