@@ -31,7 +31,7 @@ mergeDataUI <- function(id) {
       ns = ns
     ),
     checkboxInput(ns("useMergeViaCommand"),
-                  "Merge via command line"),
+                  "Check command line"),
     actionButton(ns("applyMerge"), "Apply Merge"),
     #actionButton(ns("addMerge"), "Add Table"),
     tags$hr(),

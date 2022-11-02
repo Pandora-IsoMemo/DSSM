@@ -23,15 +23,16 @@ mergeViaCommandUI <- function(id) {
     #   value = NULL,
     #   width = "100%"
     # ),
-    tags$em(paste0("This is experimental and under development. ",
-                   "No checks of column types implemented. Please ensure that types are matching. ",
-                   "App may crash easily.")),
-    textAreaInput(
-      ns("mergeCommand"),
-      "Merge command",
-      value = NULL,
-      width = "100%"
-    )
+    # tags$em(paste0("This is experimental and under development. ",
+    #                "No checks of column types implemented. Please ensure that types are matching. ",
+    #                "App may crash easily.")),
+    # textAreaInput(
+    #   ns("mergeCommand"),
+    #   "Merge command",
+    #   value = NULL,
+    #   width = "100%"
+    # )
+    verbatimTextOutput(ns("mergeCommand"))
   )
 }
 
@@ -45,15 +46,23 @@ mergeViaCommandServer <- function(id, mergeCommandAuto) {
                function(input, output, session) {
                  mergeCommandManual <- reactiveVal()
 
+                 # disable functionality to change the command, check if there are security issues
                  # update: mergeCommand ----
-                 observeEvent(mergeCommandAuto(), {
-                   updateTextAreaInput(session, "mergeCommand", value = mergeCommandAuto())
+                 # observeEvent(mergeCommandAuto(), {
+                 #   updateTextAreaInput(session, "mergeCommand", value = mergeCommandAuto())
+                 # })
+                 #
+                 # observeEvent(input$mergeCommand, {
+                 #   mergeCommandManual(input$mergeCommand)
+                 # })
+                 #
+                 # return(mergeCommandManual)
+
+                 output$mergeCommand <- renderText({
+                   req(mergeCommandAuto())
+                   mergeCommandAuto()
                  })
 
-                 observeEvent(input$mergeCommand, {
-                   mergeCommandManual(input$mergeCommand)
-                 })
-
-                 return(mergeCommandManual)
+                 return(mergeCommandAuto)
                })
 }
