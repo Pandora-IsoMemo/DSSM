@@ -43,8 +43,8 @@ test_that("Test module importData", {
                    "Sample.ID",
                    "Sex",
                    "Age.Category",
-                   "Min..Age.(yrs)",
-                   "Max..Age.(yrs)",
+                   "Min..Age..yrs.",
+                   "Max..Age..yrs.",
                    "Sampled.Element"
                  )
                )
