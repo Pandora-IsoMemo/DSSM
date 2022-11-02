@@ -32,7 +32,7 @@ mergeDataUI <- function(id) {
     ),
     checkboxInput(ns("useMergeViaCommand"),
                   "Merge via command line"),
-    actionButton(ns("applyMerge"), "Preview Merge"),
+    actionButton(ns("applyMerge"), "Apply Merge"),
     #actionButton(ns("addMerge"), "Add Table"),
     fluidRow(column(12,
                     dataTableOutput(ns(
@@ -149,7 +149,7 @@ mergeDataServer <- function(id, mergeList) {
                        finally = NULL)
                      if (inherits(joinedData, "try-error")) {
                        alert("Could not merge data")
-                       return()
+                       return(NULL)
                      }
 
                      if (!is.null(joinedData) &&

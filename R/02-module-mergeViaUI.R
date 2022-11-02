@@ -10,21 +10,21 @@ mergeViaUIUI <- function(id) {
 
   tagList(
     fluidRow(column(
-      4,
+      6,
       selectInput(
         ns("mergeOperation"),
         "Select operation",
         choices = c(
-          "all rows in x and y" = "inner_join",
-          "all rows in x" = "left_join",
-          "all rows in y" = "right_join",
-          "all rows in x or y" = "full_join"
+          "inner_join: all rows in x and y" = "inner_join",
+          "left_join: all rows in x" = "left_join",
+          "right_join: all rows in y" = "right_join",
+          "full_join: all rows in x or y" = "full_join"
         ),
         selected = "left_join"
       )
     ),
     column(
-      8,
+      6,
       checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
     )),
     fluidRow(column(

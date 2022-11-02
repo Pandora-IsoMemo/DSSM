@@ -66,6 +66,7 @@ importDataServer <- function(id,
                    reset("file")
                    values$warnings <- list()
                    values$errors <- list()
+                   values$fileName <- ""
                    values$fileImportWarning <- NULL
                    values$fileImportSuccess <- NULL
                    values$dataImport <- NULL
@@ -73,6 +74,13 @@ importDataServer <- function(id,
                    dataSource(NULL)
 
                    showModal(importDataDialog(ns = ns))
+
+                   shinyjs::disable(ns("addData"), asis = TRUE)
+                   shinyjs::disable(ns("accept"), asis = TRUE)
+                   shinyjs::disable(ns("acceptMerged"), asis = TRUE)
+                   shinyjs::hide(ns("addData"), asis = TRUE)
+                   shinyjs::hide(ns("accept"), asis = TRUE)
+                   shinyjs::hide(ns("acceptMerged"), asis = TRUE)
 
                    titles <-
                      unlist(lapply(ckanFiles(), `[[`, "title"))
@@ -83,11 +91,11 @@ importDataServer <- function(id,
                    if (input$tabImport == "Merge Data") {
                      shinyjs::hide(ns("addData"), asis = TRUE)
                      shinyjs::hide(ns("accept"), asis = TRUE)
-                     shinyjs::show(ns("mergeData"), asis = TRUE)
+                     shinyjs::show(ns("acceptMerged"), asis = TRUE)
                    } else {
                      shinyjs::show(ns("addData"), asis = TRUE)
                      shinyjs::show(ns("accept"), asis = TRUE)
-                     shinyjs::hide(ns("mergeData"), asis = TRUE)
+                     shinyjs::hide(ns("acceptMerged"), asis = TRUE)
                    }
                  })
 
@@ -117,17 +125,21 @@ importDataServer <- function(id,
                    resource <-
                      ckanRecord()$resources[[input$ckanResource]]
                    req(resource)
-                   dataSource(list(file = resource$url, filename = resource$url))
+
+                   # "file" will be used to load the file
+                   # "filename" will be stored in values$fileName
+                   dataSource(list(file = resource$url, filename = basename(resource$url)))
                  })
 
                  observeEvent(input$file, {
                    inFile <- input$file
-                   filename <- inFile$name
 
                    if (is.null(inFile))
                      return()
 
-                   dataSource(list(file = inFile$datapath, filename = filename))
+                   # "file" will be used to load the file
+                   # "filename" will be stored in values$fileName
+                   dataSource(list(file = inFile$datapath, filename = inFile$name))
                  })
 
                  observeEvent(input$url, {
@@ -143,7 +155,9 @@ importDataServer <- function(id,
                      return()
                    }
 
-                   dataSource(list(file = tmp, filename = input$url))
+                   # "file" will be used to load the file
+                   # "filename" will be stored in values$fileName
+                   dataSource(list(file = tmp, filename = basename(input$url)))
                  })
 
                  # specify file server ----
@@ -163,6 +177,7 @@ importDataServer <- function(id,
                    # reset values
                    valuesPreview$warnings <- list()
                    valuesPreview$errors <- list()
+                   valuesPreview$fileName <- ""
                    valuesPreview$fileImportWarning <- NULL
                    valuesPreview$fileImportSuccess <- NULL
                    valuesPreview$dataImport <- NULL
@@ -307,8 +322,17 @@ importDataServer <- function(id,
 
                  joinedData <- mergeDataServer("dataMerger", mergeList = mergeList)
 
+                 observeEvent(joinedData(), {
+                   if (is.null(joinedData()) ||
+                       nrow(joinedData()) == 0) {
+                     shinyjs::disable(ns("acceptMerged"), asis = TRUE)
+                   } else {
+                     shinyjs::enable(ns("acceptMerged"), asis = TRUE)
+                   }
+                 })
+
                  ## button merge data ----
-                 observeEvent(input$mergeData, {
+                 observeEvent(input$acceptMerged, {
                    removeModal()
                    #browser()
                    # what filename??
@@ -320,6 +344,7 @@ importDataServer <- function(id,
                  })
 
                  # return value for parent module: ----
+                 # currently only the data is returned, not the path(s) to the source(s)
                  reactive(values$data)
                })
 }
@@ -332,7 +357,7 @@ importDataDialog <- function(ns) {
     footer = tagList(
       actionButton(ns("accept"), "Accept"),
       actionButton(ns("addData"), "Add to Merge Data"),
-      actionButton(ns("mergeData"), "Accept"),
+      actionButton(ns("acceptMerged"), "Accept Merged"),
       actionButton(ns("cancel"), "Cancel")
     ),
     tabsetPanel(
