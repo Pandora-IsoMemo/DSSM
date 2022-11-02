@@ -1,8 +1,8 @@
 # MpiIsoApp development version
 
-# MpiIsoApp 22.10.4
+## MpiIsoApp 22.10.4
 
-## New features
+### New features
 
 - when using _Pandora_ skin, in _Import Data_: option to merge two data tables before import (#37)
 - checks for correct column names in file imports
