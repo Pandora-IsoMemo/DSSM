@@ -4,7 +4,7 @@
 
 ## New features
 
-- when using _Pandora_ skin, in _Import Data_: option to merge two data tables before import (#42)
+- when using _Pandora_ skin, in _Import Data_: option to merge two data tables before import (#37)
 - checks for correct column names in file imports
 - update column names of files if naming conflicts
 - new tests
