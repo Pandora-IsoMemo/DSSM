@@ -249,6 +249,17 @@ importDataServer <- function(id,
                    )
                  })
 
+                 newColNames <- renameColumnsServer(
+                   "renameCols",
+                   columnNames = reactive(colnames(valuesPreview$dataImport))
+                   )
+
+                 observeEvent(newColNames(), {
+                   req(newColNames())
+
+                   colnames(valuesPreview$dataImport) <- newColNames()
+                 })
+
                  ## button cancel ----
                  observeEvent(input$cancel, {
                    removeModal()
@@ -276,7 +287,7 @@ importDataServer <- function(id,
                      )
 
                      ### format column names for import ----
-                     colnames(values$dataImport) <- colnames(values$dataImport) %>%
+                     colnames(values$dataImport) <- newColNames() %>%
                        formatColumnNames()
                    },
                    value = 0.75,
@@ -307,7 +318,7 @@ importDataServer <- function(id,
                      )
 
                      ### format column names for merger ----
-                     colnames(valuesToMerge$dataImport) <- colnames(valuesToMerge$dataImport) %>%
+                     colnames(valuesToMerge$dataImport) <- newColNames() %>%
                        formatColumnNames()
                    },
                    value = 0.75,
@@ -392,15 +403,15 @@ selectDataTab <- function(ns) {
         conditionalPanel(
           condition = "input.source == 'ckan'",
           ns = ns,
-          selectInput(ns("ckanRecord"), "Pandora dataset", choices = NULL),
-          selectizeInput(ns("ckanResource"), "Pandora dataset resource", choices = NULL)
+          selectInput(ns("ckanRecord"), "Pandora dataset", choices = NULL, width = "100%"),
+          selectizeInput(ns("ckanResource"), "Pandora dataset resource", choices = NULL, width = "100%")
         ),
         conditionalPanel(condition = "input.source == 'file'",
                          ns = ns,
-                         fileInput(ns("file"), "File")),
+                         fileInput(ns("file"), "File", width = "100%")),
         conditionalPanel(condition = "input.source == 'url'",
                          ns = ns,
-                         textInput(ns("url"), "URL"))
+                         textInput(ns("url"), "URL", width = "100%"))
       )
     ),
     tags$hr(),
@@ -430,16 +441,13 @@ selectDataTab <- function(ns) {
         conditionalPanel(
           condition = paste0("input.type == 'xlsx' || input.type == 'xlsx'"),
           ns = ns,
-          fluidRow(column(
-            width = 10,
-            selectInput(
-              ns("sheet"),
-              "Sheet",
-              selected = 1,
-              choices = 1:10,
-              width = "100%"
-            )
-          ))
+          selectInput(
+            ns("sheet"),
+            "Sheet",
+            selected = 1,
+            choices = 1:10,
+            width = "100%"
+          )
         )
       )
     ),
@@ -448,9 +456,9 @@ selectDataTab <- function(ns) {
     div(class = "text-danger", uiOutput(ns("warning"))),
     div(class = "text-danger", uiOutput(ns("error"))),
     div(class = "text-success", textOutput(ns("success"))),
+    renameColumnsUI(ns("renameCols")),
     tags$hr(),
-    tags$h5("Preview Data"),
-    tags$h5("(Long character entries might be cutted in the preview.)"),
+    tags$html(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)")),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "preview"
@@ -779,4 +787,62 @@ getSheetSelection <- function(filepath) {
   names(sheets) <- sheetNames
 
   sheets
+}
+
+
+# Rename Columns Module ----
+
+#' Rename Columns UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+renameColumnsUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(tags$br(),
+          fluidRow(
+            column(5, selectInput(
+              ns("columnToRename"), "Rename a column", choices = NULL
+            )),
+            column(5, style = "margin-top: 18px;", textInput(
+              ns("newName"), label = NULL, placeholder = "New name"
+            )),
+            column(
+              2,
+              align = "right",
+              style = "margin-top: 18px;",
+              actionButton(ns("setColName"), "Set")
+            )
+          ))
+}
+
+#' Rename Columns Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param columnNames (reactive) column names
+renameColumnsServer <- function(id, columnNames) {
+  moduleServer(id,
+               function(input, output, session) {
+                 newColumnNames <- reactiveVal()
+
+                 observeEvent(columnNames(), {
+                   updateSelectInput(session, "columnToRename", choices = columnNames())
+                   updateTextInput(session, "newName", value = "")
+
+                   # by default return current column names
+                   newColumnNames(columnNames())
+                 })
+
+                 observeEvent(input$setColName, {
+                   req(columnNames(), input$newName)
+
+                   tmpNames <- columnNames()
+                   tmpNames[tmpNames == input$columnToRename] <- input$newName
+                   newColumnNames(tmpNames)
+                 })
+
+                 newColumnNames
+               })
 }
