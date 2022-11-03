@@ -10,17 +10,29 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    selectInput(
-      ns("tableX"),
-      "Select tabel x",
-      choices = NULL,
-      width = "100%"
+    fluidRow(
+      column(
+        8,
+        selectInput(
+          ns("tableX"),
+          "Select tabel x",
+          choices = NULL,
+          width = "100%"
+        )
+      ),
+      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableX")))
     ),
-    selectInput(
-      ns("tableY"),
-      "Select tabel y",
-      choices = NULL,
-      width = "100%"
+    fluidRow(
+      column(
+        8,
+        selectInput(
+          ns("tableY"),
+          "Select tabel y",
+          choices = NULL,
+          width = "100%"
+        )
+      ),
+      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
     ),
     conditionalPanel(condition = "input.useMergeViaCommand == false",
                      mergeViaUIUI(ns("mergerViaUI")),
@@ -32,8 +44,20 @@ mergeDataUI <- function(id) {
     ),
     checkboxInput(ns("useMergeViaCommand"),
                   "Check command line"),
-    actionButton(ns("applyMerge"), "Apply Merge"),
+    fluidRow(column(6, actionButton(ns("applyMerge"), "Apply Merge")),
+             column(6, align = "right", style = "margin-top: 12px;", textOutput(ns("nRowsJoinedData")))),
     #actionButton(ns("addMerge"), "Add Table"),
+    conditionalPanel(
+      ns = ns,
+      condition = "output.showWarning == 'TRUE'",
+      tags$br(),
+      tags$html(
+        HTML(paste0("<p style=\"color:red\">Merged data has more rows than the maximal ",
+               " number of rows of the input tables.",
+               " One row of one table matches several rows of the other table.<br>",
+               " Please check the x and y colums to join on.</p>"))
+      )
+    ),
     tags$hr(),
     tags$h5("Preview Data"),
     tags$h5("(Long character entries might be cutted in the preview.)"),
@@ -85,8 +109,18 @@ mergeDataServer <- function(id, mergeList) {
                    tableXData(mergeList()[[input$tableX]]$dataImport)
                  })
 
+                 output$nRowsTableX <- renderText({
+                   req(tableXData())
+                   paste(NROW(tableXData()), "rows")
+                 })
+
                  observeEvent(input$tableY, {
                    tableYData(mergeList()[[input$tableY]]$dataImport)
+                 })
+
+                 output$nRowsTableY <- renderText({
+                   req(tableYData())
+                   paste(NROW(tableYData()), "rows")
                  })
 
                  mergeCommandAuto <-
@@ -103,7 +137,9 @@ mergeDataServer <- function(id, mergeList) {
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
-                   req(mergeCommandManual(), input$applyMerge)
+                   joinedData(NULL)
+
+                   req(mergeCommandManual())
 
                    withProgress({
                      ## create data.frames to merge ----
@@ -172,11 +208,24 @@ mergeDataServer <- function(id, mergeList) {
                    message = 'merging data ...')
                  })
 
+                 output$nRowsJoinedData <- renderText({
+                   req(joinedData())
+                   paste("Merged data has ", NROW(joinedData()), "rows")
+                 })
+
+                 output$showWarning <- renderText({
+                   req(joinedData())
+                   maxRows <- max(NROW(tableXData()), NROW(tableYData()))
+
+                   NROW(joinedData()) > maxRows
+                 })
+                 outputOptions(output, "showWarning", suspendWhenHidden = FALSE)
+
                  output$joinedData <- renderDataTable({
                    req(joinedData())
 
                    previewData <-
-                     cutAllLongStrings(joinedData()[1:2,], cutAt = 20)
+                     cutAllLongStrings(joinedData()[1:2, ], cutAt = 20)
 
                    DT::datatable(previewData,
                                  rownames = FALSE,
@@ -223,8 +272,8 @@ matchColClasses <-
            yColNames,
            df1Id = "table1",
            isTest = FALSE) {
-    colTypesX <- sapply(df1[, xColNames], class)
-    colTypesY <- sapply(df2[, yColNames], class)
+    colTypesX <- sapply(df1[, xColNames, drop = FALSE], class)
+    colTypesY <- sapply(df2[, yColNames, drop = FALSE], class)
 
     isAllEqual <- equalColClasses(colTypesX,
                                   colTypesY,
@@ -233,7 +282,7 @@ matchColClasses <-
 
     if (!isAllEqual) {
       for (i in 1:length(yColNames)) {
-        class(df2[, yColNames[i]]) <- colTypesX[i]
+        suppressWarnings(class(df2[, yColNames[i]]) <- colTypesX[i])
       }
     }
     return(df2)
