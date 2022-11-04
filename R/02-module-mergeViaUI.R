@@ -12,8 +12,36 @@ mergeViaUIUI <- function(id) {
     fluidRow(column(
       6,
       selectInput(
+        ns("columnsX"),
+        "Select x columns to join",
+        choices = NULL,
+        multiple = TRUE
+      ),
+      tags$html(
+        HTML(paste0("Names of x are used for joined columns."))
+      ),
+    ),
+    column(
+      6,
+      selectInput(
+        ns("columnsY"),
+        "Select y columns to join",
+        choices = NULL,
+        multiple = TRUE
+      )
+    )),
+    tags$br(),
+    fluidRow(
+    column(
+      6,
+      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
+    ),
+    column(
+      6,
+      #style = "margin-top: 12px;",
+      selectInput(
         ns("mergeOperation"),
-        "Select operation",
+        "Select join operation",
         choices = c(
           "inner_join: all rows in x and y" = "inner_join",
           "left_join: all rows in x" = "left_join",
@@ -21,28 +49,6 @@ mergeViaUIUI <- function(id) {
           "full_join: all rows in x or y" = "full_join"
         ),
         selected = "left_join"
-      )
-    ),
-    column(
-      6,
-      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
-    )),
-    fluidRow(column(
-      6,
-      selectInput(
-        ns("columnsX"),
-        "Select x columns",
-        choices = NULL,
-        multiple = TRUE
-      )
-    ),
-    column(
-      6,
-      selectInput(
-        ns("columnsY"),
-        "Select y columns",
-        choices = NULL,
-        multiple = TRUE
       )
     ))
   )
@@ -56,84 +62,90 @@ mergeViaUIUI <- function(id) {
 #' @param tableYData (data.frame) data to be merged
 #' @param tableXId (character) internal table name, see \link{extractTableIds}
 #' @param tableYId (character) internal table name, see \link{extractTableIds}
-mergeViaUIServer <- function(id, tableXData, tableYData, tableXId, tableYId) {
-  moduleServer(id,
-               function(input, output, session) {
-                 columnsToJoin <- reactiveValues(tableX = NULL,
-                                                 tableY = NULL)
-                 mergeCommandAuto <- reactiveVal()
+mergeViaUIServer <-
+  function(id,
+           tableXData,
+           tableYData,
+           tableXId,
+           tableYId) {
+    moduleServer(id,
+                 function(input, output, session) {
+                   columnsToJoin <- reactiveValues(tableX = NULL,
+                                                   tableY = NULL)
+                   mergeCommandAuto <- reactiveVal()
 
-                 # update: column selection ----
-                 observeEvent(tableXData(), {
-                   req(tableXData())
-                   updateSelectInput(session, "columnsX",
-                                     choices = colnames(tableXData()))
-                 })
-
-                 observeEvent(tableYData(), {
-                   req(tableYData())
-                   updateSelectInput(session, "columnsY",
-                                     choices = colnames(tableYData()))
-                 })
-
-                 observeEvent(input$addAllCommonColumns, {
-                   req(tableXData(), tableYData())
-                   commonColumns <- intersect(colnames(tableXData()), colnames(tableYData()))
-
-                   #req(commonColumns())
-                   if (input$addAllCommonColumns) {
+                   # update: column selection ----
+                   observeEvent(tableXData(), {
+                     req(tableXData())
                      updateSelectInput(session, "columnsX",
-                                       selected = commonColumns)
+                                       choices = colnames(tableXData()))
+                   })
+
+                   observeEvent(tableYData(), {
+                     req(tableYData())
                      updateSelectInput(session, "columnsY",
-                                       selected = commonColumns)
-                   } else {
-                     updateSelectInput(session, "columnsX",
-                                       selected = list())
-                     updateSelectInput(session, "columnsY",
-                                       selected = list())
-                   }
-                 })
+                                       choices = colnames(tableYData()))
+                   })
 
-                 # create: mergeCommandAuto ----
-                 observeEvent(list(input$columnsX, input$columnsY), {
-                   columnsToJoin$tableX <-
-                     equalizeLength(input$columnsX, input$columnsY)$xColNames
-                   columnsToJoin$tableY <-
-                     equalizeLength(input$columnsX, input$columnsY)$yColNames
+                   observeEvent(list(input$addAllCommonColumns, input$columnsX, input$columnsY), {
+                     req(tableXData(), tableYData())
+                     commonColumns <-
+                       intersect(colnames(tableXData()), colnames(tableYData()))
 
-                   colJoinString <-
-                     extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
-
-                   if (isNotEmptyColumnsAndNonEqualTables(colJoinString, tableXId(), tableYId())) {
-                     mergeCommandAuto(
-                       tmpl(
-                         paste0(
-                           c(
-                             "{{ tableX }} %>% ",
-                             "  {{ mergeOperation }}({{ tableY }},",
-                             "    by = {{ colJoinString }})"
-                           ),
-                           collapse = ""
-                         ),
-                         tableX = tableXId(),
-                         mergeOperation = input$mergeOperation,
-                         tableY = tableYId(),
-                         colJoinString = colJoinString
-                       ) %>% as.character()
-                     )
-                   } else {
-                     mergeCommandAuto("")
-
-                     if (isEqualTables(tableXId(), tableYId())) {
-                       alert("Please choose two different tables.")
+                     #req(commonColumns())
+                     if (input$addAllCommonColumns) {
+                       updateSelectInput(session, "columnsX",
+                                         selected = commonColumns)
+                       updateSelectInput(session, "columnsY",
+                                         selected = commonColumns)
+                     } else {
+                       updateSelectInput(session, "columnsX",
+                                         selected = list())
+                       updateSelectInput(session, "columnsY",
+                                         selected = list())
                      }
-                   }
-                 })
+                   })
 
-                 # return value for parent module: ----
-                 return(mergeCommandAuto)
-               })
-}
+                   # create: mergeCommandAuto ----
+                   observeEvent(list(input$columnsX, input$columnsY), {
+                     columnsToJoin$tableX <-
+                       equalizeLength(input$columnsX, input$columnsY)$xColNames
+                     columnsToJoin$tableY <-
+                       equalizeLength(input$columnsX, input$columnsY)$yColNames
+
+                     colJoinString <-
+                       extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
+
+                     if (isNotEmptyColumnsAndNonEqualTables(colJoinString, tableXId(), tableYId())) {
+                       mergeCommandAuto(
+                         tmpl(
+                           paste0(
+                             c(
+                               "{{ tableX }} %>% ",
+                               "  {{ mergeOperation }}({{ tableY }},",
+                               "    by = {{ colJoinString }})"
+                             ),
+                             collapse = ""
+                           ),
+                           tableX = tableXId(),
+                           mergeOperation = input$mergeOperation,
+                           tableY = tableYId(),
+                           colJoinString = colJoinString
+                         ) %>% as.character()
+                       )
+                     } else {
+                       mergeCommandAuto("")
+
+                       if (isEqualTables(tableXId(), tableYId())) {
+                         alert("Please choose two different tables.")
+                       }
+                     }
+                   })
+
+                   # return value for parent module: ----
+                   return(mergeCommandAuto)
+                 })
+  }
 
 
 # Merge Via UI Helper Functions ----
@@ -173,9 +185,10 @@ extractJoinString <- function(xColumns, yColumns) {
   paste0("c(", res, ")")
 }
 
-isNotEmptyColumnsAndNonEqualTables <- function(colJoinString, tableXId, tableYId) {
-  !(colJoinString == "c(\"\"=\"\")") && (tableXId != tableYId)
-}
+isNotEmptyColumnsAndNonEqualTables <-
+  function(colJoinString, tableXId, tableYId) {
+    !(colJoinString == "c(\"\"=\"\")") && (tableXId != tableYId)
+  }
 
 isEqualTables <- function(tableXId, tableYId) {
   !is.null(tableXId) && !is.null(tableYId) && tableXId == tableYId

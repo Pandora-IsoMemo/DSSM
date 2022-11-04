@@ -45,6 +45,7 @@ Imports:
   sp (>= 1.2.7),
   stringi (>= 1.1.7),
   templates,
+  tidyr,
   webshot,
   zip
 Suggests:

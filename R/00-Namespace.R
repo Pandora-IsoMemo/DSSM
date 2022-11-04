@@ -40,6 +40,7 @@
 #'  qnorm residuals pnorm var sd setNames cor density median kmeans
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom templates tmpl
+#' @importFrom tidyr separate unite
 #' @importFrom utils available.packages compareVersion install.packages head
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output download.file
 #' @importFrom zip zipr

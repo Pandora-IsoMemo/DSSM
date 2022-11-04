@@ -88,7 +88,7 @@ importDataServer <- function(id,
                  })
 
                  observeEvent(input$tabImport, {
-                   if (input$tabImport == "Merge Data") {
+                   if (input$tabImport == "Merge (optional)") {
                      shinyjs::hide(ns("addData"), asis = TRUE)
                      shinyjs::hide(ns("accept"), asis = TRUE)
                      shinyjs::show(ns("acceptMerged"), asis = TRUE)
@@ -195,7 +195,7 @@ importDataServer <- function(id,
                        dec = input$decSep,
                        withRownames = isTRUE(input$rownames),
                        sheetId = as.numeric(input$sheet),
-                       headOnly = TRUE,
+                       headOnly = FALSE,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
                      )
@@ -235,7 +235,7 @@ importDataServer <- function(id,
                    req(valuesPreview$dataImport)
 
                    previewData <-
-                     cutAllLongStrings(valuesPreview$dataImport, cutAt = 20)
+                     cutAllLongStrings(valuesPreview$dataImport[1:2, ], cutAt = 20)
                    DT::datatable(
                      previewData,
                      filter = "none",
@@ -249,15 +249,15 @@ importDataServer <- function(id,
                    )
                  })
 
-                 newColNames <- renameColumnsServer(
-                   "renameCols",
-                   columnNames = reactive(colnames(valuesPreview$dataImport))
+                 preparedData <- prepareDataServer(
+                   "dataPreparer",
+                   selectedData = reactive(valuesPreview$dataImport)
                    )
 
-                 observeEvent(newColNames(), {
-                   req(newColNames())
+                 observeEvent(preparedData(), {
+                   req(preparedData())
 
-                   colnames(valuesPreview$dataImport) <- newColNames()
+                   valuesPreview$dataImport <- preparedData()
                  })
 
                  ## button cancel ----
@@ -269,66 +269,26 @@ importDataServer <- function(id,
                  observeEvent(input$accept, {
                    removeModal()
 
-                   withProgress({
-                     # load full data set
-                     values <- loadDataWrapper(
-                       values = values,
-                       filepath = dataSource()$file,
-                       filename = dataSource()$filename,
-                       colNames = colNames,
-                       type = input$type,
-                       sep = input$colSep,
-                       dec = input$decSep,
-                       withRownames = isTRUE(input$rownames),
-                       sheetId = as.numeric(input$sheet),
-                       headOnly = FALSE,
-                       customWarningChecks = customWarningChecks,
-                       customErrorChecks = customErrorChecks
-                     )
+                   tmpData <- preparedData()
+                   ### format column names for import ----
+                   colnames(tmpData) <- colnames(tmpData) %>%
+                     formatColumnNames()
 
-                     ### format column names for import ----
-                     colnames(values$dataImport) <- newColNames() %>%
-                       formatColumnNames()
-                   },
-                   value = 0.75,
-                   message = 'importing full data ...')
-
-                   values$data[[values$fileName]] <-
-                     values$dataImport
+                   values$data[[valuesPreview$fileName]] <- tmpData
                  })
 
                  ## button add data ----
                  observeEvent(input$addData, {
-                   withProgress({
-                     # load full data set
-                     valuesToMerge <- loadDataWrapper(
-                       values = values,
-                       filepath = dataSource()$file,
-                       filename = dataSource()$filename,
-                       colNames = colNames,
-                       type = input$type,
-                       sep = input$colSep,
-                       dec = input$decSep,
-                       withRownames = isTRUE(input$rownames),
-                       # set headOnly = TRUE to FALSE after developement
-                       #  warning if data becomes too large
-                       headOnly = FALSE,
-                       customWarningChecks = customWarningChecks,
-                       customErrorChecks = customErrorChecks
-                     )
-
-                     ### format column names for merger ----
-                     colnames(valuesToMerge$dataImport) <- newColNames() %>%
-                       formatColumnNames()
-                   },
-                   value = 0.75,
-                   message = 'loading full data ...')
+                   tmpData <- preparedData()
+                   ### format column names for import ----
+                   colnames(tmpData) <- colnames(tmpData) %>%
+                     formatColumnNames()
 
                    mergeList(c(
                      mergeList(),
                      setNames(
-                       list(reactiveValuesToList(valuesToMerge)),
-                       valuesToMerge$fileName
+                       list(tmpData),
+                       valuesPreview$fileName
                      )
                    ))
 
@@ -359,26 +319,30 @@ importDataServer <- function(id,
                })
 }
 
-# import data dialog ui
+# import data dialog UI ----
 importDataDialog <- function(ns) {
   modalDialog(
     shinyjs::useShinyjs(),
     title = "Import Data",
+    style = 'height: 900px',
     footer = tagList(
       actionButton(ns("accept"), "Accept"),
-      actionButton(ns("addData"), "Add to Merge Data"),
+      actionButton(ns("addData"), "Mark for Merge"),
       actionButton(ns("acceptMerged"), "Accept Merged"),
       actionButton(ns("cancel"), "Cancel")
     ),
     tabsetPanel(
       id = ns("tabImport"),
-      tabPanel("Select Data",
+      tabPanel("Select",
                selectDataTab(ns = ns)),
-      tabPanel("Merge Data",
+      tabPanel("Prepare (optional)",
+               prepareDataUI(ns("dataPreparer"))),
+      tabPanel("Merge (optional)",
                mergeDataUI(ns("dataMerger")))
     )
   )
 }
+
 
 #' Select Data UI
 #'
@@ -456,7 +420,6 @@ selectDataTab <- function(ns) {
     div(class = "text-danger", uiOutput(ns("warning"))),
     div(class = "text-danger", uiOutput(ns("error"))),
     div(class = "text-success", textOutput(ns("success"))),
-    renameColumnsUI(ns("renameCols")),
     tags$hr(),
     tags$html(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)")),
     fluidRow(column(12,
@@ -787,62 +750,4 @@ getSheetSelection <- function(filepath) {
   names(sheets) <- sheetNames
 
   sheets
-}
-
-
-# Rename Columns Module ----
-
-#' Rename Columns UI
-#'
-#' UI of the module
-#'
-#' @param id id of module
-renameColumnsUI <- function(id) {
-  ns <- NS(id)
-
-  tagList(tags$br(),
-          fluidRow(
-            column(5, selectInput(
-              ns("columnToRename"), "Rename a column", choices = NULL
-            )),
-            column(5, style = "margin-top: 18px;", textInput(
-              ns("newName"), label = NULL, placeholder = "New name"
-            )),
-            column(
-              2,
-              align = "right",
-              style = "margin-top: 18px;",
-              actionButton(ns("setColName"), "Set")
-            )
-          ))
-}
-
-#' Rename Columns Server
-#'
-#' Server function of the module
-#' @param id id of module
-#' @param columnNames (reactive) column names
-renameColumnsServer <- function(id, columnNames) {
-  moduleServer(id,
-               function(input, output, session) {
-                 newColumnNames <- reactiveVal()
-
-                 observeEvent(columnNames(), {
-                   updateSelectInput(session, "columnToRename", choices = columnNames())
-                   updateTextInput(session, "newName", value = "")
-
-                   # by default return current column names
-                   newColumnNames(columnNames())
-                 })
-
-                 observeEvent(input$setColName, {
-                   req(columnNames(), input$newName)
-
-                   tmpNames <- columnNames()
-                   tmpNames[tmpNames == input$columnToRename] <- input$newName
-                   newColumnNames(tmpNames)
-                 })
-
-                 newColumnNames
-               })
 }

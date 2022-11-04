@@ -1,3 +1,398 @@
+# Prepare Data Module ----
+
+#' Prepare Data UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+prepareDataUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    renameColumnsUI(ns("renameCols")),
+    joinColumnsUI(ns("joinCols")),
+    splitColumnsUI(ns("splitCols")),
+    deleteColumnsUI(ns("deleteCols")),
+    tags$hr(),
+    tags$html(
+      HTML(
+        "<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)"
+      )
+    ),
+    fluidRow(column(12,
+                    dataTableOutput(ns(
+                      "preview"
+                    ))))
+  )
+}
+
+
+#' Prepare Data Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param selectedData (list) list of data to be merged
+prepareDataServer <- function(id, selectedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 preparedData <- reactiveVal()
+
+                 observeEvent(selectedData(), {
+                   preparedData(selectedData())
+                 })
+
+                 newColNames <- renameColumnsServer("renameCols",
+                                                    columnNames = reactive(colnames(preparedData())))
+
+                 observeEvent(newColNames(), {
+                   req(newColNames())
+                   tmpData <- preparedData()
+                   colnames(tmpData) <- newColNames()
+                   preparedData(tmpData)
+                 })
+
+                 reducedData <-
+                   deleteColumnsServer("deleteCols", preparedData)
+
+                 observeEvent(reducedData(), {
+                   req(reducedData())
+                   preparedData(reducedData())
+                 })
+
+                 joinedData <-
+                   joinColumnsServer("joinCols", preparedData)
+
+                 observeEvent(joinedData(), {
+                   req(joinedData())
+                   preparedData(joinedData())
+                 })
+
+                 splittedData <-
+                   splitColumnsServer("splitCols", preparedData)
+
+                 observeEvent(splittedData(), {
+                   req(splittedData())
+                   preparedData(splittedData())
+                 })
+
+                 output$preview <- renderDataTable({
+                   req(preparedData())
+
+                   previewData <-
+                     cutAllLongStrings(preparedData()[1:2, ], cutAt = 20)
+                   DT::datatable(
+                     previewData,
+                     filter = "none",
+                     selection = "none",
+                     rownames = FALSE,
+                     options = list(
+                       dom = "t",
+                       ordering = FALSE,
+                       scrollX = TRUE
+                     )
+                   )
+                 })
+
+                 preparedData
+               })
+}
+
+
+## Rename Columns Module ----
+
+#' Rename Columns UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+renameColumnsUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(tags$br(),
+          fluidRow(
+            column(5, selectInput(
+              ns("columnToRename"), "Rename a column", choices = NULL
+            )),
+            column(5, style = "margin-top: 18px;", textInput(
+              ns("newName"), label = NULL, placeholder = "New name"
+            )),
+            column(
+              2,
+              align = "right",
+              style = "margin-top: 18px;",
+              actionButton(ns("setColName"), "Set", width = "100%")
+            )
+          ))
+}
+
+#' Rename Columns Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param columnNames (reactive) column names
+renameColumnsServer <- function(id, columnNames) {
+  moduleServer(id,
+               function(input, output, session) {
+                 newColumnNames <- reactiveVal()
+
+                 observeEvent(columnNames(), {
+                   updateSelectInput(session, "columnToRename", choices = columnNames())
+                   updateTextInput(session, "newName", value = "")
+
+                   # by default return current column names
+                   newColumnNames(columnNames())
+                 })
+
+                 observeEvent(input$setColName, {
+                   req(columnNames(), input$newName)
+
+                   tmpNames <- columnNames()
+                   tmpNames[tmpNames == input$columnToRename] <-
+                     input$newName
+                   newColumnNames(tmpNames)
+                 })
+
+                 newColumnNames
+               })
+}
+
+
+## Delete Columns Module ----
+
+#' Delete Columns UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+deleteColumnsUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(tags$br(),
+          fluidRow(
+            column(
+              5,
+              selectInput(
+                ns("columnsToDelete"),
+                "Delete column(s)",
+                choices = NULL,
+                multiple = TRUE
+              )
+            ),
+            column(
+              3,
+              offset = 4,
+              align = "right",
+              style = "margin-top: 18px;",
+              actionButton(ns("deleteCol"), "Delete")
+            )
+          ))
+}
+
+#' Delete Columns Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param preparedData (reactive) selected data, possibly already modified
+deleteColumnsServer <- function(id, preparedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 newData <- reactiveVal()
+
+                 observeEvent(preparedData(), {
+                   updateSelectInput(
+                     session,
+                     "columnsToDelete",
+                     choices = colnames(preparedData()),
+                     selected = c()
+                   )
+
+                   # by default return current data
+                   newData(preparedData())
+                 })
+
+                 observeEvent(input$deleteCol, {
+                   req(preparedData(), input$columnsToDelete)
+
+                   tmpData <- preparedData()
+                   tmpData <-
+                     tmpData[!(colnames(tmpData) %in% input$columnsToDelete)]
+                   newData(tmpData)
+                 })
+
+                 newData
+               })
+}
+
+
+## Join Columns Module ----
+
+#' Join Columns UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+joinColumnsUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(fluidRow(
+    column(4, selectInput(
+      ns("column1ToJoin"), "Join column 1", choices = NULL
+    )),
+    column(2, style = "margin-top: 18px;",
+           textInput(
+             ns("sep"), label = NULL, value = "; "
+           )),
+    column(4,
+           selectInput(
+             ns("column2ToJoin"), "with column 2", choices = NULL
+           ))
+  ),
+  fluidRow(
+    column(5, textInput(
+      ns("newName"), label = NULL, placeholder = "New name"
+    )),
+    column(
+      4,
+      offset = 1,
+      style = "margin-top: 14px;",
+      checkboxInput(ns("keepOrigColumns"), "Keep input columns", value = TRUE)
+    ),
+    column(2, align = "right",
+           actionButton(ns("join"), "Join", width = "100%"))
+  ))
+}
+
+#' Join Columns Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param preparedData (reactive) (reactive) selected data, possibly already modified
+joinColumnsServer <- function(id, preparedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 newData <- reactiveVal()
+
+                 observeEvent(preparedData(), {
+                   updateSelectInput(session, "column1ToJoin",
+                                     choices = colnames(preparedData()))
+                   updateSelectInput(session, "column2ToJoin",
+                                     choices = colnames(preparedData()))
+                   updateTextInput(session, "newName", value = "")
+
+                   # by default return current data
+                   newData(preparedData())
+                 })
+
+                 observeEvent(input$join, {
+                   req(preparedData(),
+                       input$column1ToJoin,
+                       input$column2ToJoin,
+                       input$newName)
+
+                   #tmpData <- preparedData()
+                   # newName <- input$newName
+                   # tmpData[[newName]] <- paste(tmpData[[input$column1ToJoin]],
+                   #                             tmpData[[input$column2ToJoin]],
+                   #                             sep = input$sep)
+                   #
+                   # if (!input$keepOrigColumns) {
+                   #   tmpData <- tmpData[!(colnames(tmpData) %in% c(input$column1ToJoin, input$column2ToJoin))]
+                   # }
+
+                   tmpData <- preparedData() %>%
+                     unite(
+                       !!input$newName,
+                       c(input$column1ToJoin, input$column2ToJoin),
+                       sep = input$sep,
+                       remove = !input$keepOrigColumns,
+                       na.rm = TRUE
+                     )
+
+                   newData(tmpData)
+                 })
+
+                 newData
+               })
+}
+
+
+## Split Columns Module ----
+
+#' Split Columns UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+splitColumnsUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(fluidRow(
+    column(4, selectInput(
+      ns("columnToSplit"), "Split a column", choices = NULL
+    )),
+    column(2, style = "margin-top: 18px;",
+           textInput(
+             ns("sep"), label = NULL, value = "; "
+           )),
+    column(4, style = "margin-top: 30px;",
+           checkboxInput(
+             ns("keepOrigColumn"), "Keep input column", value = TRUE
+           )),
+  ),
+  fluidRow(
+    column(5, textInput(
+      ns("newName1"), label = NULL, placeholder = "New name 1"
+    )),
+    column(5, textInput(
+      ns("newName2"), label = NULL, placeholder = "New name 2"
+    )),
+    column(2, align = "right",
+           actionButton(ns("split"), "Split", width = "100%"))
+  ))
+}
+
+#' Split Columns Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param preparedData (reactive) (reactive) selected data, possibly already modified
+splitColumnsServer <- function(id, preparedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 newData <- reactiveVal()
+
+                 observeEvent(preparedData(), {
+                   updateSelectInput(session, "columnToSplit",
+                                     choices = colnames(preparedData()))
+                   updateTextInput(session, "newName1", value = "")
+                   updateTextInput(session, "newName1", value = "")
+
+                   # by default return current data
+                   newData(preparedData())
+                 })
+
+                 observeEvent(input$split, {
+                   req(preparedData(),
+                       input$columnToSplit,
+                       input$newName1,
+                       input$newName2)
+
+                   tmpData <- preparedData() %>%
+                     separate(
+                       !!input$columnToSplit,
+                       c(input$newName1, input$newName2),
+                       sep = input$sep,
+                       remove = !input$keepOrigColumn
+                     )
+
+                   newData(tmpData)
+                 })
+
+                 newData
+               })
+}
+
+
 # Merge Data Module ----
 
 #' Merge Data UI
@@ -34,29 +429,34 @@ mergeDataUI <- function(id) {
       ),
       column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
     ),
-    conditionalPanel(condition = "input.useMergeViaCommand == false",
-                     mergeViaUIUI(ns("mergerViaUI")),
-                     ns = ns),
+    mergeViaUIUI(ns("mergerViaUI")),
     conditionalPanel(
       condition = "input.useMergeViaCommand == true",
       mergeViaCommandUI(ns("mergerViaCommand")),
       ns = ns
     ),
-    checkboxInput(ns("useMergeViaCommand"),
-                  "Check command line"),
-    fluidRow(column(6, actionButton(ns("applyMerge"), "Apply Merge")),
-             column(6, align = "right", style = "margin-top: 12px;", textOutput(ns("nRowsJoinedData")))),
+    fluidRow(
+      column(3, actionButton(ns("applyMerge"), "Apply Merge")),
+      column(4, checkboxInput(
+        ns("useMergeViaCommand"), "Check command line"
+      )),
+      column(5, align = "right", style = "margin-top: 12px;", textOutput(ns(
+        "nRowsJoinedData"
+      )))
+    ),
     #actionButton(ns("addMerge"), "Add Table"),
     conditionalPanel(
       ns = ns,
       condition = "output.showWarning == 'TRUE'",
       tags$br(),
-      tags$html(
-        HTML(paste0("<p style=\"color:red\">Merged data has more rows than the maximal ",
-               " number of rows of the input tables.",
-               " One row of one table matches several rows of the other table.<br>",
-               " Please check the x and y colums to join on.</p>"))
-      )
+      tags$html(HTML(
+        paste0(
+          "<p style=\"color:red\">Merged data has more rows than the maximal ",
+          " number of rows of the input tables.",
+          " One row of one table matches several rows of the other table.<br>",
+          " Please check the x and y colums to join on.</p>"
+        )
+      ))
     ),
     tags$hr(),
     tags$h5("Preview Data"),
@@ -106,7 +506,7 @@ mergeDataServer <- function(id, mergeList) {
                  })
 
                  observeEvent(input$tableX, {
-                   tableXData(mergeList()[[input$tableX]]$dataImport)
+                   tableXData(mergeList()[[input$tableX]])
                  })
 
                  output$nRowsTableX <- renderText({
@@ -115,7 +515,7 @@ mergeDataServer <- function(id, mergeList) {
                  })
 
                  observeEvent(input$tableY, {
-                   tableYData(mergeList()[[input$tableY]]$dataImport)
+                   tableYData(mergeList()[[input$tableY]])
                  })
 
                  output$nRowsTableY <- renderText({
@@ -145,7 +545,7 @@ mergeDataServer <- function(id, mergeList) {
                      ## create data.frames to merge ----
                      for (i in c(input$tableX, input$tableY)) {
                        assign(tableIds()[i],
-                              mergeList()[[i]]$dataImport)
+                              mergeList()[[i]])
                      }
 
                      ## match column types ----
@@ -215,7 +615,8 @@ mergeDataServer <- function(id, mergeList) {
 
                  output$showWarning <- renderText({
                    req(joinedData())
-                   maxRows <- max(NROW(tableXData()), NROW(tableYData()))
+                   maxRows <-
+                     max(NROW(tableXData()), NROW(tableYData()))
 
                    NROW(joinedData()) > maxRows
                  })
@@ -245,7 +646,7 @@ mergeDataServer <- function(id, mergeList) {
 extractMergeChoices <- function(tableList) {
   tableChoices <- names(tableList)
   names(tableChoices) <-
-    paste0(extractTableIds(tableChoices), " --- ", tableChoices)
+    paste0(extractTableIds(tableChoices), " -- ", tableChoices)
 
   tableChoices
 }
