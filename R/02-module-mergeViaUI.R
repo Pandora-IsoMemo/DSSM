@@ -11,14 +11,16 @@ mergeViaUIUI <- function(id) {
   tagList(
     fluidRow(column(
       6,
-      selectInput(
-        ns("columnsX"),
-        "Select x columns to join",
-        choices = NULL,
-        multiple = TRUE
+      div(
+        style = "margin-bottom: 0px",
+        selectInput(
+          ns("columnsX"),
+          "Select x columns to join",
+          choices = NULL,
+          multiple = TRUE
+        )
       ),
-      tags$html(
-        HTML(paste0("Names of x are used for joined columns."))
+      tags$html(HTML(paste0("(Names are used for joined columns.)"))
       ),
     ),
     column(
@@ -34,7 +36,7 @@ mergeViaUIUI <- function(id) {
     fluidRow(
     column(
       6,
-      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns")
+      checkboxInput(ns("addAllCommonColumns"), "Join on all common columns", value = FALSE)
     ),
     column(
       6,
@@ -70,34 +72,41 @@ mergeViaUIServer <-
            tableYId) {
     moduleServer(id,
                  function(input, output, session) {
+                   commonColumns <- reactiveVal()
                    columnsToJoin <- reactiveValues(tableX = NULL,
                                                    tableY = NULL)
                    mergeCommandAuto <- reactiveVal()
 
                    # update: column selection ----
                    observeEvent(tableXData(), {
-                     req(tableXData())
                      updateSelectInput(session, "columnsX",
-                                       choices = colnames(tableXData()))
+                                       choices = colnames(tableXData()),
+                                       selected = list())
+
+                     commonColumns(
+                       extractCommon(colnames(tableXData()), colnames(tableYData()))
+                     )
                    })
 
                    observeEvent(tableYData(), {
-                     req(tableYData())
                      updateSelectInput(session, "columnsY",
-                                       choices = colnames(tableYData()))
+                                       choices = colnames(tableYData()),
+                                       selected = list())
+
+                     commonColumns(
+                       extractCommon(colnames(tableXData()), colnames(tableYData()))
+                     )
                    })
 
-                   observeEvent(list(input$addAllCommonColumns, input$columnsX, input$columnsY), {
-                     req(tableXData(), tableYData())
-                     commonColumns <-
-                       intersect(colnames(tableXData()), colnames(tableYData()))
 
-                     #req(commonColumns())
+
+                   observeEvent(list(input$addAllCommonColumns, commonColumns()), {
+                     req(!is.null(input$addAllCommonColumns))
                      if (input$addAllCommonColumns) {
                        updateSelectInput(session, "columnsX",
-                                         selected = commonColumns)
+                                         selected = commonColumns())
                        updateSelectInput(session, "columnsY",
-                                         selected = commonColumns)
+                                         selected = commonColumns())
                      } else {
                        updateSelectInput(session, "columnsX",
                                          selected = list())
@@ -151,18 +160,13 @@ mergeViaUIServer <-
 # Merge Via UI Helper Functions ----
 
 ## helpers: column selection ----
-extractCommonColumns <- function(tableList, tableX, tableY) {
-  colnamesX <- extractColNames(tableList[[tableX]])
-  colnamesY <- extractColNames(tableList[[tableY]])
+
+extractCommon <- function(colnamesX, colnamesY) {
+  if (is.null(colnamesX) || is.null(colnamesY) ||
+      length(colnamesX) == 0 || length(colnamesY) == 0) return(list())
 
   intersect(colnamesX, colnamesY)
 }
-
-
-extractColNames <- function(tableListElement) {
-  colnames(tableListElement$dataImport)
-}
-
 
 equalizeLength <- function(xColNames, yColNames) {
   minLength <- min(length(xColNames), length(yColNames))

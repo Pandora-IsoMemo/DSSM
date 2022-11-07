@@ -8,8 +8,11 @@ testthat::test_that("Test module mergeViaUI", {
       formatColumnNames(isTest = TRUE)
   }
 
-  # to find common columns use:
-  # extractCommonColumns(testMergeList, names(testMergeList)[1], names(testMergeList)[2]) %>% dput()
+  # to create new testCommonColumns use:
+#
+#   colnamesX <- colnames(testMergeList[[names(testMergeList)[1]]]$dataImport)
+#   colnamesY <- colnames(testMergeList[[names(testMergeList)[2]]]$dataImport)
+#   intersect(colnamesX, colnamesY) %>% dput()
 
   testCommonColumns <-
     c(

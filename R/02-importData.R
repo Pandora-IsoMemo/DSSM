@@ -40,15 +40,7 @@ importDataServer <- function(id,
                    fileName = NULL,
                    fileImportSuccess = NULL,
                    dataImport = NULL,
-                   data = list()
-                 )
-
-                 valuesPreview <- reactiveValues(
-                   warnings = list(),
-                   errors = list(),
-                   fileName = NULL,
-                   fileImportSuccess = NULL,
-                   dataImport = NULL,
+                   preview <- NULL,
                    data = list()
                  )
 
@@ -67,9 +59,9 @@ importDataServer <- function(id,
                    values$warnings <- list()
                    values$errors <- list()
                    values$fileName <- ""
-                   values$fileImportWarning <- NULL
                    values$fileImportSuccess <- NULL
                    values$dataImport <- NULL
+                   values$preview <- NULL
                    values$data <- list()
                    dataSource(NULL)
 
@@ -175,18 +167,17 @@ importDataServer <- function(id,
                    req(dataSource())
 
                    # reset values
-                   valuesPreview$warnings <- list()
-                   valuesPreview$errors <- list()
-                   valuesPreview$fileName <- ""
-                   valuesPreview$fileImportWarning <- NULL
-                   valuesPreview$fileImportSuccess <- NULL
-                   valuesPreview$dataImport <- NULL
-                   valuesPreview$data <- list()
+                   values$warnings <- list()
+                   values$errors <- list()
+                   values$fileName <- ""
+                   values$fileImportSuccess <- NULL
+                   values$dataImport <- NULL
+                   values$preview <- NULL
+                   values$data <- list()
 
                    withProgress({
-                     # load first lines only
-                     valuesPreview <- loadDataWrapper(
-                       values = valuesPreview,
+                     values <- loadDataWrapper(
+                       values = values,
                        filepath = dataSource()$file,
                        filename = dataSource()$filename,
                        colNames = colNames,
@@ -199,20 +190,23 @@ importDataServer <- function(id,
                        customWarningChecks = customWarningChecks,
                        customErrorChecks = customErrorChecks
                      )
+
+                     if (length(values$errors) > 0 ||
+                         length(values$warnings) > 0) {
+                       shinyjs::disable(ns("addData"), asis = TRUE)
+                       shinyjs::disable(ns("accept"), asis = TRUE)
+                     } else {
+                       shinyjs::enable(ns("addData"), asis = TRUE)
+                       shinyjs::enable(ns("accept"), asis = TRUE)
+                       values$fileImportSuccess <-
+                         "Data import successful"
+                     }
+
+                     req(values$dataImport)
+                     values$preview <- cutAllLongStrings(values$dataImport[1:2, ], cutAt = 20)
                    },
                    value = 0.75,
-                   message = 'loading preview data ...')
-
-                   if (length(valuesPreview$errors) > 0 ||
-                       length(valuesPreview$warnings) > 0) {
-                     shinyjs::disable(ns("addData"), asis = TRUE)
-                     shinyjs::disable(ns("accept"), asis = TRUE)
-                   } else {
-                     shinyjs::enable(ns("addData"), asis = TRUE)
-                     shinyjs::enable(ns("accept"), asis = TRUE)
-                     valuesPreview$fileImportSuccess <-
-                       "Data import successful"
-                   }
+                   message = 'loading data ...')
                  })
 
                  observeEvent(list(input$type, dataSource()$file), {
@@ -225,19 +219,16 @@ importDataServer <- function(id,
                  })
 
                  output$warning <-
-                   renderUI(tagList(lapply(valuesPreview$warnings, tags$p)))
+                   renderUI(tagList(lapply(values$warnings, tags$p)))
                  output$error <-
-                   renderUI(tagList(lapply(valuesPreview$errors, tags$p)))
+                   renderUI(tagList(lapply(values$errors, tags$p)))
                  output$success <-
-                   renderText(valuesPreview$fileImportSuccess)
+                   renderText(values$fileImportSuccess)
 
                  output$preview <- renderDataTable({
-                   req(valuesPreview$dataImport)
-
-                   previewData <-
-                     cutAllLongStrings(valuesPreview$dataImport[1:2, ], cutAt = 20)
+                   req(values$preview)
                    DT::datatable(
-                     previewData,
+                     values$preview,
                      filter = "none",
                      selection = "none",
                      rownames = FALSE,
@@ -251,13 +242,14 @@ importDataServer <- function(id,
 
                  preparedData <- prepareDataServer(
                    "dataPreparer",
-                   selectedData = reactive(valuesPreview$dataImport)
+                   selectedData = reactive(values$dataImport)
                    )
 
                  observeEvent(preparedData(), {
                    req(preparedData())
 
-                   valuesPreview$dataImport <- preparedData()
+                   values$dataImport <- preparedData()
+                   values$preview <- cutAllLongStrings(values$dataImport[1:2, ], cutAt = 20)
                  })
 
                  ## button cancel ----
@@ -274,7 +266,7 @@ importDataServer <- function(id,
                    colnames(tmpData) <- colnames(tmpData) %>%
                      formatColumnNames()
 
-                   values$data[[valuesPreview$fileName]] <- tmpData
+                   values$data[[values$fileName]] <- tmpData
                  })
 
                  ## button add data ----
@@ -288,7 +280,7 @@ importDataServer <- function(id,
                      mergeList(),
                      setNames(
                        list(tmpData),
-                       valuesPreview$fileName
+                       values$fileName
                      )
                    ))
 
@@ -417,9 +409,12 @@ selectDataTab <- function(ns) {
     ),
     checkboxInput(ns("rownames"), "First column contains rownames"),
     helpText("The first row in your file need to contain variable names."),
-    div(class = "text-danger", uiOutput(ns("warning"))),
-    div(class = "text-danger", uiOutput(ns("error"))),
-    div(class = "text-success", textOutput(ns("success"))),
+    div(
+      style = 'height: 166px',
+      div(class = "text-danger", uiOutput(ns("warning"))),
+      div(class = "text-danger", uiOutput(ns("error"))),
+      div(class = "text-success", textOutput(ns("success")))
+    ),
     tags$hr(),
     tags$html(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)")),
     fluidRow(column(12,

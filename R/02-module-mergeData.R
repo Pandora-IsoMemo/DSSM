@@ -10,9 +10,13 @@ prepareDataUI <- function(id) {
 
   tagList(
     renameColumnsUI(ns("renameCols")),
+    tags$br(),
     joinColumnsUI(ns("joinCols")),
+    tags$br(),
     splitColumnsUI(ns("splitCols")),
+    tags$br(),
     deleteColumnsUI(ns("deleteCols")),
+    tags$br(),
     tags$hr(),
     tags$html(
       HTML(
@@ -167,8 +171,7 @@ renameColumnsServer <- function(id, columnNames) {
 deleteColumnsUI <- function(id) {
   ns <- NS(id)
 
-  tagList(tags$br(),
-          fluidRow(
+  tagList(fluidRow(
             column(
               5,
               selectInput(
@@ -430,37 +433,48 @@ mergeDataUI <- function(id) {
       column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
     ),
     mergeViaUIUI(ns("mergerViaUI")),
+    fluidRow(
+      column(4,
+             style = "margin-top: -46px;",
+             checkboxInput(
+               ns("useMergeViaCommand"), "Check command line"
+             ))
+    ),
     conditionalPanel(
       condition = "input.useMergeViaCommand == true",
       mergeViaCommandUI(ns("mergerViaCommand")),
       ns = ns
     ),
+    tags$br(),
     fluidRow(
       column(3, actionButton(ns("applyMerge"), "Apply Merge")),
-      column(4, checkboxInput(
-        ns("useMergeViaCommand"), "Check command line"
-      )),
-      column(5, align = "right", style = "margin-top: 12px;", textOutput(ns(
+      column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
         "nRowsJoinedData"
       )))
     ),
     #actionButton(ns("addMerge"), "Add Table"),
-    conditionalPanel(
-      ns = ns,
-      condition = "output.showWarning == 'TRUE'",
-      tags$br(),
-      tags$html(HTML(
-        paste0(
-          "<p style=\"color:red\">Merged data has more rows than the maximal ",
-          " number of rows of the input tables.",
-          " One row of one table matches several rows of the other table.<br>",
-          " Please check the x and y colums to join on.</p>"
-        )
-      ))
+    div(
+      style = 'height: 96px',
+      conditionalPanel(
+        ns = ns,
+        condition = "output.showWarning == 'TRUE'",
+        tags$br(),
+        tags$html(HTML(
+          paste0(
+            "<p style=\"color:red\">Merged data has more rows than the maximal ",
+            " number of rows of the input tables.",
+            " One row of one table matches several rows of the other table.<br>",
+            " Please check the x and y colums to join on.</p>"
+          )
+        ))
+      )
     ),
     tags$hr(),
-    tags$h5("Preview Data"),
-    tags$h5("(Long character entries might be cutted in the preview.)"),
+    tags$html(
+      HTML(
+        "<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)"
+      )
+    ),
     fluidRow(column(12,
                     dataTableOutput(ns(
                       "joinedData"
