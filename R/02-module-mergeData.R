@@ -16,7 +16,6 @@ prepareDataUI <- function(id) {
     splitColumnsUI(ns("splitCols")),
     tags$br(),
     deleteColumnsUI(ns("deleteCols")),
-    tags$br(),
     tags$hr(),
     tags$html(
       HTML(

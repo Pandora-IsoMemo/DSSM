@@ -40,7 +40,7 @@ importDataServer <- function(id,
                    fileName = NULL,
                    fileImportSuccess = NULL,
                    dataImport = NULL,
-                   preview <- NULL,
+                   preview = NULL,
                    data = list()
                  )
 
@@ -410,7 +410,7 @@ selectDataTab <- function(ns) {
     checkboxInput(ns("rownames"), "First column contains rownames"),
     helpText("The first row in your file need to contain variable names."),
     div(
-      style = 'height: 166px',
+      style = 'height: 105px',
       div(class = "text-danger", uiOutput(ns("warning"))),
       div(class = "text-danger", uiOutput(ns("error"))),
       div(class = "text-success", textOutput(ns("success")))
