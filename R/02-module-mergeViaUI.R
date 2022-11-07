@@ -13,22 +13,34 @@ mergeViaUIUI <- function(id) {
       6,
       div(
         style = "margin-bottom: 0px",
-        selectInput(
-          ns("columnsX"),
-          "Select x columns to join",
+        pickerInput(
+          inputId = ns("columnsX"),
+          label = "Select x columns to join",
           choices = NULL,
+          options = list(
+            `actions-box` = TRUE,
+            size = 20,
+            `none-selected-text` = "No columns selected"#,
+            #`selected-text-format` = "count > 8"
+          ),
           multiple = TRUE
         )
       ),
-      tags$html(HTML(paste0("(Names are used for joined columns.)"))
+      tags$html(HTML(paste0("(Names of x are used for joined columns.)"))
       ),
     ),
     column(
       6,
-      selectInput(
-        ns("columnsY"),
-        "Select y columns to join",
+      pickerInput(
+        inputId = ns("columnsY"),
+        label = "Select y columns to join",
         choices = NULL,
+        options = list(
+          `actions-box` = TRUE,
+          size = 20,
+          `none-selected-text` = "No columns selected"#,
+          #`selected-text-format` = "count > 8"
+        ),
         multiple = TRUE
       )
     )),
@@ -79,7 +91,7 @@ mergeViaUIServer <-
 
                    # update: column selection ----
                    observeEvent(tableXData(), {
-                     updateSelectInput(session, "columnsX",
+                     updatePickerInput(session, "columnsX",
                                        choices = colnames(tableXData()),
                                        selected = list())
 
@@ -89,7 +101,7 @@ mergeViaUIServer <-
                    })
 
                    observeEvent(tableYData(), {
-                     updateSelectInput(session, "columnsY",
+                     updatePickerInput(session, "columnsY",
                                        choices = colnames(tableYData()),
                                        selected = list())
 
@@ -103,14 +115,14 @@ mergeViaUIServer <-
                    observeEvent(list(input$addAllCommonColumns, commonColumns()), {
                      req(!is.null(input$addAllCommonColumns))
                      if (input$addAllCommonColumns) {
-                       updateSelectInput(session, "columnsX",
+                       updatePickerInput(session, "columnsX",
                                          selected = commonColumns())
-                       updateSelectInput(session, "columnsY",
+                       updatePickerInput(session, "columnsY",
                                          selected = commonColumns())
                      } else {
-                       updateSelectInput(session, "columnsX",
+                       updatePickerInput(session, "columnsX",
                                          selected = list())
-                       updateSelectInput(session, "columnsY",
+                       updatePickerInput(session, "columnsY",
                                          selected = list())
                      }
                    })
@@ -130,9 +142,9 @@ mergeViaUIServer <-
                          tmpl(
                            paste0(
                              c(
-                               "{{ tableX }} %>% ",
+                               "{{ tableX }} %>%",
                                "  {{ mergeOperation }}({{ tableY }},",
-                               "    by = {{ colJoinString }})"
+                               "  by = {{ colJoinString }})"
                              ),
                              collapse = ""
                            ),

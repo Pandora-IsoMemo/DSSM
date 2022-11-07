@@ -445,13 +445,6 @@ mergeDataUI <- function(id) {
       ns = ns
     ),
     tags$br(),
-    fluidRow(
-      column(3, actionButton(ns("applyMerge"), "Apply Merge")),
-      column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
-        "nRowsJoinedData"
-      )))
-    ),
-    #actionButton(ns("addMerge"), "Add Table"),
     div(
       style = 'height: 96px',
       conditionalPanel(
@@ -468,6 +461,13 @@ mergeDataUI <- function(id) {
         ))
       )
     ),
+    fluidRow(
+      column(3, actionButton(ns("applyMerge"), "Apply Merge")),
+      column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
+        "nRowsJoinedData"
+      )))
+    ),
+    #actionButton(ns("addMerge"), "Add Table"),
     tags$hr(),
     tags$html(
       HTML(
@@ -489,15 +489,17 @@ mergeDataUI <- function(id) {
 mergeDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
-                 tableId <- reactiveValues(tableX = NULL,
-                                           tableY = NULL)
-
                  tableIds <- reactiveVal()
 
                  tableXData <- reactiveVal()
                  tableYData <- reactiveVal()
 
-                 joinedData <- reactiveVal()
+                 joinedResult <- reactiveValues(
+                   data = NULL,
+                   preview = NULL,
+                   warnings = list(),
+                   errors = list()
+                 )
 
                  # update: table selection ----
                  observeEvent(mergeList(), {
@@ -550,7 +552,7 @@ mergeDataServer <- function(id, mergeList) {
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
-                   joinedData(NULL)
+                   joinedResult$data <- NULL
 
                    req(mergeCommandManual())
 
@@ -587,67 +589,92 @@ mergeDataServer <- function(id, mergeList) {
                      joinedData <-
                        tryCatch({
                          eval(parse(text = mergeCommandManual()))
+                         #stop("test error")
+                         #warning("test warning")
                        },
                        error = function(cond) {
+                         joinedResult$errors <- c(joinedResult$errors, cond$message)
                          alert(cond$message)
                          # Choose a return value in case of error
                          return(NULL)
                        },
                        warning = function(cond) {
+                         joinedResult$warnings <- c(joinedResult$warnings, cond$message)
                          alert(cond$message)
                          # Choose a return value in case of warning
                          return(NULL)
                        },
                        finally = NULL)
                      if (inherits(joinedData, "try-error")) {
+                       joinedResult$errors <- c(joinedResult$errors, "Could not merge data.")
                        alert("Could not merge data")
                        return(NULL)
                      }
 
-                     if (!is.null(joinedData) &&
-                         nrow(joinedData) > 100000)
-                       alert(
-                         paste0(
-                           "Warning: Merged data is very large and has ",
-                           nrow(joinedData),
-                           "rows.",
-                           "The app might be very slow or even crash."
+                     # check result
+                     if (!is.null(joinedData)) {
+                       if (nrow(joinedData) > 100000) {
+                         bigJoinWarn <- paste(
+                           "Warning: Merged data is very large and has", nrow(joinedData), "rows.",
+                           "The app might be very slow or even crash after import."
                          )
-                       )
+                         joinedResult$warnings <- c(joinedResult$warnings, bigJoinWarn)
+                         alert(
+                           bigJoinWarn
+                         )
+                       }
 
-                     joinedData(joinedData)
+                       if (NROW(joinedData) > max(NROW(tableXData()), NROW(tableYData()))) {
+                         largerThanInputWarning <- paste(
+                           "Merged data has more rows than the maximal number of rows of the",
+                           "input tables. One row of one table matches several rows of the other",
+                           "table. Please check the x and y colums to join on."
+                         )
+                         joinedResult$warnings <- c(joinedResult$warnings, largerThanInputWarning)
+                       }
+
+                     }
+
+                     joinedResult$data <- joinedData
+                     joinedResult$preview <- cutAllLongStrings(joinedData[1:2, ], cutAt = 20)
+
                    },
                    value = 0.75,
                    message = 'merging data ...')
                  })
 
                  output$nRowsJoinedData <- renderText({
-                   req(joinedData())
-                   paste("Merged data has ", NROW(joinedData()), "rows")
+                   req(joinedResult$data)
+                   paste("Merged data has ", NROW(joinedResult$data), "rows")
                  })
 
                  output$showWarning <- renderText({
-                   req(joinedData())
+                   req(joinedResult$data)
                    maxRows <-
                      max(NROW(tableXData()), NROW(tableYData()))
 
-                   NROW(joinedData()) > maxRows
+                   NROW(joinedResult$data) > maxRows
                  })
                  outputOptions(output, "showWarning", suspendWhenHidden = FALSE)
 
                  output$joinedData <- renderDataTable({
-                   req(joinedData())
+                   req(joinedResult$preview)
 
-                   previewData <-
-                     cutAllLongStrings(joinedData()[1:2, ], cutAt = 20)
-
-                   DT::datatable(previewData,
-                                 rownames = FALSE,
-                                 options = list(scrollX = TRUE))
+                   DT::datatable(
+                     joinedResult$preview,
+                     filter = "none",
+                     selection = "none",
+                     rownames = FALSE,
+                     options = list(
+                       dom = "t",
+                       ordering = FALSE,
+                       scrollX = TRUE
+                     )
+                   )
                  })
 
                  # return value for parent module: ----
-                 return(joinedData)
+                 return(reactive(joinedResult$data))
 
                })
 }
