@@ -1,5 +1,5 @@
-# Pandora & IsoMemo spatiotemporal modelling
-Shiny App for spatiotemporal modelling develloped with the Pandora & IsoMemo initiatives.
+# Pandora & IsoMemo spatiotemporal modeling
+Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initiatives.
 
 ## Deployment Versionens:
 

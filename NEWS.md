@@ -76,6 +76,12 @@ into a zip file
 - In the _Modelling_ tab under _TimeR_ and _KernelTimeR_: new (numeric) input field for the
 `Time selection` in addition to the slider input `Time selection`
 
+# MpiIsoApp 22.08.2.1
+
+## Updates
+
+- text update of the modeling tab for the _pandora / isomemo search app_ (#9)
+
 ## MpiIsoApp 22.08.2
 
 ### Enhancements
@@ -84,4 +90,4 @@ into a zip file
 
 ### Bug fixes
 
-- fixes in the modelling tab _AssignR_: (#46)
+- fixes in the modeling tab _AssignR_: (#46)
