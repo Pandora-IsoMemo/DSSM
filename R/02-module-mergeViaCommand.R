@@ -9,7 +9,7 @@ mergeViaCommandUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    tags$br(),
+    #tags$br(),
     # output for path to table1, table2
     # textAreaInput(
     #   ns("table1"),

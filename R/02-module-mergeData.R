@@ -445,7 +445,7 @@ mergeDataUI <- function(id) {
       ns = ns
     ),
     div(
-      style = 'height: 96px',
+      style = 'height: 76px',
       htmlOutput(ns("mergeWarnings")),
     ),
     fluidRow(
@@ -546,7 +546,6 @@ mergeDataServer <- function(id, mergeList) {
                  observeEvent(input$applyMerge, {
                    joinedResult$data <- NULL
                    joinedResult$preview <- NULL
-                   joinedResult$warnings <- list()
                    joinedResult$warningsPopup <- list()
                    joinedResult$errors <- list()
 

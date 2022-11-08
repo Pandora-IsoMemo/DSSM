@@ -410,7 +410,7 @@ selectDataTab <- function(ns) {
     checkboxInput(ns("rownames"), "First column contains rownames"),
     helpText("The first row in your file need to contain variable names."),
     div(
-      style = 'height: 105px',
+      style = 'height: 145px',
       div(class = "text-danger", uiOutput(ns("warning"))),
       div(class = "text-danger", uiOutput(ns("error"))),
       div(class = "text-success", textOutput(ns("success")))
