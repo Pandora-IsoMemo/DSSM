@@ -276,7 +276,8 @@ timeAndMapSectionServer <- function(id,
                  observeEvent(list(dateValue(),
                                    zoomValue()), {
                                      mapAndTimeSettings$time <- dateValue()
-                                     mapAndTimeSettings$zoom <- zoomValue()
+                                     mapAndTimeSettings$zoom <-
+                                       zoomValue()
                                      mapAndTimeSettings$upperLeftLatitude <-
                                        mapSectionParams$upperLeftLatitude
                                      mapAndTimeSettings$upperLeftLongitude <-
@@ -378,6 +379,419 @@ mapSectionServer <- function(id,
                })
 }
 
+## Z-scale settings ----
+
+#' Z Scale UI
+#'
+#' UI of the module
+#'
+#' @param id id of module
+zScaleUI <-
+  function(id) {
+    ns <- NS(id)
+    tagList(
+      selectInput(
+        inputId = ns("estType"),
+        label = "Estimation type",
+        choices = NULL,
+      ),
+      conditionalPanel(
+        ns = ns,
+        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+        sliderInput(
+          inputId = ns("Quantile"),
+          label = "Estimation quantile",
+          min = 0.01,
+          max = 0.99,
+          value = c(0.9),
+          width = "100%"
+        )
+      ),
+      checkboxInput(
+        inputId = ns("showModel"),
+        label = "Show model estimates",
+        value = TRUE
+      ),
+      htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
+      numericInput(
+        inputId = ns("max"),
+        label = "Max range",
+        value = 10
+      ),
+      numericInput(
+        inputId = ns("min"),
+        label = "Min range",
+        value = 0
+      ),
+      conditionalPanel(
+        ns = ns,
+        condition = "output.restrictOption == 'show'",
+        selectInput(
+          inputId = ns("limit"),
+          label = "Range restriction",
+          choices = list(
+            "No restriction" = "No restriction",
+            "0-1" = "0-1",
+            "0-100" = "0-100"
+          )
+        )
+      )
+    )
+  }
+
+#' Z Scale Server
+#'
+#' Server function of the module
+#' @param id id of module
+#' @param Model (reactive) model output
+#' @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
+#' @param estimationTypeChoices (reactive) named characters of choices of estimation types
+#' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
+#' restrict the z scale.
+#' @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
+#' @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
+#'  "Minima/Maxima"
+#' @param zValuesFactor (numeric) factor applied to zValues
+zScaleServer <- function(id,
+                         Model,
+                         fixCol,
+                         estimationTypeChoices,
+                         restrictOption,
+                         zValuesFun,
+                         zValuesFactor,
+                         mapType = reactive("Map")) {
+  moduleServer(id,
+               function(input, output, session) {
+                 zModelValues <- reactiveVal(NULL)
+
+                 values <- reactiveValues(
+                   estType = NULL,
+                   Quantile = NULL,
+                   showModel = TRUE,
+                   range = NULL,
+                   limit = NULL
+                 )
+
+                 output$titleScaleInput <- renderText({
+                   switch(mapType(),
+                          "Time course" = "Range of y axis:",
+                          "Minima/Maxima" = "Range of y axis:",
+                          "Range of colour scale:")
+                 })
+
+                 observeEvent(estimationTypeChoices(), {
+                   updateSelectInput(session,
+                                     "estType",
+                                     choices = estimationTypeChoices(),
+                                     selected = "Mean")
+                 })
+
+                 observeEvent(list(input$estType, Model(), mapType()), {
+                   req(input$estType)
+                   validate(validInput(Model()))
+
+                   if (!fixCol())
+                     zModelValues(
+                       zValuesFun(
+                         estimationType = input$estType,
+                         model = Model(),
+                         mapType = mapType(),
+                         factor = zValuesFactor
+                       )
+                     )
+                   else
+                     zModelValues(NULL)
+
+                   req(zModelValues())
+                   values$estType <- input$estType
+                   values$range <-
+                     c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
+
+                   updateNumericInput(
+                     session,
+                     "min",
+                     value = zModelValues()$minInput$value,
+                     min = zModelValues()$minInput$min,
+                     max = zModelValues()$minInput$max
+                   )
+
+                   updateNumericInput(
+                     session,
+                     "max",
+                     value = zModelValues()$maxInput$value,
+                     min = zModelValues()$maxInput$min,
+                     max = zModelValues()$maxInput$max
+                   )
+
+                   # reset Quantile
+                   values$Quantile <- NULL
+
+                   req(input$estType %in% c("Quantile", "QuantileTOTAL"))
+                   values$Quantile <- input$Quantile
+                 })
+
+                 output$restrictOption <-
+                   renderText({
+                     restrictOption()
+                   })
+                 outputOptions(output, "restrictOption", suspendWhenHidden = FALSE)
+
+                 # react slower on user input
+                 zRange <- reactive({
+                   if(input$estType == "Significance (p-value)"){
+                     pmax(0, pmin(1, c(input$min, input$max)))
+                   } else {
+                     c(input$min, input$max)
+                   }
+                 })
+
+                 zRange_d <- zRange %>% debounce(1000)
+
+                 observeEvent(zRange_d(), {
+                   req(zModelValues(), (values$range[1] != zRange_d()[1] |
+                                          values$range[2] != zRange_d()[2]))
+                   values$range <- zRange_d()
+                 })
+
+                 observeEvent(input$limit, {
+                   req(restrictOption() == "show", zModelValues())
+
+                   rangez <- c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
+
+                   if (identical(input$limit, "0-1")) {
+                     rangez <- pmax(0, pmin(1, rangez))
+                     if (rangez[1] == rangez[2]) {
+                       rangez <- c(0, 1)
+                     }
+                   }
+
+                   if (identical(input$limit, "0-100")) {
+                     rangez <- pmax(0, pmin(100, rangez))
+                     if (rangez[1] == rangez[2]) {
+                       rangez <- c(0, 100)
+                     }
+                   }
+
+                   values$range <- c(min(rangez), max(rangez))
+                   values$limit <- input$limit
+
+                   updateNumericInput(session, "min", value = min(rangez),
+                                      min = min(rangez), max = max(rangez))
+                   updateNumericInput(session, "max", value = max(rangez),
+                                      min = min(rangez), max = max(rangez))
+                 })
+
+                 observeEvent(input$Quantile, {
+                   values$estType <- input$estType
+                   values$Quantile <- input$Quantile
+                 })
+
+                 observeEvent(input$showModel, {
+                   values$showModel <- input$showModel
+                 })
+
+                 values
+               })
+}
+
+
+#' Get Z Values Map Sim
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZValuesMapSim <-
+  function(estimationType, model, mapType, factor = 1) {
+    if (is.null(model))
+      return(NULL)
+
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
+    if (estimationType %in% c("Mean", "Quantile")) {
+      zRange <- model$Est
+      minValue <- 0
+      maxValue <- signif(max(zRange, na.rm = TRUE) * factor, 2)
+
+      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      return(zValues)
+    }
+
+    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+      sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+      zRange <- model$Sd
+      maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
+
+      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      return(zValues)
+    }
+  }
+
+
+#' Get Z Values Map Diff
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZValuesMapDiff <-
+  function(estimationType, model, mapType, factor = 1) {
+    if (is.null(model))
+      return(NULL)
+
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
+    if (estimationType %in% c("Mean", "Quantile", "Significance (p-value)", "Significance (z-value)")) {
+      zRange <- model$Est
+      minValue <- min(zRange, na.rm = TRUE)
+      maxValue <- max(zRange, na.rm = TRUE) * factor
+
+      minValue <- signif(minValue,
+                         which(round(abs(diff(zRange) / minValue * 10^(0:10)), 0) > 1)[1])
+      maxValue <- signif(maxValue,
+                         which(round(abs(diff(zRange) / maxValue * 10^(0:10)), 0) > 1)[1])
+
+      minValue[is.na(minValue)] <- 0
+      maxValue[is.na(maxValue)] <- 0
+
+      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      return(zValues)
+    }
+
+    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+      sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+      zRange <- model$Sd
+      maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
+
+      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      return(zValues)
+    }
+  }
+
+
+#' Get Z Values Kernel
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZValuesKernel <-
+  function(estimationType, model, mapType, factor = 1.25) {
+    model <- model$model
+    if (is.null(model))
+      return(NULL)
+
+    zValues <- list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+
+    if (estimationType %in% c("1 SE", "2 SE")) {
+      sdVal <- ifelse(grepl("2", estimationType), 2, 1)
+      zRange <-
+        as.vector(apply(sapply(1:length(model), function(x)
+          model[[x]]$estimate), 1, sd)) * sdVal
+    } else {
+      zRange <-
+        as.vector(rowMeans(sapply(1:length(model), function(x)
+          model[[x]]$estimate))) * factor
+    }
+
+    maxValue <- signif(max(zRange, na.rm = TRUE), 2)
+
+    zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
+    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+    return(zValues)
+  }
+
+
+#' Get Z Values
+#'
+#' @param estimationType (character) type of estimate
+#' @param model (list) model output
+#' @param mapType (character) type of map, either "Map" or "Time course"
+#' @param factor (numeric) factor applied to estimates
+getZvalues <- function(estimationType, model, mapType, factor = 3) {
+  model <- model$model
+  if (is.null(model))
+    return(NULL)
+
+  zValues <- list(
+    minInput = list(value = 0, min = 0, max = 10),
+    maxInput = list(value = 10, min = 0, max = 10)
+  )
+
+  if(mapType == "Speed"){
+    maxValue <- signif(50000 / diff(model$range$mean), 1)
+
+    zValues$minInput <- list(value = 1,        min = 0, max = maxValue)
+    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue * 100)
+    return(zValues)
+  }
+
+  if (mapType == "Time course" || estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
+    defaultMin <- getDefaultZMin(model$range$mean)
+    defaultMax <- getDefaultZMax(model$range$mean)
+    zValues$minInput <- list(value = defaultMin, min = defaultMin, max = defaultMax)
+    zValues$maxInput <- list(value = defaultMax, min = defaultMin, max = defaultMax)
+    return(zValues)
+  }
+
+  val <- 10   # default value
+  if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") &&
+      mapType != "Time course") {
+    val <- getDefaultZError(estimationType, model$range$seTotal)
+  }
+
+  if (estimationType %in% c("1 SE", "2 SE")  &&
+      mapType != "Time course") {
+    val <- getDefaultZError(estimationType, model$range$se)
+  }
+
+  zValues$minInput <- list(value = 0,   min = 0, max = val * factor)
+  zValues$maxInput <- list(value = val, min = 0, max = val * factor)
+  return(zValues)
+}
+
+
+#' Get Default Z Error
+#'
+#' @param estType (character) type of estimate
+#' @param range (numeric) range from model output
+getDefaultZError <- function(estType, range) {
+  sdVal <- ifelse(grepl("2", estType), 2, 1)
+  3 * signif(1.1 * max(range) * sdVal, 2)
+}
+
+#' Get Default Z Min
+#'
+#' @param mean mean from model output
+getDefaultZMin <- function(mean) {
+  signif(mean[1] - 0.1 * diff(mean), which(round(abs(
+    diff(mean) / mean[1] * 10 ^ (0:10)
+  ), 0) > 1)[1])
+}
+
+#' Get Default Z Max
+#'
+#' @param mean mean from model output
+getDefaultZMax <- function(mean) {
+  signif(mean[2] + 0.1 * diff(mean), which(round(abs(
+    diff(mean) / mean[2] * 10 ^ (0:10)
+  ), 0) > 1)[1])
+}
+
+## Combined Input ----
 
 #' Slider And Input UI
 #'

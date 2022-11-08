@@ -1,5 +1,24 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.11.1
+
+### Updates
+
+- extract z scale settings ("Estimation type", "Show estimates", Min/Max range, "Restrict range")
+into their own module
+- new module zScale applied in the modelling tabs: _AverageR_, _KernelR_, _TimeR_, _KernelTimeR_,
+_SpreadR_, _OperatoR_, _LocateR_
+- switch the title for min/max range dependent on the "Plot type"
+
+### Bug fixes
+- fix update of min/max values after removing a restriction (min/max values had been overwritten
+before, that is, removing a restriction did not reset min/max values) (#27)
+- remove duplicated re-rendering of the map when changing "Estimation type" or restricting the range
+- update choices of "Estimation type" when switching the "Plot type" in _TimeR_ since some types
+are not implemented for "Time course"
+- debounce inputs for min/max range to prevent re-rendering of the map when typing min/max values 
+
+
 ## MpiIsoApp 22.10.3
 
 ### Updates

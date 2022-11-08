@@ -275,36 +275,13 @@ modelResults3DUI <- function(id, title = ""){
               )
           )
       ),
+      # right sidebar ----
       sidebarPanel(
         width = 2,
         radioButtons(inputId = ns("Centering"),
                      label = "Map Centering",
                      choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-        selectInput(inputId = ns("estType"), label = "Estimation type",
-                    choices = c("Mean" = "Mean",
-                                "1 SEM" = "1 SE",
-                                "1 Total_Error" = "1 SETOTAL",
-                                "2 SEM" = "2 SE",
-                                "2 Total_Error" = "2 SETOTAL",
-                                "1 SD" = "1 SD Population",
-                                "2 SD" = "2 SD Population",
-                                "Quantile_Mean" = "Quantile",
-                                "Quantile_Total" = "QuantileTOTAL"),
-                    selected = "Mean"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
-          sliderInput(inputId = ns("Quantile"),
-                      label = "Estimation quantile",
-                      min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-        ),
-        checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-        numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-        numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
-        selectInput(inputId = ns("limitz"), label = "Restrict range dependent variable",
-                      choices = list("No restriction" = "No restriction",
-                                     "0-1" = "0-1",
-                                     "0-100" = "0-100")),
+        zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                      choices = c("Map", "Time course"),
                      selected = "Map"),
@@ -633,29 +610,47 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-    if(input$fixCol == FALSE){
-      if(input$estType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") && input$mapType != "Time course"){
-        sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-        val <- signif(1.1 * max(Model()$model$range$seTotal) * sdVal, 2)
-        updateNumericInput(session, "rangezMin", value = 0, min = 0, max = val * 3)
-        updateNumericInput(session, "rangezMax", value = val, min = 0, max = val * 3)
-      }
-      if(input$estType %in% c("1 SE", "2 SE") && input$mapType != "Time course"){
-        sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-        val <- signif(1.1 * max(Model()$model$range$se) * sdVal, 2)
-        updateNumericInput(session, "rangezMin", value = 0, min = 0, max = val * 3)
-        updateNumericInput(session, "rangezMax", value = val, min = 0, max = val * 3)
-      }
-      if(!(input$estType %in% c("1 SE", "1 SETOTAL", "2 SE", "2 SETOTAL", "1 SD Population", "2 SD Population"))){
-        minValue <- signif(Model()$model$range$mean[1] - 0.1 * diff(Model()$model$range$mean), which(round(abs(diff(Model()$model$range$mean) / Model()$model$range$mean[1] * 10^(0:10)), 0) > 1)[1])
-        maxValue <- signif(Model()$model$range$mean[2] + 0.1 * diff(Model()$model$range$mean), which(round(abs(diff(Model()$model$range$mean) / Model()$model$range$mean[2] * 10^(0:10)), 0) > 1)[1])
-        updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-      }
-    }
+  estimationTypeChoices <- reactiveVal(c(
+    "Mean" = "Mean",
+    "1 SEM" = "1 SE",
+    "1 Total_Error" = "1 SETOTAL",
+    "2 SEM" = "2 SE",
+    "2 Total_Error" = "2 SETOTAL",
+    "1 SD" = "1 SD Population",
+    "2 SD" = "2 SD Population",
+    "Quantile_Mean" = "Quantile",
+    "Quantile_Total" = "QuantileTOTAL"
+  ))
+
+  observeEvent(input$mapType, {
+    choices <- switch(
+      input$mapType,
+      "Map" = c("Mean" = "Mean",
+                "1 SEM" = "1 SE",
+                "1 Total_Error" = "1 SETOTAL",
+                "2 SEM" = "2 SE",
+                "2 Total_Error" = "2 SETOTAL",
+                "1 SD" = "1 SD Population",
+                "2 SD" = "2 SD Population",
+                "Quantile_Mean" = "Quantile",
+                "Quantile_Total" = "QuantileTOTAL"),
+      "Time course" = c("Mean" = "Mean",
+                        "Quantile_Mean" = "Quantile",
+                        "Quantile_Total" = "QuantileTOTAL")
+    )
+
+    estimationTypeChoices(choices)
   })
+
+  zSettings <- zScaleServer("zScale",
+                            mapType = reactive(input$mapType),
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices = estimationTypeChoices,
+                            restrictOption = reactive("show"),
+                            zValuesFun = getZvalues,
+                            zValuesFactor = 3
+  )
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -909,24 +904,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         }
       }
 
-      rangez = c(input$rangezMin, input$rangezMax)
-      if(input$limitz == "0-1"){
-        rangez <- pmax(0, pmin(1, rangez))
-        if(rangez[1] == rangez[2]){
-          rangez <- c(0,1)
-        }
-        updateNumericInput(session, "rangezMin", value = min(rangez))
-        updateNumericInput(session, "rangezMax", value = max(rangez))
-      }
-      if(input$limitz == "0-100"){
-        rangez <- pmax(0, pmin(100, rangez))
-        if(rangez[1] == rangez[2]){
-          rangez <- c(0,100)
-        }
-        updateNumericInput(session, "rangezMin", value = min(rangez))
-        updateNumericInput(session, "rangezMax", value = max(rangez))
-      }
-
       textLabels <- NULL
       if(input$textLabels & !is.null(input$textLabelsVar) & input$textLabelsVar != ""){
         textLabels <- (data())[, input$textLabelsVar, drop = FALSE]
@@ -958,33 +935,34 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        centerX = centerEstimate$centerX(),
                        centerY = centerEstimate$centerY(),
                        Radius = centerEstimate$radius(),
-                       rangey = rangez,
+                       rangey = zSettings$range,
+                       limitz = zSettings$limit,
                        seType = input$intervalType,
                        pointDat = pointDat,
                        pointsTime = input$pointsTime,
                        returnPred = returnPred,
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
-                       limitz = input$limitz,
                        formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
+        req(zSettings$estType)
         plotMap3D(
           model,
           time = time,
-          estType = input$estType,
-          estQuantile = input$Quantile,
+          estType = zSettings$estType,
+          estQuantile = zSettings$Quantile,
+          rangez = zSettings$range,
+          limitz = zSettings$limit,
+          showModel = zSettings$showModel,
           points = input$points,
           pointSize = input$pointSize,
           StdErr = input$StdErr,
           rangex = values$rangex,
           rangey = values$rangey,
-          rangez = rangez,
-          limitz = input$limitz,
           mask = input$mask,
           maskRadius = input$maskRadius,
           addU = input$AddU,
-          showModel = input$showModel,
           pColor = input$pointCol,
           pointShape = as.numeric(input$pointShape),
           textLabels = textLabels,
