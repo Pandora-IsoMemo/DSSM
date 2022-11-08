@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 22.10.4
+## MpiIsoApp 22.11.1
 
 ### Updates
 
