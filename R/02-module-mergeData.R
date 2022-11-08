@@ -444,22 +444,9 @@ mergeDataUI <- function(id) {
       mergeViaCommandUI(ns("mergerViaCommand")),
       ns = ns
     ),
-    tags$br(),
     div(
       style = 'height: 96px',
-      conditionalPanel(
-        ns = ns,
-        condition = "output.showWarning == 'TRUE'",
-        tags$br(),
-        tags$html(HTML(
-          paste0(
-            "<p style=\"color:red\">Merged data has more rows than the maximal ",
-            " number of rows of the input tables.",
-            " One row of one table matches several rows of the other table.<br>",
-            " Please check the x and y colums to join on.</p>"
-          )
-        ))
-      )
+      htmlOutput(ns("mergeWarnings")),
     ),
     fluidRow(
       column(3, actionButton(ns("applyMerge"), "Apply Merge")),
@@ -498,6 +485,7 @@ mergeDataServer <- function(id, mergeList) {
                    data = NULL,
                    preview = NULL,
                    warnings = list(),
+                   warningsPopup = list(),
                    errors = list()
                  )
 
@@ -553,6 +541,10 @@ mergeDataServer <- function(id, mergeList) {
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
                    joinedResult$data <- NULL
+                   joinedResult$preview <- NULL
+                   joinedResult$warnings <- list()
+                   joinedResult$warningsPopup <- list()
+                   joinedResult$errors <- list()
 
                    req(mergeCommandManual())
 
@@ -593,48 +585,52 @@ mergeDataServer <- function(id, mergeList) {
                          #warning("test warning")
                        },
                        error = function(cond) {
-                         joinedResult$errors <- c(joinedResult$errors, cond$message)
-                         alert(cond$message)
+                         joinedResult$errors <- "Could not merge data."
+                         alert(paste("Could not merge data:", cond$message))
                          # Choose a return value in case of error
                          return(NULL)
                        },
                        warning = function(cond) {
-                         joinedResult$warnings <- c(joinedResult$warnings, cond$message)
-                         alert(cond$message)
+                         joinedResult$warningsPopup <- cond$message
                          # Choose a return value in case of warning
                          return(NULL)
                        },
                        finally = NULL)
-                     if (inherits(joinedData, "try-error")) {
-                       joinedResult$errors <- c(joinedResult$errors, "Could not merge data.")
-                       alert("Could not merge data")
-                       return(NULL)
-                     }
 
-                     # check result
                      if (!is.null(joinedData)) {
+                       # check result for warnings
+                       if (NROW(joinedData) > max(NROW(tableXData()), NROW(tableYData()))) {
+                         largerThanInput <- "Merged data has more rows than the input tables."
+                         largerThanInputDetails <- paste(
+                           largerThanInput, "One row of one table matches several rows of the",
+                           "other table. Please check the x and y colums to join on."
+                         )
+                         joinedResult$warnings <- c(joinedResult$warnings, largerThanInput)
+                         joinedResult$warningsPopup <- c(joinedResult$warningsPopup,
+                                                         largerThanInputDetails)
+                       }
+
                        if (nrow(joinedData) > 100000) {
-                         bigJoinWarn <- paste(
-                           "Warning: Merged data is very large and has", nrow(joinedData), "rows.",
+                         bigJoin <- "Merged data is very large (> 100000 rows)."
+                         bigJoinDetails <- paste(
+                           bigJoin, "It has", nrow(joinedData), "rows.",
                            "The app might be very slow or even crash after import."
                          )
-                         joinedResult$warnings <- c(joinedResult$warnings, bigJoinWarn)
-                         alert(
-                           bigJoinWarn
-                         )
+                         joinedResult$warnings <- c(joinedResult$warnings, bigJoin)
+                         joinedResult$warningsPopup <- c(joinedResult$warningsPopup,
+                                                         bigJoinDetails)
                        }
-
-                       if (NROW(joinedData) > max(NROW(tableXData()), NROW(tableYData()))) {
-                         largerThanInputWarning <- paste(
-                           "Merged data has more rows than the maximal number of rows of the",
-                           "input tables. One row of one table matches several rows of the other",
-                           "table. Please check the x and y colums to join on."
-                         )
-                         joinedResult$warnings <- c(joinedResult$warnings, largerThanInputWarning)
-                       }
-
                      }
 
+                     if (length(joinedResult$warningsPopup) > 0) {
+                       alert(
+                         paste0("WARNING: \n",
+                                paste(joinedResult$warningsPopup, collapse = "\n")
+                         )
+                       )
+                     }
+
+                     # return result
                      joinedResult$data <- joinedData
                      joinedResult$preview <- cutAllLongStrings(joinedData[1:2, ], cutAt = 20)
 
@@ -648,14 +644,9 @@ mergeDataServer <- function(id, mergeList) {
                    paste("Merged data has ", NROW(joinedResult$data), "rows")
                  })
 
-                 output$showWarning <- renderText({
-                   req(joinedResult$data)
-                   maxRows <-
-                     max(NROW(tableXData()), NROW(tableYData()))
-
-                   NROW(joinedResult$data) > maxRows
+                 output$mergeWarnings <- renderText({
+                   extractMergeNotification(joinedResult$warnings, joinedResult$errors)
                  })
-                 outputOptions(output, "showWarning", suspendWhenHidden = FALSE)
 
                  output$joinedData <- renderDataTable({
                    req(joinedResult$preview)
@@ -741,7 +732,7 @@ equalColClasses <-
       if (!isTest) {
         shinyjs::alert(
           paste0(
-            "Warning: Column types not matching for: \n",
+            "WARNING: \n Column types not matching for: \n",
             extractJoinString(names(colTypesX)[typeMismatch],
                               names(colTypesY)[typeMismatch]),
             ". \n\n",
@@ -756,3 +747,30 @@ equalColClasses <-
       return(TRUE)
     }
   }
+
+
+#' Extract Merge Notification
+#'
+#' @param warningsList (list) merge warnings
+#' @param errorsList (list) merge errors
+extractMergeNotification <- function(warningsList, errorsList) {
+  if (length(warningsList) == 0 && length(errorsList) == 0) return(NULL)
+
+  if (length(warningsList) > 0) {
+    mergeWarning <- paste0("<p style=\"color:orange\">",
+                           paste(warningsList, collapse = "<br>"),
+                           "</p>")
+  } else {
+    mergeWarning <- NULL
+  }
+
+  if (length(errorsList) > 0) {
+    mergeError <- paste0("<p style=\"color:red\">",
+                         paste(errorsList, collapse = "<br>"),
+                         "</p>")
+  } else {
+    mergeError <- NULL
+  }
+
+  HTML(paste0(mergeWarning, mergeError))
+}

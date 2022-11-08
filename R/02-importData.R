@@ -599,6 +599,8 @@ loadData <-
 #' @param df (data.frame) data.frame with character and non-character columns
 #' @param cutAt (numeric) number of characters after which to cut the entries of an character-column
 cutAllLongStrings <- function(df, cutAt = 50) {
+  if (is.null(df)) return(NULL)
+
   df <- lapply(df, function(z) {
     if (!is.character(z))
       return(z)
