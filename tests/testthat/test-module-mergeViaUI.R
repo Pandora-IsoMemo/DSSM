@@ -87,7 +87,7 @@ testthat::test_that("Test module mergeViaUI", {
                         columnsY = testCommonColumns
                       )
 
-                      testthat::expect_equal(session$returned(), testMergeCommand)
+                      testthat::expect_equal(session$returned$command, testMergeCommand)
 
                       # testthat::expect_true(typeof(output$colNames) == "character")
                       # testthat::expect_equal(

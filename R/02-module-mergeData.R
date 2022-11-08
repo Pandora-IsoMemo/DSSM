@@ -526,7 +526,7 @@ mergeDataServer <- function(id, mergeList) {
                    paste(NROW(tableYData()), "rows")
                  })
 
-                 mergeCommandAuto <-
+                 mergeViaUI <-
                    mergeViaUIServer(
                      "mergerViaUI",
                      tableXData = tableXData,
@@ -536,7 +536,11 @@ mergeDataServer <- function(id, mergeList) {
                    )
 
                  mergeCommandManual <-
-                   mergeViaCommandServer("mergerViaCommand", mergeCommandAuto)
+                   mergeViaCommandServer("mergerViaCommand", reactive(mergeViaUI$command))
+
+                 observeEvent(mergeViaUI$warning, {
+                   joinedResult$warnings <- mergeViaUI$warning
+                 })
 
                  # apply: mergeCommand ----
                  observeEvent(input$applyMerge, {
@@ -666,7 +670,6 @@ mergeDataServer <- function(id, mergeList) {
 
                  # return value for parent module: ----
                  return(reactive(joinedResult$data))
-
                })
 }
 

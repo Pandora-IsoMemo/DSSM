@@ -87,7 +87,10 @@ mergeViaUIServer <-
                    commonColumns <- reactiveVal()
                    columnsToJoin <- reactiveValues(tableX = NULL,
                                                    tableY = NULL)
-                   mergeCommandAuto <- reactiveVal()
+                   mergeViaUIResult <- reactiveValues(
+                     command = NULL,
+                     warning = list()
+                   )
 
                    # update: column selection ----
                    observeEvent(tableXData(), {
@@ -129,33 +132,31 @@ mergeViaUIServer <-
 
                    # create: mergeCommandAuto ----
                    observeEvent(list(input$columnsX, input$columnsY), {
-                     columnsToJoin$tableX <-
-                       equalizeLength(input$columnsX, input$columnsY)$xColNames
-                     columnsToJoin$tableY <-
-                       equalizeLength(input$columnsX, input$columnsY)$yColNames
+                     equalizedColNames <- equalizeLength(input$columnsX, input$columnsY)
+                     columnsToJoin$tableX <- equalizedColNames$xColNames
+                     columnsToJoin$tableY <- equalizedColNames$yColNames
+                     mergeViaUIResult$warning <- equalizedColNames$diffWarning
 
                      colJoinString <-
                        extractJoinString(columnsToJoin$tableX, columnsToJoin$tableY)
 
                      if (isNotEmptyColumnsAndNonEqualTables(colJoinString, tableXId(), tableYId())) {
-                       mergeCommandAuto(
-                         tmpl(
-                           paste0(
-                             c(
-                               "{{ tableX }} %>%",
-                               "  {{ mergeOperation }}({{ tableY }},",
-                               "  by = {{ colJoinString }})"
-                             ),
-                             collapse = ""
+                       mergeViaUIResult$command <- tmpl(
+                         paste0(
+                           c(
+                             "{{ tableX }} %>%",
+                             "  {{ mergeOperation }}({{ tableY }},",
+                             "  by = {{ colJoinString }})"
                            ),
-                           tableX = tableXId(),
-                           mergeOperation = input$mergeOperation,
-                           tableY = tableYId(),
-                           colJoinString = colJoinString
-                         ) %>% as.character()
-                       )
+                           collapse = ""
+                         ),
+                         tableX = tableXId(),
+                         mergeOperation = input$mergeOperation,
+                         tableY = tableYId(),
+                         colJoinString = colJoinString
+                       ) %>% as.character()
                      } else {
-                       mergeCommandAuto("")
+                       mergeViaUIResult$command <- ""
 
                        if (isEqualTables(tableXId(), tableYId())) {
                          alert("Please choose two different tables.")
@@ -164,7 +165,7 @@ mergeViaUIServer <-
                    })
 
                    # return value for parent module: ----
-                   return(mergeCommandAuto)
+                   return(mergeViaUIResult)
                  })
   }
 
@@ -187,8 +188,16 @@ equalizeLength <- function(xColNames, yColNames) {
     return(NULL)
   }
 
+  if (length(xColNames) != length(yColNames)) {
+    diffWarning <- "Number of columns differ, minimum number is used for merging."
+  } else {
+    diffWarning <- list()
+  }
+
   list(xColNames = xColNames[1:minLength],
-       yColNames = yColNames[1:minLength])
+       yColNames = yColNames[1:minLength],
+       diffWarning = diffWarning
+       )
 }
 
 
