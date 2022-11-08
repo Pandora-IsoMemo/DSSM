@@ -112,6 +112,19 @@ importDataServer <- function(id,
                    updateSelectizeInput(session, "ckanResource", choices = choices)
                  })
 
+                 observeEvent(input$source, {
+                   # reset values
+                   values$warnings <- list()
+                   values$errors <- list()
+                   values$fileName <- ""
+                   values$fileImportSuccess <- NULL
+                   values$dataImport <- NULL
+                   values$preview <- NULL
+                   values$data <- list()
+
+                   dataSource(NULL)
+                 })
+
                  observe({
                    req(input$source == "ckan", input$ckanResource)
                    resource <-
@@ -134,8 +147,8 @@ importDataServer <- function(id,
                    dataSource(list(file = inFile$datapath, filename = inFile$name))
                  })
 
-                 observeEvent(input$url, {
-                   req(input$url)
+                 observe({
+                   req(input$source == "url", input$url)
                    req(trimws(input$url) != "")
 
                    tmp <- tempfile()
@@ -210,7 +223,7 @@ importDataServer <- function(id,
                  })
 
                  observeEvent(list(input$type, dataSource()$file), {
-                   req(dataSource()$file)
+                   req(input$type)
 
                    if (input$type %in% c("xls", "xlsx")) {
                      updateSelectInput(session, "sheet",
@@ -727,6 +740,8 @@ addIncIfDuplicate <- function(vNames, isDuplicate, inc = 1) {
 #'
 #' @param filepath (character) url or path
 getSheetSelection <- function(filepath) {
+  if (is.null(filepath)) return(list())
+
   fileSplit <- strsplit(filepath, split = "\\.")[[1]]
   typeOfFile <- fileSplit[length(fileSplit)]
 
