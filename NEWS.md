@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.12.1
+
+### Bug Fixes
+- fix export of time plot as time series in TimeR and KernelTimeR (#8)
+
 ## MpiIsoApp 22.11.1
 
 ### Updates

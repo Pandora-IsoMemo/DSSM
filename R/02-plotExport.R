@@ -3,7 +3,14 @@ plotExportButton <- function(id){
   actionButton(ns("export"), "Export Plot")
 }
 
-plotExport <- function(input, output, session, plotObj, type, predictions = function(){NULL}, plotFun = NULL, Model = NULL){
+plotExport <- function(input,
+                       output,
+                       session,
+                       plotObj,
+                       type,
+                       predictions = function(){NULL},
+                       plotFun = NULL,
+                       Model = NULL){
   observeEvent(input$export, {
     showModal(modalDialog(
       title = "Export Graphic",
@@ -73,10 +80,16 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
 
       withProgress(message = "Generating series ...", value = 0, {
         times <- seq(minTime, maxTime, by = intTime)
+
+        figFileNames <- sapply(times,
+                               function(i) {
+                                 nameFile(plotType = type, exportType = input$exportType,
+                                          isTimeSeries = input$isTimeSeries, i = i)
+                               })
+
         for (i in times) {
           incProgress(1 / length(times), detail = paste("time: ", i))
-          figFilename <- nameFile(plotType = type, exportType = input$exportType,
-                                  isTimeSeries = input$isTimeSeries, i = i)
+          figFilename <- figFileNames[[which(times == i)]]
 
           if (input$exportType == "geo-tiff"){
             writeGeoTiff(predictions(), figFilename)
@@ -88,24 +101,13 @@ plotExport <- function(input, output, session, plotObj, type, predictions = func
               tiff = tiff(figFilename, width = input$width, height = input$height),
               svg = svg(figFilename, width = input$width / 72, height = input$height / 72)
             )
-            plotFun()(model = Model(), time = i, plotRetNull = TRUE)
+            plotFun()(model = Model(), time = i)
             dev.off()
           }
         }
 
-        zipr(
-          file,
-          sapply(times, function(i) {
-            nameFile(plotType = type, exportType = input$exportType,
-                     isTimeSeries = input$isTimeSeries, i = i)
-          })
-        )
-
-        unlink(sapply(times, function(i) {
-          nameFile(plotType = type, exportType = input$exportType,
-                   isTimeSeries = input$isTimeSeries, i = i)
-        }))
-
+        zipr(file, figFileNames)
+        unlink(figFileNames)
       })
     }
   )
