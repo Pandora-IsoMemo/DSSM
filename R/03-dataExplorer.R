@@ -287,13 +287,50 @@ dataExplorerServer <- function(id) {
 
                        if (class(dCoord) == "try-error") {
                          alert(
-                           "Conversion of coordinates has failed. Please select appropriate longitude / latitude fields and coordinate type."
+                           paste0(
+                             "Conversion of coordinates has failed. Please select appropriate ",
+                             "longitude / latitude fields and coordinate format."
+                           )
                          )
+                         if (locationFields$longitude() == "longitude") {
+                           # reset to origial
+                           d$longitude <- isoDataRaw()[[locationFields$longitude()]]
+                         } else {
+                           d$longitude <- NULL
+                         }
+
+                         if (locationFields$latitude() == "latitude") {
+                           # reset to origial
+                           d$latitude <- isoDataRaw()[[locationFields$latitude()]]
+                         } else {
+                           d$latitude <- NULL
+                         }
                        } else {
+                         showNotification(
+                           paste0(
+                             "Conversion of coordinates succeeded. ",
+                             "Columns longitude and latitude set successfully."
+                           )
+                         )
                          d <- dCoord
+                         d$id <- as.character(1:nrow(d))
                          d$longitude <- d[, locationFields$longitude()]
                          d$latitude <- d[, locationFields$latitude()]
-                         d$id <- as.character(1:nrow(d))
+
+                         if (locationFields$longitude() != "longitude") {
+                           # remove original
+                           d[[locationFields$longitude()]] <- NULL
+                         }
+
+                         if (locationFields$latitude() != "latitude") {
+                           # remove original
+                           d[[locationFields$latitude()]] <- NULL
+                         }
+
+                         # put lng/lat to beginning
+                         oldColNames <- colnames(d)
+                         oldColNames <- oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
+                         d <- d[, c("longitude", "latitude", oldColNames)]
                        }
                      }
 
