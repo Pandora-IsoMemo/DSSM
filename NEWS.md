@@ -1,5 +1,13 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.12.2
+
+### Updates
+- add notification if conversion of lng/lat was successful (#67)
+
+### Bug Fixes
+- fix reset of lng/lat columns when switching coord formats
+
 ## MpiIsoApp 22.12.1
 
 ### Bug Fixes
