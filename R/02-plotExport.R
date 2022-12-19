@@ -7,10 +7,11 @@ plotExport <- function(input,
                        output,
                        session,
                        plotObj,
-                       type,
+                       modelType,
                        predictions = function(){NULL},
                        plotFun = NULL,
-                       Model = NULL){
+                       Model = NULL,
+                       mapType = "Map"){
   observeEvent(input$export, {
     showModal(modalDialog(
       title = "Export Graphic",
@@ -30,7 +31,7 @@ plotExport <- function(input,
         numericInput(session$ns("height"), "Height (px)", value = 800)
       ),
       conditionalPanel(
-        condition = paste0("'", type, "' == 'spatio-temporal-average'"),
+        condition = paste0("'", modelType, "' == 'spatio-temporal-average'"),
         ns = session$ns,
         checkboxInput(session$ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
@@ -52,7 +53,7 @@ plotExport <- function(input,
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      nameFile(plotType = type, exportType = input$exportType, isTimeSeries = input$isTimeSeries)
+      nameFile(plotType = modelType, exportType = input$exportType, isTimeSeries = input$isTimeSeries)
     },
     content = function(file){
       if (!input$isTimeSeries) {
@@ -83,7 +84,7 @@ plotExport <- function(input,
 
         figFileNames <- sapply(times,
                                function(i) {
-                                 nameFile(plotType = type, exportType = input$exportType,
+                                 nameFile(plotType = modelType, exportType = input$exportType,
                                           isTimeSeries = input$isTimeSeries, i = i)
                                })
 

@@ -1259,7 +1259,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   callModule(plotExport, "export", reactive(values$plot), "spatio-temporal-average",
              predictions = reactive(values$predictions),
              plotFun = plotFun,
-             Model = Model
+             Model = Model,
+             mapType = reactive(input$mapType)
              )
   callModule(batchPointEstimates, "batch", plotFun, time = TRUE, fruitsData = fruitsData, Model = Model)
 
