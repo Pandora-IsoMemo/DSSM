@@ -1,5 +1,6 @@
 test_that("Test module leafletPointSettings", {
   testServer(leafletPointSettingsServer,
+             args = list(dataColnames = reactive(NULL)),
              {
                # Arrange
                print("test leaflet Point Settings")
@@ -29,6 +30,7 @@ test_that("Test module leafletPointSettings", {
 
 test_that("Test module-leafletPointSettings if clusterPoints", {
   testServer(leafletPointSettingsServer,
+             args = list(dataColnames = reactive(NULL)),
              {
                # Arrange
                print(paste("Testing leafletPointSettingsServer if clusterPoints"))
@@ -45,6 +47,7 @@ test_that("Test module-leafletPointSettings if clusterPoints", {
 
 test_that("Test module-leafletPointSettings if not clusterPoints", {
   testServer(leafletPointSettingsServer,
+             args = list(dataColnames = reactive(NULL)),
              {
                # Arrange
                print(paste("Testing leafletPointSettingsServer if clusterPoints"))

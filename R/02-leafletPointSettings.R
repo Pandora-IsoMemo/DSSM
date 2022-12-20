@@ -8,7 +8,6 @@ leafletPointSettingsUI <- function(id) {
     checkboxInput(ns("clusterPoints"), "Cluster data points"),
     conditionalPanel(
       condition = "input.clusterPoints == false",
-      checkboxInput(ns("showLegend"), "Legend", value = TRUE),
       fluidRow(
         column(8,
                checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
@@ -21,6 +20,23 @@ leafletPointSettingsUI <- function(id) {
                  ns = ns
                ))
       ),
+      fluidRow(column(8,
+                      selectInput(ns("columnForPointColour"), "Point colour variable",
+                                  choices = c("Add data ..." = ""))
+                      ),
+               column(4,
+                      style = "margin-top: 1.5em;",
+                      checkboxInput(ns("showLegend"), "Legend", value = TRUE)
+               )),
+      selectInput(ns("paletteForPointColour"), "Point colour palette",
+                  choices = c("Red-Yellow-Green" = "RdYlGn",
+                              "Yellow-Green-Blue" = "YlGnBu",
+                              "Purple-Orange" = "PuOr",
+                              "Pink-Yellow-Green" = "PiYG",
+                              "Red-Yellow-Blue" = "RdYlBu",
+                              "Yellow-Brown" = "YlOrBr",
+                              "Brown-Turquoise" = "BrBG"),
+                  selected = "RdYlGn"),
       checkboxInput(ns("customPoints"), "Customize data points"),
       conditionalPanel(
         condition = "input.customPoints == true",
@@ -42,7 +58,8 @@ leafletPointSettingsUI <- function(id) {
 #' server funtion of leaflet point settings module
 #'
 #' @param id An ID string that corresponds with the ID used to call the module's UI function.
-leafletPointSettingsServer <- function(id){
+#' @param dataColnames (reactive) colnames of loaded data
+leafletPointSettingsServer <- function(id, dataColnames){
   moduleServer(
     id,
     function(input, output, session) {
@@ -54,6 +71,28 @@ leafletPointSettingsServer <- function(id){
 
       observeEvent(input$showLegend, {
         values$showLegend <- input$showLegend
+      })
+
+      observeEvent(dataColnames(), {
+        if (!is.null(dataColnames())) {
+          selectedDefault <- ifelse("source" %in% dataColnames(),
+                                    "source",
+                                    dataColnames()[1])
+        } else {
+          selectedDefault <- character(0)
+        }
+
+        updateSelectInput(session = session, "columnForPointColour",
+                          choices = dataColnames(),
+                          selected = selectedDefault)
+      })
+
+      observeEvent(input$columnForPointColour, {
+        values$columnForPointColour <- input$columnForPointColour
+      })
+
+      observeEvent(input$paletteForPointColour, {
+        values$paletteForPointColour <- input$paletteForPointColour
       })
 
       observeEvent(input$pointRadiusPxl, {
