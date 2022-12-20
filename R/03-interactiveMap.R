@@ -128,7 +128,6 @@ interactiveMap <- function(input, output, session, isoData) {
   leafletValues <- callModule(leafletSettings, "mapSettings")
 
   isoColnames <- reactiveVal()
-
   observeEvent(isoData(), {
     req(isoData())
     isoColnames(colnames(isoData()))
@@ -167,7 +166,7 @@ interactiveMap <- function(input, output, session, isoData) {
         # add data with default point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
-                                 leafletPointValues = leafletPointValues())
+                                 leafletPointValues = leafletPointValues)
       }
     })
   })
@@ -233,7 +232,7 @@ interactiveMap <- function(input, output, session, isoData) {
   # Update data
   observe({
     leafletProxy("map") %>%
-      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
+      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
   })
 
   # When map is clicked, show a popup with info

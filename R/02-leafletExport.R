@@ -82,7 +82,7 @@ leafletExport <- function(input,
 
         m <- m %>%
           updateDataOnLeafletMap(isoData = isoData(),
-                              leafletPointValues = leafletPointValues())
+                                 leafletPointValues = leafletPointValues)
 
         mapview::mapshot(
           m,

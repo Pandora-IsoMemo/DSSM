@@ -105,9 +105,7 @@ leafletPointSettingsServer <- function(id, dataColnames){
                                       NA_real_)
       })
 
-      reactive({
-        values
-      })
+      values
     }
   )
 }
