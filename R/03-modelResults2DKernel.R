@@ -14,6 +14,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -126,6 +127,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           batchModelingUI(ns("batchModeling"))
         )
       ),
+      # main panel ----
       mainPanel(
         width = 8,
         div(class = "aspect-16-9", div(
@@ -134,28 +136,32 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
-          div(
-            style = "display:flex;",
-            div(
-              class = "zoom-map",
-              sliderInput(inputId = ns("zoom"),
-                          label = "Zoom/x-Range in degrees Longitude",
-                          min = 0.1, max = 360, value = 50, width = "100%")
-            ),
-            div(
-              class = "move-map",
-              uiOutput(ns("move"))
-            )),
-          numericInput(inputId = ns("upperLeftLatitude"),
-                       label = "Set Latitude of upper left corner",
-                       min = -90, max = 90, value = c(), width = "20%"),
-          numericInput(inputId = ns("upperLeftLongitude"),
-                       label = "Set Longitude of upper left corner",
-                       min = -180, max = 180, value = c(), width = "20%"),
-          numericInput(inputId = ns("zoomSet"),
-                      label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                      min = 0.1, max = 360, value = 50, width = "20%"),
-          actionButton(ns("set"), "Set"),
+          tags$br(),
+          tags$br(),
+          fluidRow(column(width = 3,
+                          div(
+                            class = "move-map",
+                            uiOutput(ns("move"))
+                          )
+          ),
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
+          )),
+          tags$hr(),
+          tags$h4("Map Section"),
+          mapSectionUI(ns("mapSection")),
+          fluidRow(
+            column(
+              width = 3,
+              offset = 9,
+              style = "margin-top: -60px;",
+              align = "right",
+              actionButton(ns("set"), "Set Map Section")
+            )
+          ),
+          tags$hr(),
           div(
             if (!asFruitsTab) div(
               style = 'display:inline-block',
@@ -163,7 +169,6 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
               textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
               actionButton(ns("saveMap"), "Save map")
             ) else NULL,
-            div(style = 'display:inline-block', plotExportButton(ns("export"))),
             dataExportButton(ns("exportData"))
           ),
           actionButton(ns("add_btn2D"), "Add data point"),
@@ -172,25 +177,13 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           uiOutput(ns("pointInput2D"))
         )
       ),
+      # right sidebar ----
         sidebarPanel(
           width = 2,
-          selectInput(inputId = ns("estType"), label = "Estimation type",
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                        selected = 1),
@@ -358,21 +351,14 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          sliderInput(inputId = ns("Radius"),
-                      label = "Radius (km)",
-                      min = 10, max = 300, value = 100, step = 10, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+
           batchPointEstimatesUI(ns("batch"))
         )
       )
@@ -447,7 +433,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       Model(NULL)
       return()
     }
-    values$set <- 0
 
     if(input$modelArea){
       restriction <- c(input$mALat1, input$mALat2, input$mALong1, input$mALong2)
@@ -475,25 +460,22 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     Model(model)
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+      )
 
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
-
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -501,73 +483,43 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-        if(input$estType %in% c("1 SE", "2 SE")){
-          sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-          zValues <- as.vector(apply(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate), 1, sd)) * sdVal
-        } else {
-          zValues <- as.vector(rowMeans(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate))) * 1.25
-        }
-        minValue <- 0
-        maxValue <- signif(max(zValues, na.rm = TRUE), 2)
-        updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-        updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-  })
+  zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices =
+                              reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZValuesKernel,
+                            zValuesFactor = 1.25
+                            )
 
-  observeEvent(input$zoom, {
-    zoom <- input$zoom
-    values$zoom <- input$zoom
-  })
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
 
   observeEvent(input$up, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-
-    values$up <- values$up + zoom / 40
+    values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-
-    values$up <- values$up - zoom / 40
+    values$up <- values$up - values$zoom / 40
   })
   observeEvent(input$left, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-
-    values$right <- values$right - zoom / 40
+    values$right <- values$right - values$zoom / 40
   })
   observeEvent(input$right, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-
-    values$right <- values$right + zoom / 40
+    values$right <- values$right + values$zoom / 40
   })
   observeEvent(input$center, {
+    values$upperLeftLatitude <- NA
+    values$upperLeftLongitude <- NA
     values$up <- 0
     values$right <- 0
   })
   observeEvent(input$set, {
-    values$set <- 1
+    values$zoom <- mapSettings$zoom
+    values$upperLeftLatitude <- mapSettings$upperLeftLatitude
+    values$upperLeftLongitude <- mapSettings$upperLeftLongitude
     values$up <- 0
     values$right <- 0
-    values$zoom <- input$zoomSet
-    values$upperLeftLatitude <- input$upperLeftLatitude
-    values$upperLeftLongitude <- input$upperLeftLongitude
   })
 
   ### Add Points
@@ -657,20 +609,19 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     return(pointDat2D())
   })
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         meanCenter = reactive(values$meanCenter),
+                                         sdCenter = reactive(values$sdCenter))
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
 
       if(input$fixCol == FALSE){
-        if(values$set > 0){
-          zoom <- values$zoom
-        } else {
-          zoom <- input$zoom
-        }
+        zoom <- values$zoom
 
         rangey <- - diff(range(Model()$data$Latitude, na.rm = TRUE)) / 2 +
           max(Model()$data$Latitude, na.rm = TRUE) + values$up
-        if(!is.na(values$upperLeftLatitude) & values$set > 0){
+        if(!is.na(values$upperLeftLatitude)){
           rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0) + values$up
         } else {
           rangey <- rangey + c( - zoom / 4, zoom / 4)
@@ -678,7 +629,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         if(input$Centering == "Europe"){
           rangex <- - diff(range(Model()$data$Longitude, na.rm = TRUE)) / 2 +
             max(Model()$data$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
+          if(!is.na(values$upperLeftLongitude)){
             rangex <- values$upperLeftLongitude + values$right
             rangex <- rangex + c(0, zoom)
           } else {
@@ -690,7 +641,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
           dataPac$Longitude[Model()$data$Longitude >= -20] <- (- 160 + dataPac$Longitude[Model()$data$Longitude >= -20])
           rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
             max(dataPac$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
+          if(!is.na(values$upperLeftLongitude)){
             rangex <- values$upperLeftLongitude + values$right
             if(rangex < -20) rangex <- rangex + 200
             if(rangex >= -20) rangex <- rangex - 160
@@ -747,22 +698,24 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         }
       }
 
+      req(zSettings$estType)
+
       plotMap(
         model,
         points = input$points,
         pointSize = input$pointSize,
         rangex = values$rangex,
         rangey = values$rangey,
-        rangez = c(input$rangezMin, input$rangezMax),
-        limitz = input$limitz,
+        estType = zSettings$estType,
+        showModel = zSettings$showModel,
+        rangez = zSettings$range,
+        limitz = zSettings$limit,
         resolution = input$resolution,
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
         ncol = values$ncol,
         pColor = input$pointCol,
-        estType = input$estType,
-        showModel = input$showModel,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
         pointLabels = pointLabels,
@@ -772,9 +725,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = input$centerX,
-        centerY = input$centerY,
-        Radius = input$Radius,
+        centerX = centerEstimate$centerX(),
+        centerY = centerEstimate$centerY(),
+        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -829,19 +782,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   )
 
   output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius)) return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+    centerEstimate$text()
   })
 
   observe({

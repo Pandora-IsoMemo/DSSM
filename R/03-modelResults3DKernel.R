@@ -12,6 +12,7 @@ modelResults3DKernelUI <- function(id, title = ""){
     value = id,
     fluidRow(
       class = "modeling-content",
+      # left sidebar ----
       sidebarPanel(
         width = 2,
         selectInput(ns("dataSource"),
@@ -156,6 +157,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           batchModelingUI(ns("batchModeling"))
         )
       ),
+      # main panel ----
       mainPanel(
         width = 8,
         div(class = "aspect-16-9", div(
@@ -164,35 +166,26 @@ modelResults3DKernelUI <- function(id, title = ""){
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
-          div(plotExportButton(ns("export"))),
+          tags$br(),
+          tags$br(),
+          fluidRow(column(width = 3,
+                          conditionalPanel(
+                            condition = "input.mapType == 'Map'",
+                            ns = ns,
+                            div(
+                              class = "move-map",
+                              uiOutput(ns("move"))
+                            ))
+          ),
+          column(width = 3,
+                 offset = 6,
+                 align = "right",
+                 plotExportButton(ns("export"))
+          )),
           conditionalPanel(
             condition = "input.mapType == 'Map'",
             ns = ns,
-            sliderInput(inputId = ns("time"),
-                        label = "Time selection",
-                        min = 0, max = 15000, value = 5000, step = 100, width = "100%"),
-            div(
-              style = "display:flex;",
-              div(
-                class = "zoom-map",
-                sliderInput(inputId = ns("zoom"),
-                            label = "Zoom/x-Range in degrees Longitude",
-                            min = 0.1, max = 360, value = 50, width = "100%")
-              ),
-              div(
-                class = "move-map",
-                uiOutput(ns("move"))
-              )),
-            numericInput(inputId = ns("upperLeftLatitude"),
-                         label = "Set Latitude of upper left corner",
-                         min = -90, max = 90, value = c(), width = "20%"),
-            numericInput(inputId = ns("upperLeftLongitude"),
-                         label = "Set Longitude of upper left corner",
-                         min = -180, max = 180, value = c(), width = "20%"),
-            numericInput(inputId = ns("zoomSet"),
-                        label = "Zoom/x-Range in degrees Longitude (click set button for apply)",
-                        min = 0.1, max = 360, value = 50, width = "20%"),
-            actionButton( ns("set"), "Set"),
+            timeAndMapSectionUI(ns("sectionOfMap"), label = "Time and Map Section"),
             div(div(
               style = 'display:inline-block',
               class = "save-plot-container",
@@ -209,9 +202,10 @@ modelResults3DKernelUI <- function(id, title = ""){
         conditionalPanel(
           condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by cluster'",
           ns = ns,
+          # possibly add input for timerange also later ----
           sliderInput(inputId = ns("trange"),
                       label = "Time range",
-                      min = 15000, max = 0, value = c(15000, 0), width = "100%"),
+                      min = 0, max = 15000, value = c(0, 15000), width = "100%"),
           actionButton(ns("add_btn"), "Add data point"),
           actionButton(ns("rm_btn"), "Remove data point"),
           # colourInput(ns("col_btn"), "Select colour of data point"),
@@ -225,48 +219,44 @@ modelResults3DKernelUI <- function(id, title = ""){
             ns = ns)
         )
       ),
+      # right sidebar ----
         sidebarPanel(
           width = 2,
-          selectInput(inputId = ns("estType"), label = "Estimation type",
-                       choices = c("Mean", "1 SE", "2 SE", "Quantile"),
-                       selected = "Mean"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.estType == 'Quantile'",
-            sliderInput(inputId = ns("Quantile"),
-                        label = "Estimation quantile",
-                        min = 0.01, max = 0.99, value = c(0.9), width = "100%")
-          ),
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          checkboxInput(inputId = ns("showModel"), label = "Show model estimates", value = T),
-          numericInput(ns("rangezMin"), "Min value of range dependent variable", value = 0),
-          numericInput(ns("rangezMax"), "Max value of range dependent variable", value = 10),
+          zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by cluster"),
                        selected = "Map"),
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
+            ns = ns,
+            tags$hr(),
             selectInput(inputId = ns("intervalType"), label = "Uncertainty Interval Type",
                         choices = list("none" = "1",
                                        "1 SE" = "2",
                                        "2 SE" = "6"), selected = "2"),
-          checkboxInput(inputId = ns("pointsTime"),
-                        label = "Show nearby points",
-                        value = TRUE, width = "100%"),
-          conditionalPanel(
-            condition = "input.pointsTime == true",
-            checkboxInput(inputId = ns("intTime"),
-                          label = "Show nearby points unc. intervals",
-                          value = FALSE, width = "100%"),
-            sliderInput(inputId = ns("rangePointsTime"),
-                        label = "Show nearby points / intervals range in km",
-                        min = 10, max = 2500, value = 250, step = 10),
-            ns = ns),
-          ns = ns),
+            checkboxInput(inputId = ns("pointsTime"),
+                          label = "Show nearby points",
+                          value = TRUE, width = "100%"),
+            conditionalPanel(
+              condition = "input.pointsTime == true",
+              ns = ns,
+              checkboxInput(inputId = ns("intTime"),
+                            label = "Show nearby points unc. intervals",
+                            value = FALSE, width = "100%"),
+              sliderInput(inputId = ns("rangePointsTime"),
+                          label = "Show nearby points / intervals range in km",
+                          min = 10, max = 2500, value = 250, step = 10)
+              ),
+            formatTimeCourseUI(ns("timeCourseFormat")),
+            tags$hr()
+            ),
           conditionalPanel(
             condition = "input.mapType != 'Time course'",
+            ns = ns,
+            tags$hr(),
             radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                          choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                          selected = 1),
@@ -414,7 +404,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("ncol"),
                         label = "Approximate number of colour levels",
                         min = 4, max = 50, value = 50, step = 2, width = "100%"),
-            ns = ns),
+            conditionalPanel(
+              condition = "input.mapType == 'Map'",
+              ns = ns,
+              centerEstimateUI(ns("centerEstimateParams"))
+            ),
+            tags$hr()
+            ),
           checkboxInput(inputId = ns("smoothCols"),
                         label = "Smooth color transition",
                         value = FALSE, width = "100%"),
@@ -448,24 +444,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          conditionalPanel(
-            condition = "input.timeCourse != 'mapType'",
-            sliderInput(inputId = ns("Radius"),
-                        label = "Radius (km)",
-                        min = 10, max = 300, value = 100, step = 10, width = "100%"),
-            ns = ns),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+
           batchPointEstimatesUI(ns("batch"))
         )
     )
@@ -516,19 +501,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
 
   output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius) | input$mapType != "Map") return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+    centerEstimate$text()
   })
 
 
@@ -599,24 +572,22 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     else input$Independent
   })
 
+  zoomFromModel <- reactiveVal(50)
+
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
-      if(input$Centering == "Europe"){
-        rangeLong <- diff(range(Model()$data$Longitude, na.rm = TRUE) + c(-1, 1))
+      newZoom <- extractZoomFromLongRange(
+        rangeLongitude = range(Model()$data$Longitude, na.rm = TRUE),
+        mapCentering = input$Centering
+      )
 
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      } else {
-        longRange <- Model()$data$Longitude
-        longRange[Model()$data$Longitude < -20] <- longRange[Model()$data$Longitude < -20] + 200
-        longRange[Model()$data$Longitude >= -20] <- (- 160 + longRange[Model()$data$Longitude >= -20])
-        rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
-        updateSliderInput(session, "zoom",
-                          value = pmin(360, pmax(0, rangeLong, na.rm = TRUE)))
-      }
-      values$up <- 0
-      values$right <- 0
+      isolate({
+        zoomFromModel(newZoom)
+        values$zoom <- newZoom
+        values$up <- 0
+        values$right <- 0
+      })
     }
   })
 
@@ -624,69 +595,61 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     moveButtons(ns = session$ns)
   })
 
-  observe({
-    validate(validInput(Model()))
-    if(input$estType %in% c("1 SE", "2SE")){
-      sdVal <- ifelse(grepl("2", input$estType), 2, 1)
-      zValues <- as.vector(apply(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate), 1, sd)) * sdVal
-    } else {
-      zValues <- as.vector(rowMeans(sapply(1:length(Model()$model), function(x) Model()$model[[x]]$estimate))) * 1.5
-    }
-    minValue <- 0
-    maxValue <- signif(max(zValues, na.rm = TRUE), 2)
-    updateNumericInput(session, "rangezMin", value = minValue, min = minValue, max = maxValue)
-    updateNumericInput(session, "rangezMax", value = maxValue, min = minValue, max = maxValue)
-  })
-
-  observeEvent(input$zoom, {
-    zoom <- input$zoom
-    values$zoom <- input$zoom
-  })
+  zSettings <- zScaleServer("zScale",
+                            Model = Model,
+                            fixCol = reactive(input$fixCol),
+                            estimationTypeChoices =
+                              reactive(c("Mean", "1 SE", "2 SE", "Quantile")),
+                            restrictOption = reactive("hide"),
+                            zValuesFun = getZValuesKernel,
+                            zValuesFactor = 1.5)
 
   observeEvent(input$up, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up + zoom / 40
+    values$up <- values$up + values$zoom / 40
   })
 
   observeEvent(input$down, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$up <- values$up - zoom / 40
+    values$up <- values$up - values$zoom / 40
   })
+
   observeEvent(input$left, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right - zoom / 40
+    values$right <- values$right - values$zoom / 40
   })
+
   observeEvent(input$right, {
-    if(values$set > 0){
-      zoom <- values$zoom
-    } else {
-      zoom <- input$zoom
-    }
-    values$right <- values$right + zoom / 40
+    values$right <- values$right + values$zoom / 40
   })
+
   observeEvent(input$center, {
+    values$upperLeftLatitude <- NA
+    values$upperLeftLongitude <- NA
     values$up <- 0
     values$right <- 0
   })
-  observeEvent(input$set, {
-    values$set <- 1
+
+  dateExtent <- reactiveValues(
+    min = 0,
+    max = 15000,
+    mean = 5000,
+    range = c(0, 15000),
+    step = 100
+  )
+
+  mapSection <- timeAndMapSectionServer("sectionOfMap",
+                                        dateMin = reactive(dateExtent$min),
+                                        dateMax = reactive(dateExtent$max),
+                                        dateValue = reactive(dateExtent$mean),
+                                        dateStep = reactive(dateExtent$step),
+                                        zoomValue = zoomFromModel)
+
+  observeEvent(mapSection$set, {
+    mapSectionVars <- names(mapSection)
+    for (i in mapSectionVars[mapSectionVars != "set"]) {
+      values[[i]] <- mapSection[[i]]
+    }
+
     values$up <- 0
     values$right <- 0
-    values$zoom <- input$zoomSet
-    values$upperLeftLatitude <- input$upperLeftLatitude
-    values$upperLeftLongitude <- input$upperLeftLongitude
   })
 
   observe({
@@ -765,27 +728,25 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     if(exists("d")){
       d <- na.omit(d)
-      step <- signif(roundUpNice(diff(range(d)),
-                                 nice = c(1,10)) / 10000, digits = 2)
-      minD <- min(d) - diff(range(d)) * 0.1
-      maxD <- max(d) + diff(range(d)) * 0.1
 
+      dateExtent$mean <- signif(mean(d), digits = 1)
+      dateExtent$range <- signif(range(d), digits = 1)
+      dateExtent$step <- signif(roundUpNice(diff(range(d)),
+                                            nice = c(1,10)) / 10000, digits = 2)
+      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
+      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+
+      # update plot time
+      values$time <- dateExtent$mean
+
+      # time range update ----
       updateSliderInput(
         session,
         "trange",
-        value = signif(range(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
-      )
-
-      updateSliderInput(
-        session,
-        "time",
-        value = signif(mean(d), digits = 1),
-        min = signif(minD, digits = 2),
-        max = signif(maxD, digits = 2),
-        step = step
+        value = dateExtent$range,
+        min = dateExtent$min,
+        max = dateExtent$max,
+        step = dateExtent$step
       )
     }
   })
@@ -877,22 +838,24 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     return(pointDat2D())
   })
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         meanCenter = reactive(values$meanCenter),
+                                         sdCenter = reactive(values$sdCenter),
+                                         mapType = reactive(input$mapType))
+
+  formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
 
   plotFun <- reactive({
-    function(model, time = input$time, returnPred = FALSE, ...){
+    function(model, time = values$time, returnPred = FALSE, ...){
       pointDat = pointDat()
       pointDatOK = pointDatOK()
 
       if(input$fixCol == FALSE){
-        if(values$set > 0){
-          zoom <- values$zoom
-        } else {
-          zoom <- input$zoom
-        }
+        zoom <- values$zoom
 
         rangey <- - diff(range(model$data$Latitude, na.rm = TRUE)) / 2 +
           max(model$data$Latitude, na.rm = TRUE) + values$up
-        if(!is.na(values$upperLeftLatitude) & values$set > 0){
+        if(!is.na(values$upperLeftLatitude)){
           rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0)  + values$up
         } else {
           rangey <- rangey + c( - zoom / 4, zoom / 4)
@@ -900,9 +863,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         if(input$Centering == "Europe"){
           rangex <- - diff(range(model$data$Longitude, na.rm = TRUE)) / 2 +
             max(model$data$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
-            rangex <- values$upperLeftLongitude + values$right
-            rangex <- rangex + c(0, zoom)
+          if(!is.na(values$upperLeftLongitude)){
+            rangex <- values$upperLeftLongitude + values$right + c(0, zoom)
           } else {
             rangex <- rangex + c( - zoom / 2, zoom / 2)
           }
@@ -912,7 +874,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           dataPac$Longitude[model$data$Longitude >= -20] <- (- 160 + dataPac$Longitude[model$data$Longitude >= -20])
           rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
             max(dataPac$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude) & values$set > 0){
+          if(!is.na(values$upperLeftLongitude)){
             rangex <- values$upperLeftLongitude + values$right
             if(rangex < -20) rangex <- rangex + 200
             if(rangex >= -20) rangex <- rangex - 160
@@ -920,7 +882,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           } else {
             rangex <- rangex + c( - zoom / 2, zoom / 2)
           }
-          }
+        }
+
         if(rangex[2] > 180){
           rangex <- c(180 - zoom, 180)
         }
@@ -974,9 +937,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        trange = input$trange,
                        independent = isolate(Independent()),
                        resolution = input$resolution,
-                       centerX = input$centerX,
-                       centerY = input$centerY,
-                       Radius = input$Radius,
+                       centerX = centerEstimate$centerX(),
+                       centerY = centerEstimate$centerY(),
+                       Radius = centerEstimate$radius(),
                        rangey = c(input$rangezMin, input$rangezMax),
                        pointDat = pointDat,
                        seType = input$intervalType,
@@ -985,6 +948,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
                        limitz = NULL,
+                       formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
       if(input$mapType == "Time intervals by cluster"){
@@ -1000,6 +964,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         )
       }
 
+        req(zSettings$estType)
+
       if(input$mapType == "Map"){
         plotMap3D(
           model,
@@ -1008,17 +974,17 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           pointSize = input$pointSize,
           rangex = values$rangex,
           rangey = values$rangey,
-          rangez = c(input$rangezMin, input$rangezMax),
-          limitz = input$limitz,
+          estType = zSettings$estType,
+          showModel = zSettings$showModel,
+          rangez = zSettings$range,
+          limitz = zSettings$limit,
           addU = input$AddU,
-          estType = input$estType,
           centerMap = input$Centering,
           resolution = input$resolution,
           interior = as.numeric(input$interior),
           mask = input$mask,
           maskRadius = input$maskRadius,
           ncol = values$ncol,
-          showModel = input$showModel,
           pColor = input$pointCol,
           pointShape = as.numeric(input$pointShape),
           textLabels = textLabels,
@@ -1028,9 +994,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           fontSize = input$fontSize,
           fontType = input$fontType,
           fontCol = input$fontCol,
-          centerX = input$centerX,
-          centerY = input$centerY,
-          Radius = input$Radius,
+          centerX = centerEstimate$centerX(),
+          centerY = centerEstimate$centerY(),
+          Radius = centerEstimate$radius(),
           terrestrial = input$terrestrial,
           colors = input$Colours,
           reverseColors = input$reverseCols,
@@ -1300,7 +1266,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   callModule(plotExport, "export", reactive(values$plot), "spatio-temporal-average",
              predictions = reactive(values$predictions),
              plotFun = plotFun,
-             Model = Model
+             Model = Model,
+             mapType = reactive(input$mapType)
   )
   callModule(batchPointEstimates, "batch", plotFun, time = TRUE, fruitsData = fruitsData, Model = Model)
   modelParams <- reactive({
