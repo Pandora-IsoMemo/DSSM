@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 22.11.2
+## MpiIsoApp 22.12.4
 
 ### New features
 
@@ -17,6 +17,29 @@
 
 ### Updates
 - disable accept button(s) by default in _Import Data_
+
+## MpiIsoApp 22.12.3
+
+### Updates
+- _export of plots_ after modelling: hide option to create a time series for
+_Time Course_ plot type (#8)
+
+### Bug Fixes
+- fix naming issue when data contains columns exactly named "latitude" or "longitude"
+  - columns will be renamed if coordinate conversion fails
+
+## MpiIsoApp 22.12.2
+
+### Updates
+- add notification if conversion of lng/lat was successful (#67)
+
+### Bug Fixes
+- fix reset of lng/lat columns when switching coord formats
+
+## MpiIsoApp 22.12.1
+
+### Bug Fixes
+- fix export of time plot as time series in TimeR and KernelTimeR (#8)
 
 ## MpiIsoApp 22.11.1
 
