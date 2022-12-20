@@ -255,7 +255,8 @@ importDataServer <- function(id,
 
                  preparedData <- prepareDataServer(
                    "dataPreparer",
-                   selectedData = reactive(values$dataImport)
+                   selectedData = reactive(values$dataImport),
+                   nameOfSelected = reactive(values$fileName)
                    )
 
                  observeEvent(preparedData(), {

@@ -12,14 +12,14 @@ mergeViaUIUI <- function(id) {
     selectInput(
       ns("columnsX"),
       "Select x columns to join (Names of x are used for joined columns.)",
-      choices = NULL,
+      choices = c("Select table x ..." = ""),
       multiple = TRUE,
       width = "100%"
     ),
     selectInput(
       ns("columnsY"),
       "Select y columns to join",
-      choices = NULL,
+      choices = c("Select table y ..." = ""),
       multiple = TRUE,
       width = "100%"
     ),

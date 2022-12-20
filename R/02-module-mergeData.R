@@ -9,6 +9,8 @@ prepareDataUI <- function(id) {
   ns <- NS(id)
 
   tagList(
+    tags$br(),
+    htmlOutput(ns("selectedFile")),
     renameColumnsUI(ns("renameCols")),
     tags$br(),
     joinColumnsUI(ns("joinCols")),
@@ -35,13 +37,26 @@ prepareDataUI <- function(id) {
 #' Server function of the module
 #' @param id id of module
 #' @param selectedData (list) list of data to be merged
-prepareDataServer <- function(id, selectedData) {
+prepareDataServer <- function(id, selectedData, nameOfSelected) {
   moduleServer(id,
                function(input, output, session) {
                  preparedData <- reactiveVal()
 
                  observeEvent(selectedData(), {
                    preparedData(selectedData())
+                 })
+
+                 output$selectedFile <- renderText({
+                   prefix <- "<b>Selected file:</b> &nbsp;&nbsp;"
+                   if (is.null(nameOfSelected()) ||
+                       is.na(nameOfSelected()) ||
+                       nameOfSelected() == "") {
+                     text <- "Please select a file first."
+                   } else {
+                     text <- nameOfSelected()
+                   }
+
+                   HTML(paste0(prefix, text))
                  })
 
                  newColNames <- renameColumnsServer("renameCols",
@@ -367,7 +382,7 @@ splitColumnsServer <- function(id, preparedData) {
                    updateSelectInput(session, "columnToSplit",
                                      choices = colnames(preparedData()))
                    updateTextInput(session, "newName1", value = "")
-                   updateTextInput(session, "newName1", value = "")
+                   updateTextInput(session, "newName2", value = "")
 
                    # by default return current data
                    newData(preparedData())
@@ -413,7 +428,7 @@ mergeDataUI <- function(id) {
         selectInput(
           ns("tableX"),
           "Select tabel x",
-          choices = NULL,
+          choices = c("Mark files for merge ..." = ""),
           width = "100%"
         )
       ),
@@ -425,7 +440,7 @@ mergeDataUI <- function(id) {
         selectInput(
           ns("tableY"),
           "Select tabel y",
-          choices = NULL,
+          choices = c("Mark files for merge ..." = ""),
           width = "100%"
         )
       ),
