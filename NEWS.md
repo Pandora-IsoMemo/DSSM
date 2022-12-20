@@ -1,5 +1,15 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.12.3
+
+### Updates
+- _export of plots_ after modelling: hide option to create a time series for
+_Time Course_ plot type (#8)
+
+### Bug Fixes
+- fix naming issue when data contains columns exactly named "latitude" or "longitude"
+  - columns will be renamed if coordinate conversion fails
+
 ## MpiIsoApp 22.12.2
 
 ### Updates
