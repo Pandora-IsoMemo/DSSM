@@ -7,10 +7,11 @@ plotExport <- function(input,
                        output,
                        session,
                        plotObj,
-                       type,
+                       modelType,
                        predictions = function(){NULL},
                        plotFun = NULL,
-                       Model = NULL){
+                       Model = NULL,
+                       mapType = reactive("Map")){
   observeEvent(input$export, {
     showModal(modalDialog(
       title = "Export Graphic",
@@ -30,7 +31,8 @@ plotExport <- function(input,
         numericInput(session$ns("height"), "Height (px)", value = 800)
       ),
       conditionalPanel(
-        condition = paste0("'", type, "' == 'spatio-temporal-average'"),
+        condition = paste0("'", modelType, "' == 'spatio-temporal-average' & ",
+                           "'", mapType(), "' == 'Map'"),
         ns = session$ns,
         checkboxInput(session$ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
@@ -50,12 +52,19 @@ plotExport <- function(input,
     replayPlot(plotObj())
   })
 
+  isTimeSeriesInput <- reactiveVal(FALSE)
+
+  observe({
+    req(!is.null(input$isTimeSeries))
+    if (mapType() == "Map") isTimeSeriesInput(input$isTimeSeries) else isTimeSeriesInput(FALSE)
+  })
+
   output$exportExecute <- downloadHandler(
     filename = function(){
-      nameFile(plotType = type, exportType = input$exportType, isTimeSeries = input$isTimeSeries)
+      nameFile(plotType = modelType, exportType = input$exportType, isTimeSeries = isTimeSeriesInput())
     },
     content = function(file){
-      if (!input$isTimeSeries) {
+      if (!isTimeSeriesInput()) {
         if (input$exportType == "geo-tiff"){
           writeGeoTiff(predictions(), file)
           return()
@@ -71,44 +80,43 @@ plotExport <- function(input,
         replayPlot(plotObj())
 
         dev.off()
-        return()
-      }
+      } else {
+        minTime <- input$minTime
+        maxTime <- input$maxTime
+        intTime <- abs(input$intTime)
 
-      minTime <- input$minTime
-      maxTime <- input$maxTime
-      intTime <- abs(input$intTime)
+        withProgress(message = "Generating series ...", value = 0, {
+          times <- seq(minTime, maxTime, by = intTime)
 
-      withProgress(message = "Generating series ...", value = 0, {
-        times <- seq(minTime, maxTime, by = intTime)
+          figFileNames <- sapply(times,
+                                 function(i) {
+                                   nameFile(plotType = modelType, exportType = input$exportType,
+                                            isTimeSeries = isTimeSeriesInput(), i = i)
+                                 })
 
-        figFileNames <- sapply(times,
-                               function(i) {
-                                 nameFile(plotType = type, exportType = input$exportType,
-                                          isTimeSeries = input$isTimeSeries, i = i)
-                               })
+          for (i in times) {
+            incProgress(1 / length(times), detail = paste("time: ", i))
+            figFilename <- figFileNames[[which(times == i)]]
 
-        for (i in times) {
-          incProgress(1 / length(times), detail = paste("time: ", i))
-          figFilename <- figFileNames[[which(times == i)]]
-
-          if (input$exportType == "geo-tiff"){
-            writeGeoTiff(predictions(), figFilename)
-          } else {
-            switch(
-              input$exportType,
-              png = png(figFilename, width = input$width, height = input$height),
-              pdf = pdf(figFilename, width = input$width / 72, height = input$height / 72),
-              tiff = tiff(figFilename, width = input$width, height = input$height),
-              svg = svg(figFilename, width = input$width / 72, height = input$height / 72)
-            )
-            plotFun()(model = Model(), time = i)
-            dev.off()
+            if (input$exportType == "geo-tiff"){
+              writeGeoTiff(predictions(), figFilename)
+            } else {
+              switch(
+                input$exportType,
+                png = png(figFilename, width = input$width, height = input$height),
+                pdf = pdf(figFilename, width = input$width / 72, height = input$height / 72),
+                tiff = tiff(figFilename, width = input$width, height = input$height),
+                svg = svg(figFilename, width = input$width / 72, height = input$height / 72)
+              )
+              plotFun()(model = Model(), time = i)
+              dev.off()
+            }
           }
-        }
 
-        zipr(file, figFileNames)
-        unlink(figFileNames)
-      })
+          zipr(file, figFileNames)
+          unlink(figFileNames)
+        })
+      }
     }
   )
 }

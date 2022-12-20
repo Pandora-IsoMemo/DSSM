@@ -245,7 +245,11 @@ dataExplorerServer <- function(id) {
                  )
 
                  # Extract isoDataFull (both skins) ----
-                 observe({
+                 observeEvent(list(locationFields$longitude(),
+                                   locationFields$latitude(),
+                                   locationFields$coordType(),
+                                   calibrateMethod(),
+                                   calLevel()), {
                    req(isoDataRaw())
                    d <- isoDataRaw()
 
@@ -286,26 +290,40 @@ dataExplorerServer <- function(id) {
                          }, silent = TRUE)
 
                        if (class(dCoord) == "try-error") {
-                         alert(
-                           paste0(
-                             "Conversion of coordinates has failed. Please select appropriate ",
-                             "longitude / latitude fields and coordinate format."
-                           )
-                         )
-                         if (locationFields$longitude() == "longitude") {
-                           # reset to origial
-                           d$longitude <- isoDataRaw()[[locationFields$longitude()]]
-                         } else {
-                           d$longitude <- NULL
-                         }
+                         ### Conversion failure ----
+                         if (locationFields$longitude() == "longitude" ||
+                             locationFields$latitude() == "latitude") {
+                           if (locationFields$longitude() == "longitude") {
+                             # rename original to avoid name conflicts
+                             tmpIsoDataRaw <- isoDataRaw()
+                             tmpIsoDataRaw[[paste0(locationFields$longitude(), "_orig")]] <-
+                               tmpIsoDataRaw[["longitude"]]
+                             tmpIsoDataRaw[["longitude"]] <- NULL
+                             isoDataRaw(tmpIsoDataRaw)
+                           }
 
-                         if (locationFields$latitude() == "latitude") {
-                           # reset to origial
-                           d$latitude <- isoDataRaw()[[locationFields$latitude()]]
+                           if (locationFields$latitude() == "latitude") {
+                             # rename original to avoid name conflicts
+                             tmpIsoDataRaw <- isoDataRaw()
+                             tmpIsoDataRaw[[paste0(locationFields$latitude(), "_orig")]] <-
+                               tmpIsoDataRaw[["latitude"]]
+                             tmpIsoDataRaw[["latitude"]] <- NULL
+                             isoDataRaw(tmpIsoDataRaw)
+                           }
                          } else {
+                           alert(
+                             paste0(
+                               "Conversion of coordinates has failed. Please select appropriate ",
+                               "longitude / latitude fields and coordinate format. ",
+                               "Columns longitude and latitude were removed (renamed)."
+                             )
+                           )
+
+                           d$longitude <- NULL
                            d$latitude <- NULL
                          }
                        } else {
+                         ### Conversion success ----
                          showNotification(
                            paste0(
                              "Conversion of coordinates succeeded. ",
