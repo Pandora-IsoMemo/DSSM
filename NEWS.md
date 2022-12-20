@@ -5,12 +5,16 @@
 ### New features
 
 - when using _Pandora_ skin, in _Import Data_:
-  - option to merge two data tables before import (#37)
   - option to prepare data before import or merge
     - rename columns
     - join columns
     - split columns
     - delete columns
+  - option to merge two data tables before import (#37)
+    - optionally select all common columns
+    - specify the merge operation
+    - apply the merge for reviewing and error checking
+    - accept the merged file to finally import it into the app
   - checks for correct column names in file imports
   - update column names of files if naming conflicts
   - new tests
