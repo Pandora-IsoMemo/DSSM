@@ -82,10 +82,10 @@ updateDataOnLeafletMap <- function(map, isoData, leafletPointValues) {
   map <- map %>%
     cleanDataFromMap()
 
-  if (is.null(isoData) || is.null(isoData$latitude) || all(is.na(isoData$latitude)) ||
-      is.null(isoData$longitude) || all(is.na(isoData$longitude))) return(map)
+  if (is.null(isoData) || is.null(isoData[["latitude"]]) || all(is.na(isoData[["latitude"]])) ||
+      is.null(isoData[["longitude"]]) || all(is.na(isoData[["longitude"]]))) return(map)
 
-  isoData <- isoData[(!is.na(isoData$longitude) & !is.na(isoData$latitude)), ]
+  isoData <- isoData[(!is.na(isoData[["longitude"]]) & !is.na(isoData[["latitude"]])), ]
 
   if (leafletPointValues$clusterPoints) {
     return(drawClustersOnMap(map, isoData))
