@@ -31,7 +31,8 @@ plotExport <- function(input,
         numericInput(session$ns("height"), "Height (px)", value = 800)
       ),
       conditionalPanel(
-        condition = paste0("'", modelType, "' == 'spatio-temporal-average'"),
+        condition = paste0("'", modelType, "' == 'spatio-temporal-average' & ",
+                           "'", mapType(), "' == 'Map'"),
         ns = session$ns,
         checkboxInput(session$ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
