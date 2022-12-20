@@ -264,6 +264,7 @@ importDataServer <- function(id,
 
                    values$dataImport <- preparedData()
                    values$preview <- cutAllLongStrings(values$dataImport[1:2, ], cutAt = 20)
+                   shinyjs::enable(ns("addData"), asis = TRUE)
                  })
 
                  ## button cancel ----
@@ -290,13 +291,22 @@ importDataServer <- function(id,
                    colnames(tmpData) <- colnames(tmpData) %>%
                      formatColumnNames()
 
-                   mergeList(c(
-                     mergeList(),
-                     setNames(
-                       list(tmpData),
-                       values$fileName
+                   if (values$fileName %in% names(mergeList())) {
+                     tmpMergeList <- mergeList()
+                     tmpMergeList[[values$fileName]] <- tmpData
+                     mergeList(tmpMergeList)
+                     showNotification(
+                       "File was marked already and was updated successfully."
                      )
-                   ))
+                   } else {
+                     mergeList(c(
+                       mergeList(),
+                       setNames(
+                         list(tmpData),
+                         values$fileName
+                       )
+                     ))
+                   }
 
                    shinyjs::disable(ns("addData"), asis = TRUE)
                  })

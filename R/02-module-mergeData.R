@@ -36,7 +36,8 @@ prepareDataUI <- function(id) {
 #'
 #' Server function of the module
 #' @param id id of module
-#' @param selectedData (list) list of data to be merged
+#' @param selectedData (reactive) selected data
+#' @param nameOfSelected (reactive) filename of selected data
 prepareDataServer <- function(id, selectedData, nameOfSelected) {
   moduleServer(id,
                function(input, output, session) {
@@ -523,7 +524,8 @@ mergeDataServer <- function(id, mergeList) {
                                      selected = tableChoices[2])
                  })
 
-                 observeEvent(input$tableX, {
+                 observe({
+                   req(input$tableX)
                    tableXData(mergeList()[[input$tableX]])
                  })
 
@@ -532,7 +534,8 @@ mergeDataServer <- function(id, mergeList) {
                    paste(NROW(tableXData()), "rows")
                  })
 
-                 observeEvent(input$tableY, {
+                 observe({
+                   req(input$tableY)
                    tableYData(mergeList()[[input$tableY]])
                  })
 
