@@ -1,5 +1,27 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.12.4
+
+### New features
+
+- when using _Pandora_ skin, in _Import Data_:
+  - option to prepare data before import or merge
+    - rename columns
+    - join columns
+    - split columns
+    - delete columns
+  - option to merge two data tables before import (#37)
+    - optionally select all common columns
+    - specify the merge operation
+    - apply the merge for reviewing and error checking
+    - accept the merged file to finally import it into the app
+  - checks for correct column names in file imports
+  - update column names of files if naming conflicts
+  - new tests
+
+### Updates
+- disable accept button(s) by default in _Import Data_
+
 ## MpiIsoApp 22.12.3
 
 ### Updates
@@ -40,7 +62,6 @@ before, that is, removing a restriction did not reset min/max values) (#27)
 - update choices of "Estimation type" when switching the "Plot type" in _TimeR_ since some types
 are not implemented for "Time course"
 - debounce inputs for min/max range to prevent re-rendering of the map when typing min/max values 
-
 
 ## MpiIsoApp 22.10.3
 
