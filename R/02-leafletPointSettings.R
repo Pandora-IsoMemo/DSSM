@@ -20,23 +20,7 @@ leafletPointSettingsUI <- function(id) {
                  ns = ns
                ))
       ),
-      fluidRow(column(8,
-                      selectInput(ns("columnForPointColour"), "Point colour variable",
-                                  choices = c("Add data ..." = ""))
-                      ),
-               column(4,
-                      style = "margin-top: 1.5em;",
-                      checkboxInput(ns("showLegend"), "Legend", value = TRUE)
-               )),
-      selectInput(ns("paletteForPointColour"), "Point colour palette",
-                  choices = c("Red-Yellow-Green" = "RdYlGn",
-                              "Yellow-Green-Blue" = "YlGnBu",
-                              "Purple-Orange" = "PuOr",
-                              "Pink-Yellow-Green" = "PiYG",
-                              "Red-Yellow-Blue" = "RdYlBu",
-                              "Yellow-Brown" = "YlOrBr",
-                              "Brown-Turquoise" = "BrBG"),
-                  selected = "RdYlGn"),
+      pointColourUI(ns("pointColor")),
       checkboxInput(ns("customPoints"), "Customize data points"),
       conditionalPanel(
         condition = "input.customPoints == true",
@@ -69,8 +53,75 @@ leafletPointSettingsServer <- function(id, dataColnames){
         values$clusterPoints <- input$clusterPoints
       })
 
+      pointColorVals <- pointColourServer("pointColor", dataColnames)
+
+      observe({
+        for (i in names(pointColorVals)) {
+          values[[i]] <- pointColorVals[[i]]
+        }
+      })
+
+      observeEvent(input$pointRadiusPxl, {
+        values$pointRadius <- input$pointRadiusPxl
+      })
+
+      observe({
+        values$jitterMaxKm <- ifelse(input$useJitter,
+                                      input$jitterMaxKm,
+                                      NA_real_)
+      })
+
+      values
+    }
+  )
+}
+
+#' ui function of leaflet point settings module
+#'
+#' @param id namespace
+pointColourUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    fluidRow(column(8,
+                    selectInput(ns("columnForPointColour"), "Point colour variable",
+                                choices = c("Add data ..." = ""))
+    ),
+    column(4,
+           style = "margin-top: 1.5em;",
+           checkboxInput(ns("showLegend"), "Legend", value = TRUE)
+    )),
+    fluidRow(column(8,
+                    selectInput(ns("paletteForPointColour"), "Point colour palette",
+                                choices = c("Red-Yellow-Green" = "RdYlGn",
+                                            "Yellow-Green-Blue" = "YlGnBu",
+                                            "Purple-Orange" = "PuOr",
+                                            "Pink-Yellow-Green" = "PiYG",
+                                            "Red-Yellow-Blue" = "RdYlBu",
+                                            "Yellow-Brown" = "YlOrBr",
+                                            "Brown-Turquoise" = "BrBG"),
+                                selected = "RdYlGn")
+    ),
+    column(4,
+           style = "margin-top: 1.5em;",
+           checkboxInput(ns("isReversePalette"), "Reverse", value = FALSE)
+    ))
+    )
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @param id An ID string that corresponds with the ID used to call the module's UI function.
+#' @param dataColnames (reactive) colnames of loaded data
+pointColourServer <- function(id, dataColnames){
+  moduleServer(
+    id,
+    function(input, output, session) {
+      colourValues <- reactiveValues()
+
       observeEvent(input$showLegend, {
-        values$showLegend <- input$showLegend
+        colourValues$showLegend <- input$showLegend
       })
 
       observeEvent(dataColnames(), {
@@ -88,27 +139,23 @@ leafletPointSettingsServer <- function(id, dataColnames){
       })
 
       observeEvent(input$columnForPointColour, {
-        values$columnForPointColour <- input$columnForPointColour
+        colourValues$columnForPointColour <- input$columnForPointColour
       })
 
       observeEvent(input$paletteForPointColour, {
-        values$paletteForPointColour <- input$paletteForPointColour
+        colourValues$paletteForPointColour <- input$paletteForPointColour
       })
 
-      observeEvent(input$pointRadiusPxl, {
-        values$pointRadius <- input$pointRadiusPxl
+      observeEvent(input$isReversePalette, {
+        colourValues$isReversePalette <- input$isReversePalette
       })
 
-      observe({
-        values$jitterMaxKm <- ifelse(input$useJitter,
-                                      input$jitterMaxKm,
-                                      NA_real_)
-      })
+      return(colourValues)
+    })
+  }
 
-      values
-    }
-  )
-}
+
+# Helper functions ----
 
 #' Update Data On Map
 #'
