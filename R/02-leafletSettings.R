@@ -73,7 +73,7 @@ leafletSettingsUI <- function(id, title = "") {
           ns("applyBounds"), "Apply"
         )),
         column(
-          7, checkboxInput(ns("showBounds"), "Show boundaries")
+          7, checkboxInput(ns("showBounds"), "Show boundaries", value = TRUE)
         )
         ),
       tags$hr(),
