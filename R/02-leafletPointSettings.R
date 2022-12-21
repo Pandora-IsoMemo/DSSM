@@ -123,7 +123,7 @@ pointColourUI <- function(id) {
            checkboxInput(ns("showLegend"), "Legend", value = TRUE)
     )),
     fluidRow(column(8,
-                    selectInput(ns("paletteForPointColour"), "Point colour palette",
+                    selectInput(ns("paletteName"), "Point colour palette",
                                 choices = colourPalettes,
                                 selected = "Dark2")
     ),
@@ -149,7 +149,6 @@ pointColourServer <- function(id, loadedData){
       })
 
       observeEvent(loadedData(), {
-        browser()
         if (!is.null(loadedData())) {
           selectedDefault <- ifelse("source" %in% colnames(loadedData()),
                                     "source",
@@ -167,18 +166,30 @@ pointColourServer <- function(id, loadedData){
         colourValues$columnForPointColour <- input$columnForPointColour
       })
 
-      observeEvent(input$paletteForPointColour, {
-        # pal <- colorFactor(
-        #   palette = input$paletteForPointColour,
-        #   domain = df$type
-        # )
+      observeEvent(list(input$paletteName,
+                        input$isReversePalette,
+                        input$columnForPointColour), {
+        if (is.null(loadedData())) colourValues$pointColourPalette <- NULL
 
+        if (!is.null(loadedData())) {
+          colourColumn <- loadedData()[[input$columnForPointColour]]
 
-        colourValues$paletteForPointColour <- input$paletteForPointColour
-      })
+          if (is.numeric(colourColumn)) {
+            pal <- colorNumeric(
+              palette = input$paletteName,
+              domain = colourColumn,
+              reverse = input$isReversePalette
+            )
+          } else {
+            pal <- colorFactor(
+              palette = input$paletteName,
+              domain = as.factor(colourColumn),
+              reverse = input$isReversePalette
+            )
+          }
 
-      observeEvent(input$isReversePalette, {
-        colourValues$isReversePalette <- input$isReversePalette
+          colourValues$pointColourPalette <- pal
+        }
       })
 
       return(colourValues)
@@ -213,9 +224,13 @@ updateDataOnLeafletMap <- function(map, isoData, leafletPointValues) {
   if (!is.null(plotData$Longitude_jit)) plotData$longitude <- plotData$Longitude_jit
 
   drawCirclesOnMap(map, plotData,
-                   pointRadius = leafletPointValues$pointRadius) %>%
+                   pointRadius = leafletPointValues$pointRadius,
+                   colourPal = leafletPointValues$pointColourPalette,
+                   columnForColour = leafletPointValues$columnForPointColour) %>%
     setColorLegend(showLegend = leafletPointValues$showLegend,
-                   values = isoData$source)
+                   title = leafletPointValues$columnForPointColour,
+                   pal = leafletPointValues$pointColourPalette,
+                   values = isoData[[leafletPointValues$columnForPointColour]])
 }
 
 
@@ -248,11 +263,8 @@ setJitterCoords <- function(dat, km) {
 }
 
 
-drawCirclesOnMap <- function(map, isoData, pointRadius) {
-  numColors <- length(unique(isoData$source))
-  colors <- appColors(c("red", "green", "purple", "black"),
-                      names = FALSE)[1:numColors]
-  pal <- colorFactor(colors, isoData$Source)
+drawCirclesOnMap <- function(map, isoData, pointRadius, colourPal, columnForColour) {
+  if (is.null(colourPal)) return(map)
 
   map %>%
     addCircleMarkers(
@@ -262,8 +274,8 @@ drawCirclesOnMap <- function(map, isoData, pointRadius) {
       group = "dataPoints",
       stroke = F,
       fillOpacity = 0.7,
-      color = pal(isoData$source),
-      fillColor = pal(isoData$source),
+      color = colourPal(isoData[[columnForColour]]),
+      fillColor = colourPal(isoData[[columnForColour]]),
       radius = pointRadius
     )
 }
@@ -281,16 +293,17 @@ cleanDataFromMap <- function(map){
 #'
 #' @param map leaflet map
 #' @param showLegend logical show/hide legend
+#' @param title legend title
+#' @param pal colour palette
 #' @param values possible values that can be mapped, e.g. isoData$source
-setColorLegend <- function(map, showLegend, values){
+setColorLegend <- function(map, showLegend, title, pal, values){
 
-  if (showLegend) {
-
+  if (showLegend && !is.null(pal)) {
     map <- map %>%
       addLegend("topleft",
-                pal = getColourPal(values),
+                pal = pal,
                 values = values,
-                title = "Database",
+                title = title,
                 layerId = "colorLegend")
   } else {
     map <- map %>% removeControl("colorLegend")
@@ -298,19 +311,3 @@ setColorLegend <- function(map, showLegend, values){
 
   map
 }
-
-
-#' Get Colour Palette
-#'
-#' Get colour palette for the points and the legend
-#'
-#' @inheritParams setColorLegend
-getColourPal <- function(values){
-  numColors <- length(unique(values))
-
-  colors <- appColors(c("red", "green", "purple", "black"),
-                      names = FALSE)[1:numColors]
-
-  colorFactor(colors, values)
-}
-

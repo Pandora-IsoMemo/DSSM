@@ -473,10 +473,18 @@ addCirclesRelativeToZoom <-
     if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
     if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
 
+    colors <- appColors(c("red", "green", "purple", "black"),
+                        names = FALSE)[1:length(unique(isoData$source))]
+
     drawCirclesOnMap(
       map = map,
       isoData = isoData,
-      pointRadius = relateToZoom(radius = 20)
+      pointRadius = relateToZoom(radius = 20),
+      colourPal = colorFactor(
+        palette = colors,
+        domain = isoData$source
+      ),
+      columnForPointColour = "source"
     )
   }
 
