@@ -1,5 +1,12 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 22.12.5
+
+### New features
+- interactive map: option to assign colour of symbol by selecting a certain data column (#13)
+  - choose a colour palette
+  - reverse colours
+
 ## MpiIsoApp 22.12.4
 
 ### New features
