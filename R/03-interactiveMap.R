@@ -127,14 +127,8 @@ interactiveMap <- function(input, output, session, isoData) {
 
   leafletValues <- callModule(leafletSettings, "mapSettings")
 
-  isoColnames <- reactiveVal()
-  observeEvent(isoData(), {
-    req(isoData())
-    isoColnames(colnames(isoData()))
-  })
-
   leafletPointValues <-
-    leafletPointSettingsServer("mapPointSettings", dataColnames = isoColnames)
+    leafletPointSettingsServer("mapPointSettings", loadedData = isoData)
 
   # Create the map
   leafletMap <- reactiveVal({

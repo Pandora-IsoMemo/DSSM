@@ -42,8 +42,8 @@ leafletPointSettingsUI <- function(id) {
 #' server funtion of leaflet point settings module
 #'
 #' @param id An ID string that corresponds with the ID used to call the module's UI function.
-#' @param dataColnames (reactive) colnames of loaded data
-leafletPointSettingsServer <- function(id, dataColnames){
+#' @param loadedData (reactive) loaded data
+leafletPointSettingsServer <- function(id, loadedData){
   moduleServer(
     id,
     function(input, output, session) {
@@ -53,7 +53,7 @@ leafletPointSettingsServer <- function(id, dataColnames){
         values$clusterPoints <- input$clusterPoints
       })
 
-      pointColorVals <- pointColourServer("pointColor", dataColnames)
+      pointColorVals <- pointColourServer("pointColor", loadedData)
 
       observe({
         for (i in names(pointColorVals)) {
@@ -82,6 +82,37 @@ leafletPointSettingsServer <- function(id, dataColnames){
 pointColourUI <- function(id) {
   ns <- NS(id)
 
+  # using colours from: RColorBrewer::brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
+  # adding full names manually
+  colourPalettes <- list(diverging = c("Brown-BlueGreen" = "BrBG",
+                                       "Pink-Green" = "PiYG",
+                                       "Purple-Green" = "PRGn",
+                                       "Orange-Purple" = "PuOr",
+                                       "Red-Blue" = "RdBu",
+                                       "Red-Yellow-Blue" = "RdYlBu"),
+                         qualitive = c("Dark" = "Dark2",
+                                       "Paired" = "Paired",
+                                       "Set" = "Set2"),
+                         sequential = c("Blue" = "Blues",
+                                        "BlueGreen" = "BuGn",
+                                        "BluePurple" = "BuPu",
+                                        "GreenBlue" = "GnBu",
+                                        "Green" = "Greens",
+                                        "Grey" = "Greys",
+                                        "Orange" = "Oranges",
+                                        "OrangeRed" = "OrRd",
+                                        "PurpleBlue" = "PuBu",
+                                        "PurpleBlueGreen" = "PuBuGn",
+                                        "PurpleRed" = "PuRd",
+                                        "Purple" = "Purples",
+                                        "RedPurple" = "RdPu",
+                                        "Red" = "Reds",
+                                        "YellowGreen" = "YlGn",
+                                        "YellowGreenBlue" = "YlGnBu",
+                                        "YellowOrangeBrown" = "YlOrBr",
+                                        "YellowOrangeRed" = "YlOrRd")
+                      )
+
   tagList(
     fluidRow(column(8,
                     selectInput(ns("columnForPointColour"), "Point colour variable",
@@ -93,14 +124,8 @@ pointColourUI <- function(id) {
     )),
     fluidRow(column(8,
                     selectInput(ns("paletteForPointColour"), "Point colour palette",
-                                choices = c("Red-Yellow-Green" = "RdYlGn",
-                                            "Yellow-Green-Blue" = "YlGnBu",
-                                            "Purple-Orange" = "PuOr",
-                                            "Pink-Yellow-Green" = "PiYG",
-                                            "Red-Yellow-Blue" = "RdYlBu",
-                                            "Yellow-Brown" = "YlOrBr",
-                                            "Brown-Turquoise" = "BrBG"),
-                                selected = "RdYlGn")
+                                choices = colourPalettes,
+                                selected = "Dark2")
     ),
     column(4,
            style = "margin-top: 1.5em;",
@@ -112,9 +137,8 @@ pointColourUI <- function(id) {
 
 #' server funtion of leaflet point settings module
 #'
-#' @param id An ID string that corresponds with the ID used to call the module's UI function.
-#' @param dataColnames (reactive) colnames of loaded data
-pointColourServer <- function(id, dataColnames){
+#' @inheritParams leafletPointSettingsServer
+pointColourServer <- function(id, loadedData){
   moduleServer(
     id,
     function(input, output, session) {
@@ -124,17 +148,18 @@ pointColourServer <- function(id, dataColnames){
         colourValues$showLegend <- input$showLegend
       })
 
-      observeEvent(dataColnames(), {
-        if (!is.null(dataColnames())) {
-          selectedDefault <- ifelse("source" %in% dataColnames(),
+      observeEvent(loadedData(), {
+        browser()
+        if (!is.null(loadedData())) {
+          selectedDefault <- ifelse("source" %in% colnames(loadedData()),
                                     "source",
-                                    dataColnames()[1])
+                                    colnames(loadedData())[1])
         } else {
           selectedDefault <- character(0)
         }
 
         updateSelectInput(session = session, "columnForPointColour",
-                          choices = dataColnames(),
+                          choices = colnames(loadedData()),
                           selected = selectedDefault)
       })
 
@@ -143,6 +168,12 @@ pointColourServer <- function(id, dataColnames){
       })
 
       observeEvent(input$paletteForPointColour, {
+        # pal <- colorFactor(
+        #   palette = input$paletteForPointColour,
+        #   domain = df$type
+        # )
+
+
         colourValues$paletteForPointColour <- input$paletteForPointColour
       })
 
