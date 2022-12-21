@@ -18,9 +18,10 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(names(session$returned),
-                            c("clusterPoints", "jitterMaxKm"))
+                            c("clusterPoints", "pointColourPalette", "jitterMaxKm"))
                expect_true(is.na(session$returned$jitterMaxKm))
                expect_true(session$returned$clusterPoints)
+               expect_null(session$returned$pointColourPalette)
              })
 })
 
@@ -48,10 +49,12 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(names(session$returned),
-                            c("clusterPoints", "jitterMaxKm", "pointRadius"))
+                            c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints"
+                            ))
                expect_false(session$returned$clusterPoints)
                expect_equal(session$returned$pointRadius, 30)
                expect_equal(session$returned$jitterMaxKm, 15)
+               expect_null(session$returned$pointColourPalette)
              })
 })
 
@@ -71,7 +74,7 @@ test_that("Test module pointColourServer", {
                session$setInputs(
                  columnForPointColour = "source",
                  showLegend = FALSE,
-                 paletteForPointColour = "RdYlGn",
+                 paletteName = "Dark2",
                  isReversePalette = FALSE
                )
 
@@ -79,16 +82,10 @@ test_that("Test module pointColourServer", {
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c(
-                   "paletteForPointColour",
-                   "showLegend",
-                   "columnForPointColour",
-                   "isReversePalette"
-                 )
+                 c("showLegend", "columnForPointColour", "pointColourPalette")
                )
-               expect_equal(session$returned$paletteForPointColour, "RdYlGn")
                expect_false(session$returned$showLegend)
                expect_equal(session$returned$columnForPointColour, "source")
-               expect_false(session$returned$isReversePalette)
+               expect_true(is.function(session$returned$pointColourPalette))
              })
 })

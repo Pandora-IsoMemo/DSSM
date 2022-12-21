@@ -169,9 +169,9 @@ pointColourServer <- function(id, loadedData){
       observeEvent(list(input$paletteName,
                         input$isReversePalette,
                         input$columnForPointColour), {
-        if (is.null(loadedData())) colourValues$pointColourPalette <- NULL
+        if (is.null(loadedData()) || is.null(input$columnForPointColour)) colourValues$pointColourPalette <- NULL
 
-        if (!is.null(loadedData())) {
+        if (!is.null(loadedData()) && !is.null(input$columnForPointColour)) {
           colourColumn <- loadedData()[[input$columnForPointColour]]
 
           if (is.numeric(colourColumn)) {
