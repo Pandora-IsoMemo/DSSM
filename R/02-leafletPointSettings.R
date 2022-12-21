@@ -183,7 +183,7 @@ pointColourServer <- function(id, loadedData){
           } else {
             pal <- colorFactor(
               palette = input$paletteName,
-              domain = as.factor(colourColumn),
+              domain = colourColumn,
               reverse = input$isReversePalette
             )
           }
