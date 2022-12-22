@@ -11,7 +11,6 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                # Act
                session$setInputs(
                  clusterPoints = TRUE,
-                 customPoints = FALSE,
                  useJitter = FALSE
                )
 
@@ -42,7 +41,6 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                  clusterPoints = FALSE,
                  useJitter = TRUE,
                  jitterMaxKm = 15,
-                 customPoints = TRUE,
                  pointRadiusPxl = 30
                )
 

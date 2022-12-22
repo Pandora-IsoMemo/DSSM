@@ -45,12 +45,14 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    fluidRow(column(width = 6,
-                    checkboxInput(ns("fitBounds"), "Fit boundaries")
-                    ),
-             column(width = 6,
-                    actionButton(ns("centerMapButton"), "Center map")
-                    )),
+    fluidRow(
+      column(width = 6,
+             checkboxInput(ns("fitBounds"), "Fit boundaries")),
+      column(width = 6,
+             actionButton(ns(
+               "centerMapButton"
+             ), "Center map"))
+    ),
     conditionalPanel(
       condition = "input.fitBounds == true",
       tags$hr(),
@@ -68,14 +70,12 @@ leafletSettingsUI <- function(id, title = "") {
         min = -180,
         max = 180
       ),
-      fluidRow(
-        column(5, actionButton(
-          ns("applyBounds"), "Apply"
-        )),
-        column(
-          7, checkboxInput(ns("showBounds"), "Show boundaries", value = TRUE)
-        )
-        ),
+      fluidRow(column(5, actionButton(
+        ns("applyBounds"), "Apply"
+      )),
+      column(
+        7, checkboxInput(ns("showBounds"), "Show boundaries", value = TRUE)
+      )),
       tags$hr(),
       ns = ns
     )
@@ -151,19 +151,15 @@ leafletSettings <- function(input, output, session) {
 #' @param leafletValues map settings, e.g. scalePosition, show/hide bounds
 customizeLeafletMap <- function(leafletMap, leafletValues) {
   leafletMap %>%
-    addProviderTiles(
-      leafletValues$leafletType
-      ) %>%
+    addProviderTiles(leafletValues$leafletType) %>%
     drawIcons(
       scale = !is.na(leafletValues$scalePosition),
       scalePosition = leafletValues$scalePosition,
       northArrow = !is.na(leafletValues$northArrowPosition),
       northArrowPosition = leafletValues$northArrowPosition
     ) %>%
-    drawFittedBounds(
-      showBounds = leafletValues$showBounds,
-      bounds = leafletValues$bounds
-      )
+    drawFittedBounds(showBounds = leafletValues$showBounds,
+                     bounds = leafletValues$bounds)
 
 }
 
@@ -195,7 +191,7 @@ drawFittedBounds <- function(map, showBounds, bounds) {
 }
 
 
-defaultBounds <- function(){
+defaultBounds <- function() {
   list(lng = c(west = 0, east = 60),
        lat = c(south = 33, north = 63))
 }
