@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 22.12.5
+## MpiIsoApp 23.01.1
 
 ### New features
 - interactive map: option to assign colour of symbol by selecting a certain data column (#13)
