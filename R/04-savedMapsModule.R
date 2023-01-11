@@ -19,17 +19,18 @@ savedMapsTabUI <- function(id, title = "") {
                numericInput(ns("sdMap"), "Sd of map", value = 0, min = 0),
                radioButtons(
                  ns("userMapType"),
-                 "Type",
+                 "Map Type",
                  choices = c(
                    "all" = "1",
                    "region - circle" = "2",
-                   "region - square" = "3"
+                   "region - rectangle" = "3"
                  ),
-                 inline = FALSE
+                 inline = FALSE,
+                 width = "100%"
                ),
                conditionalPanel(
                  ns = ns,
-                 condition = "input.userMapType == '2' || input.userMapType == '3'",
+                 condition = "input.userMapType == '2'",
                  numericInput(
                    inputId = ns("userRadius"),
                    label = "Radius in km",
@@ -39,7 +40,8 @@ savedMapsTabUI <- function(id, title = "") {
                    width = "100%",
                    step = 100
                  ),
-                 tags$h5("Center"),
+                 tags$strong("Center"),
+                 tags$br(),
                  numericInput(
                    inputId = ns("centerLatitude"),
                    label = "Latitude",
@@ -50,6 +52,46 @@ savedMapsTabUI <- function(id, title = "") {
                  ),
                  numericInput(
                    inputId = ns("centerLongitude"),
+                   label = "Longitude",
+                   min = -180,
+                   max = 180,
+                   value = c(10),
+                   width = "49%"
+                 )
+               ),
+               conditionalPanel(
+                 ns = ns,
+                 condition = "input.userMapType == '3'",
+                 tags$strong("Upper left"),
+                 tags$br(),
+                 numericInput(
+                   inputId = ns("upperLeftLatitude"),
+                   label = "Latitude",
+                   min = -90,
+                   max = 90,
+                   value = c(50),
+                   width = "49%"
+                 ),
+                 numericInput(
+                   inputId = ns("upperLeftLongitude"),
+                   label = "Longitude",
+                   min = -180,
+                   max = 180,
+                   value = c(10),
+                   width = "49%"
+                 ),
+                 tags$strong("Lower right"),
+                 tags$br(),
+                 numericInput(
+                   inputId = ns("lowerRightLatitude"),
+                   label = "Latitude",
+                   min = -90,
+                   max = 90,
+                   value = c(50),
+                   width = "49%"
+                 ),
+                 numericInput(
+                   inputId = ns("lowerRightLongitude"),
                    label = "Longitude",
                    min = -180,
                    max = 180,
