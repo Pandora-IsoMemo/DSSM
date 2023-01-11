@@ -1,6 +1,7 @@
 #' Start Application
 #'
 #' @param port port
+#' @param launch.browser (logical) If true, the system's default web browser will be launched
 #'
 #' @export
 startApplication <- function(port = 4242,
