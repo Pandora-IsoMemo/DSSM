@@ -13,7 +13,8 @@ savedMapsTabUI <- function(id, title = "") {
              width = 2,
              div(
                style = 'display:inline-block',
-               class = "save-plot-container",
+               tags$h3("Create Map"),
+               tags$br(),
                textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
                numericInput(ns("meanMap"), "Mean of map", value = 0),
                numericInput(ns("sdMap"), "Sd of map", value = 0, min = 0),
@@ -102,7 +103,10 @@ savedMapsTabUI <- function(id, title = "") {
                actionButton(ns("createMap"), "Create new map")
              )
            ),
-           mainPanel(uiOutput(ns(
+           mainPanel(
+             tags$h3("Saved Maps"),
+             tags$br(),
+             uiOutput(ns(
              "mapTable"
            )))))
 }
