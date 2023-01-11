@@ -484,7 +484,7 @@ addCirclesRelativeToZoom <-
         palette = colors,
         domain = isoData$source
       ),
-      columnForPointColour = "source"
+      columnForColour = "source"
     )
   }
 
