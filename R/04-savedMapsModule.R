@@ -44,16 +44,28 @@ savedMapsTabUI <- function(id, title = "") {
                      width = "100%",
                      step = 100
                    ),
-                   numericInputLatAndLongUI(ns("centerCoords"), label = "Center",
-                                            valueLat = 50, valueLong = 10)
+                   numericInputLatAndLongUI(
+                     ns("centerCoords"),
+                     label = "Center",
+                     valueLat = 50,
+                     valueLong = 10
+                   )
                  ),
                  conditionalPanel(
                    ns = ns,
                    condition = "input.userMapType == '3'",
-                   numericInputLatAndLongUI(ns("upperLeftCoords"), label = "Upper Left",
-                                            valueLat = 25, valueLong = 35),
-                   numericInputLatAndLongUI(ns("lowerRightCoords"), label = "Lower Right",
-                                            valueLat = 75, valueLong = -15)
+                   numericInputLatAndLongUI(
+                     ns("upperLeftCoords"),
+                     label = "Upper Left",
+                     valueLat = 25,
+                     valueLong = 35
+                   ),
+                   numericInputLatAndLongUI(
+                     ns("lowerRightCoords"),
+                     label = "Lower Right",
+                     valueLat = 75,
+                     valueLong = -15
+                   )
                  ),
                  actionButton(ns("createMap"), "Create new map")
                )
@@ -87,12 +99,14 @@ savedMapsTab <- function(input, output, session, savedMaps) {
   })
 
   circleCenter <- numericInputLatAndLongServer("centerCoords")
-  rectangleUpperLeft <- numericInputLatAndLongServer("upperLeftCoords",
-                                                     valueLat = reactive(25),
-                                                     valueLong = reactive(35))
-  rectangleLowerRight <- numericInputLatAndLongServer("lowerRightCoords",
-                                                      valueLat = reactive(75),
-                                                      valueLong = reactive(-15))
+  rectangleUpperLeft <-
+    numericInputLatAndLongServer("upperLeftCoords",
+                                 valueLat = reactive(25),
+                                 valueLong = reactive(35))
+  rectangleLowerRight <-
+    numericInputLatAndLongServer("lowerRightCoords",
+                                 valueLat = reactive(75),
+                                 valueLong = reactive(-15))
 
   observeEvent(input$createMap, {
     mapName <- trimws(input$saveMapName)
@@ -119,12 +133,12 @@ savedMapsTab <- function(input, output, session, savedMaps) {
         )
 
       if (!is.null(coord)) {
-      XPred <- data.frame(
-        Est = input$meanMap,
-        Sd = input$sdMap,
-        Longitude = coord[, 1],
-        Latitude = coord[, 2]
-      )
+        XPred <- data.frame(
+          Est = input$meanMap,
+          Sd = input$sdMap,
+          Longitude = coord[, 1],
+          Latitude = coord[, 2]
+        )
       } else {
         XPred <- NULL
       }
@@ -137,11 +151,26 @@ savedMapsTab <- function(input, output, session, savedMaps) {
         lowerRightLong = rectangleLowerRight$longitude()
       )
 
-      latLength <- abs(diff(c(rectangleLowerRight$latitude(), rectangleUpperLeft$latitude())))
-      longLength <- abs(diff(c(rectangleLowerRight$longitude(), rectangleUpperLeft$longitude())))
+      latLength <-
+        abs(diff(
+          c(
+            rectangleLowerRight$latitude(),
+            rectangleUpperLeft$latitude()
+          )
+        ))
+      longLength <-
+        abs(diff(
+          c(
+            rectangleLowerRight$longitude(),
+            rectangleUpperLeft$longitude()
+          )
+        ))
 
       withProgress(
-        coord <- getFullCoordGrid(gridLength = mean(c(latLength, longLength) / 2) * 111 / 10000),
+        coord <-
+          getFullCoordGrid(gridLength = mean(c(
+            latLength, longLength
+          ) / 2) * 111 / 10000),
         value = 80,
         message = "Generating grid ..."
       )
@@ -151,7 +180,8 @@ savedMapsTab <- function(input, output, session, savedMaps) {
           long = center[1],
           lat = center[2],
           latLength = latLength,
-          longLength = longLength)
+          longLength = longLength
+        )
 
       if (!is.null(coord)) {
         XPred <- data.frame(
@@ -240,7 +270,7 @@ getFullCoordGrid <- function(gridLength) {
 #' @param radius (numeric) radius
 #'
 filterCoordCircle <- function(fullGrid, lat, long, radius) {
-  fullGrid[sqrt((fullGrid[, 2] - lat) ^ 2 + (fullGrid[, 1] - long) ^ 2) < radius,]
+  fullGrid[sqrt((fullGrid[, 2] - lat) ^ 2 + (fullGrid[, 1] - long) ^ 2) < radius, ]
 }
 
 #' Filter Coord Square
@@ -253,7 +283,7 @@ filterCoordCircle <- function(fullGrid, lat, long, radius) {
 #' @param length (numeric) side length of square
 #'
 filterCoordSquare <- function(fullGrid, lat, long, length) {
-  fullGrid[pmax(abs(fullGrid[, 2] - lat), abs(fullGrid[, 1] - long)) < length / 2,]
+  fullGrid[pmax(abs(fullGrid[, 2] - lat), abs(fullGrid[, 1] - long)) < length / 2, ]
 }
 
 #' Filter Coord Rectangle
@@ -272,7 +302,7 @@ filterCoordRectangle <-
            latLength,
            longLength) {
     fullGrid[pmax(abs(fullGrid[, 2] - lat)) < latLength / 2 &
-               pmax(abs(fullGrid[, 1] - long)) < longLength / 2,]
+               pmax(abs(fullGrid[, 1] - long)) < longLength / 2, ]
   }
 
 #' Get Coord Center

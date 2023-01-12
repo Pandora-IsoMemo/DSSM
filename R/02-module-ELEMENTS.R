@@ -9,27 +9,34 @@
 #' @param valueLat (numeric) latitude
 #' @param valueLong (numeric) longitude
 numericInputLatAndLongUI <-
-  function(id, label, valueLat = 50, valueLong = 10) {
+  function(id,
+           label,
+           valueLat = 50,
+           valueLong = 10) {
     ns <- NS(id)
     tagList(fluidRow(
       tags$strong(label, style = "margin-left: 15px;"),
       tags$br(),
-      column(6,
-             numericInput(
-               inputId = ns("latitude"),
-               label = "Latitude",
-               min = -90,
-               max = 90,
-               value = valueLat
-             )),
-      column(6,
-             numericInput(
-               inputId = ns("longitude"),
-               label = "Longitude",
-               min = -180,
-               max = 180,
-               value = valueLong
-             ))
+      column(
+        6,
+        numericInput(
+          inputId = ns("latitude"),
+          label = "Latitude",
+          min = -90,
+          max = 90,
+          value = valueLat
+        )
+      ),
+      column(
+        6,
+        numericInput(
+          inputId = ns("longitude"),
+          label = "Longitude",
+          min = -180,
+          max = 180,
+          value = valueLong
+        )
+      )
     ))
   }
 
@@ -47,22 +54,18 @@ numericInputLatAndLongServer <- function(id,
                  observe({
                    req(valueLat())
 
-                   updateNumericInput(
-                     session = session,
-                     "latitude",
-                     value = valueLat()
-                   )
+                   updateNumericInput(session = session,
+                                      "latitude",
+                                      value = valueLat())
                  }) %>%
                    bindEvent(valueLat())
 
                  observe({
                    req(valueLong())
 
-                   updateNumericInput(
-                     session = session,
-                     "longitude",
-                     value = valueLong()
-                   )
+                   updateNumericInput(session = session,
+                                      "longitude",
+                                      value = valueLong())
                  }) %>%
                    bindEvent(valueLong())
 
