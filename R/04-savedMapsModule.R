@@ -27,6 +27,7 @@ savedMapsTabUI <- function(id, title = "") {
                      "region - circle" = "2",
                      "region - rectangle" = "3"
                    ),
+                   selected = 1,
                    inline = FALSE,
                    width = "100%"
                  ),
@@ -42,24 +43,7 @@ savedMapsTabUI <- function(id, title = "") {
                      width = "100%",
                      step = 100
                    ),
-                   tags$strong("Center"),
-                   tags$br(),
-                   numericInput(
-                     inputId = ns("centerLatitude"),
-                     label = "Latitude",
-                     min = -90,
-                     max = 90,
-                     value = c(50),
-                     width = "40%"
-                   ),
-                   numericInput(
-                     inputId = ns("centerLongitude"),
-                     label = "Longitude",
-                     min = -180,
-                     max = 180,
-                     value = c(10),
-                     width = "40%"
-                   )
+                   numericInputLatAndLongUI(ns("centerCoords"), label = "Center")
                  ),
                  conditionalPanel(
                    ns = ns,
@@ -132,6 +116,8 @@ savedMapsTab <- function(input, output, session, savedMaps) {
     savedMaps(savedMaps()[-input$deleteMap$i])
   })
 
+  circleCenter <- numericInputLatAndLongServer("centerCoords")
+
   observeEvent(input$createMap, {
     mapName <- trimws(input$saveMapName)
     if (mapName == "") {
@@ -147,8 +133,8 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 
       coord <- coord %>%
         filterCoordCircle(
-          lat = input$centerLatitude,
-          long = input$centerLongitude,
+          lat = circleCenter$latitude(),
+          long = circleCenter$longitude(),
           radius = input$userRadius / 111
         )
 

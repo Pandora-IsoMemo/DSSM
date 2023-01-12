@@ -1,4 +1,76 @@
-## Combined Input ----
+## Combined Inputs ----
+
+#' Numeric Input Lat And Long UI
+#'
+#' UI of the numeric input of latitude and longitude
+#'
+#' @param id id of module
+#' @param label label
+#' @param valueLat (numeric) latitude
+#' @param valueLong (numeric) longitude
+numericInputLatAndLongUI <-
+  function(id, label, valueLat = 50, valueLong = 10) {
+    ns <- NS(id)
+    tagList(fluidRow(
+      tags$strong(label),
+      tags$br(),
+      column(6,
+             numericInput(
+               inputId = ns("latitude"),
+               label = "Latitude",
+               min = -90,
+               max = 90,
+               value = valueLat
+             )),
+      column(6,
+             numericInput(
+               inputId = ns("longitude"),
+               label = "Longitude",
+               min = -180,
+               max = 180,
+               value = valueLong
+             ))
+    ))
+  }
+
+#' Numeric Input Lat And Long Server
+#'
+#' Server function of the numeric input of latitude and longitude module
+#' @param id id of module
+#' @param valueLat (numeric) latitude
+#' @param valueLong (numeric) longitude
+numericInputLatAndLongServer <- function(id,
+                                         valueLat = reactive(50),
+                                         valueLong = reactive(10)) {
+  moduleServer(id,
+               function(input, output, session) {
+                 observe({
+                   req(valueLat())
+
+                   updateNumericInput(
+                     session = session,
+                     "latitude",
+                     value = valueLat()
+                   )
+                 }) %>%
+                   bindEvent(valueLat())
+
+                 observe({
+                   req(valueLong())
+
+                   updateNumericInput(
+                     session = session,
+                     "longitude",
+                     value = valueLong()
+                   )
+                 }) %>%
+                   bindEvent(valueLong())
+
+                 list(longitude = reactive(input$longitude),
+                      latitude = reactive(input$latitude))
+               })
+}
+
 
 #' Slider And Input UI
 #'
