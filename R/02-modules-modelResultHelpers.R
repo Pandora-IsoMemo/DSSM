@@ -792,7 +792,7 @@ getDefaultZMax <- function(mean) {
 }
 
 
-# Collection of helper functions for the modelling tabs ----
+# Helper functions for the modelling tabs ----
 
 #' Extract Zoom From Long Range
 #'

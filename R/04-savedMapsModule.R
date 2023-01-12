@@ -146,9 +146,11 @@ savedMapsTab <- function(input, output, session, savedMaps) {
     if (input$userMapType == "2") {
       coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
 
-      coord <-
-        coord[sqrt((coord[, 2] - input$centerLatitude) ^ 2 +  (coord[, 1] - input$centerLongitude) ^
-                     2) < input$userRadius / 111,]
+      coord <- coord %>%
+        filterCoordCircle(lat = input$centerLatitude,
+                          long = input$centerLongitude,
+                          radius = input$userRadius / 111)
+
       XPred <- data.frame(
         Est = input$meanMap,
         Sd = input$sdMap,
@@ -159,9 +161,11 @@ savedMapsTab <- function(input, output, session, savedMaps) {
     if (input$userMapType == "3") {
       coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
 
-      coord <-
-        coord[pmax(abs(coord[, 2] - input$centerLatitude),
-                   abs(coord[, 1] - input$centerLongitude)) < input$userRadius / 111,]
+      coord <- coord %>%
+        filterCoordSquare(lat = input$centerLatitude,
+                          long = input$centerLongitude,
+                          radius = input$userRadius / 111)
+
       XPred <- data.frame(
         Est = input$meanMap,
         Sd = input$sdMap,
@@ -208,6 +212,8 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 }
 
 
+# Helper functions for saved maps tabs ----
+
 #' Get Full Coord Grid
 #'
 #' @param gridLength length of the
@@ -217,3 +223,28 @@ getFullCoordGrid <- function(gridLength) {
   expand.grid(lo, la)
 }
 
+#' Filter Coord Circle
+#'
+#' Filter full grid of coordinates to circle area
+#'
+#' @param fullGrid grid of coordinates
+#' @param lat (numeric) latitude
+#' @param long (numeric) longitude
+#' @param radius (numeric) radius
+#'
+filterCoordCircle <- function(fullGrid, lat, long, radius) {
+  fullGrid[sqrt((fullGrid[, 2] - lat) ^2 + (fullGrid[, 1] - long) ^2) < radius,]
+}
+
+#' Filter Coord Square
+#'
+#' Filter full grid of coordinates to square area
+#'
+#' @param fullGrid grid of coordinates
+#' @param lat (numeric) latitude
+#' @param long (numeric) longitude
+#' @param radius (numeric) radius
+#'
+filterCoordSquare <- function(fullGrid, lat, long, radius) {
+  fullGrid[pmax(abs(fullGrid[, 2] - lat), abs(fullGrid[, 1] - long)) < radius,]
+}
