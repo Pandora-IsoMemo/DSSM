@@ -43,47 +43,16 @@ savedMapsTabUI <- function(id, title = "") {
                      width = "100%",
                      step = 100
                    ),
-                   numericInputLatAndLongUI(ns("centerCoords"), label = "Center")
+                   numericInputLatAndLongUI(ns("centerCoords"), label = "Center",
+                                            valueLat = 50, valueLong = 10)
                  ),
                  conditionalPanel(
                    ns = ns,
                    condition = "input.userMapType == '3'",
-                   tags$strong("Upper left"),
-                   tags$br(),
-                   numericInput(
-                     inputId = ns("upperLeftLat"),
-                     label = "Latitude",
-                     min = -90,
-                     max = 90,
-                     value = c(50),
-                     width = "40%"
-                   ),
-                   numericInput(
-                     inputId = ns("upperLeftLong"),
-                     label = "Longitude",
-                     min = -180,
-                     max = 180,
-                     value = c(10),
-                     width = "40%"
-                   ),
-                   tags$strong("Lower right"),
-                   tags$br(),
-                   numericInput(
-                     inputId = ns("lowerRightLat"),
-                     label = "Latitude",
-                     min = -90,
-                     max = 90,
-                     value = c(50),
-                     width = "40%"
-                   ),
-                   numericInput(
-                     inputId = ns("lowerRightLong"),
-                     label = "Longitude",
-                     min = -180,
-                     max = 180,
-                     value = c(10),
-                     width = "40%"
-                   )
+                   numericInputLatAndLongUI(ns("upperLeftCoords"), label = "Upper Left",
+                                            valueLat = 25, valueLong = 35),
+                   numericInputLatAndLongUI(ns("lowerRightCoords"), label = "Lower Right",
+                                            valueLat = 75, valueLong = -15)
                  ),
                  actionButton(ns("createMap"), "Create new map")
                )
@@ -117,6 +86,12 @@ savedMapsTab <- function(input, output, session, savedMaps) {
   })
 
   circleCenter <- numericInputLatAndLongServer("centerCoords")
+  rectangleUpperLeft <- numericInputLatAndLongServer("upperLeftCoords",
+                                                     valueLat = reactive(25),
+                                                     valueLong = reactive(35))
+  rectangleLowerRight <- numericInputLatAndLongServer("lowerRightCoords",
+                                                      valueLat = reactive(75),
+                                                      valueLong = reactive(-15))
 
   observeEvent(input$createMap, {
     mapName <- trimws(input$saveMapName)
@@ -129,7 +104,11 @@ savedMapsTab <- function(input, output, session, savedMaps) {
       XPred <- as.numeric(c(input$meanMap, input$sdMap))
     }
     if (input$userMapType == "2") {
-      coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
+      withProgress(
+        coord <- getFullCoordGrid(gridLength = input$userRadius / 10000),
+        value = 80,
+        message = "Generating grid ..."
+      )
 
       coord <- coord %>%
         filterCoordCircle(
@@ -138,24 +117,33 @@ savedMapsTab <- function(input, output, session, savedMaps) {
           radius = input$userRadius / 111
         )
 
+      if (!is.null(coord)) {
       XPred <- data.frame(
         Est = input$meanMap,
         Sd = input$sdMap,
         Longitude = coord[, 1],
         Latitude = coord[, 2]
       )
+      } else {
+        XPred <- NULL
+      }
     }
     if (input$userMapType == "3") {
       center <- getCoordCenter(
-        upperLeftLat = input$upperLeftLat,
-        upperLeftLong = input$upperLeftLong,
-        lowerRightLat = input$lowerRightLat,
-        lowerRightLong = input$lowerRightLong
+        upperLeftLat = rectangleUpperLeft$latitude(),
+        upperLeftLong = rectangleUpperLeft$longitude(),
+        lowerRightLat = rectangleLowerRight$latitude(),
+        lowerRightLong = rectangleLowerRight$longitude()
       )
-      latLength <- abs(diff(c(input$lowerRightLat, input$upperLeftLat)))
-      longLength <- abs(diff(c(input$lowerRightLong, input$upperLeftLong)))
 
-      coord <- getFullCoordGrid(gridLength = min(c(latLength, longLength) / 2) / 10000)
+      latLength <- abs(diff(c(rectangleLowerRight$latitude(), rectangleUpperLeft$latitude())))
+      longLength <- abs(diff(c(rectangleLowerRight$longitude(), rectangleUpperLeft$longitude())))
+
+      withProgress(
+        coord <- getFullCoordGrid(gridLength = mean(c(latLength, longLength) / 2) / 10000),
+        value = 80,
+        message = "Generating grid ..."
+      )
 
       coord <- coord %>%
         filterCoordRectangle(
@@ -164,14 +152,19 @@ savedMapsTab <- function(input, output, session, savedMaps) {
           latLength = latLength,
           longLength = longLength)
 
-      XPred <- data.frame(
-        Est = input$meanMap,
-        Sd = input$sdMap,
-        Longitude = coord[, 1],
-        Latitude = coord[, 2]
-      )
+      if (!is.null(coord)) {
+        XPred <- data.frame(
+          Est = input$meanMap,
+          Sd = input$sdMap,
+          Longitude = coord[, 1],
+          Latitude = coord[, 2]
+        )
+      } else {
+        XPred <- NULL
+      }
     }
 
+    req(XPred)
     map <- createSavedMap(
       model = NULL,
       predictions = XPred,
@@ -218,7 +211,22 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 getFullCoordGrid <- function(gridLength) {
   lo <- seq(-180, 180, by = gridLength)
   la <- seq(-90, 90, by = gridLength)
-  expand.grid(lo, la)
+
+  tryCatch({
+    expand.grid(lo, la)
+    #stop("test error")
+    #warning("test warning")
+  },
+  error = function(cond) {
+    alert(paste("Could not create grid of coordinates:", cond$message))
+    # Choose a return value in case of error
+    return(NULL)
+  },
+  warning = function(cond) {
+    # Choose a return value in case of warning
+    return(NULL)
+  },
+  finally = NULL)
 }
 
 #' Filter Coord Circle
