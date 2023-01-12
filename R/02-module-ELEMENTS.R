@@ -12,7 +12,7 @@ numericInputLatAndLongUI <-
   function(id, label, valueLat = 50, valueLong = 10) {
     ns <- NS(id)
     tagList(fluidRow(
-      tags$strong(label),
+      tags$strong(label, style = "margin-left: 15px;"),
       tags$br(),
       column(6,
              numericInput(

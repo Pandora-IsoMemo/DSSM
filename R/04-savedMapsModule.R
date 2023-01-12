@@ -14,7 +14,7 @@ savedMapsTabUI <- function(id, title = "") {
                width = 2,
                div(
                  style = 'display:inline-block',
-                 tags$h3("Create Map"),
+                 tags$h3("Create Map", style = "margin-top:2px"),
                  tags$br(),
                  textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
                  numericInput(ns("meanMap"), "Mean of map", value = 0),
@@ -140,7 +140,7 @@ savedMapsTab <- function(input, output, session, savedMaps) {
       longLength <- abs(diff(c(rectangleLowerRight$longitude(), rectangleUpperLeft$longitude())))
 
       withProgress(
-        coord <- getFullCoordGrid(gridLength = mean(c(latLength, longLength) / 2) / 10000),
+        coord <- getFullCoordGrid(gridLength = mean(c(latLength, longLength) / 2) * 111 / 10000),
         value = 80,
         message = "Generating grid ..."
       )
@@ -207,7 +207,7 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 
 #' Get Full Coord Grid
 #'
-#' @param gridLength length of the
+#' @param gridLength length between two points
 getFullCoordGrid <- function(gridLength) {
   lo <- seq(-180, 180, by = gridLength)
   la <- seq(-90, 90, by = gridLength)
