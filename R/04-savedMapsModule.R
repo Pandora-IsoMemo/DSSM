@@ -32,7 +32,7 @@ savedMapsTabUI <- function(id, title = "") {
                  ),
                  conditionalPanel(
                    ns = ns,
-                   condition = "input.userMapType == '2' | input.userMapType == '3'",
+                   condition = "input.userMapType == '2'",
                    numericInput(
                      inputId = ns("userRadius"),
                      label = "Radius in km",
@@ -50,7 +50,7 @@ savedMapsTabUI <- function(id, title = "") {
                      min = -90,
                      max = 90,
                      value = c(50),
-                     width = "49%"
+                     width = "40%"
                    ),
                    numericInput(
                      inputId = ns("centerLongitude"),
@@ -58,49 +58,49 @@ savedMapsTabUI <- function(id, title = "") {
                      min = -180,
                      max = 180,
                      value = c(10),
-                     width = "49%"
+                     width = "40%"
                    )
                  ),
-                 # conditionalPanel(
-                 #   ns = ns,
-                 #   condition = "input.userMapType == '3'",
-                 #   tags$strong("Upper left"),
-                 #   tags$br(),
-                 #   numericInput(
-                 #     inputId = ns("upperLeftLatitude"),
-                 #     label = "Latitude",
-                 #     min = -90,
-                 #     max = 90,
-                 #     value = c(50),
-                 #     width = "49%"
-                 #   ),
-                 #   numericInput(
-                 #     inputId = ns("upperLeftLongitude"),
-                 #     label = "Longitude",
-                 #     min = -180,
-                 #     max = 180,
-                 #     value = c(10),
-                 #     width = "49%"
-                 #   ),
-                 #   tags$strong("Lower right"),
-                 #   tags$br(),
-                 #   numericInput(
-                 #     inputId = ns("lowerRightLatitude"),
-                 #     label = "Latitude",
-                 #     min = -90,
-                 #     max = 90,
-                 #     value = c(50),
-                 #     width = "49%"
-                 #   ),
-                 #   numericInput(
-                 #     inputId = ns("lowerRightLongitude"),
-                 #     label = "Longitude",
-                 #     min = -180,
-                 #     max = 180,
-                 #     value = c(10),
-                 #     width = "49%"
-                 #   )
-                 # ),
+                 conditionalPanel(
+                   ns = ns,
+                   condition = "input.userMapType == '3'",
+                   tags$strong("Upper left"),
+                   tags$br(),
+                   numericInput(
+                     inputId = ns("upperLeftLat"),
+                     label = "Latitude",
+                     min = -90,
+                     max = 90,
+                     value = c(50),
+                     width = "40%"
+                   ),
+                   numericInput(
+                     inputId = ns("upperLeftLong"),
+                     label = "Longitude",
+                     min = -180,
+                     max = 180,
+                     value = c(10),
+                     width = "40%"
+                   ),
+                   tags$strong("Lower right"),
+                   tags$br(),
+                   numericInput(
+                     inputId = ns("lowerRightLat"),
+                     label = "Latitude",
+                     min = -90,
+                     max = 90,
+                     value = c(50),
+                     width = "40%"
+                   ),
+                   numericInput(
+                     inputId = ns("lowerRightLong"),
+                     label = "Longitude",
+                     min = -180,
+                     max = 180,
+                     value = c(10),
+                     width = "40%"
+                   )
+                 ),
                  actionButton(ns("createMap"), "Create new map")
                )
              ),
@@ -160,16 +160,16 @@ savedMapsTab <- function(input, output, session, savedMaps) {
       )
     }
     if (input$userMapType == "3") {
-      coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
-
       center <- getCoordCenter(
-        upperLeftLat = upperLeftLat,
-        upperLeftLong = upperLeftLong,
-        lowerRightLat = lowerRightLat,
-        lowerRightLong = lowerRightLong
+        upperLeftLat = input$upperLeftLat,
+        upperLeftLong = input$upperLeftLong,
+        lowerRightLat = input$lowerRightLat,
+        lowerRightLong = input$lowerRightLong
       )
-      latLength <- abs(diff(c(lowerRightLat, upperLeftLat)))
-      longLength <- abs(diff(c(lowerRightLong, upperLeftLong)))
+      latLength <- abs(diff(c(input$lowerRightLat, input$upperLeftLat)))
+      longLength <- abs(diff(c(input$lowerRightLong, input$upperLeftLong)))
+
+      coord <- getFullCoordGrid(gridLength = min(c(latLength, longLength) / 2) / 10000)
 
       coord <- coord %>%
         filterCoordRectangle(
