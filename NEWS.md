@@ -6,7 +6,9 @@
 
 - under Saved/Create Maps tab (#19)
   - option to add a square
-  - update of the UI (with fixed sidebar)
+  - update of the UI
+
+- fixed sidebars with auto scroll in all tabs (#4)
 
 ## MpiIsoApp 22.12.4
 

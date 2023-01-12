@@ -15,6 +15,7 @@ modelResults3DUI <- function(id, title = ""){
       # left sidebar ----
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -278,6 +279,7 @@ modelResults3DUI <- function(id, title = ""){
       # right sidebar ----
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         radioButtons(inputId = ns("Centering"),
                      label = "Map Centering",
                      choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),

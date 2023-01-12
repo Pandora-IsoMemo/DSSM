@@ -14,6 +14,7 @@ modelResultsAssignUI <- function(id, title = "") {
       class = "modeling-content",
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         selectInput(ns("dataSource"),
           "Data source",
           choices = c(

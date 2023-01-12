@@ -12,7 +12,7 @@ savedMapsTabUI <- function(id, title = "") {
            sidebarLayout(
              sidebarPanel(
                width = 2,
-               style = "position:fixed; width:15%; overflow-y:auto; height:80%",
+               style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
                div(
                  style = 'display:inline-block',
                  tags$h3("Create Map", style = "margin-top:2px"),
