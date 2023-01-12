@@ -7,7 +7,7 @@
 getFullCoordGrid(gridLength)
 }
 \arguments{
-\item{gridLength}{length of the}
+\item{gridLength}{length between two points}
 }
 \description{
 Get Full Coord Grid
