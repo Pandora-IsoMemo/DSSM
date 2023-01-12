@@ -162,12 +162,21 @@ savedMapsTab <- function(input, output, session, savedMaps) {
     if (input$userMapType == "3") {
       coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
 
+      center <- getCoordCenter(
+        upperLeftLat = upperLeftLat,
+        upperLeftLong = upperLeftLong,
+        lowerRightLat = lowerRightLat,
+        lowerRightLong = lowerRightLong
+      )
+      latLength <- abs(diff(c(lowerRightLat, upperLeftLat)))
+      longLength <- abs(diff(c(lowerRightLong, upperLeftLong)))
+
       coord <- coord %>%
-        filterCoordSquare(
-          lat = input$centerLatitude,
-          long = input$centerLongitude,
-          length = input$userRadius / 111
-        )
+        filterCoordRectangle(
+          long = center[1],
+          lat = center[2],
+          latLength = latLength,
+          longLength = longLength)
 
       XPred <- data.frame(
         Est = input$meanMap,
@@ -246,7 +255,7 @@ filterCoordCircle <- function(fullGrid, lat, long, radius) {
 #' @param fullGrid grid of coordinates
 #' @param lat (numeric) latitude of center
 #' @param long (numeric) longitude of center
-#' @param length (numeric) length
+#' @param length (numeric) side length of square
 #'
 filterCoordSquare <- function(fullGrid, lat, long, length) {
   fullGrid[pmax(abs(fullGrid[, 2] - lat), abs(fullGrid[, 1] - long)) < length / 2,]
@@ -257,31 +266,18 @@ filterCoordSquare <- function(fullGrid, lat, long, length) {
 #' Filter full grid of coordinates to square area
 #'
 #' @param fullGrid grid of coordinates
-#' @param upperLeftLat (numeric) latitude of upper left point
-#' @param upperLeftLong (numeric) longitude of upper left point
-#' @param lowerRightLat (numeric) latitude of lower right point
-#' @param lowerRightLong (numeric) longitude of lower right point
+#' @param lat (numeric) latitude of center
+#' @param long (numeric) longitude of center
+#' @param latLength (numeric) length between latitudes
+#' @param longLength (numeric) length between longitudes
 filterCoordRectangle <-
   function(fullGrid,
-           upperLeftLat,
-           upperLeftLong,
-           lowerRightLat,
-           lowerRightLong) {
-    center <- getCoordCenter(
-      upperLeftLat = upperLeftLat,
-      upperLeftLong = upperLeftLong,
-      lowerRightLat = lowerRightLat,
-      lowerRightLong = lowerRightLong
-    )
-
-    # not yet working
-    latLength <- abs(diff(c(lowerRightLat, upperLeftLat)))
-    longLength <- abs(diff(c(lowerRightLong, upperLeftLong)))
-    longCenter <- center[1]
-    latCenter <- center[2]
-
-    fullGrid[pmax(abs(fullGrid[, 2] - latCenter)) < latLength / 2 &
-               pmax(abs(fullGrid[, 1] - longCenter)) < longLength / 2,]
+           lat,
+           long,
+           latLength,
+           longLength) {
+    fullGrid[pmax(abs(fullGrid[, 2] - lat)) < latLength / 2 &
+               pmax(abs(fullGrid[, 1] - long)) < longLength / 2,]
   }
 
 #' Get Coord Center

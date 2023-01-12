@@ -21,10 +21,11 @@ test_that("Test create circle", {
   expect_equal(testCoordsSquare, expectedCoords$expectedCoordSquare)
 
   testCoordsRectangle <- testCoords %>%
-    filterCoordRectangle(upperLeftLat = centerLatitude + testRadius / 111,
-                         upperLeftLong = centerLongitude - testRadius / 111,
-                         lowerRightLat = centerLatitude - testRadius / 111,
-                         lowerRightLong = centerLongitude + testRadius / 111)
+    filterCoordRectangle(long = centerLongitude,
+                         lat = centerLatitude,
+                         latLength = testRadius / 111 * 2,
+                         longLength = testRadius / 111 * 2)
+
   expect_equal(testCoordsRectangle, testCoordsSquare)
 })
 

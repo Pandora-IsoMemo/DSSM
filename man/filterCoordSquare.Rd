@@ -13,7 +13,7 @@ filterCoordSquare(fullGrid, lat, long, length)
 
 \item{long}{(numeric) longitude of center}
 
-\item{length}{(numeric) length}
+\item{length}{(numeric) side length of square}
 }
 \description{
 Filter full grid of coordinates to square area

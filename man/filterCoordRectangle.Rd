@@ -4,24 +4,18 @@
 \alias{filterCoordRectangle}
 \title{Filter Coord Rectangle}
 \usage{
-filterCoordRectangle(
-  fullGrid,
-  upperLeftLat,
-  upperLeftLong,
-  lowerRightLat,
-  lowerRightLong
-)
+filterCoordRectangle(fullGrid, lat, long, latLength, longLength)
 }
 \arguments{
 \item{fullGrid}{grid of coordinates}
 
-\item{upperLeftLat}{(numeric) latitude of upper left point}
+\item{lat}{(numeric) latitude of center}
 
-\item{upperLeftLong}{(numeric) longitude of upper left point}
+\item{long}{(numeric) longitude of center}
 
-\item{lowerRightLat}{(numeric) latitude of lower right point}
+\item{latLength}{(numeric) length between latitudes}
 
-\item{lowerRightLong}{(numeric) longitude of lower right point}
+\item{longLength}{(numeric) length between longitudes}
 }
 \description{
 Filter full grid of coordinates to square area
