@@ -4,16 +4,16 @@
 \alias{filterCoordSquare}
 \title{Filter Coord Square}
 \usage{
-filterCoordSquare(fullGrid, lat, long, radius)
+filterCoordSquare(fullGrid, lat, long, length)
 }
 \arguments{
 \item{fullGrid}{grid of coordinates}
 
-\item{lat}{(numeric) latitude}
+\item{lat}{(numeric) latitude of center}
 
-\item{long}{(numeric) longitude}
+\item{long}{(numeric) longitude of center}
 
-\item{radius}{(numeric) radius}
+\item{length}{(numeric) length}
 }
 \description{
 Filter full grid of coordinates to square area

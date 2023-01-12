@@ -9,9 +9,9 @@ filterCoordCircle(fullGrid, lat, long, radius)
 \arguments{
 \item{fullGrid}{grid of coordinates}
 
-\item{lat}{(numeric) latitude}
+\item{lat}{(numeric) latitude of center}
 
-\item{long}{(numeric) longitude}
+\item{long}{(numeric) longitude of center}
 
 \item{radius}{(numeric) radius}
 }

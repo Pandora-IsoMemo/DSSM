@@ -18,7 +18,15 @@ test_that("Test create circle", {
   testCoordsSquare <- testCoords %>%
     filterCoordSquare(lat = centerLatitude,
                       long = centerLongitude,
-                      radius = testRadius / 111)
+                      length = testRadius / 111)
 
   expect_identical(testCoordsSquare, expectedCoords$expectedCoordSquare)
+
+  testCoordsRectangle <- testCoords %>%
+    filterCoordRectangle(lat = centerLatitude,
+                         long = centerLongitude,
+                         latLength = testRadius / 111,
+                         longLength = testRadius / 111)
+
+  expect_identical(testCoordsRectangle, expectedCoords$expectedCoordSquare)
 })
