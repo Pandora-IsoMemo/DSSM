@@ -479,18 +479,22 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 #' @param columnForPointSize (character) name of the column that determines the point size
 #' @param sizeFactor (numeric) general factor for point size
 getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
-  if (is.null(df)) return(NULL)
+  if (is.null(df))
+    return(NULL)
 
   nPoints <- nrow(df)
-  defaultPointSize <- rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
+  defaultPointSize <-
+    rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
 
-  if (columnForPointSize %in% c("",  "none")) return(defaultPointSize)
+  if (columnForPointSize %in% c("",  "none"))
+    return(defaultPointSize)
 
   sizeColumn <- df[, columnForPointSize] %>%
     as.numeric() %>%
     suppressWarnings()
 
-  if (length(unique(na.omit(sizeColumn))) < 2) return(defaultPointSize)
+  if (length(unique(na.omit(sizeColumn))) < 2)
+    return(defaultPointSize)
 
   # normalize values
   varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)

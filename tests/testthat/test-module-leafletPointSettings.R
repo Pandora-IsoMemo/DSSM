@@ -99,10 +99,12 @@ test_that("Test module pointColourServer", {
 })
 
 test_that("Test getPointSize", {
-  testDf <- data.frame(a = c(1, NA, 3),
-                       b = 5:7,
-                       c = c(3, 4, 10),
-                       d = c(4, 4, 4))
+  testDf <- data.frame(
+    a = c(1, NA, 3),
+    b = 5:7,
+    c = c(3, 4, 10),
+    d = c(4, 4, 4)
+  )
 
   expect_equal(getPointSize(df = testDf, columnForPointSize = "b"),
                c(0.1, 4, 8))
@@ -116,12 +118,8 @@ test_that("Test getPointSize", {
     getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1),
     c(0.1, 1.1, 8)
   )
-  expect_equal(
-    getPointSize(df = testDf, columnForPointSize = "a"),
-    c(0.1, 0, 8)
-  )
-  expect_equal(
-    getPointSize(df = testDf, columnForPointSize = "d"),
-    c(4, 4, 4)
-  )
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "a"),
+               c(0.1, 0, 8))
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "d"),
+               c(4, 4, 4))
 })
