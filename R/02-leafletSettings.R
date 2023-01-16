@@ -49,6 +49,7 @@ leafletSettingsUI <- function(id, title = "") {
       column(width = 6,
              checkboxInput(ns("fitBounds"), "Fit boundaries")),
       column(width = 6,
+             align = "right",
              actionButton(ns(
                "centerMapButton"
              ), "Center map"))

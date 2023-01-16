@@ -15,6 +15,7 @@ leafletPointSettingsUI <- function(id) {
       ),
       column(
         4,
+        style = "margin-top: -1em;",
         conditionalPanel(
           condition = "input.useJitter == true",
           numericInput(
