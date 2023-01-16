@@ -248,8 +248,8 @@ pointSizeUI <- function(id) {
                ns("sizeFactor"),
                "Point size factor",
                value = 1,
-               min = 0,
-               max = 5,
+               min = 0.1,
+               max = 2,
                step = 0.1,
                width = "75%"
              )),
@@ -267,66 +267,53 @@ pointSizeUI <- function(id) {
 pointSizeServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
-                 sizeValues <- reactiveValues()
+                 sizeValues <- reactiveValues(
+                   pointRadiusInPxl = defaultPointSizeInPxl()
+                 )
 
-                 observeEvent(input$showLegend, {
+                 observe({
                    sizeValues$showLegend <- input$showLegend
-                 })
+                 }) %>%
+                   bindEvent(input$showLegend)
 
-                 # observeEvent(input$sizeFactor, {
-                 #   sizeValues$sizeFactor <- input$sizeFactor
-                 # })
-
-                 observeEvent(loadedData(), {
-                   if (!is.null(loadedData())) {
-                     selectedDefault <- ifelse("source" %in% colnames(loadedData()),
-                                               "source",
-                                               colnames(loadedData())[1])
+                 observe({
+                   if (is.null(loadedData())) {
+                     numCols <- c("Add data ..." = "")
+                     selectedDefault <- ""
+                     showLegendVal <- FALSE
                    } else {
+                     numCols <- partialNumericColumns(loadedData())
+                     if (length(numCols) == 0) {
+                       numCols <- c("No numeric columns ..." = "")
+                       selectedDefault <- ""
+                       showLegendVal <- FALSE
+                     }
                      selectedDefault <- "none"
+                     showLegendVal <- TRUE
                    }
 
                    updateSelectInput(
                      session = session,
                      "columnForPointSize",
-                     choices = colnames(loadedData()),
+                     choices = numCols,
                      selected = selectedDefault
                    )
+                   updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+                 }) %>%
+                   bindEvent(loadedData())
 
-                   updateCheckboxInput(session = session, "showLegend", value = TRUE)
-                 })
-
-                 observeEvent(input$columnForPointSize, {
-                   sizeValues$columnForPointSize <- input$columnForPointSize
-                 })
-
-                 observeEvent(
-                   list(
-                     input$columnForPointSize
-                   ),
-                   {
-                     if (!is.null(loadedData()) &&
-                         !is.null(input$columnForPointSize)) {
-                       sizeColumn <- loadedData()[[input$columnForPointSize]]
-
-                       # if (is.numeric(sizeColumn)) {
-                       #   pal <- colorNumeric(
-                       #     palette = input$paletteName,
-                       #     domain = sizeColumn,
-                       #     reverse = input$isReversePalette
-                       #   )
-                       # } else {
-                       #   pal <- colorFactor(
-                       #     palette = input$paletteName,
-                       #     domain = sizeColumn,
-                       #     reverse = input$isReversePalette
-                       #   )
-                       # }
-                       #
-                       # sizeValues$pointColourPalette <- pal
-                     }
+                 observe({
+                   if (is.null(loadedData())) {
+                     sizeValues$size <- NULL
+                   } else {
+                     sizeValues$size <- getPointSize(
+                       df = loadedData(),
+                       columnForPointSize = input$columnForPointSize,
+                       sizeFactor = input$sizeFactor
+                     )
                    }
-                 )
+                 }) %>%
+                   bindEvent(list(input$columnForPointSize, input$sizeFactor))
 
                  return(sizeValues)
                })
@@ -475,4 +462,40 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
   }
 
   map
+}
+
+#' Get Point Size
+#'
+#' @param df (data.frame) loaded data
+#' @param columnForPointSize (character) name of the column that determines the point size
+#' @param sizeFactor (numeric) general factor for point size
+getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
+  nPoints <- nrow(df)
+  if (columnForPointSize %in% c("",  "none")) {
+    pointSize <- rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
+    return(pointSize)
+  }
+
+  sizeColumn <- df[, columnForPointSize] %>%
+    as.numeric() %>%
+    suppressWarnings()
+
+  # normalize values
+  varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)
+  varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
+
+  # mean value should have a factor of 1
+  varSizeFactor <- 2 * varSizeFactor
+
+  # avoid zero values
+  varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <- 0.1 / defaultPointSizeInPxl()
+
+  # multiply with default
+  pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl()
+
+  pointSizes
+}
+
+defaultPointSizeInPxl <- function() {
+  4
 }

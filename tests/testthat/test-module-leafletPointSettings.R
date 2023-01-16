@@ -87,3 +87,15 @@ test_that("Test module pointColourServer", {
                expect_true(is.function(session$returned$pointColourPalette))
              })
 })
+
+test_that("Test getPointSize", {
+  testDf <- data.frame(
+    a = 1:3,
+    b = 5:7,
+    c = c(3, 4, 10)
+  )
+
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "b"), c(0.1, 4, 8))
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "b", sizeFactor = 2), c(0.2, 8, 16))
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1), c(0.1, 1.1, 8))
+})
