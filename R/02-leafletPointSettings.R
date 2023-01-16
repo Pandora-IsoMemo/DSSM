@@ -29,9 +29,10 @@ leafletPointSettingsUI <- function(id) {
         )
       )),
       pointColourUI(ns("pointColor")),
+      pointSizeUI(ns("pointSize")),
       sliderInput(
         ns("pointRadiusPxl"),
-        "Point radius in pixel",
+        "Opacity / Point radius in pixel",
         value = 4,
         min = 1,
         max = 20,
@@ -55,10 +56,16 @@ leafletPointSettingsServer <- function(id, loadedData) {
                  })
 
                  pointColorVals <- pointColourServer("pointColor", loadedData)
-
                  observe({
                    for (i in names(pointColorVals)) {
                      values[[i]] <- pointColorVals[[i]]
+                   }
+                 })
+
+                 pointSizeVals <- pointSizeServer("pointSize", loadedData)
+                 observe({
+                   for (i in names(pointSizeVals)) {
+                     values[[i]] <- pointSizeVals[[i]]
                    }
                  })
 
@@ -129,7 +136,7 @@ pointColourUI <- function(id) {
            )),
     column(4,
            style = "margin-top: 1.5em;",
-           checkboxInput(ns("showLegend"), "Legend", value = TRUE))
+           checkboxInput(ns("showLegend"), "Legend", value = FALSE))
   ),
   fluidRow(
     column(
@@ -177,6 +184,7 @@ pointColourServer <- function(id, loadedData) {
                      choices = colnames(loadedData()),
                      selected = selectedDefault
                    )
+                   updateCheckboxInput(session = session, "showLegend", value = TRUE)
                  })
 
                  observeEvent(input$columnForPointColour, {
@@ -218,6 +226,109 @@ pointColourServer <- function(id, loadedData) {
                  )
 
                  return(colourValues)
+               })
+}
+
+
+#' ui function of leaflet point settings module
+#'
+#' @param id namespace
+pointSizeUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    fluidRow(
+      column(8,
+             selectInput(
+               ns("columnForPointSize"),
+               "Point size variable",
+               choices = c("Add data ..." = "")
+             ),
+             numericInput(
+               ns("sizeFactor"),
+               "Point size factor",
+               value = 1,
+               min = 0,
+               max = 5,
+               step = 0.1,
+               width = "75%"
+             )),
+      column(4,
+             style = "margin-top: 1.5em;",
+             checkboxInput(ns("showLegend"), "Legend", value = FALSE))
+    )
+  )
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @inheritParams leafletPointSettingsServer
+pointSizeServer <- function(id, loadedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 sizeValues <- reactiveValues()
+
+                 observeEvent(input$showLegend, {
+                   sizeValues$showLegend <- input$showLegend
+                 })
+
+                 # observeEvent(input$sizeFactor, {
+                 #   sizeValues$sizeFactor <- input$sizeFactor
+                 # })
+
+                 observeEvent(loadedData(), {
+                   if (!is.null(loadedData())) {
+                     selectedDefault <- ifelse("source" %in% colnames(loadedData()),
+                                               "source",
+                                               colnames(loadedData())[1])
+                   } else {
+                     selectedDefault <- "none"
+                   }
+
+                   updateSelectInput(
+                     session = session,
+                     "columnForPointSize",
+                     choices = colnames(loadedData()),
+                     selected = selectedDefault
+                   )
+
+                   updateCheckboxInput(session = session, "showLegend", value = TRUE)
+                 })
+
+                 observeEvent(input$columnForPointSize, {
+                   sizeValues$columnForPointSize <- input$columnForPointSize
+                 })
+
+                 observeEvent(
+                   list(
+                     input$columnForPointSize
+                   ),
+                   {
+                     if (!is.null(loadedData()) &&
+                         !is.null(input$columnForPointSize)) {
+                       sizeColumn <- loadedData()[[input$columnForPointSize]]
+
+                       # if (is.numeric(sizeColumn)) {
+                       #   pal <- colorNumeric(
+                       #     palette = input$paletteName,
+                       #     domain = sizeColumn,
+                       #     reverse = input$isReversePalette
+                       #   )
+                       # } else {
+                       #   pal <- colorFactor(
+                       #     palette = input$paletteName,
+                       #     domain = sizeColumn,
+                       #     reverse = input$isReversePalette
+                       #   )
+                       # }
+                       #
+                       # sizeValues$pointColourPalette <- pal
+                     }
+                   }
+                 )
+
+                 return(sizeValues)
                })
 }
 
