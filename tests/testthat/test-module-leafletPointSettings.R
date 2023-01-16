@@ -9,15 +9,15 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                # Arrange
                print("test leaflet Point Settings if clusterPoints")
                # Act
-               session$setInputs(
-                 clusterPoints = TRUE,
-                 useJitter = FALSE
-               )
+               session$setInputs(clusterPoints = TRUE,
+                                 useJitter = FALSE)
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(names(session$returned),
-                            c("clusterPoints", "pointColourPalette", "jitterMaxKm"))
+               expect_equal(
+                 names(session$returned),
+                 c("clusterPoints", "pointColourPalette", "jitterMaxKm")
+               )
                expect_true(is.na(session$returned$jitterMaxKm))
                expect_true(session$returned$clusterPoints)
                expect_null(session$returned$pointColourPalette)
@@ -46,9 +46,15 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(names(session$returned),
-                            c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints"
-                            ))
+               expect_equal(
+                 names(session$returned),
+                 c(
+                   "jitterMaxKm",
+                   "pointColourPalette",
+                   "pointRadius",
+                   "clusterPoints"
+                 )
+               )
                expect_false(session$returned$clusterPoints)
                expect_equal(session$returned$pointRadius, 30)
                expect_equal(session$returned$jitterMaxKm, 15)
@@ -80,7 +86,11 @@ test_that("Test module pointColourServer", {
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c("showLegend", "columnForPointColour", "pointColourPalette")
+                 c(
+                   "showLegend",
+                   "columnForPointColour",
+                   "pointColourPalette"
+                 )
                )
                expect_false(session$returned$showLegend)
                expect_equal(session$returned$columnForPointColour, "source")
@@ -89,13 +99,20 @@ test_that("Test module pointColourServer", {
 })
 
 test_that("Test getPointSize", {
-  testDf <- data.frame(
-    a = 1:3,
-    b = 5:7,
-    c = c(3, 4, 10)
-  )
+  testDf <- data.frame(a = 1:3,
+                       b = 5:7,
+                       c = c(3, 4, 10))
 
-  expect_equal(getPointSize(df = testDf, columnForPointSize = "b"), c(0.1, 4, 8))
-  expect_equal(getPointSize(df = testDf, columnForPointSize = "b", sizeFactor = 2), c(0.2, 8, 16))
-  expect_equal(getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1), c(0.1, 1.1, 8))
+  expect_equal(getPointSize(df = testDf, columnForPointSize = "b"),
+               c(0.1, 4, 8))
+  expect_equal(getPointSize(
+    df = testDf,
+    columnForPointSize = "b",
+    sizeFactor = 2
+  ),
+  c(0.2, 8, 16))
+  expect_equal(
+    getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1),
+    c(0.1, 1.1, 8)
+  )
 })

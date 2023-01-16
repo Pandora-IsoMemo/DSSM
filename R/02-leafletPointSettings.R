@@ -9,25 +9,27 @@ leafletPointSettingsUI <- function(id) {
     conditionalPanel(
       condition = "input.clusterPoints == false",
       ns = ns,
-      fluidRow(column(
-        8,
-        checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
-      ),
-      column(
-        4,
-        style = "margin-top: -1em;",
-        conditionalPanel(
-          condition = "input.useJitter == true",
-          numericInput(
-            ns("jitterMaxKm"),
-            label = NULL,
-            value = 25,
-            min = 0,
-            max = 100
-          ),
-          ns = ns
+      fluidRow(
+        column(8,
+               checkboxInput(
+                 ns("useJitter"), "Use jitter (in max. km)"
+               )),
+        column(
+          4,
+          style = "margin-top: -1em;",
+          conditionalPanel(
+            condition = "input.useJitter == true",
+            numericInput(
+              ns("jitterMaxKm"),
+              label = NULL,
+              value = 25,
+              min = 0,
+              max = 100
+            ),
+            ns = ns
+          )
         )
-      )),
+      ),
       pointColourUI(ns("pointColor")),
       pointSizeUI(ns("pointSize")),
       sliderInput(
@@ -55,14 +57,16 @@ leafletPointSettingsServer <- function(id, loadedData) {
                    values$clusterPoints <- input$clusterPoints
                  })
 
-                 pointColorVals <- pointColourServer("pointColor", loadedData)
+                 pointColorVals <-
+                   pointColourServer("pointColor", loadedData)
                  observe({
                    for (i in names(pointColorVals)) {
                      values[[i]] <- pointColorVals[[i]]
                    }
                  })
 
-                 pointSizeVals <- pointSizeServer("pointSize", loadedData)
+                 pointSizeVals <-
+                   pointSizeServer("pointSize", loadedData)
                  observe({
                    for (i in names(pointSizeVals)) {
                      values[[i]] <- pointSizeVals[[i]]
@@ -236,28 +240,28 @@ pointColourServer <- function(id, loadedData) {
 pointSizeUI <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    fluidRow(
-      column(8,
-             selectInput(
-               ns("columnForPointSize"),
-               "Point size variable",
-               choices = c("Add data ..." = "")
-             ),
-             numericInput(
-               ns("sizeFactor"),
-               "Point size factor",
-               value = 1,
-               min = 0.1,
-               max = 2,
-               step = 0.1,
-               width = "75%"
-             )),
-      column(4,
-             style = "margin-top: 1.5em;",
-             checkboxInput(ns("showLegend"), "Legend", value = FALSE))
-    )
-  )
+  tagList(fluidRow(
+    column(
+      8,
+      selectInput(
+        ns("columnForPointSize"),
+        "Point size variable",
+        choices = c("Add data ..." = "")
+      ),
+      numericInput(
+        ns("sizeFactor"),
+        "Point size factor",
+        value = 1,
+        min = 0.1,
+        max = 2,
+        step = 0.1,
+        width = "75%"
+      )
+    ),
+    column(4,
+           style = "margin-top: 1.5em;",
+           checkboxInput(ns("showLegend"), "Legend", value = FALSE))
+  ))
 }
 
 
@@ -267,9 +271,7 @@ pointSizeUI <- function(id) {
 pointSizeServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
-                 sizeValues <- reactiveValues(
-                   pointRadiusInPxl = defaultPointSizeInPxl()
-                 )
+                 sizeValues <- reactiveValues(pointRadiusInPxl = defaultPointSizeInPxl())
 
                  observe({
                    sizeValues$showLegend <- input$showLegend
@@ -341,7 +343,7 @@ updateDataOnLeafletMap <-
 
     isoData <-
       isoData[(!is.na(isoData[["longitude"]]) &
-                 !is.na(isoData[["latitude"]])),]
+                 !is.na(isoData[["latitude"]])), ]
 
     if (leafletPointValues$clusterPoints) {
       return(drawClustersOnMap(map, isoData))
@@ -488,7 +490,8 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   varSizeFactor <- 2 * varSizeFactor
 
   # avoid zero values
-  varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <- 0.1 / defaultPointSizeInPxl()
+  varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <-
+    0.1 / defaultPointSizeInPxl()
 
   # multiply with default
   pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl()
