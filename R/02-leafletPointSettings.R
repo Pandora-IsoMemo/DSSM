@@ -31,15 +31,15 @@ leafletPointSettingsUI <- function(id) {
         )
       ),
       pointColourUI(ns("pointColor")),
-      pointSizeUI(ns("pointSize")),
-      sliderInput(
-        ns("pointRadiusPxl"),
-        "Opacity / Point radius in pixel",
-        value = 4,
-        min = 1,
-        max = 20,
-        step = 1
-      )
+      pointSizeUI(ns("pointSize"))#,
+      # sliderInput(
+      #   ns("pointRadiusPxl"),
+      #   "Opacity / Point radius in pixel",
+      #   value = 4,
+      #   min = 1,
+      #   max = 20,
+      #   step = 1
+      # )
     )
   )
 }
@@ -73,9 +73,9 @@ leafletPointSettingsServer <- function(id, loadedData) {
                    }
                  })
 
-                 observeEvent(input$pointRadiusPxl, {
-                   values$pointRadius <- input$pointRadiusPxl
-                 })
+                 # observeEvent(input$pointRadiusPxl, {
+                 #   values$pointRadius <- input$pointRadiusPxl
+                 # })
 
                  observe({
                    values$jitterMaxKm <- ifelse(input$useJitter,
@@ -280,24 +280,26 @@ pointSizeServer <- function(id, loadedData) {
 
                  observe({
                    if (is.null(loadedData())) {
-                     numCols <- c("Add data ..." = "")
+                     choices <- c("Add data ..." = "")
                      selectedDefault <- ""
                      showLegendVal <- FALSE
                    } else {
                      numCols <- partialNumericColumns(loadedData())
                      if (length(numCols) == 0) {
-                       numCols <- c("No numeric columns ..." = "")
+                       choices <- c("No numeric columns ..." = "")
                        selectedDefault <- ""
                        showLegendVal <- FALSE
+                     } else {
+                       choices <- c("None" = "", numCols)
                      }
-                     selectedDefault <- "none"
+                     selectedDefault <- ""
                      showLegendVal <- TRUE
                    }
 
                    updateSelectInput(
                      session = session,
                      "columnForPointSize",
-                     choices = numCols,
+                     choices = choices,
                      selected = selectedDefault
                    )
                    updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
@@ -306,9 +308,9 @@ pointSizeServer <- function(id, loadedData) {
 
                  observe({
                    if (is.null(loadedData())) {
-                     sizeValues$size <- NULL
+                     sizeValues$pointRadius <- NULL
                    } else {
-                     sizeValues$size <- getPointSize(
+                     sizeValues$pointRadius <- getPointSize(
                        df = loadedData(),
                        columnForPointSize = input$columnForPointSize,
                        sizeFactor = input$sizeFactor
@@ -416,7 +418,7 @@ drawCirclesOnMap <-
            pointRadius,
            colourPal,
            columnForColour) {
-    if (is.null(colourPal))
+    if (is.null(colourPal) | is.null(pointRadius))
       return(map)
 
     map %>%
@@ -473,25 +475,29 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 #' @param sizeFactor (numeric) general factor for point size
 getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   nPoints <- nrow(df)
-  if (columnForPointSize %in% c("",  "none")) {
-    pointSize <- rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
-    return(pointSize)
-  }
+  defaultPointSize <- rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
+
+  if (columnForPointSize %in% c("",  "none")) return(defaultPointSize)
 
   sizeColumn <- df[, columnForPointSize] %>%
     as.numeric() %>%
     suppressWarnings()
 
+  if (length(unique(na.omit(sizeColumn))) < 2) return(defaultPointSize)
+
   # normalize values
   varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)
   varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
 
-  # mean value should have a factor of 1
+  # the mean of the data (== 0.5) should have a factor of 1
   varSizeFactor <- 2 * varSizeFactor
 
-  # avoid zero values
+  # give zero values a small factor
   varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <-
     0.1 / defaultPointSizeInPxl()
+
+  # give missing values zero factor
+  varSizeFactor[is.na(varSizeFactor)] <- 0
 
   # multiply with default
   pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl()
