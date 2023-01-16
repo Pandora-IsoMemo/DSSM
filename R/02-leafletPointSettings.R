@@ -30,16 +30,16 @@ leafletPointSettingsUI <- function(id) {
           )
         )
       ),
+      sliderInput(
+        ns("pointOpacity"),
+        "Opacity",
+        value = 0.7,
+        min = 0,
+        max = 1,
+        step = 0.1
+      ),
       pointColourUI(ns("pointColor")),
-      pointSizeUI(ns("pointSize"))#,
-      # sliderInput(
-      #   ns("pointRadiusPxl"),
-      #   "Opacity / Point radius in pixel",
-      #   value = 4,
-      #   min = 1,
-      #   max = 20,
-      #   step = 1
-      # )
+      pointSizeUI(ns("pointSize"))
     )
   )
 }
@@ -73,9 +73,9 @@ leafletPointSettingsServer <- function(id, loadedData) {
                    }
                  })
 
-                 # observeEvent(input$pointRadiusPxl, {
-                 #   values$pointRadius <- input$pointRadiusPxl
-                 # })
+                 observeEvent(input$pointOpacity, {
+                   values$pointOpacity <- input$pointOpacity
+                 })
 
                  observe({
                    values$jitterMaxKm <- ifelse(input$useJitter,
@@ -271,7 +271,7 @@ pointSizeUI <- function(id) {
 pointSizeServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
-                 sizeValues <- reactiveValues(pointRadiusInPxl = defaultPointSizeInPxl())
+                 sizeValues <- reactiveValues()
 
                  observe({
                    sizeValues$showLegend <- input$showLegend
@@ -303,19 +303,22 @@ pointSizeServer <- function(id, loadedData) {
                      selected = selectedDefault
                    )
                    updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+
+                   sizeValues$pointRadius <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = selectedDefault,
+                     sizeFactor = input$sizeFactor
+                   )
+                   sizeValues$showLegend <- input$showLegend
                  }) %>%
                    bindEvent(loadedData())
 
                  observe({
-                   if (is.null(loadedData())) {
-                     sizeValues$pointRadius <- NULL
-                   } else {
-                     sizeValues$pointRadius <- getPointSize(
-                       df = loadedData(),
-                       columnForPointSize = input$columnForPointSize,
-                       sizeFactor = input$sizeFactor
-                     )
-                   }
+                   sizeValues$pointRadius <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = input$columnForPointSize,
+                     sizeFactor = input$sizeFactor
+                   )
                  }) %>%
                    bindEvent(list(input$columnForPointSize, input$sizeFactor))
 
@@ -364,7 +367,8 @@ updateDataOnLeafletMap <-
       plotData,
       pointRadius = leafletPointValues$pointRadius,
       colourPal = leafletPointValues$pointColourPalette,
-      columnForColour = leafletPointValues$columnForPointColour
+      columnForColour = leafletPointValues$columnForPointColour,
+      pointOpacity = leafletPointValues$pointOpacity
     ) %>%
       setColorLegend(
         showLegend = leafletPointValues$showLegend,
@@ -417,7 +421,8 @@ drawCirclesOnMap <-
            isoData,
            pointRadius,
            colourPal,
-           columnForColour) {
+           columnForColour,
+           pointOpacity) {
     if (is.null(colourPal) | is.null(pointRadius))
       return(map)
 
@@ -428,7 +433,7 @@ drawCirclesOnMap <-
         lng =  ~ longitude,
         group = "dataPoints",
         stroke = F,
-        fillOpacity = 0.7,
+        fillOpacity = pointOpacity,
         color = colourPal(isoData[[columnForColour]]),
         fillColor = colourPal(isoData[[columnForColour]]),
         radius = pointRadius
@@ -474,6 +479,8 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 #' @param columnForPointSize (character) name of the column that determines the point size
 #' @param sizeFactor (numeric) general factor for point size
 getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
+  if (is.null(df)) return(NULL)
+
   nPoints <- nrow(df)
   defaultPointSize <- rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
 
