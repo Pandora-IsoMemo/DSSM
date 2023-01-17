@@ -247,20 +247,21 @@ pointSizeUI <- function(id) {
         ns("columnForPointSize"),
         "Point size variable",
         choices = c("Add data ..." = "")
-      ),
-      numericInput(
-        ns("sizeFactor"),
-        "Point size factor",
-        value = 1,
-        min = 0.1,
-        max = 2,
-        step = 0.1,
-        width = "75%"
       )
     ),
     column(4,
-           style = "margin-top: 1.5em;",
-           checkboxInput(ns("showLegend"), "Legend", value = FALSE))
+           style = "margin-top: -0.5em;",
+           #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
+           numericInput(
+             ns("sizeFactor"),
+             "Factor",
+             value = 1,
+             min = 0.1,
+             max = 20,
+             step = 0.1,
+             width = "100%"
+           )
+           )
   ))
 }
 
@@ -273,27 +274,27 @@ pointSizeServer <- function(id, loadedData) {
                function(input, output, session) {
                  sizeValues <- reactiveValues()
 
-                 observe({
-                   sizeValues$showLegend <- input$showLegend
-                 }) %>%
-                   bindEvent(input$showLegend)
+                 # observe({
+                 #   sizeValues$showLegend <- input$showLegend
+                 # }) %>%
+                 #   bindEvent(input$showLegend)
 
                  observe({
                    if (is.null(loadedData())) {
                      choices <- c("Add data ..." = "")
                      selectedDefault <- ""
-                     showLegendVal <- FALSE
+                     #showLegendVal <- FALSE
                    } else {
                      numCols <- partialNumericColumns(loadedData())
                      if (length(numCols) == 0) {
                        choices <- c("No numeric columns ..." = "")
                        selectedDefault <- ""
-                       showLegendVal <- FALSE
+                       #showLegendVal <- FALSE
                      } else {
                        choices <- c("None" = "", numCols)
                      }
                      selectedDefault <- ""
-                     showLegendVal <- TRUE
+                     #showLegendVal <- TRUE
                    }
 
                    updateSelectInput(
@@ -302,14 +303,14 @@ pointSizeServer <- function(id, loadedData) {
                      choices = choices,
                      selected = selectedDefault
                    )
-                   updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+                   #updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
 
                    sizeValues$pointRadius <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = selectedDefault,
                      sizeFactor = input$sizeFactor
                    )
-                   sizeValues$showLegend <- input$showLegend
+                   #sizeValues$showLegend <- input$showLegend
                  }) %>%
                    bindEvent(loadedData())
 
