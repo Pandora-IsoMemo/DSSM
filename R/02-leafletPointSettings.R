@@ -274,7 +274,7 @@ pointSizeServer <- function(id, loadedData) {
                  sizeValues <- reactiveValues()
 
                  observe({
-                   sizeValues$showLegend <- input$showLegend
+                   sizeValues$showSizeLegend <- input$showLegend
                  }) %>%
                    bindEvent(input$showLegend)
 
@@ -304,16 +304,22 @@ pointSizeServer <- function(id, loadedData) {
                    )
                    updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
 
+                   # update values to be returned
+                   sizeValues$columnForPointSize <- input$columnForPointSize
+                   sizeValues$sizeFactor <- input$sizeFactor
                    sizeValues$pointRadius <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = selectedDefault,
                      sizeFactor = input$sizeFactor
                    )
-                   sizeValues$showLegend <- input$showLegend
+                   sizeValues$showSizeLegend <- input$showLegend
                  }) %>%
                    bindEvent(loadedData())
 
                  observe({
+                   # update values to be returned
+                   sizeValues$columnForPointSize <- input$columnForPointSize
+                   sizeValues$sizeFactor <- input$sizeFactor
                    sizeValues$pointRadius <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = input$columnForPointSize,
@@ -366,6 +372,8 @@ updateDataOnLeafletMap <-
       map,
       plotData,
       pointRadius = leafletPointValues$pointRadius,
+      columnForSize = leafletPointValues$columnForPointSize,
+      sizeFactor = leafletPointValues$sizeFactor,
       colourPal = leafletPointValues$pointColourPalette,
       columnForColour = leafletPointValues$columnForPointColour,
       pointOpacity = leafletPointValues$pointOpacity
@@ -375,6 +383,13 @@ updateDataOnLeafletMap <-
         title = leafletPointValues$columnForPointColour,
         pal = leafletPointValues$pointColourPalette,
         values = isoData[[leafletPointValues$columnForPointColour]]
+      ) %>%
+      setSizeLegend(
+        showLegend = leafletPointValues$showSizeLegend,
+        title = leafletPointValues$columnForPointSize,
+        factor = leafletPointValues$sizeFactor,
+        radius = leafletPointValues$pointRadius,
+        data = isoData
       )
   }
 
@@ -420,12 +435,17 @@ drawCirclesOnMap <-
   function(map,
            isoData,
            pointRadius,
+           columnForSize,
+           sizeFactor,
            colourPal,
            columnForColour,
            pointOpacity) {
     if (is.null(colourPal) | is.null(pointRadius))
       return(map)
-
+    #browser()
+    # radius <- ifelse(is.null(columnForSize) | is.na(columnForSize) | columnForSize == "",
+    #                  pointRadius,
+    #                  isoData[[columnForSize]] * sizeFactor)
     map %>%
       addCircleMarkers(
         data = isoData,
@@ -436,7 +456,9 @@ drawCirclesOnMap <-
         fillOpacity = pointOpacity,
         color = colourPal(isoData[[columnForColour]]),
         fillColor = colourPal(isoData[[columnForColour]]),
+        #radius = radius
         radius = pointRadius
+
       )
   }
 
@@ -472,6 +494,38 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 
   map
 }
+
+#' Set Size Legend
+#'
+#' @param map leaflet map
+#' @param showLegend logical show/hide legend
+#' @param title legend title
+#' @param factor factor for size
+#' @param radius displayed radius
+#' @param values underlying values that are mapped to size
+setSizeLegend <- function(map, showLegend, title, factor, radius, data) {
+  #browser()
+  if ( !is.null(showLegend) && showLegend && !is.null(title) && !is.na(title) && title != "") {
+    legendData <- radius# data[[title]]
+    map <- map %>%
+      addLegendSize(
+        values = legendData,
+        #position = "topleft",
+        color = "black",
+        fillColor = "black",
+        opacity = 0.5,
+        title = title,
+        shape = "circle",
+        orientation = "horizontal",
+        breaks = 5,
+        baseSize = mean(radius, na.rm = TRUE),
+        group = "sizeLegend"
+      )
+  } else {
+    map <- map %>% clearGroup("sizeLegend")
+  }
+}
+
 
 #' Get Point Size
 #'

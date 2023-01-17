@@ -19,6 +19,7 @@
 #'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds
 #'  leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
+#' @importFrom leaflegend addLegendSize
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
