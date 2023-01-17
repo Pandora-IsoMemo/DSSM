@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 23.01.1
+## MpiIsoApp 23.01.2
 
 ### New features
 
@@ -9,6 +9,18 @@
   - update of the UI
 
 - fixed sidebars with auto scroll in all tabs (#4)
+
+## MpiIsoApp 23.01.1
+
+### New features
+- interactive map: 
+  - option to assign colour of symbol by selecting a certain data column (#13)
+    - choose a colour palette
+    - reverse colours
+  - option to assign size of symbol by selecting a certain data column (#13)
+    - set a factor to adjust the size
+    - if no column is selected, the factor sets the general point size
+  - option to adjust opacity
 
 ## MpiIsoApp 22.12.4
 
