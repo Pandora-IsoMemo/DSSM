@@ -8,33 +8,38 @@ leafletPointSettingsUI <- function(id) {
     checkboxInput(ns("clusterPoints"), "Cluster data points"),
     conditionalPanel(
       condition = "input.clusterPoints == false",
-      checkboxInput(ns("showLegend"), "Legend", value = TRUE),
+      ns = ns,
       fluidRow(
         column(8,
-               checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
-        ),
-        column(4,
-               conditionalPanel(
-                 condition = "input.useJitter == true",
-                 numericInput(ns("jitterMaxKm"), label = NULL,
-                              value = 25, min = 0, max = 100),
-                 ns = ns
-               ))
+               checkboxInput(
+                 ns("useJitter"), "Use jitter (in max. km)"
+               )),
+        column(
+          4,
+          style = "margin-top: -1em;",
+          conditionalPanel(
+            condition = "input.useJitter == true",
+            numericInput(
+              ns("jitterMaxKm"),
+              label = NULL,
+              value = 25,
+              min = 0,
+              max = 100
+            ),
+            ns = ns
+          )
+        )
       ),
-      checkboxInput(ns("customPoints"), "Customize data points"),
-      conditionalPanel(
-        condition = "input.customPoints == true",
-        tags$hr(),
-        sliderInput(ns("pointRadiusPxl"),
-                    "Point radius in pixel",
-                    value = 4,
-                    min = 1,
-                    max = 20,
-                    step = 1),
-        tags$hr(),
-        ns = ns
+      sliderInput(
+        ns("pointOpacity"),
+        "Opacity",
+        value = 0.7,
+        min = 0,
+        max = 1,
+        step = 0.1
       ),
-      ns = ns
+      pointColourUI(ns("pointColor")),
+      pointSizeUI(ns("pointSize"))
     )
   )
 }
@@ -42,69 +47,340 @@ leafletPointSettingsUI <- function(id) {
 #' server funtion of leaflet point settings module
 #'
 #' @param id An ID string that corresponds with the ID used to call the module's UI function.
-leafletPointSettingsServer <- function(id){
-  moduleServer(
-    id,
-    function(input, output, session) {
-      values <- reactiveValues()
+#' @param loadedData (reactive) loaded data
+leafletPointSettingsServer <- function(id, loadedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 values <- reactiveValues()
 
-      observe({
-        values$clusterPoints <- input$clusterPoints
-      })
+                 observe({
+                   values$clusterPoints <- input$clusterPoints
+                 })
 
-      observeEvent(input$showLegend, {
-        values$showLegend <- input$showLegend
-      })
+                 pointColorVals <-
+                   pointColourServer("pointColor", loadedData)
+                 observe({
+                   for (i in names(pointColorVals)) {
+                     values[[i]] <- pointColorVals[[i]]
+                   }
+                 })
 
-      observeEvent(input$pointRadiusPxl, {
-        values$pointRadius <- input$pointRadiusPxl
-      })
+                 pointSizeVals <-
+                   pointSizeServer("pointSize", loadedData)
+                 observe({
+                   for (i in names(pointSizeVals)) {
+                     values[[i]] <- pointSizeVals[[i]]
+                   }
+                 })
 
-      observe({
-        values$jitterMaxKm <- ifelse(input$useJitter,
-                                      input$jitterMaxKm,
-                                      NA_real_)
-      })
+                 observeEvent(input$pointOpacity, {
+                   values$pointOpacity <- input$pointOpacity
+                 })
 
-      reactive({
-        values
-      })
-    }
-  )
+                 observe({
+                   values$jitterMaxKm <- ifelse(input$useJitter,
+                                                input$jitterMaxKm,
+                                                NA_real_)
+                 })
+
+                 values
+               })
 }
+
+#' ui function of leaflet point settings module
+#'
+#' @param id namespace
+pointColourUI <- function(id) {
+  ns <- NS(id)
+
+  # using colours from: RColorBrewer::brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
+  # adding full names manually
+  colourPalettes <- list(
+    diverging = c(
+      "Brown-BlueGreen" = "BrBG",
+      "Pink-Green" = "PiYG",
+      "Purple-Green" = "PRGn",
+      "Orange-Purple" = "PuOr",
+      "Red-Blue" = "RdBu",
+      "Red-Yellow-Blue" = "RdYlBu"
+    ),
+    qualitive = c(
+      "Dark" = "Dark2",
+      "Paired" = "Paired",
+      "Set" = "Set2"
+    ),
+    sequential = c(
+      "Blue" = "Blues",
+      "BlueGreen" = "BuGn",
+      "BluePurple" = "BuPu",
+      "GreenBlue" = "GnBu",
+      "Green" = "Greens",
+      "Grey" = "Greys",
+      "Orange" = "Oranges",
+      "OrangeRed" = "OrRd",
+      "PurpleBlue" = "PuBu",
+      "PurpleBlueGreen" = "PuBuGn",
+      "PurpleRed" = "PuRd",
+      "Purple" = "Purples",
+      "RedPurple" = "RdPu",
+      "Red" = "Reds",
+      "YellowGreen" = "YlGn",
+      "YellowGreenBlue" = "YlGnBu",
+      "YellowOrangeBrown" = "YlOrBr",
+      "YellowOrangeRed" = "YlOrRd"
+    )
+  )
+
+  tagList(fluidRow(
+    column(8,
+           selectInput(
+             ns("columnForPointColour"),
+             "Point colour variable",
+             choices = c("Add data ..." = "")
+           )),
+    column(4,
+           style = "margin-top: 1.5em;",
+           checkboxInput(ns("showLegend"), "Legend", value = FALSE))
+  ),
+  fluidRow(
+    column(
+      8,
+      selectInput(
+        ns("paletteName"),
+        "Point colour palette",
+        choices = colourPalettes,
+        selected = "Dark2"
+      )
+    ),
+    column(4,
+           style = "margin-top: 1.5em;",
+           checkboxInput(
+             ns("isReversePalette"), "Reverse", value = FALSE
+           ))
+  ))
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @inheritParams leafletPointSettingsServer
+pointColourServer <- function(id, loadedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 colourValues <- reactiveValues()
+
+                 observeEvent(input$showLegend, {
+                   colourValues$showLegend <- input$showLegend
+                 })
+
+                 observeEvent(loadedData(), {
+                   if (!is.null(loadedData())) {
+                     selectedDefault <- ifelse("source" %in% colnames(loadedData()),
+                                               "source",
+                                               colnames(loadedData())[1])
+                   } else {
+                     selectedDefault <- character(0)
+                   }
+
+                   updateSelectInput(
+                     session = session,
+                     "columnForPointColour",
+                     choices = colnames(loadedData()),
+                     selected = selectedDefault
+                   )
+                   updateCheckboxInput(session = session, "showLegend", value = TRUE)
+                 })
+
+                 observeEvent(input$columnForPointColour, {
+                   colourValues$columnForPointColour <- input$columnForPointColour
+                 })
+
+                 observeEvent(
+                   list(
+                     input$paletteName,
+                     input$isReversePalette,
+                     input$columnForPointColour
+                   ),
+                   {
+                     if (is.null(loadedData()) ||
+                         is.null(input$columnForPointColour))
+                       colourValues$pointColourPalette <- NULL
+
+                     if (!is.null(loadedData()) &&
+                         !is.null(input$columnForPointColour)) {
+                       colourColumn <- loadedData()[[input$columnForPointColour]]
+
+                       if (is.numeric(colourColumn)) {
+                         pal <- colorNumeric(
+                           palette = input$paletteName,
+                           domain = colourColumn,
+                           reverse = input$isReversePalette
+                         )
+                       } else {
+                         pal <- colorFactor(
+                           palette = input$paletteName,
+                           domain = colourColumn,
+                           reverse = input$isReversePalette
+                         )
+                       }
+
+                       colourValues$pointColourPalette <- pal
+                     }
+                   }
+                 )
+
+                 return(colourValues)
+               })
+}
+
+
+#' ui function of leaflet point settings module
+#'
+#' @param id namespace
+pointSizeUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(fluidRow(
+    column(
+      8,
+      selectInput(
+        ns("columnForPointSize"),
+        "Point size variable",
+        choices = c("Add data ..." = "")
+      )
+    ),
+    column(4,
+           style = "margin-top: -0.5em;",
+           #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
+           numericInput(
+             ns("sizeFactor"),
+             "Factor",
+             value = 1,
+             min = 0.1,
+             max = 20,
+             step = 0.1,
+             width = "100%"
+           )
+           )
+  ))
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @inheritParams leafletPointSettingsServer
+pointSizeServer <- function(id, loadedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 sizeValues <- reactiveValues()
+
+                 # observe({
+                 #   sizeValues$showLegend <- input$showLegend
+                 # }) %>%
+                 #   bindEvent(input$showLegend)
+
+                 observe({
+                   if (is.null(loadedData())) {
+                     choices <- c("Add data ..." = "")
+                     selectedDefault <- ""
+                     #showLegendVal <- FALSE
+                   } else {
+                     numCols <- partialNumericColumns(loadedData())
+                     if (length(numCols) == 0) {
+                       choices <- c("No numeric columns ..." = "")
+                       selectedDefault <- ""
+                       #showLegendVal <- FALSE
+                     } else {
+                       choices <- c("None" = "", numCols)
+                     }
+                     selectedDefault <- ""
+                     #showLegendVal <- TRUE
+                   }
+
+                   updateSelectInput(
+                     session = session,
+                     "columnForPointSize",
+                     choices = choices,
+                     selected = selectedDefault
+                   )
+                   #updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+
+                   sizeValues$pointRadius <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = selectedDefault,
+                     sizeFactor = input$sizeFactor
+                   )
+                   #sizeValues$showLegend <- input$showLegend
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   sizeValues$pointRadius <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = input$columnForPointSize,
+                     sizeFactor = input$sizeFactor
+                   )
+                 }) %>%
+                   bindEvent(list(input$columnForPointSize, input$sizeFactor))
+
+                 return(sizeValues)
+               })
+}
+
+
+# Helper functions ----
 
 #' Update Data On Map
 #'
 #' @param map reactive leaflet map object
 #' @param isoData reactive isoData data
 #' @param leafletPointValues reactive settings for points on map
-updateDataOnLeafletMap <- function(map, isoData, leafletPointValues) {
-  map <- map %>%
-    cleanDataFromMap()
+updateDataOnLeafletMap <-
+  function(map, isoData, leafletPointValues) {
+    map <- map %>%
+      cleanDataFromMap()
 
-  if (is.null(isoData) || is.null(isoData[["latitude"]]) || all(is.na(isoData[["latitude"]])) ||
-      is.null(isoData[["longitude"]]) || all(is.na(isoData[["longitude"]]))) return(map)
+    if (is.null(isoData) ||
+        is.null(isoData[["latitude"]]) ||
+        all(is.na(isoData[["latitude"]])) ||
+        is.null(isoData[["longitude"]]) ||
+        all(is.na(isoData[["longitude"]])))
+      return(map)
 
-  isoData <- isoData[(!is.na(isoData[["longitude"]]) & !is.na(isoData[["latitude"]])), ]
+    isoData <-
+      isoData[(!is.na(isoData[["longitude"]]) &
+                 !is.na(isoData[["latitude"]])), ]
 
-  if (leafletPointValues$clusterPoints) {
-    return(drawClustersOnMap(map, isoData))
+    if (leafletPointValues$clusterPoints) {
+      return(drawClustersOnMap(map, isoData))
+    }
+
+    plotData <- setJitterCoords(isoData,
+                                km = leafletPointValues$jitterMaxKm)
+
+    if (!is.null(plotData$Latitude_jit))
+      plotData$latitude <- plotData$Latitude_jit
+    if (!is.null(plotData$Longitude_jit))
+      plotData$longitude <- plotData$Longitude_jit
+
+    drawCirclesOnMap(
+      map,
+      plotData,
+      pointRadius = leafletPointValues$pointRadius,
+      colourPal = leafletPointValues$pointColourPalette,
+      columnForColour = leafletPointValues$columnForPointColour,
+      pointOpacity = leafletPointValues$pointOpacity
+    ) %>%
+      setColorLegend(
+        showLegend = leafletPointValues$showLegend,
+        title = leafletPointValues$columnForPointColour,
+        pal = leafletPointValues$pointColourPalette,
+        values = isoData[[leafletPointValues$columnForPointColour]]
+      )
   }
 
-  plotData <- setJitterCoords(isoData,
-                              km = leafletPointValues$jitterMaxKm)
 
-  if (!is.null(plotData$Latitude_jit)) plotData$latitude <- plotData$Latitude_jit
-  if (!is.null(plotData$Longitude_jit)) plotData$longitude <- plotData$Longitude_jit
-
-  drawCirclesOnMap(map, plotData,
-                   pointRadius = leafletPointValues$pointRadius) %>%
-    setColorLegend(showLegend = leafletPointValues$showLegend,
-                   values = isoData$source)
-}
-
-
-drawClustersOnMap <- function(map, isoData){
+drawClustersOnMap <- function(map, isoData) {
   map %>%
     addMarkers(
       data = isoData,
@@ -118,43 +394,55 @@ drawClustersOnMap <- function(map, isoData){
 
 setJitterCoords <- function(dat, km) {
   # no jitter should be used: km == NA
-  if (is.na(km)) return(dat)
+  if (is.na(km))
+    return(dat)
 
   withProgress({
     set.seed(20180213)
 
-    dat$Latitude_jit <- jitter_latlong(dat$latitude, type = "lat", dat$latitude, km = km)
-    dat$Longitude_jit <- jitter_latlong(dat$longitude, type = "long", dat$latitude, km = km)
+    dat$Latitude_jit <-
+      jitter_latlong(dat$latitude,
+                     type = "lat",
+                     dat$latitude,
+                     km = km)
+    dat$Longitude_jit <-
+      jitter_latlong(dat$longitude,
+                     type = "long",
+                     dat$latitude,
+                     km = km)
     dat
   },
   value = 0.9,
-  message = 'Add jitter ...'
-  )
+  message = 'Add jitter ...')
 }
 
 
-drawCirclesOnMap <- function(map, isoData, pointRadius) {
-  numColors <- length(unique(isoData$source))
-  colors <- appColors(c("red", "green", "purple", "black"),
-                      names = FALSE)[1:numColors]
-  pal <- colorFactor(colors, isoData$Source)
+drawCirclesOnMap <-
+  function(map,
+           isoData,
+           pointRadius,
+           colourPal,
+           columnForColour,
+           pointOpacity) {
+    if (is.null(colourPal) | is.null(pointRadius))
+      return(map)
 
-  map %>%
-    addCircleMarkers(
-      data = isoData,
-      lat = ~ latitude,
-      lng =  ~ longitude,
-      group = "dataPoints",
-      stroke = F,
-      fillOpacity = 0.7,
-      color = pal(isoData$source),
-      fillColor = pal(isoData$source),
-      radius = pointRadius
-    )
-}
+    map %>%
+      addCircleMarkers(
+        data = isoData,
+        lat = ~ latitude,
+        lng =  ~ longitude,
+        group = "dataPoints",
+        stroke = F,
+        fillOpacity = pointOpacity,
+        color = colourPal(isoData[[columnForColour]]),
+        fillColor = colourPal(isoData[[columnForColour]]),
+        radius = pointRadius
+      )
+  }
 
 
-cleanDataFromMap <- function(map){
+cleanDataFromMap <- function(map) {
   map %>%
     clearGroup("dataPoints") %>%
     clearMarkerClusters() %>%
@@ -166,17 +454,19 @@ cleanDataFromMap <- function(map){
 #'
 #' @param map leaflet map
 #' @param showLegend logical show/hide legend
+#' @param title legend title
+#' @param pal colour palette
 #' @param values possible values that can be mapped, e.g. isoData$source
-setColorLegend <- function(map, showLegend, values){
-
-  if (showLegend) {
-
+setColorLegend <- function(map, showLegend, title, pal, values) {
+  if (showLegend && !is.null(pal)) {
     map <- map %>%
-      addLegend("topleft",
-                pal = getColourPal(values),
-                values = values,
-                title = "Database",
-                layerId = "colorLegend")
+      addLegend(
+        "topleft",
+        pal = pal,
+        values = values,
+        title = title,
+        layerId = "colorLegend"
+      )
   } else {
     map <- map %>% removeControl("colorLegend")
   }
@@ -184,18 +474,49 @@ setColorLegend <- function(map, showLegend, values){
   map
 }
 
-
-#' Get Colour Palette
+#' Get Point Size
 #'
-#' Get colour palette for the points and the legend
-#'
-#' @inheritParams setColorLegend
-getColourPal <- function(values){
-  numColors <- length(unique(values))
+#' @param df (data.frame) loaded data
+#' @param columnForPointSize (character) name of the column that determines the point size
+#' @param sizeFactor (numeric) general factor for point size
+getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
+  if (is.null(df) || is.null(columnForPointSize) || is.null(sizeFactor))
+    return(NULL)
 
-  colors <- appColors(c("red", "green", "purple", "black"),
-                      names = FALSE)[1:numColors]
+  nPoints <- nrow(df)
+  defaultPointSize <-
+    rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
 
-  colorFactor(colors, values)
+  if (columnForPointSize %in% c("",  "none"))
+    return(defaultPointSize)
+
+  sizeColumn <- df[, columnForPointSize] %>%
+    as.numeric() %>%
+    suppressWarnings()
+
+  if (length(unique(na.omit(sizeColumn))) < 2)
+    return(defaultPointSize)
+
+  # normalize values
+  varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)
+  varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
+
+  # the mean of the data (== 0.5) should have a factor of 1
+  varSizeFactor <- 2 * varSizeFactor
+
+  # give zero values a small factor
+  varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <-
+    0.1 / defaultPointSizeInPxl()
+
+  # give missing values zero factor
+  varSizeFactor[is.na(varSizeFactor)] <- 0
+
+  # multiply with default
+  pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl()
+
+  pointSizes
 }
 
+defaultPointSizeInPxl <- function() {
+  4
+}

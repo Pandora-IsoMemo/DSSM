@@ -4,10 +4,15 @@
 \alias{startApplication}
 \title{Start Application}
 \usage{
-startApplication(port = 4242)
+startApplication(
+  port = 4242,
+  launch.browser = getOption("shiny.launch.browser", interactive())
+)
 }
 \arguments{
 \item{port}{port}
+
+\item{launch.browser}{(logical) If true, the system's default web browser will be launched}
 }
 \description{
 Start Application
