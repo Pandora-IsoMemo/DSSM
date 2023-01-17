@@ -16,7 +16,7 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c("clusterPoints", "pointColourPalette", "jitterMaxKm")
+                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints")
                )
                expect_true(is.na(session$returned$jitterMaxKm))
                expect_true(session$returned$clusterPoints)
