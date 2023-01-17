@@ -480,7 +480,7 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 #' @param columnForPointSize (character) name of the column that determines the point size
 #' @param sizeFactor (numeric) general factor for point size
 getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
-  if (is.null(df))
+  if (is.null(df) || is.null(columnForPointSize) || is.null(sizeFactor))
     return(NULL)
 
   nPoints <- nrow(df)

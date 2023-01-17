@@ -41,22 +41,18 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                  clusterPoints = FALSE,
                  useJitter = TRUE,
                  jitterMaxKm = 15,
-                 pointRadiusPxl = 30
+                 pointOpacity = 0.5
                )
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c(
-                   "jitterMaxKm",
-                   "pointColourPalette",
-                   "pointRadius",
-                   "clusterPoints"
-                 )
+                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints",
+                   "pointOpacity")
                )
                expect_false(session$returned$clusterPoints)
-               expect_equal(session$returned$pointRadius, 30)
+               expect_equal(session$returned$pointOpacity, 0.5)
                expect_equal(session$returned$jitterMaxKm, 15)
                expect_null(session$returned$pointColourPalette)
              })
@@ -95,6 +91,35 @@ test_that("Test module pointColourServer", {
                expect_false(session$returned$showLegend)
                expect_equal(session$returned$columnForPointColour, "source")
                expect_true(is.function(session$returned$pointColourPalette))
+             })
+})
+
+test_that("Test module pointSizeServer", {
+  testServer(pointSizeServer,
+             args = list(loadedData = reactive(data.frame(
+               a = 1:3,
+               b = 5:7,
+               c = 9:11
+             ))),
+             {
+               # Arrange
+               print("test pointSizeServer")
+
+               # Act
+               session$setInputs(
+                 columnForPointSize = "b",
+                 sizeFactor = FALSE
+               )
+
+               # Assert
+               expect_equal(colnames(loadedData()), c("a", "b", "c"))
+               expect_equal(
+                 names(session$returned),
+                 c(
+                   "pointRadius"
+                 )
+               )
+               expect_equal(session$returned$pointRadius, c(0, 0, 0))
              })
 })
 
