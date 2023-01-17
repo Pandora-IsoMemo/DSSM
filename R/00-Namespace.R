@@ -29,13 +29,14 @@
 #' @importFrom readr guess_encoding
 #' @importFrom readxl excel_sheets read_excel
 #' @importFrom Rfast spdinv Crossprod rmvnorm
+#' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
 #' @importFrom shinyjs alert reset runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula dunif model.matrix na.exclude na.omit predict
 #'  quantile rgamma rnorm runif sd setNames mahalanobis pchisq cov pf rbeta
-#' @importFrom sp point.in.polygon plot
+#' @importFrom sp point.in.polygon plot SpatialPoints
 #' @importFrom stats aggregate as.formula model.matrix na.exclude na.omit predict quantile dnorm
 #'  qnorm residuals pnorm var sd setNames cor density median kmeans
 #' @importFrom stringi stri_escape_unicode

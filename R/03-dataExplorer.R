@@ -15,6 +15,7 @@ dataExplorerUI <- function(id, title = "") {
     sidebarLayout(
       sidebarPanel(
         width = 3,
+        style = "position:fixed; width:20%; max-width:350px; overflow-y:auto; height:88%",
         radioButtons(
           "skin",
           ## no namespace to make it easier to use it across tabs

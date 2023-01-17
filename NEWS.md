@@ -1,5 +1,15 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 23.01.2
+
+### New features
+
+- under Saved/Create Maps tab (#19)
+  - option to add a square
+  - update of the UI
+
+- fixed sidebars with auto scroll in all tabs (#4)
+
 ## MpiIsoApp 23.01.1
 
 ### New features
