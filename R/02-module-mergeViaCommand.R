@@ -44,7 +44,7 @@ mergeViaCommandUI <- function(id) {
 mergeViaCommandServer <- function(id, mergeCommandAuto) {
   moduleServer(id,
                function(input, output, session) {
-                 mergeCommandManual <- reactiveVal()
+                 #mergeCommandManual <- reactiveVal()
 
                  # disable functionality to change the command, check if there are security issues
                  # update: mergeCommand ----

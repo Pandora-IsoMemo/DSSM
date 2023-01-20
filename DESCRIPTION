@@ -38,6 +38,7 @@ Imports:
   rgdal,
   rgeos,
   rlang,
+  RSQLite,
   shiny (>= 1.0.5),
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),

@@ -447,28 +447,38 @@ mergeDataUI <- function(id) {
       ),
       column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
     ),
-    mergeViaUIUI(ns("mergerViaUI")),
-    fluidRow(
-      column(4,
-             style = "margin-top: -46px;",
-             checkboxInput(
-               ns("useMergeViaCommand"), "Check command line"
-             ))
-    ),
-    conditionalPanel(
-      condition = "input.useMergeViaCommand == true",
-      mergeViaCommandUI(ns("mergerViaCommand")),
-      ns = ns
-    ),
-    div(
-      style = 'height: 76px',
-      htmlOutput(ns("mergeWarnings")),
-    ),
-    fluidRow(
-      column(3, actionButton(ns("applyMerge"), "Apply Merge")),
-      column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
-        "nRowsJoinedData"
-      )))
+    tabsetPanel(
+      id = ns("tabMerge"),
+      tabPanel("Merge with UI",
+               tags$br(),
+               mergeViaUIUI(ns("mergerViaUI")),
+               fluidRow(
+                 column(4,
+                        style = "margin-top: -46px;",
+                        checkboxInput(
+                          ns("checkCommand"), "Check command line"
+                        ))
+               ),
+               conditionalPanel(
+                 condition = "input.checkCommand == true",
+                 verbatimTextOutput(ns("mergeCommand")),
+                 ns = ns
+               ),
+               div(
+                 style = 'height: 76px',
+                 htmlOutput(ns("mergeWarnings")),
+               ),
+               fluidRow(
+                 column(3, actionButton(ns("applyMerge"), "Apply Merge")),
+                 column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
+                   "nRowsJoinedData"
+                 )))
+               )
+               ),
+      tabPanel("Merge with SQL",
+               tags$br(),
+               mergeViaCommandUI(ns("mergerViaCommand"))
+               )
     ),
     #actionButton(ns("addMerge"), "Add Table"),
     tags$hr(),
@@ -556,6 +566,11 @@ mergeDataServer <- function(id, mergeList) {
                  mergeCommandManual <-
                    mergeViaCommandServer("mergerViaCommand", reactive(mergeViaUI$command))
 
+                 output$mergeCommand <- renderText({
+                   req(mergeViaUI$command)
+                   mergeViaUI$command
+                 })
+
                  observeEvent(mergeViaUI$warning, {
                    joinedResult$warnings <- mergeViaUI$warning
                  })
@@ -567,7 +582,7 @@ mergeDataServer <- function(id, mergeList) {
                    joinedResult$warningsPopup <- list()
                    joinedResult$errors <- list()
 
-                   req(mergeCommandManual())
+                   req(mergeViaUI$command)
 
                    withProgress({
                      ## create data.frames to merge ----
@@ -577,7 +592,7 @@ mergeDataServer <- function(id, mergeList) {
                      }
 
                      ## match column types ----
-                     columsToJoinString <- mergeCommandManual() %>%
+                     columsToJoinString <- mergeViaUI$command %>%
                        gsub(pattern = ".*by = ", replacement = "") %>%
                        gsub(pattern = ")$", replacement = "")
 
@@ -601,7 +616,7 @@ mergeDataServer <- function(id, mergeList) {
                      ## merge data ----
                      joinedData <-
                        tryCatch({
-                         eval(parse(text = mergeCommandManual()))
+                         eval(parse(text = mergeViaUI$command))
                          #stop("test error")
                          #warning("test warning")
                        },
