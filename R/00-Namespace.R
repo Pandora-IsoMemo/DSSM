@@ -31,6 +31,7 @@
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
+#' @importFrom RSQLite dbConnect dbListTables dbWriteTable SQLite
 #' @importFrom shinyjs alert reset runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput

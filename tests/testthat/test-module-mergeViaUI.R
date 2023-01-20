@@ -211,15 +211,15 @@ testthat::test_that("Test in-memory sql", {
   testMergeList <-
     readRDS(testthat::test_path("data-module-mergeImports.rds"))
 
-  testdb <- RSQLite::dbConnect(RSQLite::SQLite(), "file::memory:")
+  testdb <- dbConnect(SQLite(), "file::memory:")
 
   testTable1 <- testMergeList[[1]]$dataImport
   testTable2 <- testMergeList[[2]]$dataImport
 
-  RSQLite::dbWriteTable(testdb, "table1", testTable1)
-  RSQLite::dbWriteTable(testdb, "table2", testTable2)
+  dbWriteTable(testdb, "table1", testTable1)
+  dbWriteTable(testdb, "table2", testTable2)
 
-  expect_equal(RSQLite::dbListTables(testdb), c("table1", "table2"))
+  expect_equal(dbListTables(testdb), c("table1", "table2"))
 
   testQuery <-
     "SELECT t1.`Human.Entry.ID`, t1.`Age.Category`, t1.`Site.Name` FROM table1 AS t1 LEFT JOIN table2 as t2 ON t1.`Age.Category` = t2.`Age.Category` AND t1.`Site.Name` = t2.`Site.Name`;"

@@ -9,30 +9,23 @@ mergeViaCommandUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    #tags$br(),
-    # output for path to table1, table2
-    # textAreaInput(
-    #   ns("table1"),
-    #   "table1",
-    #   value = NULL,
-    #   width = "100%"
-    # ),
-    # textAreaInput(
-    #   ns("table2"),
-    #   "table2",
-    #   value = NULL,
-    #   width = "100%"
-    # ),
-    # tags$em(paste0("This is experimental and under development. ",
-    #                "No checks of column types implemented. Please ensure that types are matching. ",
-    #                "App may crash easily.")),
-    # textAreaInput(
-    #   ns("mergeCommand"),
-    #   "Merge command",
-    #   value = NULL,
-    #   width = "100%"
-    # )
-    verbatimTextOutput(ns("mergeCommand"))
+    tags$strong("List of tables:"),
+    tags$br(),
+    tableOutput(ns("inMemoryTables")),
+    checkboxInput(ns("showColumns"), "Show available columns", value = FALSE),
+    conditionalPanel(
+      ns = ns,
+      condition = "input.showColumns == true",
+      dataTableOutput(ns("inMemoryColumns"))
+    ),
+    tags$br(),
+    textAreaInput(
+      ns("sqlCommand"),
+      "SQL query (Please, use the table id inside the SQL query.)",
+      placeholder = "SELECT * FROM t1 INNER JOIN t2 ON t1.`Latitude` = t2.`latitude`;",
+      value = NULL,
+      width = "100%"
+    )
   )
 }
 
@@ -40,29 +33,64 @@ mergeViaCommandUI <- function(id) {
 #'
 #' Server function of the merge Command module
 #' @param id id of module
-#' @param mergeCommandAuto (character) automatically generated command for data merge
-mergeViaCommandServer <- function(id, mergeCommandAuto) {
+#' @param mergeList (list) list of data to be merged
+mergeViaCommandServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
-                 #mergeCommandManual <- reactiveVal()
 
-                 # disable functionality to change the command, check if there are security issues
-                 # update: mergeCommand ----
-                 # observeEvent(mergeCommandAuto(), {
-                 #   updateTextAreaInput(session, "mergeCommand", value = mergeCommandAuto())
-                 # })
-                 #
-                 # observeEvent(input$mergeCommand, {
-                 #   mergeCommandManual(input$mergeCommand)
-                 # })
-                 #
-                 # return(mergeCommandManual)
+                 inMemoryDB <- reactiveVal(dbConnect(SQLite(), "file::memory:"))
+                 tableIds <- reactiveVal(NULL)
 
-                 output$mergeCommand <- renderText({
-                   req(mergeCommandAuto())
-                   mergeCommandAuto()
+                 observe({
+                   req(length(mergeList()) > 0)
+                   tmpDB <- inMemoryDB()
+                   for (i in 1:length(mergeList())) {
+                     dbWriteTable(tmpDB, paste0("t", i), mergeList()[[i]], overwrite = TRUE)
+                   }
+
+                   updateCheckboxInput(session = session, "showColumns", value = TRUE)
+                   inMemoryDB(tmpDB)
+                   tableIds(dbListTables(tmpDB))
+                 }) %>%
+                   bindEvent(mergeList())
+
+                 output$inMemoryTables <- renderTable({
+                   validate(need(
+                     !is.null(tableIds()),
+                     "Mark files for merge ..."
+                   ))
+
+                   req(tableIds())
+                   data.frame(
+                     `id` = tableIds(),
+                     `name` = names(mergeList())
+                   )
                  })
 
-                 return(mergeCommandAuto)
+                 output$inMemoryColumns <- renderDataTable({
+                   req(tableIds())
+                   inMemCols <- sapply(mergeList(), function(table) {
+                     table %>%
+                       colnames() %>%
+                       paste(collapse = ", ")
+                     })
+
+                   DT::datatable(
+                     data.frame(
+                       `id` = tableIds(),
+                       `column name` = inMemCols
+                     ),
+                     filter = "none",
+                     selection = "none",
+                     rownames = FALSE,
+                     options = list(
+                       dom = "t",
+                       ordering = FALSE,
+                       scrollX = TRUE
+                     )
+                   )
+                 })
+
+                 return(NULL)
                })
 }

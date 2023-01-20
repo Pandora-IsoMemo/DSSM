@@ -4,12 +4,12 @@
 \alias{mergeViaCommandServer}
 \title{Merge Command Server}
 \usage{
-mergeViaCommandServer(id, mergeCommandAuto)
+mergeViaCommandServer(id, mergeList)
 }
 \arguments{
 \item{id}{id of module}
 
-\item{mergeCommandAuto}{(character) automatically generated command for data merge}
+\item{mergeList}{(list) list of data to be merged}
 }
 \description{
 Server function of the merge Command module

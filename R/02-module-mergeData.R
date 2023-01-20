@@ -423,34 +423,34 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    fluidRow(
-      column(
-        8,
-        selectInput(
-          ns("tableX"),
-          "Select tabel x",
-          choices = c("Mark files for merge ..." = ""),
-          width = "100%"
-        )
-      ),
-      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableX")))
-    ),
-    fluidRow(
-      column(
-        8,
-        selectInput(
-          ns("tableY"),
-          "Select tabel y",
-          choices = c("Mark files for merge ..." = ""),
-          width = "100%"
-        )
-      ),
-      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
-    ),
     tabsetPanel(
       id = ns("tabMerge"),
       tabPanel("Merge with UI",
                tags$br(),
+               fluidRow(
+                 column(
+                   8,
+                   selectInput(
+                     ns("tableX"),
+                     "Select tabel x",
+                     choices = c("Mark files for merge ..." = ""),
+                     width = "100%"
+                   )
+                 ),
+                 column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableX")))
+               ),
+               fluidRow(
+                 column(
+                   8,
+                   selectInput(
+                     ns("tableY"),
+                     "Select tabel y",
+                     choices = c("Mark files for merge ..." = ""),
+                     width = "100%"
+                   )
+                 ),
+                 column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
+               ),
                mergeViaUIUI(ns("mergerViaUI")),
                fluidRow(
                  column(4,
@@ -563,8 +563,7 @@ mergeDataServer <- function(id, mergeList) {
                      tableYId = reactive(tableIds()[input$tableY])
                    )
 
-                 mergeCommandManual <-
-                   mergeViaCommandServer("mergerViaCommand", reactive(mergeViaUI$command))
+                 mergeCommandManual <- mergeViaCommandServer("mergerViaCommand", mergeList = mergeList)
 
                  output$mergeCommand <- renderText({
                    req(mergeViaUI$command)
