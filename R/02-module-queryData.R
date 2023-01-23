@@ -94,7 +94,7 @@ queryDataServer <- function(id, mergeList) {
                      colSel <- "*"
                    }
                    updateAceEditor(session = session, "sqlCommand",
-                                   value = paste0("SELECT t1.", colSel, " FROM t1;"),
+                                   value = paste0("select t1.", colSel, " from t1;"),
                                    autoCompleters = c("snippet", "text", "static", "keyword"),
                                    autoCompleteList = inMemCols)
                  }) %>%
