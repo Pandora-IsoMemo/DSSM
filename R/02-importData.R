@@ -93,6 +93,7 @@ importDataServer <- function(id,
 
                  ckanRecord <- reactive({
                    req(input$ckanRecord)
+                   updateSelectInput(session = session, "sheet", selected = character(0))
                    ckanFiles()[[input$ckanRecord]]
                  })
 
@@ -145,6 +146,7 @@ importDataServer <- function(id,
                    # "file" will be used to load the file
                    # "filename" will be stored in values$fileName
                    dataSource(list(file = inFile$datapath, filename = inFile$name))
+                   updateSelectInput(session = session, "sheet", selected = character(0))
                  })
 
                  observe({
@@ -163,6 +165,7 @@ importDataServer <- function(id,
                    # "file" will be used to load the file
                    # "filename" will be stored in values$fileName
                    dataSource(list(file = tmp, filename = basename(input$url)))
+                   updateSelectInput(session = session, "sheet", selected = character(0))
                  })
 
                  # specify file server ----
