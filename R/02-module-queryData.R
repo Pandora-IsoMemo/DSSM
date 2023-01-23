@@ -29,7 +29,7 @@ queryDataUI <- function(id) {
       autoScrollEditorIntoView = TRUE,
       minLines = 5,
       maxLines = 10,
-      autoComplete = "enabled"
+      autoComplete = "live"
     ),
     div(style = "margin-top: 1em;",
         fluidRow(
@@ -61,6 +61,7 @@ queryDataServer <- function(id, mergeList) {
                function(input, output, session) {
                  inMemoryDB <- reactiveVal(dbConnect(SQLite(), "file::memory:"))
                  tableIds <- reactiveVal(NULL)
+                 inMemColumns <- reactiveVal(NULL)
 
                  result <- reactiveValues(
                    data = NULL,
@@ -72,16 +73,30 @@ queryDataServer <- function(id, mergeList) {
 
                  observe({
                    req(length(mergeList()) > 0)
+
                    tmpDB <- inMemoryDB()
                    for (i in 1:length(mergeList())) {
                      dbWriteTable(tmpDB, paste0("t", i), mergeList()[[i]], overwrite = TRUE)
                    }
-
-                   updateCheckboxInput(session = session, "showColumns", value = TRUE)
                    inMemoryDB(tmpDB)
                    tableIds(dbListTables(tmpDB))
+
+                   inMemCols <-
+                     lapply(mergeList(), function(table) {
+                       table %>%
+                         colnames()
+                     })
+                   inMemColumns(inMemCols)
+
+                   if (!is.null(inMemCols[1])) {
+                     colSel <- paste0("`", inMemCols[1][[1]], "`")
+                   } else {
+                     colSel <- "*"
+                   }
                    updateAceEditor(session = session, "sqlCommand",
-                                   value = "SELECT t1.* FROM t1;")
+                                   value = paste0("SELECT t1.", colSel, " FROM t1;"),
+                                   autoCompleters = c("snippet", "text", "static", "keyword"),
+                                   autoCompleteList = inMemCols)
                  }) %>%
                    bindEvent(mergeList())
 
@@ -113,16 +128,15 @@ queryDataServer <- function(id, mergeList) {
                                  "In-memory columns: Mark files ..."))
 
                    req(tableIds())
-                   inMemCols <-
-                     sapply(mergeList(), function(table) {
-                       table %>%
-                         colnames() %>%
+                   inMemColsPasted <-
+                     sapply(inMemColumns(), function(colnamesOfTable) {
+                       colnamesOfTable %>%
                          paste(collapse = ", ")
                      })
 
                    DT::datatable(
                      data.frame(`ID` = tableIds(),
-                                `Columns` = inMemCols),
+                                `Columns` = inMemColsPasted),
                      filter = "none",
                      selection = "none",
                      rownames = FALSE,
