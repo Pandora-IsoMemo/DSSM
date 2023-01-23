@@ -1,11 +1,11 @@
-# Merge Via Command Module ----
+# Query Data Module ----
 
-#' Merge Via Command UI
+#' Query Data UI
 #'
-#' UI of the merge Via command module
+#' UI of the query data module
 #'
 #' @param id id of module
-mergeViaCommandUI <- function(id) {
+queryDataUI <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -51,12 +51,12 @@ mergeViaCommandUI <- function(id) {
   )
 }
 
-#' Merge Command Server
+#' Query Data Server
 #'
-#' Server function of the merge Command module
+#' Server function of the qery data module
 #' @param id id of module
 #' @param mergeList (list) list of data to be merged
-mergeViaCommandServer <- function(id, mergeList) {
+queryDataServer <- function(id, mergeList) {
   moduleServer(id,
                function(input, output, session) {
                  inMemoryDB <- reactiveVal(dbConnect(SQLite(), "file::memory:"))
@@ -150,18 +150,14 @@ mergeViaCommandServer <- function(id, mergeList) {
                      result$data <-
                        tryCatch({
                          dbGetQuery(tmpDB, input$sqlCommand)
-                         #stop("test error")
-                         #warning("test warning")
                        },
                        error = function(cond) {
                          result$errors <- "Query failed."
                          alert(paste("Query failed:", cond$message))
-                         # Choose a return value in case of error
                          return(NULL)
                        },
                        warning = function(cond) {
                          result$warningsPopup <- cond$message
-                         # Choose a return value in case of warning
                          return(NULL)
                        },
                        finally = NULL)

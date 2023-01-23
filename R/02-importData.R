@@ -342,7 +342,7 @@ importDataServer <- function(id,
                  })
 
                  ## button query data ----
-                 queriedData <- mergeViaCommandServer("dataQuerier", mergeList = mergeList)
+                 queriedData <- queryDataServer("dataQuerier", mergeList = mergeList)
 
                  observeEvent(queriedData(), {
                    if (is.null(queriedData()) ||
@@ -387,7 +387,7 @@ importDataDialog <- function(ns) {
       tabPanel("Merge",
                mergeDataUI(ns("dataMerger"))),
       tabPanel("Query with SQL",
-               mergeViaCommandUI(ns("dataQuerier")))
+               queryDataUI(ns("dataQuerier")))
     )
   )
 }
