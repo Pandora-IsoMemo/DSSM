@@ -62,8 +62,13 @@ mergeViaCommandServer <- function(id, mergeList) {
                  inMemoryDB <- reactiveVal(dbConnect(SQLite(), "file::memory:"))
                  tableIds <- reactiveVal(NULL)
 
-                 result <- reactiveValues(data = NULL,
-                                          preview = NULL)
+                 result <- reactiveValues(
+                   data = NULL,
+                   preview = NULL,
+                   warnings = list(),
+                   warningsPopup = list(),
+                   errors = list()
+                 )
 
                  observe({
                    req(length(mergeList()) > 0)
@@ -135,13 +140,39 @@ mergeViaCommandServer <- function(id, mergeList) {
 
                  observe({
                    req(length(mergeList()) > 0)
-                   tmpDB <- inMemoryDB()
+                   withProgress({
+                     result$data <- NULL
+                     result$preview <- NULL
+                     result$warningsPopup <- list()
+                     result$errors <- list()
+                     tmpDB <- inMemoryDB()
 
-                   # tryCatch einbauen!!
-                   result$data <-
-                     dbGetQuery(tmpDB, input$sqlCommand)
-                   result$preview <-
-                     cutAllLongStrings(result$data[1:2, , drop = FALSE], cutAt = 20)
+                     result$data <-
+                       tryCatch({
+                         dbGetQuery(tmpDB, input$sqlCommand)
+                         #stop("test error")
+                         #warning("test warning")
+                       },
+                       error = function(cond) {
+                         result$errors <- "Query failed."
+                         alert(paste("Query failed:", cond$message))
+                         # Choose a return value in case of error
+                         return(NULL)
+                       },
+                       warning = function(cond) {
+                         result$warningsPopup <- cond$message
+                         # Choose a return value in case of warning
+                         return(NULL)
+                       },
+                       finally = NULL)
+
+                     if (!is.null(result$data)) {
+                       result$preview <-
+                         cutAllLongStrings(result$data[1:2, , drop = FALSE], cutAt = 20)
+                     }
+                   },
+                   value = 0.75,
+                   message = 'applying query ...')
                  }) %>%
                    bindEvent(input$applyQuery)
 
