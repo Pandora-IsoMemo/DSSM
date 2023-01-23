@@ -98,7 +98,7 @@ prepareDataServer <- function(id, selectedData, nameOfSelected) {
                    req(preparedData())
 
                    previewData <-
-                     cutAllLongStrings(preparedData()[1:2, ], cutAt = 20)
+                     cutAllLongStrings(preparedData()[1:2, , drop = FALSE], cutAt = 20)
                    DT::datatable(
                      previewData,
                      filter = "none",
@@ -187,23 +187,23 @@ deleteColumnsUI <- function(id) {
   ns <- NS(id)
 
   tagList(fluidRow(
-            column(
-              5,
-              selectInput(
-                ns("columnsToDelete"),
-                "Delete column(s)",
-                choices = NULL,
-                multiple = TRUE
-              )
-            ),
-            column(
-              3,
-              offset = 4,
-              align = "right",
-              style = "margin-top: 18px;",
-              actionButton(ns("deleteCol"), "Delete")
-            )
-          ))
+    column(
+      5,
+      selectInput(
+        ns("columnsToDelete"),
+        "Delete column(s)",
+        choices = NULL,
+        multiple = TRUE
+      )
+    ),
+    column(
+      3,
+      offset = 4,
+      align = "right",
+      style = "margin-top: 18px;",
+      actionButton(ns("deleteCol"), "Delete")
+    )
+  ))
 }
 
 #' Delete Columns Server
@@ -423,68 +423,54 @@ mergeDataUI <- function(id) {
 
   tagList(
     tags$br(),
-    tabsetPanel(
-      id = ns("tabMerge"),
-      tabPanel("Merge with UI",
-               tags$br(),
-               fluidRow(
-                 column(
-                   8,
-                   selectInput(
-                     ns("tableX"),
-                     "Select tabel x",
-                     choices = c("Mark files for merge ..." = ""),
-                     width = "100%"
-                   )
-                 ),
-                 column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableX")))
-               ),
-               fluidRow(
-                 column(
-                   8,
-                   selectInput(
-                     ns("tableY"),
-                     "Select tabel y",
-                     choices = c("Mark files for merge ..." = ""),
-                     width = "100%"
-                   )
-                 ),
-                 column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
-               ),
-               mergeViaUIUI(ns("mergerViaUI")),
-               fluidRow(
-                 column(4,
-                        style = "margin-top: -46px;",
-                        checkboxInput(
-                          ns("checkCommand"), "Check command line"
-                        ))
-               ),
-               conditionalPanel(
-                 condition = "input.checkCommand == true",
-                 verbatimTextOutput(ns("mergeCommand")),
-                 ns = ns
-               ),
-               div(
-                 style = 'height: 76px',
-                 htmlOutput(ns("mergeWarnings")),
-               ),
-               fluidRow(
-                 column(3, actionButton(ns("applyMerge"), "Apply Merge")),
-                 column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
-                   "nRowsJoinedData"
-                 )))
-               )
-               ),
-      tabPanel("Merge with SQL",
-               tags$br(),
-               mergeViaCommandUI(ns("mergerViaCommand"))
-               )
+    fluidRow(
+      column(
+        8,
+        selectInput(
+          ns("tableX"),
+          "Select tabel x",
+          choices = c("Mark files ..." = ""),
+          width = "100%"
+        )
+      ),
+      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableX")))
+    ),
+    fluidRow(
+      column(
+        8,
+        selectInput(
+          ns("tableY"),
+          "Select tabel y",
+          choices = c("Mark files ..." = ""),
+          width = "100%"
+        )
+      ),
+      column(4, align = "right", style = "margin-top: 32px;", textOutput(ns("nRowsTableY")))
+    ),
+    mergeViaUIUI(ns("mergerViaUI")),
+    fluidRow(column(
+      4,
+      style = "margin-top: -46px;",
+      checkboxInput(ns("checkCommand"), "Check command line")
+    )),
+    conditionalPanel(
+      condition = "input.checkCommand == true",
+      verbatimTextOutput(ns("mergeCommand")),
+      ns = ns
+    ),
+    div(style = 'height: 76px',
+        htmlOutput(ns("mergeWarnings")), ),
+    fluidRow(
+      column(3, actionButton(ns("applyMerge"), "Apply Merge")),
+      column(9, align = "right", style = "margin-top: 12px;", textOutput(ns(
+        "nRowsJoinedData"
+      )))
     ),
     #actionButton(ns("addMerge"), "Add Table"),
     tags$hr(),
     tags$html(
       HTML(
-        "<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)"
+        "<b>Preview merged data</b> &nbsp;&nbsp; (Long characters are cutted in the preview)"
       )
     ),
     fluidRow(column(12,
@@ -563,8 +549,6 @@ mergeDataServer <- function(id, mergeList) {
                      tableYId = reactive(tableIds()[input$tableY])
                    )
 
-                 mergeCommandManual <- mergeViaCommandServer("mergerViaCommand", mergeList = mergeList)
-
                  output$mergeCommand <- renderText({
                    req(mergeViaUI$command)
                    mergeViaUI$command
@@ -635,39 +619,48 @@ mergeDataServer <- function(id, mergeList) {
                      if (!is.null(joinedData)) {
                        # check result for warnings
                        if (NROW(joinedData) > max(NROW(tableXData()), NROW(tableYData()))) {
-                         largerThanInput <- "Merged data has more rows than the input tables."
+                         largerThanInput <-
+                           "Merged data has more rows than the input tables."
                          largerThanInputDetails <- paste(
-                           largerThanInput, "One row of one table matches several rows of the",
+                           largerThanInput,
+                           "One row of one table matches several rows of the",
                            "other table. Please check the x and y colums to join on."
                          )
-                         joinedResult$warnings <- c(joinedResult$warnings, largerThanInput)
-                         joinedResult$warningsPopup <- c(joinedResult$warningsPopup,
-                                                         largerThanInputDetails)
+                         joinedResult$warnings <-
+                           c(joinedResult$warnings, largerThanInput)
+                         joinedResult$warningsPopup <-
+                           c(joinedResult$warningsPopup,
+                             largerThanInputDetails)
                        }
 
                        if (nrow(joinedData) > 100000) {
                          bigJoin <- "Merged data is very large (> 100000 rows)."
                          bigJoinDetails <- paste(
-                           bigJoin, "It has", nrow(joinedData), "rows.",
+                           bigJoin,
+                           "It has",
+                           nrow(joinedData),
+                           "rows.",
                            "The app might be very slow or even crash after import."
                          )
-                         joinedResult$warnings <- c(joinedResult$warnings, bigJoin)
-                         joinedResult$warningsPopup <- c(joinedResult$warningsPopup,
-                                                         bigJoinDetails)
+                         joinedResult$warnings <-
+                           c(joinedResult$warnings, bigJoin)
+                         joinedResult$warningsPopup <-
+                           c(joinedResult$warningsPopup,
+                             bigJoinDetails)
                        }
                      }
 
                      if (length(joinedResult$warningsPopup) > 0) {
-                       alert(
-                         paste0("WARNING: \n",
-                                paste(joinedResult$warningsPopup, collapse = "\n")
-                         )
-                       )
+                       alert(paste0(
+                         "WARNING: \n",
+                         paste(joinedResult$warningsPopup, collapse = "\n")
+                       ))
                      }
 
                      # return result
                      joinedResult$data <- joinedData
-                     joinedResult$preview <- cutAllLongStrings(joinedData[1:2, ], cutAt = 20)
+                     joinedResult$preview <-
+                       cutAllLongStrings(joinedData[1:2, , drop = FALSE], cutAt = 20)
 
                    },
                    value = 0.75,
@@ -788,7 +781,9 @@ equalColClasses <-
 #' @param warningsList (list) merge warnings
 #' @param errorsList (list) merge errors
 extractMergeNotification <- function(warningsList, errorsList) {
-  if (length(warningsList) == 0 && length(errorsList) == 0) return(NULL)
+  if (length(warningsList) == 0 &&
+      length(errorsList) == 0)
+    return(NULL)
 
   if (length(warningsList) > 0) {
     mergeWarning <- paste0("<p style=\"color:orange\">",

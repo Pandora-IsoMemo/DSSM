@@ -70,9 +70,11 @@ importDataServer <- function(id,
                    shinyjs::disable(ns("addData"), asis = TRUE)
                    shinyjs::disable(ns("accept"), asis = TRUE)
                    shinyjs::disable(ns("acceptMerged"), asis = TRUE)
+                   shinyjs::disable(ns("acceptQuery"), asis = TRUE)
                    shinyjs::hide(ns("addData"), asis = TRUE)
                    shinyjs::hide(ns("accept"), asis = TRUE)
                    shinyjs::hide(ns("acceptMerged"), asis = TRUE)
+                   shinyjs::hide(ns("acceptQuery"), asis = TRUE)
 
                    titles <-
                      unlist(lapply(ckanFiles(), `[[`, "title"))
@@ -80,14 +82,21 @@ importDataServer <- function(id,
                  })
 
                  observeEvent(input$tabImport, {
-                   if (input$tabImport == "Merge (optional)") {
+                   if (input$tabImport == "Merge") {
                      shinyjs::hide(ns("addData"), asis = TRUE)
                      shinyjs::hide(ns("accept"), asis = TRUE)
                      shinyjs::show(ns("acceptMerged"), asis = TRUE)
+                     shinyjs::hide(ns("acceptQuery"), asis = TRUE)
+                   } else if (input$tabImport == "Query with SQL") {
+                     shinyjs::hide(ns("addData"), asis = TRUE)
+                     shinyjs::hide(ns("accept"), asis = TRUE)
+                     shinyjs::hide(ns("acceptMerged"), asis = TRUE)
+                     shinyjs::show(ns("acceptQuery"), asis = TRUE)
                    } else {
                      shinyjs::show(ns("addData"), asis = TRUE)
                      shinyjs::show(ns("accept"), asis = TRUE)
                      shinyjs::hide(ns("acceptMerged"), asis = TRUE)
+                     shinyjs::hide(ns("acceptQuery"), asis = TRUE)
                    }
                  })
 
@@ -219,7 +228,7 @@ importDataServer <- function(id,
                      }
 
                      req(values$dataImport)
-                     values$preview <- cutAllLongStrings(values$dataImport[1:2, ], cutAt = 20)
+                     values$preview <- cutAllLongStrings(values$dataImport[1:2, , drop = FALSE], cutAt = 20)
                    },
                    value = 0.75,
                    message = 'loading data ...')
@@ -266,7 +275,7 @@ importDataServer <- function(id,
                    req(preparedData())
 
                    values$dataImport <- preparedData()
-                   values$preview <- cutAllLongStrings(values$dataImport[1:2, ], cutAt = 20)
+                   values$preview <- cutAllLongStrings(values$dataImport[1:2, , drop = FALSE], cutAt = 20)
                    shinyjs::enable(ns("addData"), asis = TRUE)
                  })
 
@@ -314,6 +323,7 @@ importDataServer <- function(id,
                    shinyjs::disable(ns("addData"), asis = TRUE)
                  })
 
+                 ## button merge data ----
                  joinedData <- mergeDataServer("dataMerger", mergeList = mergeList)
 
                  observeEvent(joinedData(), {
@@ -325,11 +335,28 @@ importDataServer <- function(id,
                    }
                  })
 
-                 ## button merge data ----
                  observeEvent(input$acceptMerged, {
                    removeModal()
 
                    values$data[["mergedData"]] <- joinedData()
+                 })
+
+                 ## button query data ----
+                 queriedData <- mergeViaCommandServer("dataQuerier", mergeList = mergeList)
+
+                 observeEvent(queriedData(), {
+                   if (is.null(queriedData()) ||
+                       nrow(queriedData()) == 0) {
+                     shinyjs::disable(ns("acceptQuery"), asis = TRUE)
+                   } else {
+                     shinyjs::enable(ns("acceptQuery"), asis = TRUE)
+                   }
+                 })
+
+                 observeEvent(input$acceptQuery, {
+                   removeModal()
+
+                   values$data[["queriedData"]] <- queriedData()
                  })
 
                  # return value for parent module: ----
@@ -343,21 +370,24 @@ importDataDialog <- function(ns) {
   modalDialog(
     shinyjs::useShinyjs(),
     title = "Import Data",
-    style = 'height: 900px',
+    style = 'height: 940px',
     footer = tagList(
       actionButton(ns("accept"), "Accept"),
-      actionButton(ns("addData"), "Mark for Merge"),
+      actionButton(ns("addData"), "Mark for Merge / Query"),
       actionButton(ns("acceptMerged"), "Accept Merged"),
+      actionButton(ns("acceptQuery"), "Accept Query"),
       actionButton(ns("cancel"), "Cancel")
     ),
     tabsetPanel(
       id = ns("tabImport"),
-      tabPanel("Select",
+      tabPanel("Select (required)",
                selectDataTab(ns = ns)),
-      tabPanel("Prepare (optional)",
+      tabPanel("Prepare",
                prepareDataUI(ns("dataPreparer"))),
-      tabPanel("Merge (optional)",
-               mergeDataUI(ns("dataMerger")))
+      tabPanel("Merge",
+               mergeDataUI(ns("dataMerger"))),
+      tabPanel("Query with SQL",
+               mergeViaCommandUI(ns("dataQuerier")))
     )
   )
 }
@@ -437,7 +467,7 @@ selectDataTab <- function(ns) {
     checkboxInput(ns("rownames"), "First column contains rownames"),
     helpText("The first row in your file need to contain variable names."),
     div(
-      style = 'height: 145px',
+      style = "height: 12.5em",
       div(class = "text-danger", uiOutput(ns("warning"))),
       div(class = "text-danger", uiOutput(ns("error"))),
       div(class = "text-success", textOutput(ns("success")))

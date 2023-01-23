@@ -4,7 +4,7 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom dplyr bind_rows everything group_by group_indices inner_join left_join select
-#' @importFrom DT datatable renderDataTable dataTableOutput
+#' @importFrom DT datatable renderDataTable dataTableOutput JS
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab
@@ -31,7 +31,8 @@
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
-#' @importFrom RSQLite dbConnect dbListTables dbWriteTable SQLite
+#' @importFrom RSQLite dbConnect dbGetQuery dbListTables dbWriteTable SQLite
+#' @importFrom shinyAce aceEditor updateAceEditor
 #' @importFrom shinyjs alert reset runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput

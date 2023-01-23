@@ -40,6 +40,7 @@ Imports:
   rlang,
   RSQLite,
   shiny (>= 1.0.5),
+  shinyAce,
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),
   shinythemes (>= 1.1.1),
