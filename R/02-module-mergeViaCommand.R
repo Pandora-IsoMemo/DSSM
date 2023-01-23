@@ -9,19 +9,20 @@ mergeViaCommandUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    tags$strong("List of tables:"),
+    tags$strong("Tables:"),
     tags$br(),
     tableOutput(ns("inMemoryTables")),
-    checkboxInput(ns("showColumns"), "Show available columns", value = FALSE),
-    conditionalPanel(
-      ns = ns,
-      condition = "input.showColumns == true",
-      dataTableOutput(ns("inMemoryColumns"))
-    ),
+    tags$strong("Columns:"),
+    dataTableOutput(ns("inMemoryColumns")),
     tags$br(),
+    tags$html(
+      HTML(
+        "<b>SQL query</b> &nbsp;&nbsp; (Please, use the table id to name tables)"
+      )
+    ),
     textAreaInput(
       ns("sqlCommand"),
-      "SQL query (Please, use the table id inside the SQL query.)",
+      label = NULL,
       placeholder = "SELECT * FROM t1 INNER JOIN t2 ON t1.`Latitude` = t2.`latitude`;",
       value = NULL,
       width = "100%"
@@ -78,7 +79,7 @@ mergeViaCommandServer <- function(id, mergeList) {
                    DT::datatable(
                      data.frame(
                        `id` = tableIds(),
-                       `column name` = inMemCols
+                       `columns` = inMemCols
                      ),
                      filter = "none",
                      selection = "none",
@@ -86,7 +87,8 @@ mergeViaCommandServer <- function(id, mergeList) {
                      options = list(
                        dom = "t",
                        ordering = FALSE,
-                       scrollX = TRUE
+                       scrollX = TRUE,
+                       scrollY = "200px"
                      )
                    )
                  })
