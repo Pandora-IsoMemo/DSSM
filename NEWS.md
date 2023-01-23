@@ -1,9 +1,17 @@
 # MpiIsoApp development version
 
+## MpiIsoApp 23.01.3
+
+### New features
+- when using _Pandora_ skin, in _Import Data_:
+  - option to use sql queries to prepare or combine data before import (#37)
+    - use in-memory tables and columns
+    - provide and apply a query
+    - preview and accept the result
+    
 ## MpiIsoApp 23.01.2
 
 ### New features
-
 - under Saved/Create Maps tab (#19)
   - option to add a square
   - update of the UI
