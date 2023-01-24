@@ -95,10 +95,13 @@ queryDataServer <- function(id, mergeList) {
                    } else {
                      colSel <- "*"
                    }
-                   updateAceEditor(session = session, "sqlCommand",
-                                   value = paste0("select t1.", colSel, " as id_test, t1.* from t1;"),
-                                   autoCompleters = c("snippet", "text", "static", "keyword"),
-                                   autoCompleteList = inMemCols)
+                   updateAceEditor(
+                     session = session,
+                     "sqlCommand",
+                     value = paste0("select t1.", colSel, " as id_test, t1.* from t1;"),
+                     autoCompleters = c("snippet", "text", "static", "keyword"),
+                     autoCompleteList = inMemCols
+                   )
                  }) %>%
                    bindEvent(mergeList())
 
@@ -155,36 +158,33 @@ queryDataServer <- function(id, mergeList) {
                  })
 
                  observe({
-                   req(length(mergeList()) > 0, input$applyQuery > 1)
-                   withProgress({
-                     result$data <- NULL
-                     result$preview <- NULL
-                     result$warningsPopup <- list()
-                     result$errors <- list()
-                     tmpDB <- inMemoryDB()
+                   req(length(mergeList()) > 0, input$applyQuery > 0)
 
-                     result$data <-
-                       tryCatch({
-                         dbGetQuery(tmpDB, input$sqlCommand)
-                       },
-                       error = function(cond) {
-                         result$errors <- "Query failed."
-                         alert(paste("Query failed:", cond$message))
-                         return(NULL)
-                       },
-                       warning = function(cond) {
-                         result$warningsPopup <- cond$message
-                         return(NULL)
-                       },
-                       finally = NULL)
+                   result$data <- NULL
+                   result$preview <- NULL
+                   result$warningsPopup <- list()
+                   result$errors <- list()
+                   tmpDB <- inMemoryDB()
 
-                     if (!is.null(result$data)) {
-                       result$preview <-
-                         cutAllLongStrings(result$data[1:2, , drop = FALSE], cutAt = 20)
-                     }
-                   },
-                   value = 0.75,
-                   message = 'applying query ...')
+                   result$data <-
+                     tryCatch({
+                       dbGetQuery(tmpDB, input$sqlCommand)
+                     },
+                     error = function(cond) {
+                       result$errors <- "Query failed."
+                       alert(paste("Query failed:", cond$message))
+                       return(NULL)
+                     },
+                     warning = function(cond) {
+                       result$warningsPopup <- cond$message
+                       return(NULL)
+                     },
+                     finally = NULL)
+
+                   if (!is.null(result$data)) {
+                     result$preview <-
+                       cutAllLongStrings(result$data[1:2, , drop = FALSE], cutAt = 20)
+                   }
                  }) %>%
                    bindEvent(input$applyQuery)
 
