@@ -86,10 +86,12 @@ queryDataServer <- function(id, mergeList) {
                        table %>%
                          colnames()
                      })
+                   names(inMemCols) <- tableIds()
+
                    inMemColumns(inMemCols)
 
-                   if (!is.null(inMemCols[1])) {
-                     colSel <- paste0("`", inMemCols[1][[1]], "`")
+                   if (!is.null(inMemCols[["t1"]])) {
+                     colSel <- paste0("`", inMemCols[["t1"]][1], "`")
                    } else {
                      colSel <- "*"
                    }
@@ -153,7 +155,7 @@ queryDataServer <- function(id, mergeList) {
                  })
 
                  observe({
-                   req(length(mergeList()) > 0)
+                   req(length(mergeList()) > 0, input$applyQuery == 1)
                    withProgress({
                      result$data <- NULL
                      result$preview <- NULL
