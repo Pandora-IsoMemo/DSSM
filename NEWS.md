@@ -9,6 +9,10 @@
     - provide and apply a query
     - preview and accept the result
     
+### Bug Fixes
+- fixed bug when importing data with no numeric columns:
+  - data was not displayed because no lat/long columns were found
+    
 ## MpiIsoApp 23.01.2
 
 ### New features
