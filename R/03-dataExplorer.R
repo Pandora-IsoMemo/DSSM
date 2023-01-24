@@ -250,7 +250,8 @@ dataExplorerServer <- function(id) {
                                    locationFields$latitude(),
                                    locationFields$coordType(),
                                    calibrateMethod(),
-                                   calLevel()), {
+                                   calLevel(),
+                                   isoDataRaw()), {
                    req(isoDataRaw())
                    d <- isoDataRaw()
 

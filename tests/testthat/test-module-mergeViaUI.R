@@ -9,10 +9,10 @@ testthat::test_that("Test module mergeViaUI", {
   }
 
   # to create new testCommonColumns use:
-#
-#   colnamesX <- colnames(testMergeList[[names(testMergeList)[1]]]$dataImport)
-#   colnamesY <- colnames(testMergeList[[names(testMergeList)[2]]]$dataImport)
-#   intersect(colnamesX, colnamesY) %>% dput()
+  #
+  #   colnamesX <- colnames(testMergeList[[names(testMergeList)[1]]]$dataImport)
+  #   colnamesY <- colnames(testMergeList[[names(testMergeList)[2]]]$dataImport)
+  #   intersect(colnamesX, colnamesY) %>% dput()
 
   testCommonColumns <-
     c(
@@ -72,52 +72,57 @@ testthat::test_that("Test module mergeViaUI", {
   testMergeCommand <-
     "table1 %>%  left_join(table2,  by = c(\"Submitter.ID\"=\"Submitter.ID\", \"Context.ID\"=\"Context.ID\", \"Individual.ID\"=\"Individual.ID\", \"Sample.ID\"=\"Sample.ID\", \"Sex\"=\"Sex\", \"Age.Category\"=\"Age.Category\", \"Min..Age..yrs.\"=\"Min..Age..yrs.\", \"Max..Age..yrs.\"=\"Max..Age..yrs.\", \"Sampled.Element\"=\"Sampled.Element\", \"Analysed.Component\"=\"Analysed.Component\", \"Modern.Country\"=\"Modern.Country\", \"Site.Name\"=\"Site.Name\", \"Site.Description\"=\"Site.Description\", \"Central.Power..Empire.or.Kingdom.\"=\"Central.Power..Empire.or.Kingdom.\", \"Local.Power..e.g..Vassal..Petty.Kingdom..Tribe..etc..\"=\"Local.Power..e.g..Vassal..Petty.Kingdom..Tribe..etc..\", \"Probable.Cultural.Context\"=\"Probable.Cultural.Context\", \"Culture.Mix..Substratus..Dependence..External.Influence..etc..\"=\"Culture.Mix..Substratus..Dependence..External.Influence..etc..\", \"Latitude\"=\"Latitude\", \"Longitude\"=\"Longitude\", \"Exact.Site.location.\"=\"Exact.Site.location.\", \"unc..Radius..km.\"=\"unc..Radius..km.\", \"Min..Year..95..\"=\"Min..Year..95..\", \"Max..Year..95..\"=\"Max..Year..95..\", \"Dating.Method\"=\"Dating.Method\", \"General.Period.s.\"=\"General.Period.s.\", \"Additional.Chronological.Tags\"=\"Additional.Chronological.Tags\", \"Social.Status.Rank\"=\"Social.Status.Rank\", \"Elite.\"=\"Elite.\", \"Additional.Social.Information\"=\"Additional.Social.Information\", \"Probable.Religious.Culture\"=\"Probable.Religious.Culture\", \"Probable.Religious.Denomination\"=\"Probable.Religious.Denomination\", \"Reference\"=\"Reference\", \"IRMS.Lab.Institution.Stable.Carbon...Nitrogen.Measurement\"=\"IRMS.Lab.Institution.Stable.Carbon...Nitrogen.Measurement\", \"Nr..of.Samples..Collagen.δ13C...δ15N.\"=\"Nr..of.Samples..Collagen.δ13C...δ15N.\", \"IRMS.δ13C.Collagen\"=\"IRMS.δ13C.Collagen\", \"IRMS.δ13C.Collagen.unc\"=\"IRMS.δ13C.Collagen.unc\", \"δ15N.Collagen\"=\"δ15N.Collagen\", \"δ15N.Collagen.unc.\"=\"δ15N.Collagen.unc.\", \"Collagen.Yield\"=\"Collagen.Yield\", \"C\"=\"C\", \"N\"=\"N\", \"Atomic.C.N.Ratio\"=\"Atomic.C.N.Ratio\", \"IRMS.Lab.Institution.Stable.Carbon...Oxygen.Carbonate.Measurement\"=\"IRMS.Lab.Institution.Stable.Carbon...Oxygen.Carbonate.Measurement\", \"Nr..of.Samples..Carbonate.\"=\"Nr..of.Samples..Carbonate.\", \"δ13C.Carbonate\"=\"δ13C.Carbonate\", \"δ13C.Carbonate.unc.\"=\"δ13C.Carbonate.unc.\", \"δ18O.Carbonate..VPDB.\"=\"δ18O.Carbonate..VPDB.\", \"δ18O.Carbonate..VPDB..unc.\"=\"δ18O.Carbonate..VPDB..unc.\"))"
 
-  shiny::testServer(mergeViaUIServer, args = list(tableXData = reactive(tableXData),
-                                                  tableYData = reactive(tableYData),
-                                                  tableXId = reactive("table1"),
-                                                  tableYId = reactive("table2")),
-                    {
-                      # Arrange
-                      print("test merge via UI server")
-                      # Act
-                      session$setInputs(
-                        mergeOperation = "left_join",
-                        addAllCommonColumns = TRUE,
-                        columnsX = testCommonColumns,
-                        columnsY = testCommonColumns
-                      )
+  shiny::testServer(
+    mergeViaUIServer,
+    args = list(
+      tableXData = reactive(tableXData),
+      tableYData = reactive(tableYData),
+      tableXId = reactive("table1"),
+      tableYId = reactive("table2")
+    ),
+    {
+      # Arrange
+      print("test merge via UI server")
+      # Act
+      session$setInputs(
+        mergeOperation = "left_join",
+        addAllCommonColumns = TRUE,
+        columnsX = testCommonColumns,
+        columnsY = testCommonColumns
+      )
 
-                      testthat::expect_equal(session$returned$command, testMergeCommand)
+      testthat::expect_equal(session$returned$command, testMergeCommand)
 
-                      # testthat::expect_true(typeof(output$colNames) == "character")
-                      # testthat::expect_equal(
-                      #   colnames(joinedData())[c(1:10, (ncol(joinedData()) - 10):ncol(joinedData()))],
-                      #   c(
-                      #     "Human.Entry.ID",
-                      #     "Submitter.ID",
-                      #     "Context.ID",
-                      #     "Radiocarbon.ID",
-                      #     "Individual.ID",
-                      #     "Sample.ID",
-                      #     "Sex",
-                      #     "Age.Category",
-                      #     "Min..Age.(yrs)",
-                      #     "Max..Age.(yrs)",
-                      #     "IRMS.Lab.Institution.Stable.Oxygen.Phosphate.Measurement",
-                      #     "Nr..of.Samples.(δ18O)",
-                      #     "δ18O.Phosphate.(VPDB)",
-                      #     "δ18O.Phosphate.(VPDB).unc.",
-                      #     "δ18O.Phosphate.(VSMOW)",
-                      #     "δ18O.Phosphate.(VSMOW).unc.",
-                      #     "δ18O.Drinking.Water.(if.not.reported.differently)",
-                      #     "Lab.Institution.Stable.Strontium.Measurement",
-                      #     "Nr..of.Samples.(87Sr/86Sr)",
-                      #     "87Sr/86Sr",
-                      #     "87Sr/86Sr.unc."
-                      #   )
-                      #
-                      # )
-                    })
+      # testthat::expect_true(typeof(output$colNames) == "character")
+      # testthat::expect_equal(
+      #   colnames(joinedData())[c(1:10, (ncol(joinedData()) - 10):ncol(joinedData()))],
+      #   c(
+      #     "Human.Entry.ID",
+      #     "Submitter.ID",
+      #     "Context.ID",
+      #     "Radiocarbon.ID",
+      #     "Individual.ID",
+      #     "Sample.ID",
+      #     "Sex",
+      #     "Age.Category",
+      #     "Min..Age.(yrs)",
+      #     "Max..Age.(yrs)",
+      #     "IRMS.Lab.Institution.Stable.Oxygen.Phosphate.Measurement",
+      #     "Nr..of.Samples.(δ18O)",
+      #     "δ18O.Phosphate.(VPDB)",
+      #     "δ18O.Phosphate.(VPDB).unc.",
+      #     "δ18O.Phosphate.(VSMOW)",
+      #     "δ18O.Phosphate.(VSMOW).unc.",
+      #     "δ18O.Drinking.Water.(if.not.reported.differently)",
+      #     "Lab.Institution.Stable.Strontium.Measurement",
+      #     "Nr..of.Samples.(87Sr/86Sr)",
+      #     "87Sr/86Sr",
+      #     "87Sr/86Sr.unc."
+      #   )
+      #
+      # )
+    }
+  )
 })
 
 
@@ -199,4 +204,98 @@ test_that("matchColClasses/equalColClasses function", {
     isTest = TRUE
   ))
 
+})
+
+testthat::test_that("Test module queryDataServer", {
+  testMergeList <-
+    readRDS(testthat::test_path("data-module-mergeImports.rds"))
+
+  shiny::testServer(queryDataServer,
+                    args = list(mergeList = reactive(
+                      list(
+                        table1 = testMergeList[[1]]$dataImport,
+                        table2 = testMergeList[[2]]$dataImport
+                      )
+                    )),
+                    {
+                      # Arrange
+                      print("test queryDataServer")
+                      # Act
+                      session$setInputs(sqlCommand = paste0("select t1.* from t1;"),
+                                        applyQuery = 0)
+                      testthat::expect_equal(dbListTables(inMemoryDB()),
+                                             c("t1", "t2"))
+                      testthat::expect_null(session$returned())
+                      testthat::expect_equal(tableIds(),
+                                             c("t1", "t2"))
+                      testthat::expect_equal(inMemColumns()[["t1"]][1:3],
+                                             c("Human.Entry.ID", "Submitter.ID", "Context.ID"))
+                      testthat::expect_equal(inMemColumns()[["t2"]][1:3],
+                                             c("Entry.ID", "Submitter.ID", "Context.ID"))
+                      testthat::expect_true(is.character(output$inMemoryTables))
+                      testthat::expect_length(is.character(output$inMemoryTables), 1)
+                      testthat::expect_true(is.character(output$inMemoryColumns))
+                      testthat::expect_length(is.character(output$inMemoryColumns), 1)
+
+                      session$setInputs(
+                        sqlCommand = paste0("select t1.`Human.Entry.ID` from t1;"),
+                        applyQuery = 1
+                      )
+
+                      testthat::expect_equal(session$returned(),
+                                             structure(
+                                               list(Human.Entry.ID = c(1, 2, 3)),
+                                               class = "data.frame",
+                                               row.names = c(NA,
+                                                             -3L)
+                                             ))
+                    })
+
+  testdb <- dbConnect(SQLite(), "file::memory:")
+
+  testTable1 <- testMergeList[[1]]$dataImport
+  testTable2 <- testMergeList[[2]]$dataImport
+
+  dbWriteTable(testdb, "table1", testTable1)
+  dbWriteTable(testdb, "table2", testTable2)
+
+  expect_equal(dbListTables(testdb), c("table1", "table2"))
+
+  testQuery <-
+    "SELECT t1.`Human.Entry.ID`, t1.`Age.Category`, t1.`Site.Name` FROM table1 AS t1 LEFT JOIN table2 as t2 ON t1.`Age.Category` = t2.`Age.Category` AND t1.`Site.Name` = t2.`Site.Name`;"
+
+  expect_equal(
+    RSQLite::dbGetQuery(testdb, testQuery),
+    structure(
+      list(
+        Human.Entry.ID = c(1, 2, 3),
+        Age.Category = c("Young Middle Adult",
+                         "Young Middle Adult", "Infant"),
+        Site.Name = c("Tertiveri", "Tertiveri",
+                      "Tertiveri")
+      ),
+      class = "data.frame",
+      row.names = c(NA, -3L)
+    )
+  )
+
+  testQueryFailure <-
+    "SELECT `Human.Entry.ID`, `Age.Category`, `Site.Name` FROM table1 LEFT JOIN table2 ON `Age.Category` = `Age.Category` AND `Site.Name` = `Site.Name`;"
+
+  expect_warning(tryCatch({
+    RSQLite::dbGetQuery(testdb, testQueryFailure)
+    #stop("test error")
+    #warning("test warning")
+  },
+  error = function(cond) {
+    warning(cond$message)
+    # Choose a return value in case of error
+    return(NULL)
+  },
+  warning = function(cond) {
+    warning(cond$message)
+    # Choose a return value in case of warning
+    return(NULL)
+  },
+  finally = NULL))
 })
