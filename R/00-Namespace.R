@@ -4,7 +4,7 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom dplyr bind_rows everything group_by group_indices inner_join left_join select
-#' @importFrom DT datatable renderDataTable dataTableOutput JS
+#' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab
