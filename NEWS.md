@@ -4,7 +4,7 @@
 
 ### New features
 - when using _Pandora_ skin, in _Import Data_:
-  - option to use sql queries to prepare or combine data before import (#37)
+  - option to use sql queries to prepare or combine data before import (#37, PR #89)
     - use in-memory tables and columns
     - provide and apply a query
     - preview and accept the result
