@@ -96,7 +96,7 @@ queryDataServer <- function(id, mergeList) {
                      colSel <- "*"
                    }
                    updateAceEditor(session = session, "sqlCommand",
-                                   value = paste0("select t1.", colSel, " from t1;"),
+                                   value = paste0("select t1.", colSel, " as id_test, t1.* from t1;"),
                                    autoCompleters = c("snippet", "text", "static", "keyword"),
                                    autoCompleteList = inMemCols)
                  }) %>%
@@ -155,7 +155,7 @@ queryDataServer <- function(id, mergeList) {
                  })
 
                  observe({
-                   req(length(mergeList()) > 0, input$applyQuery == 1)
+                   req(length(mergeList()) > 0, input$applyQuery > 1)
                    withProgress({
                      result$data <- NULL
                      result$preview <- NULL
