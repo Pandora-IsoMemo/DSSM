@@ -18,6 +18,15 @@ detectDuplicatesServer <- function(id, inputData) {
     function(input, output, session) {
       # create reactiveVal that will store data later
       tableData <- reactiveVal(NULL)
+      userSimilaritySelection <- reactiveVal(
+        data.frame(
+          cols = NA,
+          textSimilarity = NA,
+          numericSimilarity = NA,
+          rounding = NA,
+          ignoreEmpty = NA
+        )
+      )
 
       # open modal when button is clicked and pass data to modal
       observe({
@@ -30,6 +39,88 @@ detectDuplicatesServer <- function(id, inputData) {
       }) %>%
         bindEvent(input[["showModal"]])
 
+      # create dataframe with user inputs and update choices for selectedVariable
+      observe({
+        userData <- userSimilaritySelection()
+        userData <- userData[userData$cols %in% input[["variables"]], ]
+        for (i in input[["variables"]][!input[["variables"]] %in% userData$cols]) {
+          userData <- rbind(
+            userData,
+            data.frame(
+              cols = i,
+              textSimilarity = "Case Sensitive",
+              numericSimilarity = "Exact Match",
+              rounding = 0,
+              ignoreEmpty = TRUE
+            )
+          )
+        }
+        userSimilaritySelection(userData)
+
+        updateSelectizeInput(
+          session = session,
+          inputId = "selectedVariable",
+          choices = input[["variables"]],
+          selected = if (length(input[["variables"]]) == 1) input[["variables"]] else input[["selectedVariable"]]
+        )
+      }) %>%
+        bindEvent(input[["variables"]])
+
+      # change inputs if user made a choice before
+      observe({
+        req(input[["selectedVariable"]] != "")
+        userData <- userSimilaritySelection()
+        data <- inputData()
+
+        if (isNumeric(data[, input[["selectedVariable"]]])) {
+          shinyjs::hide(id = "textSimilarity")
+          shinyjs::show(id = "numericSimilarity")
+        } else {
+          shinyjs::hide(id = "numericSimilarity")
+          shinyjs::show(id = "textSimilarity")
+        }
+
+        updateSelectizeInput(
+          session = session,
+          inputId = "textSimilarity",
+          selected = userData[userData$cols == input[["selectedVariable"]], "textSimilarity"]
+        )
+        updateSelectizeInput(
+          session = session,
+          inputId = "numericSimilarity",
+          selected = userData[userData$cols == input[["selectedVariable"]], "numericSimilarity"]
+        )
+        updateNumericInput(
+          session = session,
+          inputId = "rounding",
+          value = userData[userData$cols == input[["selectedVariable"]], "rounding"]
+        )
+        updateCheckboxInput(
+          session = session,
+          inputId = "ignoreEmpty",
+          value = userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"]
+        )
+      }) %>%
+        bindEvent(input[["selectedVariable"]])
+
+
+      # change user input dataframe based on user selection
+      observe({
+        req(!is.null(input[["selectedVariable"]]) && input[["selectedVariable"]] != "")
+        userData <- userSimilaritySelection()
+        userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"] <- input[["ignoreEmpty"]]
+        userData[userData$cols == input[["selectedVariable"]], "textSimilarity"] <- input[["textSimilarity"]]
+        userData[userData$cols == input[["selectedVariable"]], "numericSimilarity"] <- input[["numericSimilarity"]]
+        userData[userData$cols == input[["selectedVariable"]], "rounding"] <- input[["rounding"]]
+        userSimilaritySelection(userData)
+      }) %>%
+        bindEvent(c(
+          input[["textSimilarity"]],
+          input[["numericSimilarity"]],
+          input[["rounding"]],
+          input[["ignoreEmpty"]]
+        ))
+
       # show table when highlight duplicates is clicked
       observe({
         check_cols <- input[["variables"]]
@@ -46,17 +137,15 @@ detectDuplicatesServer <- function(id, inputData) {
           case_sensitive <- FALSE
         }
 
-        duplicateDataFrames <- createDuplicateDataFrames(
-          inputData = inputData(),
-          check_cols = check_cols,
-          rounding = rounding,
-          case_sensitive = case_sensitive
+        duplicateDataFrames <- findDuplicates(
+          data = inputData(),
+          userSimilaritySelection = userSimilaritySelection()
         )
 
         tableData(inputData())
 
         output$table <- renderDataTable({
-          datatable(tableData()) %>%
+          DT::datatable(tableData()) %>%
             DT::formatStyle(check_cols,
               backgroundColor = DT::styleRow(duplicateDataFrames$allDuplicatesRows, "pink")
             )
@@ -64,7 +153,7 @@ detectDuplicatesServer <- function(id, inputData) {
       }) %>%
         bindEvent(input[["highlightDuplicates"]])
 
-      # show table when highlight duplicates is clicked
+      # show table when show duplicates is clicked
       observe({
         check_cols <- input[["variables"]]
 
@@ -80,23 +169,56 @@ detectDuplicatesServer <- function(id, inputData) {
           case_sensitive <- FALSE
         }
 
-        duplicateDataFrames <- createDuplicateDataFrames(
-          inputData = inputData(),
-          check_cols = check_cols,
-          rounding = rounding,
-          case_sensitive = case_sensitive
+        duplicateDataFrames <- findDuplicates(
+          data = inputData(),
+          userSimilaritySelection = userSimilaritySelection()
         )
 
         tableData(duplicateDataFrames$allDuplicatesDF)
 
         output$table <- renderDataTable({
-          datatable(tableData()) %>%
+          DT::datatable(tableData()) %>%
             DT::formatStyle(check_cols,
-                            backgroundColor = DT::styleRow(1:nrow(tableData()), "pink")
+              backgroundColor = DT::styleRow(1:nrow(tableData()), "pink")
             )
         })
       }) %>%
         bindEvent(input[["showDuplicates"]])
+
+      # show table when show unique rows is clicked
+      observe({
+        check_cols <- input[["variables"]]
+
+        if (input[["numericSimilarity"]] == "Rounded Match") {
+          rounding <- input[["rounding"]]
+        } else {
+          rounding <- NULL
+        }
+
+        if (input[["textSimilarity"]] == "Case Sensitive") {
+          case_sensitive <- TRUE
+        } else {
+          case_sensitive <- FALSE
+        }
+
+        duplicateDataFrames <- findDuplicates(
+          data = inputData(),
+          userSimilaritySelection = userSimilaritySelection()
+        )
+
+        tableData(duplicateDataFrames$uniqueData)
+
+        output$table <- renderDataTable({
+          DT::datatable(tableData())
+        })
+      }) %>%
+        bindEvent(input[["showUnique"]])
+
+      observe({
+        inputData(tableData())
+        removeModal()
+      }) %>%
+        bindEvent(input[["transferDuplicates"]])
 
       # create file for table export
       output$exportDuplicates <- downloadHandler(
@@ -112,135 +234,13 @@ detectDuplicatesServer <- function(id, inputData) {
 }
 
 
-# Helper Functions --------------------------------------------------------
-
-createModal <- function(vars, session) {
-  ns <- session$ns
-  modalDialog(
-    title = "Duplicate Identifier",
-    easyClose = TRUE,
-    size = "l",
-    footer = modalButton("Back"),
-    tagList(
-      HTML("This section gives you the option to find and export duplicates or remove them from the dataset.
-                You must first select the columns in which you want to search for duplicates.
-                Then you can select the degree of similarity in order to be classified as a duplicate.<br><br>
-                For numeric columns, you can choose between 'Exact Match' and 'Rounded Match'.
-                For the 'Exact Match' selection, observations are only classified as duplicated if the values match exactly.
-                For 'Rounded Match', values are classified as identical if they are identical after rounding.
-                For this reason, you can specify a rounding factor if you have selected 'Rounded Match'.
-                A value of 2, for example, means that the values are rounded to 2 decimal places before being checked for equality.
-                A value of 0 means that the values are rounded to whole numbers.
-                You can also enter negative numbers, which will result in rounding to the power of ten, e.g. the value -2 rounds to the nearest hundred.<br>
-                For text columns you can choose between 'Case Sensitive', where a distinction is made between upper and lower case letters and
-                'Case Insensitive', where no distinction is made.<br><br>
-                You then have the option to display the duplicates, export them or remove them from the dataset."),
-      hr(),
-      selectizeInput(
-        inputId = ns("variables"),
-        label = "Duplicate Identifikation Variables",
-        choices = vars,
-        multiple = TRUE
-      ),
-      fluidRow(
-        column(
-          6,
-          selectizeInput(
-            inputId = ns("numericSimilarity"),
-            label = "Numeric Similarity",
-            choices = c(
-              "Exact Match",
-              "Rounded Match"
-            ),
-            selected = "Exact Match"
-          )
-        ),
-        column(
-          6,
-          conditionalPanel(
-            condition = "input.numericSimilarity == 'Rounded Match'",
-            ns = ns,
-            numericInput(
-              inputId = ns("rounding"),
-              label = "Rounding Factor",
-              value = 0,
-              min = -10,
-              max = 10
-            )
-          )
-        )
-      ),
-      selectizeInput(
-        inputId = ns("textSimilarity"),
-        label = "Text Similarity",
-        choices = c(
-          "Case Sensitive",
-          "Case Insensitive"
-        ),
-        selected = "Case Sensitive"
-      ),
-      hr(),
-      fluidRow(
-        column(
-          12,
-          actionButton(
-            inputId = ns("highlightDuplicates"),
-            label = "Highlight Duplicated Rows"
-          ),
-          actionButton(
-            inputId = ns("showDuplicates"),
-            label = "Show Duplicated Rows Only"
-          )
-        )
-      ),
-      br(),
-      fluidRow(
-        column(
-          12,
-          downloadButton(
-            outputId = ns("exportDuplicates"),
-            label = "Export Table"
-          ),
-          actionButton(
-            inputId = ns("removeDuplicates"),
-            label = "Close Modal and Transfer Table to App"
-          )
-        )
-      ),
-      hr(),
-      DT::dataTableOutput(ns("table"))
-    )
-  )
-}
-
-createDuplicateDataFrames <- function(inputData, check_cols, rounding = NULL, case_sensitive) {
-  cols <- check_cols
-  numericCols <- numericColumns(inputData)[numericColumns(inputData) %in% cols]
-  characterCols <- characterColumns(inputData)[characterColumns(inputData) %in% cols]
-
-  preparedData <- inputData
-
-  if (!is.null(rounding)) {
-    preparedData[numericCols] <- sapply(preparedData[numericCols], round, rounding)
-  }
-  if (case_sensitive == FALSE) {
-    preparedData[characterCols] <- sapply(preparedData[characterCols], tolower)
-  }
-
-  allDuplicatesDF <- inputData[duplicated(preparedData[, cols]) | duplicated(preparedData[, cols], fromLast = TRUE), ]
-  uniqueData <- inputData[!duplicated(preparedData[, cols]), ]
-
-  list(
-    allDuplicatesDF = allDuplicatesDF,
-    allDuplicatesRows = rownames(allDuplicatesDF),
-    uniqueData = uniqueData
-  )
-}
 
 # TEST MODULE -------------------------------------------------------------
 
 ui <- fluidPage(
-  detectDuplicatesUI(id = "detectDuplicates")
+  shinyjs::useShinyjs(),
+  detectDuplicatesUI(id = "detectDuplicates"),
+  DT::dataTableOutput("tab")
 )
 
 server <- function(input, output, session) {
@@ -253,6 +253,10 @@ server <- function(input, output, session) {
     id = "detectDuplicates",
     inputData = isoDataFull
   )
+
+  output$tab <- renderDataTable({
+    isoDataFull()
+  })
 }
 
 shinyApp(ui, server)
