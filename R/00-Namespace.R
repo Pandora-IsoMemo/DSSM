@@ -12,6 +12,7 @@
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices colorRampPalette chull png pdf tiff svg dev.off recordPlot replayPlot
 #'  cm.colors pdfFonts
+#' @importFrom IsoAppTools importDataUI importDataServer
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers
