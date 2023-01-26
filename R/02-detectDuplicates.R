@@ -123,19 +123,6 @@ detectDuplicatesServer <- function(id, inputData) {
 
       # show table when highlight duplicates is clicked
       observe({
-        check_cols <- input[["variables"]]
-
-        if (input[["numericSimilarity"]] == "Rounded Match") {
-          rounding <- input[["rounding"]]
-        } else {
-          rounding <- NULL
-        }
-
-        if (input[["textSimilarity"]] == "Case Sensitive") {
-          case_sensitive <- TRUE
-        } else {
-          case_sensitive <- FALSE
-        }
 
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
@@ -144,31 +131,24 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(inputData())
 
-        output$table <- renderDataTable({
-          DT::datatable(tableData()) %>%
-            DT::formatStyle(check_cols,
-              backgroundColor = DT::styleRow(duplicateDataFrames$allDuplicatesRows, "pink")
-            )
+        output$table <- DT::renderDataTable({
+          printTab <- DT::datatable(tableData())
+          if(length(duplicateDataFrames$allDuplicatesRows)>0){
+            printTab %>%
+              DT::formatStyle(userSimilaritySelection()$col,
+                              backgroundColor = DT::styleRow(duplicateDataFrames$allDuplicatesRows, "pink")
+              )
+          } else {
+            showNotification(paste0("Note: Couldn't find any duplicates for the current selection."))
+            printTab
+          }
+
         })
       }) %>%
         bindEvent(input[["highlightDuplicates"]])
 
       # show table when show duplicates is clicked
       observe({
-        check_cols <- input[["variables"]]
-
-        if (input[["numericSimilarity"]] == "Rounded Match") {
-          rounding <- input[["rounding"]]
-        } else {
-          rounding <- NULL
-        }
-
-        if (input[["textSimilarity"]] == "Case Sensitive") {
-          case_sensitive <- TRUE
-        } else {
-          case_sensitive <- FALSE
-        }
-
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection()
@@ -176,9 +156,9 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(duplicateDataFrames$allDuplicatesDF)
 
-        output$table <- renderDataTable({
+        output$table <- DT::renderDataTable({
           DT::datatable(tableData()) %>%
-            DT::formatStyle(check_cols,
+            DT::formatStyle(userSimilaritySelection()$col,
               backgroundColor = DT::styleRow(1:nrow(tableData()), "pink")
             )
         })
@@ -187,19 +167,6 @@ detectDuplicatesServer <- function(id, inputData) {
 
       # show table when show unique rows is clicked
       observe({
-        check_cols <- input[["variables"]]
-
-        if (input[["numericSimilarity"]] == "Rounded Match") {
-          rounding <- input[["rounding"]]
-        } else {
-          rounding <- NULL
-        }
-
-        if (input[["textSimilarity"]] == "Case Sensitive") {
-          case_sensitive <- TRUE
-        } else {
-          case_sensitive <- FALSE
-        }
 
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
@@ -208,15 +175,18 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(duplicateDataFrames$uniqueData)
 
-        output$table <- renderDataTable({
+        output$table <- DT::renderDataTable({
           DT::datatable(tableData())
         })
       }) %>%
         bindEvent(input[["showUnique"]])
 
       observe({
+        nRowsRemoved <- nrow(inputData()) - nrow(tableData())
         inputData(tableData())
+        output$table <- NULL
         removeModal()
+        showNotification(paste0("Removed ",nRowsRemoved," rows from data!"))
       }) %>%
         bindEvent(input[["transferDuplicates"]])
 
@@ -254,7 +224,7 @@ server <- function(input, output, session) {
     inputData = isoDataFull
   )
 
-  output$tab <- renderDataTable({
+  output$tab <- DT::renderDataTable({
     isoDataFull()
   })
 }
