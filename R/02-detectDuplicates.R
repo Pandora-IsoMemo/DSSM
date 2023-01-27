@@ -2,6 +2,11 @@
 
 # Module UI ---------------------------------------------------------------
 
+#' detectDuplicates module ui
+#'
+#' @param id module id
+#' @param label label for actionButton which will open a modal
+#' @export
 detectDuplicatesUI <- function(id, label = "Detect Duplicates") {
   ns <- NS(id)
   tagList(
@@ -12,6 +17,11 @@ detectDuplicatesUI <- function(id, label = "Detect Duplicates") {
 
 # Module Server -----------------------------------------------------------
 
+#' detectDuplicates module server
+#'
+#' @param id module id
+#' @param inputData dataframe in which duplicates are searched for
+#' @export
 detectDuplicatesServer <- function(id, inputData) {
   moduleServer(
     id,

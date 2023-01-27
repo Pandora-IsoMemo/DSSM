@@ -1,3 +1,7 @@
+#' Finds duplicates in data using user specified similarity rules
+#'
+#' @param data dataframe in which duplicates are searched for
+#' @param userSimilaritySelection dataframe containing similarity rules for each column to be considered
 findDuplicates <- function(data, userSimilaritySelection) {
   cols <- userSimilaritySelection$cols
   numericCols <- numericColumns(data)[numericColumns(data) %in% cols]

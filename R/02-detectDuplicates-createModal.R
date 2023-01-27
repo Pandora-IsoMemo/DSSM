@@ -1,3 +1,7 @@
+#' Creates a modalDialog for detectDuplicates module
+#'
+#' @param vars dataframe column names
+#' @param session current session
 createModal <- function(vars, session) {
   ns <- session$ns
   modalDialog(
