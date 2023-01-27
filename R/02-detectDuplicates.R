@@ -139,14 +139,16 @@ detectDuplicatesServer <- function(id, inputData) {
           userSimilaritySelection = userSimilaritySelection()
         )
 
-        tableData(inputData())
+        tableData(duplicateDataFrames$inputData)
 
         output$table <- DT::renderDataTable({
           printTab <- DT::datatable(tableData())
           if(length(duplicateDataFrames$allDuplicatesRows)>0){
             printTab %>%
               DT::formatStyle(userSimilaritySelection()$col,
-                              backgroundColor = DT::styleRow(duplicateDataFrames$allDuplicatesRows, "pink")
+                              backgroundColor = DT::styleRow(
+                                duplicateDataFrames$allDuplicatesRows,
+                                "pink")
               )
           } else {
             showNotification(paste0("Note: Couldn't find any duplicates for the current selection."))
@@ -196,7 +198,7 @@ detectDuplicatesServer <- function(id, inputData) {
         inputData(tableData())
         output$table <- NULL
         removeModal()
-        showNotification(paste0("Removed ",nRowsRemoved," rows from data!"))
+        showNotification(paste0("Removed ",nRowsRemoved," rows from dataset!"))
       }) %>%
         bindEvent(input[["transferDuplicates"]])
 

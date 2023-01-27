@@ -3,7 +3,7 @@
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
-#' @importFrom dplyr bind_rows everything group_by group_indices inner_join left_join select
+#' @importFrom dplyr bind_rows everything group_by group_by_at group_indices inner_join left_join select summarise
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs

@@ -25,7 +25,7 @@ findDuplicates <- function(data, userSimilaritySelection) {
     }
   })
 
-  checkData <- preparedData[, cols]
+  checkData <- data.frame(preparedData[, cols], row.names = row.names(preparedData))
 
   # check for ignore empty
   allDuplicatesDF <- data[duplicated(checkData) | duplicated(checkData, fromLast = TRUE), ]
@@ -35,9 +35,44 @@ findDuplicates <- function(data, userSimilaritySelection) {
   allDuplicateRows <- rownames(allDuplicatesDF)
   uniqueData <- data[!duplicated(checkData), ]
 
+  # add column with duplicate rows
+  rowCheckData <- checkData
+  rowCheckData$row <- rownames(rowCheckData)
+  duplicateRows <-
+  rowCheckData %>%
+    dplyr::group_by_at(cols) %>%
+    dplyr::summarise(row,
+                     duplicateRows = paste0(row, collapse = ","),
+                     .groups = "drop") %>%
+    dplyr::select(row,duplicateRows)
+
+  data$duplicateRows <- NULL
+  data$row <- row.names(data)
+  data <- data %>%
+    left_join(duplicateRows, by = "row")
+  data[!data$row %in% as.numeric(allDuplicateRows),"duplicateRows"] <- ""
+  row.names(data) <- data$row
+  data$row <- NULL
+
+  uniqueData$duplicateRows <- NULL
+  uniqueData$row <- row.names(uniqueData)
+  uniqueData <- uniqueData %>%
+    left_join(duplicateRows, by = "row")
+  uniqueData[!uniqueData$row %in% as.numeric(allDuplicateRows),"duplicateRows"] <- ""
+  row.names(uniqueData) <- uniqueData$row
+  uniqueData$row <- NULL
+
+  allDuplicatesDF$duplicateRows <- NULL
+  allDuplicatesDF$row <- row.names(allDuplicatesDF)
+  allDuplicatesDF <- allDuplicatesDF %>%
+    left_join(duplicateRows, by = "row")
+  row.names(allDuplicatesDF) <- allDuplicatesDF$row
+  allDuplicatesDF$row <- NULL
+
   list(
+    inputData = data,
     allDuplicatesDF = allDuplicatesDF,
-    allDuplicatesRows = allDuplicateRows,
+    allDuplicatesRows = (1:nrow(data))[rownames(data) %in% allDuplicateRows],
     uniqueData = uniqueData
   )
 }
