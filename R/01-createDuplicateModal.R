@@ -2,7 +2,7 @@
 #'
 #' @param vars dataframe column names
 #' @param session current session
-createModal <- function(vars, session) {
+createDuplicateModal <- function(vars, session) {
   ns <- session$ns
   modalDialog(
     title = "Duplicate Identifier",
@@ -22,7 +22,7 @@ createModal <- function(vars, session) {
                 You can also enter negative numbers, which will result in rounding to the power of ten, e.g. the value -2 rounds to the nearest hundred.<br>
                 For text columns you can choose between 'Case Sensitive', where a distinction is made between upper and lower case letters and
                 'Case Insensitive', where no distinction is made.<br><br>
-                You then have the option to display the duplicates, export them and/or remove them from the dataset."),
+                You then have the option to display the duplicates and/or remove them from the dataset."),
       hr(),
       selectizeInput(
         inputId = ns("variables"),
@@ -114,10 +114,10 @@ createModal <- function(vars, session) {
       fluidRow(
         column(
           12,
-          downloadButton(
-            outputId = ns("exportDuplicates"),
-            label = "Export Table"
-          ),
+          # downloadButton(
+          #   outputId = ns("exportDuplicates"),
+          #   label = "Export Table"
+          # ),
           actionButton(
             inputId = ns("transferDuplicates"),
             label = "Close Modal and Transfer Table to App"

@@ -41,7 +41,7 @@ detectDuplicatesServer <- function(id, inputData) {
       # open modal when button is clicked and pass data to modal
       observe({
         showModal(
-          createModal(
+          createDuplicateModal(
             vars = names(inputData()),
             session = session
           )
@@ -203,14 +203,14 @@ detectDuplicatesServer <- function(id, inputData) {
         bindEvent(input[["transferDuplicates"]])
 
       # create file for table export
-      output$exportDuplicates <- downloadHandler(
-        filename = function() {
-          "test.csv"
-        },
-        content = function(file) {
-          write.csv(tableData(), file)
-        }
-      )
+      # output$exportDuplicates <- downloadHandler(
+      #   filename = function() {
+      #     "test.csv"
+      #   },
+      #   content = function(file) {
+      #     write.csv(tableData(), file)
+      #   }
+      # )
     }
   )
 }
