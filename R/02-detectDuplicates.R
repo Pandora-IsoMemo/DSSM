@@ -67,14 +67,27 @@ detectDuplicatesServer <- function(id, inputData) {
         }
         userSimilaritySelection(userData)
 
+        if (length(input[["variables"]]) == 1){
+          selected <- input[["variables"]]
+          choices <- input[["variables"]]
+          } else if (length(input[["variables"]]) == 0){
+            selected <- ""
+            choices <- ""
+            } else{
+              selected <- input[["selectedVariable"]]
+              choices <- input[["variables"]]
+            }
+
         updateSelectizeInput(
           session = session,
           inputId = "selectedVariable",
-          choices = input[["variables"]],
-          selected = if (length(input[["variables"]]) == 1) input[["variables"]] else input[["selectedVariable"]]
+          choices = choices,
+          selected = selected
         )
       }) %>%
-        bindEvent(input[["variables"]])
+        bindEvent(input[["variables"]],
+                  ignoreNULL = FALSE,
+                  ignoreInit = TRUE)
 
       # change inputs if user made a choice before
       observe({
