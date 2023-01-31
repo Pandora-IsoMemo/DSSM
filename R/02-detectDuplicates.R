@@ -22,6 +22,7 @@ detectDuplicatesUI <- function(id, label = "Detect Duplicates") {
 #' @param id module id
 #' @param inputData dataframe in which duplicates are searched for
 #' @export
+#' @importFrom IsoAppTools cutAllLongStrings
 detectDuplicatesServer <- function(id, inputData) {
   moduleServer(
     id,
@@ -155,18 +156,23 @@ detectDuplicatesServer <- function(id, inputData) {
         tableData(duplicateDataFrames$inputData)
 
         output$table <- DT::renderDataTable({
-          printTab <- DT::datatable(tableData())
-          if(length(duplicateDataFrames$allDuplicatesRows)>0){
-            printTab %>%
-              DT::formatStyle(userSimilaritySelection()$col,
-                              backgroundColor = DT::styleRow(
-                                duplicateDataFrames$allDuplicatesRows,
-                                "pink")
-              )
-          } else {
-            showNotification(paste0("Note: Couldn't find any duplicates for the current selection."))
-            printTab
-          }
+          printTab <- DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+                                    options = list(
+                                      scrollX = TRUE
+                                    ))
+
+          # Coloring Rows is currently disabled because an error appears for large data (Maximum call stack size exceeded)
+          # if(length(duplicateDataFrames$allDuplicatesRows)>0){
+          #   printTab %>%
+          #     DT::formatStyle(userSimilaritySelection()$col,
+          #                     backgroundColor = DT::styleRow(
+          #                       duplicateDataFrames$allDuplicatesRows,
+          #                       "pink")
+          #     )
+          # } else {
+          #   showNotification(paste0("Note: Couldn't find any duplicates for the current selection."))
+          #   printTab
+          # }
 
         })
       }) %>%
@@ -174,6 +180,7 @@ detectDuplicatesServer <- function(id, inputData) {
 
       # show table when show duplicates is clicked
       observe({
+
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection()
@@ -182,10 +189,10 @@ detectDuplicatesServer <- function(id, inputData) {
         tableData(duplicateDataFrames$allDuplicatesDF)
 
         output$table <- DT::renderDataTable({
-          DT::datatable(tableData()) %>%
-            DT::formatStyle(userSimilaritySelection()$col,
-              backgroundColor = DT::styleRow(1:nrow(tableData()), "pink")
-            )
+          DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+                        options = list(
+                          scrollX = TRUE
+                        ))
         })
       }) %>%
         bindEvent(input[["showDuplicates"]])
@@ -201,7 +208,10 @@ detectDuplicatesServer <- function(id, inputData) {
         tableData(duplicateDataFrames$uniqueData)
 
         output$table <- DT::renderDataTable({
-          DT::datatable(tableData())
+          DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+                        options = list(
+                          scrollX = TRUE
+                        ))
         })
       }) %>%
         bindEvent(input[["showUnique"]])

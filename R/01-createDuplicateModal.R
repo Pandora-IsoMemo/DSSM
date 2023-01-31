@@ -114,7 +114,7 @@ createDuplicateModal <- function(vars, session) {
           12,
           actionButton(
             inputId = ns("highlightDuplicates"),
-            label = "Highlight Duplicated Rows"
+            label = "Show All Rows With duplicateRows Column"
           ),
           actionButton(
             inputId = ns("showDuplicates"),
@@ -122,7 +122,7 @@ createDuplicateModal <- function(vars, session) {
           ),
           actionButton(
             inputId = ns("showUnique"),
-            label = "Show Unique Rows (Keeps One Row For Each Duplicate)"
+            label = "Show Unique Rows (Keeps One Row Per Duplicate)"
           )
         )
       ),
@@ -137,7 +137,15 @@ createDuplicateModal <- function(vars, session) {
       #   )
       # ),
       hr(),
-      DT::dataTableOutput(ns("table"))
+      tags$html(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)")),
+      br(),
+      br(),
+      fluidRow(
+        column(
+          12,
+          DT::dataTableOutput(ns("table"))
+        )
+      )
     )
   )
 }
