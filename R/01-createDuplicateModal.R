@@ -114,15 +114,15 @@ createDuplicateModal <- function(vars, session) {
           12,
           actionButton(
             inputId = ns("highlightDuplicates"),
-            label = "Show All Rows With duplicateRows Column"
+            label = "All Rows + duplicateRows Column"
           ),
           actionButton(
             inputId = ns("showDuplicates"),
-            label = "Show Duplicated Rows Only"
+            label = "Duplicate Rows Only"
           ),
           actionButton(
             inputId = ns("showUnique"),
-            label = "Show Unique Rows (Keeps One Row Per Duplicate)"
+            label = "Unique Rows (Keeps One Row Per Duplicate)"
           )
         )
       ),

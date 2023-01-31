@@ -22,7 +22,6 @@ detectDuplicatesUI <- function(id, label = "Detect Duplicates") {
 #' @param id module id
 #' @param inputData dataframe in which duplicates are searched for
 #' @export
-#' @importFrom IsoAppTools cutAllLongStrings
 detectDuplicatesServer <- function(id, inputData) {
   moduleServer(
     id,
