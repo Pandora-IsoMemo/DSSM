@@ -114,7 +114,7 @@ createDuplicateModal <- function(vars, session) {
           12,
           actionButton(
             inputId = ns("highlightDuplicates"),
-            label = "All Rows + duplicateRows Column"
+            label = "All Rows With duplicateRows Column"
           ),
           actionButton(
             inputId = ns("showDuplicates"),

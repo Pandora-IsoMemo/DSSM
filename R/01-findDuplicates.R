@@ -4,10 +4,19 @@
 #' @param userSimilaritySelection dataframe containing similarity rules for each column to be considered
 findDuplicates <- function(data, userSimilaritySelection) {
   cols <- userSimilaritySelection$cols
-  numericCols <- numericColumns(data)[numericColumns(data) %in% cols]
-  characterCols <- characterColumns(data)[characterColumns(data) %in% cols]
 
   preparedData <- data
+
+  preparedData <- data.frame(lapply(preparedData, function(x){
+    if(is.factor(x)){
+      as.character(x)
+    } else {
+      x
+    }
+  }))
+
+  numericCols <- numericColumns(preparedData)[numericColumns(preparedData) %in% cols]
+  characterCols <- characterColumns(preparedData)[characterColumns(preparedData) %in% cols]
 
   preparedData[numericCols] <- sapply(numericCols, function(x) {
     if (userSimilaritySelection[cols == x, "numericSimilarity"] == "Rounded Match") {
