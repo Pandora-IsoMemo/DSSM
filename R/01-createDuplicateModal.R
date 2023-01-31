@@ -38,9 +38,9 @@ createDuplicateModal <- function(vars, session) {
       #   multiple = TRUE
       # ),
       pickerInput(
-          inputId = ns("variables"),
-          label = "Duplicate Identifikation Columns",
-          choices = vars,
+        inputId = ns("variables"),
+        label = "Duplicate Identifikation Columns",
+        choices = vars,
         options = list(
           `actions-box` = TRUE,
           size = 10,
@@ -84,11 +84,11 @@ createDuplicateModal <- function(vars, session) {
             )
           )
         ),
-          conditionalPanel(
-            condition = "input.numericSimilarity == 'Rounded Match'",
-            ns = ns,
-            column(
-              2,
+        conditionalPanel(
+          condition = "input.numericSimilarity == 'Rounded Match'",
+          ns = ns,
+          column(
+            2,
             numericInput(
               inputId = ns("rounding"),
               label = "Rounding Factor",
@@ -101,11 +101,11 @@ createDuplicateModal <- function(vars, session) {
         column(
           3,
           div(style = "margin-top: 30px;"),
-        checkboxInput(
-          inputId = ns("ignoreEmpty"),
-          label = "Ignore Empty Cells",
-          value = TRUE
-        )
+          checkboxInput(
+            inputId = ns("ignoreEmpty"),
+            label = "Ignore Empty Cells",
+            value = TRUE
+          )
         )
       ),
       hr(),

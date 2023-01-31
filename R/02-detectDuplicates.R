@@ -67,16 +67,16 @@ detectDuplicatesServer <- function(id, inputData) {
         }
         userSimilaritySelection(userData)
 
-        if (length(input[["variables"]]) == 1){
+        if (length(input[["variables"]]) == 1) {
           selected <- input[["variables"]]
           choices <- input[["variables"]]
-          } else if (length(input[["variables"]]) == 0){
-            selected <- ""
-            choices <- ""
-            } else{
-              selected <- input[["selectedVariable"]]
-              choices <- input[["variables"]]
-            }
+        } else if (length(input[["variables"]]) == 0) {
+          selected <- ""
+          choices <- ""
+        } else {
+          selected <- input[["selectedVariable"]]
+          choices <- input[["variables"]]
+        }
 
         updateSelectizeInput(
           session = session,
@@ -86,8 +86,9 @@ detectDuplicatesServer <- function(id, inputData) {
         )
       }) %>%
         bindEvent(input[["variables"]],
-                  ignoreNULL = FALSE,
-                  ignoreInit = TRUE)
+          ignoreNULL = FALSE,
+          ignoreInit = TRUE
+        )
 
       # change inputs if user made a choice before
       observe({
@@ -146,7 +147,6 @@ detectDuplicatesServer <- function(id, inputData) {
 
       # show table when highlight duplicates is clicked
       observe({
-
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection()
@@ -156,9 +156,10 @@ detectDuplicatesServer <- function(id, inputData) {
 
         output$table <- DT::renderDataTable({
           printTab <- DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
-                                    options = list(
-                                      scrollX = TRUE
-                                    ))
+            options = list(
+              scrollX = TRUE
+            )
+          )
 
           # Coloring Rows is currently disabled because an error appears for large data (Maximum call stack size exceeded)
           # if(length(duplicateDataFrames$allDuplicatesRows)>0){
@@ -172,14 +173,12 @@ detectDuplicatesServer <- function(id, inputData) {
           #   showNotification(paste0("Note: Couldn't find any duplicates for the current selection."))
           #   printTab
           # }
-
         })
       }) %>%
         bindEvent(input[["highlightDuplicates"]])
 
       # show table when show duplicates is clicked
       observe({
-
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection()
@@ -189,16 +188,16 @@ detectDuplicatesServer <- function(id, inputData) {
 
         output$table <- DT::renderDataTable({
           DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
-                        options = list(
-                          scrollX = TRUE
-                        ))
+            options = list(
+              scrollX = TRUE
+            )
+          )
         })
       }) %>%
         bindEvent(input[["showDuplicates"]])
 
       # show table when show unique rows is clicked
       observe({
-
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection()
@@ -208,9 +207,10 @@ detectDuplicatesServer <- function(id, inputData) {
 
         output$table <- DT::renderDataTable({
           DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
-                        options = list(
-                          scrollX = TRUE
-                        ))
+            options = list(
+              scrollX = TRUE
+            )
+          )
         })
       }) %>%
         bindEvent(input[["showUnique"]])
@@ -220,7 +220,7 @@ detectDuplicatesServer <- function(id, inputData) {
         inputData(tableData())
         output$table <- NULL
         removeModal()
-        showNotification(paste0("Removed ",nRowsRemoved," rows from dataset!"))
+        showNotification(paste0("Removed ", nRowsRemoved, " rows from dataset!"))
       }) %>%
         bindEvent(input[["transferDuplicates"]])
 

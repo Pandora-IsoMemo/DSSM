@@ -7,8 +7,8 @@ findDuplicates <- function(data, userSimilaritySelection) {
 
   preparedData <- data
 
-  preparedData <- data.frame(lapply(preparedData, function(x){
-    if(is.factor(x)){
+  preparedData <- data.frame(lapply(preparedData, function(x) {
+    if (is.factor(x)) {
       as.character(x)
     } else {
       x
@@ -48,18 +48,19 @@ findDuplicates <- function(data, userSimilaritySelection) {
   rowCheckData <- checkData
   rowCheckData$row <- rownames(rowCheckData)
   duplicateRows <-
-  rowCheckData %>%
-    dplyr::group_by_at(cols) %>%
-    dplyr::summarise(row,
-                     duplicateRows = paste0(row, collapse = ","),
-                     .groups = "drop") %>%
-    dplyr::select(row,duplicateRows)
+    rowCheckData %>%
+    group_by_at(cols) %>%
+    summarise(row,
+      duplicateRows = paste0(row, collapse = ","),
+      .groups = "drop"
+    ) %>%
+    select(row, duplicateRows)
 
   data$duplicateRows <- NULL
   data$row <- row.names(data)
   data <- data %>%
     left_join(duplicateRows, by = "row")
-  data[!data$row %in% as.numeric(allDuplicateRows),"duplicateRows"] <- ""
+  data[!data$row %in% as.numeric(allDuplicateRows), "duplicateRows"] <- ""
   row.names(data) <- data$row
   data$row <- NULL
 
@@ -67,7 +68,7 @@ findDuplicates <- function(data, userSimilaritySelection) {
   uniqueData$row <- row.names(uniqueData)
   uniqueData <- uniqueData %>%
     left_join(duplicateRows, by = "row")
-  uniqueData[!uniqueData$row %in% as.numeric(allDuplicateRows),"duplicateRows"] <- ""
+  uniqueData[!uniqueData$row %in% as.numeric(allDuplicateRows), "duplicateRows"] <- ""
   row.names(uniqueData) <- uniqueData$row
   uniqueData$row <- NULL
 

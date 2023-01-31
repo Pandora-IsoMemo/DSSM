@@ -12,6 +12,7 @@ Imports:
   animation,
   coda,
   colourpicker,
+  dplyr,
   DT (>= 0.4),
   futile.logger,
   jsonlite (>= 1.5),
