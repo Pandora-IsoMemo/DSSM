@@ -31,7 +31,8 @@ centerEstimateUI <- function(id, title = "") {
       width = "100%"
     ),
     conditionalPanel(
-      condition = "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != ''",
+      condition =
+        "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != '' && output.isCenterEstimateMap == true",
       numericInput(
         inputId = ns("decimalPlace"),
         label = "Decimal places for Mean/Error at the Center point",
@@ -77,7 +78,14 @@ centerEstimateServer <-
                    # "Speed" (a map but no meanCenter, sdCenter in the output available),
                    # "Minima/Maxima"
 
+                   output$isCenterEstimateMap <- reactive({
+                     mapType() %in% centerEstimateMaps
+                   })
+                   outputOptions(output, "isCenterEstimateMap", suspendWhenHidden = FALSE)
+
                    observeEvent(list(meanCenter(), sdCenter(), input$decimalPlace), {
+                     # meanCenter(), sdCenter() depend on input$centerX, input$centerY
+                     # -> do not extra observe on input$centerX, input$centerY
                      if (is.na(input$centerY) |
                          is.na(input$centerX) |
                          is.na(input$Radius) |
