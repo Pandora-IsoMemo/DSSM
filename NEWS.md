@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.01.4.1
+
+### Bug Fixes
+- inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
+
 ## MpiIsoApp 23.01.4
 
 ### Updates
