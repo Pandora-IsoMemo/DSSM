@@ -2411,19 +2411,22 @@ addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
 plotTimeIntervals <- function(Model,
                               trange = c(0, 1000),
                               AxisSize = 1,
-                              AxisLSize = 1
+                              AxisLSize = 1,
+                              clusterCol = "Set1"
 ){
   dat <- Model$data
   if(!is.null(dat$cluster)){
+    dat$cluster_color <- colorRampPalette(brewer.pal(8, clusterCol))(max(dat$cluster))[dat$cluster]
     dat$cluster <- factor(dat$cluster)
     g <- ggplot(dat, aes_(~Date, ~cluster)) + theme_light() + coord_cartesian(xlim = trange) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor.x = element_blank(),
             axis.text=element_text(size=12 * AxisLSize),
             axis.title=element_text(size=14 * AxisSize), legend.position = "none") +
-      geom_point(aes_(color = ~ cluster), position = position_dodge(0.3), alpha = 0.3) +
+      geom_point(color=dat$cluster_color, position = position_dodge(0.3), alpha = 0.3) +
       geom_errorbar(
-        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty, color = ~ cluster),
+        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty),
+        color=dat$cluster_color,
         position = position_dodge(0.3), width = 0.1, alpha = 0.3)
     print(g)
   } else {

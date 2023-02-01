@@ -22,6 +22,7 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
+#' @importFrom mclust Mclust
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
 #' @importFrom openxlsx loadWorkbook read.xlsx write.xlsx
 #' @importFrom raster raster getValues terrain writeRaster

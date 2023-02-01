@@ -88,11 +88,15 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          checkboxInput(inputId = ns("kMeans"),
-                        label = "Do k-means clustering",
-                        value = FALSE, width = "100%"),
+          selectizeInput(inputId = ns("clusterMethod"),
+                         label = "Cluster Method (optional):",
+                         choices = c("kmeans","mclust"),
+                         options = list(
+                           placeholder = '',
+                           onInitialize = I('function() { this.setValue(""); }')
+                         )),
           conditionalPanel(
-            condition = "input.kMeans == true",
+            condition = "input.clusterMethod == 'kmeans'",
             ns = ns,
             selectInput(inputId = ns("kMeansAlgo"),
                         label = "K-means algorithm:",
@@ -104,6 +108,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("timeClust"),
                         label = "Cluster time range",
                         min = 0, max = 15000, value = c(1000, 5000), step = 100)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust'",
+            ns = ns,
+            sliderInput(inputId = ns("nClustRange"),
+                        label = "Number of clusters (range)",
+                        value = c(2,10), min = 2, max = 20, step = 1)
           ),
           checkboxInput(inputId = ns("modelUnc"),
                         label = "Include dating uncertainty", value = TRUE),
@@ -554,10 +565,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       CoordType = coordType(), DateOne = input$DateOne,
                       DateTwo = input$DateTwo, DateType = input$DateType,
                       Weighting = input$Weighting,
-                      kMeans = input$kMeans,
+                      clusterMethod = input$clusterMethod,
                       dateUnc = input$dateUnc,
                       kMeansAlgo = input$kMeansAlgo,
                       nClust = input$nClust,
+                      nClustRange = input$nClustRange,
                       clusterTimeRange = input$timeClust,
                       modelUnc = input$modelUnc,
                       restriction = restriction,
@@ -959,6 +971,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
+                            clusterCol = input$clusterCol,
                             ...)
         },
           value = 0,
