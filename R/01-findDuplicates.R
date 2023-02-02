@@ -79,6 +79,17 @@ findDuplicates <- function(data, userSimilaritySelection) {
   row.names(allDuplicatesDF) <- allDuplicatesDF$row
   allDuplicatesDF$row <- NULL
 
+  # relocate duplicate column as first column
+  col_order_data <- c("duplicateRows",names(data)[names(data) != "duplicateRows"])
+  data <- data[, col_order_data]
+
+  col_order_uniqueData <- c("duplicateRows",names(uniqueData)[names(uniqueData) != "duplicateRows"])
+  uniqueData <- uniqueData[, col_order_uniqueData]
+
+  col_order_allDuplicatesDF <- c("duplicateRows",names(allDuplicatesDF)[names(allDuplicatesDF) != "duplicateRows"])
+  allDuplicatesDF <- allDuplicatesDF[, col_order_allDuplicatesDF]
+
+  # return result
   list(
     inputData = data,
     allDuplicatesDF = allDuplicatesDF,
