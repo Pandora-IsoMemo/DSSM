@@ -34,7 +34,7 @@ findDuplicates <- function(data, userSimilaritySelection) {
     }
   })
 
-  checkData <- data.frame(preparedData[, cols], row.names = row.names(preparedData))
+  checkData <- data.frame(preparedData[, cols], row.names = row.names(data))
 
   # check for ignore empty
   allDuplicatesDF <- data[duplicated(checkData) | duplicated(checkData, fromLast = TRUE), ]

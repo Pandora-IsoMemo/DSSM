@@ -154,8 +154,11 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(duplicateDataFrames$inputData)
 
+        printData <- cutAllLongStrings(tableData(), cutAt = 20)
+        rownames(printData) <- rownames(tableData())
+
         output$table <- DT::renderDataTable({
-          printTab <- DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+          printTab <- DT::datatable(printData,
             options = list(
               scrollX = TRUE
             )
@@ -186,8 +189,11 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(duplicateDataFrames$allDuplicatesDF)
 
+        printData <- cutAllLongStrings(tableData(), cutAt = 20)
+        rownames(printData) <- rownames(tableData())
+
         output$table <- DT::renderDataTable({
-          DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+          DT::datatable(printData,
             options = list(
               scrollX = TRUE
             )
@@ -205,8 +211,11 @@ detectDuplicatesServer <- function(id, inputData) {
 
         tableData(duplicateDataFrames$uniqueData)
 
+        printData <- cutAllLongStrings(tableData(), cutAt = 20)
+        rownames(printData) <- rownames(tableData())
+
         output$table <- DT::renderDataTable({
-          DT::datatable(cutAllLongStrings(tableData(), cutAt = 20),
+          DT::datatable(printData,
             options = list(
               scrollX = TRUE
             )
