@@ -3,6 +3,7 @@
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
+#' @importFrom dplyr group_by_at select summarise left_join
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
@@ -11,7 +12,7 @@
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices colorRampPalette chull png pdf tiff svg dev.off recordPlot replayPlot
 #'  cm.colors pdfFonts
-#' @importFrom DataTools importDataUI importDataServer
+#' @importFrom DataTools importDataUI importDataServer cutAllLongStrings
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers

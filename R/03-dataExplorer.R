@@ -100,6 +100,8 @@ dataExplorerUI <- function(id, title = "") {
           step  = 0.01
         ),
         tags$hr(),
+        detectDuplicatesUI(id = ns("detectDuplicates")),
+        tags$hr(),
         downloadButton(ns("saveOptions"), "Save data selection"),
         fileInput(
           ns("optionsFile"),
@@ -186,6 +188,12 @@ dataExplorerServer <- function(id) {
                  isoDataFull <- reactiveVal(NULL)
                  isoData <- reactiveVal(NULL)
                  dataColumns <- reactiveVal(NULL)
+
+                 # detectDuplicates module
+                 detectDuplicatesServer(
+                   id = "detectDuplicates",
+                   inputData = isoDataFull
+                 )
 
                  ## Load Data (isomemo skin) ----
                  observeEvent(input$load, {
