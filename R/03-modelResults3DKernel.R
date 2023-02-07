@@ -406,11 +406,7 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("ncol"),
                         label = "Approximate number of colour levels",
                         min = 4, max = 50, value = 50, step = 2, width = "100%"),
-            conditionalPanel(
-              condition = "input.mapType == 'Map'",
-              ns = ns,
-              centerEstimateUI(ns("centerEstimateParams"))
-            ),
+            centerEstimateUI(ns("centerEstimateParams")),
             tags$hr()
             ),
           checkboxInput(inputId = ns("smoothCols"),

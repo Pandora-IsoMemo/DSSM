@@ -1,9 +1,14 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 23.01.5
+## MpiIsoApp 23.02.1
 
 ### New features
 - A new button "detect duplicates" has been added that opens a pop-up where duplicates can be detected and removed from the dataset.
+
+## Version 23.01.4.1
+
+### Bug Fixes
+- inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
 
 ## MpiIsoApp 23.01.4
 
