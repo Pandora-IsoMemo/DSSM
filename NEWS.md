@@ -1,6 +1,13 @@
 # MpiIsoApp development version
 
-## MpiIsoApp 23.02.1
+## Version 23.02.2
+
+### Updates
+- the _Import Data_ module was now integrated into the modeling tabs _AverageR_, _TimeR_,
+  _SpreadR_, _KernelR_, _KernelTimeR_, and _AssignR_ (#91, PR #98)
+  - applicable when "Upload file" is selected under "Data source" in the left sidebar
+
+## Version 23.02.1
 
 ### New features
 - A new button "detect duplicates" has been added that opens a pop-up where duplicates can be detected and removed from the dataset.
@@ -10,7 +17,7 @@
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
 
-## MpiIsoApp 23.01.4
+## Version 23.01.4
 
 ### Updates
 - when using _Pandora_ skin:
@@ -18,7 +25,7 @@
   - now changes of functionality
   - all redundant code was removed
 
-## MpiIsoApp 23.01.3
+## Version 23.01.3
 
 ### New features
 - when using _Pandora_ skin, in _Import Data_:
@@ -31,7 +38,7 @@
 - fixed bug when importing data with no numeric columns:
   - data was not displayed because no lat/long columns were found
     
-## MpiIsoApp 23.01.2
+## Version 23.01.2
 
 ### New features
 - under Saved/Create Maps tab (#19)
@@ -40,7 +47,7 @@
 
 - fixed sidebars with auto scroll in all tabs (#4)
 
-## MpiIsoApp 23.01.1
+## Version 23.01.1
 
 ### New features
 - interactive map: 
@@ -52,7 +59,7 @@
     - if no column is selected, the factor sets the general point size
   - option to adjust opacity
 
-## MpiIsoApp 22.12.4
+## Version 22.12.4
 
 ### New features
 
@@ -74,7 +81,7 @@
 ### Updates
 - disable accept button(s) by default in _Import Data_
 
-## MpiIsoApp 22.12.3
+## Version 22.12.3
 
 ### Updates
 - _export of plots_ after modelling: hide option to create a time series for
@@ -84,7 +91,7 @@ _Time Course_ plot type (#8)
 - fix naming issue when data contains columns exactly named "latitude" or "longitude"
   - columns will be renamed if coordinate conversion fails
 
-## MpiIsoApp 22.12.2
+## Version 22.12.2
 
 ### Updates
 - add notification if conversion of lng/lat was successful (#67)
@@ -92,12 +99,12 @@ _Time Course_ plot type (#8)
 ### Bug Fixes
 - fix reset of lng/lat columns when switching coord formats
 
-## MpiIsoApp 22.12.1
+## Version 22.12.1
 
 ### Bug Fixes
 - fix export of time plot as time series in TimeR and KernelTimeR (#8)
 
-## MpiIsoApp 22.11.1
+## Version 22.11.1
 
 ### Updates
 
@@ -115,7 +122,7 @@ before, that is, removing a restriction did not reset min/max values) (#27)
 are not implemented for "Time course"
 - debounce inputs for min/max range to prevent re-rendering of the map when typing min/max values 
 
-## MpiIsoApp 22.10.3
+## Version 22.10.3
 
 ### Updates
 - new UI to specify the section of maps of modelling tabs (_AverageR, TimeR, SpreadR, KernelR,
@@ -131,12 +138,12 @@ KernelTimeR, OperatorR, LocateR_)
 ### Bug fixes
 - removes the slow **automatic** updates for inputs of time and zoom (#8)
 
-## MpiIsoApp 22.10.2
+## Version 22.10.2
 
 ### Bug fixes
 - fixing the point radius changing with latitude, now set radius in pixel (#44)
 
-## MpiIsoApp 22.10.1
+## Version 22.10.1
 
 ### New features
 - specify the sheet of an xlsx/xls file in the import dialog
@@ -154,31 +161,31 @@ found (#67)
 equal "decimal degrees" (#62)
 - fix in the removal of points on the interactive map after using filters (#63)
 
-## MpiIsoApp 22.09.3
+## Version 22.09.3
 
 ### New features
 - export a time series of _spatio-temporal-average_ plots in the selected file format condensed
 into a zip file
 
-## MpiIsoApp 22.09.2
+## Version 22.09.2
 
 ### New features
 - option to adjust the format of the axes in time course plots (decimal places and number of labels)
 - option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
 
-## MpiIsoApp 22.09.1
+## Version 22.09.1
 
 ### Enhancements
 - In the _Modelling_ tab under _TimeR_ and _KernelTimeR_: new (numeric) input field for the
 `Time selection` in addition to the slider input `Time selection`
 
-# MpiIsoApp 22.08.2.1
+# Version 22.08.2.1
 
 ## Updates
 
 - text update of the modeling tab for the _pandora / isomemo search app_ (#9)
 
-## MpiIsoApp 22.08.2
+## Version 22.08.2
 
 ### Enhancements
 - when using _Pandora_ skin: updates of the UI in the _Import Data_ pop-up menu (#39)

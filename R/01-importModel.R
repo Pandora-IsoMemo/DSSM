@@ -1,19 +1,3 @@
-readFile <- function(file, type, sep = ",", dec = "."){
-  encTry <- as.character(guess_encoding(file)[1,1])
-
-  tryCatch(
-    switch(
-      type,
-      csv = read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, fileEncoding = encTry),
-      xlsx = convertNumeric(read.xlsx(file))
-    ),
-    error = function(e){
-      warning("Could not read file")
-      FALSE
-    }
-  )
-}
-
 validateImport <- function(data, showModal = FALSE){
   warnings <- character(0)
 
@@ -51,16 +35,4 @@ validateImport <- function(data, showModal = FALSE){
   }
 
   length(warnings) == 0
-}
-convertNumeric <- function(data){
-  suppressWarnings(data.num <- as.data.frame(lapply(1:ncol(data), function(x){
-    y <- as.numeric(data[,x])
-    if(sum(is.na(y)) == sum(is.na(data[,x]))){
-      return(y)
-    } else {
-      return(data[,x])
-    }
-  } )))
-  names(data.num) <- names(data)
-  data.num
 }
