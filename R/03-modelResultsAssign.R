@@ -26,26 +26,9 @@ modelResultsAssignUI <- function(id, title = "") {
         ),
         conditionalPanel(
           condition = "input.dataSource == 'file'",
-          selectInput(ns("fileType"),
-            "File type",
-            choices = c("xlsx", "csv"),
-            selected = "xlsx"
-          ),
-          conditionalPanel(
-            condition = "input.fileType == 'csv'",
-            div(
-              style = "display: inline-block;horizontal-align:top; width: 80px;",
-              textInput(ns("colseparator"), "column separator:", value = ",")
-            ),
-            div(
-              style = "display: inline-block;horizontal-align:top; width: 80px;",
-              textInput(ns("decseparator"), "decimal separator:", value = ".")
-            ),
-            ns = ns
-          ),
-          helpText(
-            "The first row in your file need to contain variable names."
-          ),
+          importDataUI(ns("importData"), "Import Data"),
+          tags$br(),
+          tags$br(),
           radioButtons(
             inputId = ns("CoordType"),
             label = "Coordinate format",
@@ -56,7 +39,6 @@ modelResultsAssignUI <- function(id, title = "") {
             ),
             choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")
           ),
-          fileInput(ns("file"), "Upload file"),
           tags$hr(),
           ns = ns
         ),
@@ -206,32 +188,23 @@ modelResultsAssignUI <- function(id, title = "") {
 #'
 #' @export
 modelResultsAssign <- function(input, output, session, isoData) {
-  fileImport <- reactive({
-    inFile <- input$file
+  importedDat <- importDataServer("importData")
 
-    if (is.null(inFile)) {
-      return(NULL)
-    }
+  fileImport <- reactiveVal(NULL)
+  observe({
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
-    decseparator <- input$decseparator
-    if (decseparator == "" & input$colseparator == ";") decseparator <- ","
-    if (decseparator == "" & input$colseparator == ",") decseparator <- "."
-
-    data <- readFile(
-      inFile$datapath, input$fileType, input$colseparator,
-      decseparator
-    )
-
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE)
 
-    if (!valid) {
-      reset("file")
-      NULL
+    if (!valid){
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
     }
-    else {
-      data
-    }
-  })
+  }) %>% bindEvent(importedDat())
 
   Model <- eventReactive(input$start, ignoreNULL = FALSE, {
     data <- data()
