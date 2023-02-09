@@ -1,19 +1,3 @@
-readFile <- function(file, type, sep = ",", dec = "."){
-  encTry <- as.character(guess_encoding(file)[1,1])
-
-  tryCatch(
-    switch(
-      type,
-      csv = read.csv(file, sep = sep, dec = dec, stringsAsFactors = FALSE, fileEncoding = encTry),
-      xlsx = convertNumeric(read.xlsx(file))
-    ),
-    error = function(e){
-      warning("Could not read file")
-      FALSE
-    }
-  )
-}
-
 validateImport <- function(data, showModal = FALSE){
   warnings <- character(0)
 

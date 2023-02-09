@@ -31,7 +31,6 @@ Imports:
   raster (>= 2.6.7),
   rcarbon (>= 1.4.0),
   RColorBrewer (>= 1.1.2),
-  readr,
   Rfast (>= 2.0.0),
   rgdal,
   rgeos,

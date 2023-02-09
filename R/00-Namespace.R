@@ -27,16 +27,15 @@
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom readr guess_encoding
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
-#' @importFrom shinyjs alert reset runjs useShinyjs
+#' @importFrom shinyjs alert runjs useShinyjs
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dnorm dunif kmeans
 #'  mahalanobis median model.matrix na.exclude na.omit pchisq  pf pnorm predict
-#'  qnorm quantile rbeta residuals rgamma rnorm runif sd setNames var
+#'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head
