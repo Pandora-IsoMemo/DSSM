@@ -4,7 +4,7 @@
 
 ### Updates
 - the _Import Data_ module was now integrated into the modeling tabs _AverageR_, _TimeR_,
-  _SpreadR_, _KernelR_, _KernelTimeR_, and _AssignR_
+  _SpreadR_, _KernelR_, _KernelTimeR_, and _AssignR_ (#91, PR #98)
   - applicable when "Upload file" is selected under "Data source" in the left sidebar
 
 ## Version 23.02.1
