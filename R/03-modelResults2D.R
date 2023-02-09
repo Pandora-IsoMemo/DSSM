@@ -23,29 +23,18 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'file'",
-          selectInput(ns("fileType"),
-                      "File type",
-                      choices = c("xlsx", "csv"),
-                      selected = "xlsx"
-                      ),
-          conditionalPanel(
-            condition = "input.fileType == 'csv'",
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("colseparator"), "column separator:", value = ",")),
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("decseparator"), "decimal separator:", value = ".")),
-            ns = ns
-          ),
-          helpText(
-            "The first row in your file needs to contain variable names."
-          ),
-          radioButtons(inputId = ns("coordType"),
-                       label = "Coordinate format",
-                       choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-                                       "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-                                       "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
-                       choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
-                       fileInput(ns("file"), "Upload file"),
+          importDataUI(ns("importData"), "Import Data"),
+          tags$br(),
+          tags$br(),
+          radioButtons(
+            inputId = ns("coordType"),
+            label = "Coordinate format",
+            choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
+                            "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
+                            "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
+            choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds"),
+            selected = "decimal degrees"
+            ),
           tags$hr(),
           ns = ns
         ),
@@ -881,28 +870,25 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       selected = selectedTextLabel)
   })
 
-  ## Import Data
-  fileImport <- reactive({
-    inFile <- input$file
+  ## Import Data ----
+  importedDat <- importDataServer("importData")
 
-    if (is.null(inFile))
-      return(NULL)
+  fileImport <- reactiveVal(NULL)
 
-    decseparator = input$decseparator
-    if (decseparator == "" & input$colseparator == ";") decseparator <- ","
-    if (decseparator == "" & input$colseparator == ",") decseparator <- "."
+  observe({
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
-    data <- readFile(inFile$datapath, input$fileType, input$colseparator,
-                     decseparator)
-
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE)
 
     if (!valid){
-      reset("file")
-      NULL
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
     }
-    else data
-  })
+  }) %>% bindEvent(importedDat())
 
   dataFun <- reactive({
     req(Model())
@@ -919,8 +905,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return(allData)
     }
   })
-
-
 
   output$pointInput2D <- renderUI(inputGroup2D())
   output$n2D <- reactive(nrow(pointDat2D()))
