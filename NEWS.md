@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.02.3
+
+### Updates
+- Option to set max number of characters to be displayed in the table.
+
 ## Version 23.02.2
 
 ### Updates
