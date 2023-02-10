@@ -84,11 +84,19 @@ createDuplicateModal <- function(vars, session) {
             )
           )
         ),
-        conditionalPanel(
-          condition = "input.numericSimilarity == 'Rounded Match'",
-          ns = ns,
           column(
             4,
+            shinyjs::hidden(
+              textInput(
+                inputId = ns("specificString"),
+                label = "Optional: Duplicated String",
+                value = "",
+                placeholder = "Find duplicates for a specific string"
+              )
+            ),
+            conditionalPanel(
+              condition = "input.numericSimilarity == 'Rounded Match'",
+              ns = ns,
             numericInput(
               inputId = ns("rounding"),
               label = "Rounding Factor",

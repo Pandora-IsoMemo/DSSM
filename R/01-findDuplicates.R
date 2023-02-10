@@ -34,10 +34,15 @@ print(userSimilaritySelection)
       adjustedData <- preparedData[, x]
     }
     if (userSimilaritySelection[cols == x, "ignoreSpaces"]) {
-      gsub(" ","",adjustedData)
-    } else {
-      adjustedData
+      adjustedData <- gsub(" ","",adjustedData)
     }
+    if(userSimilaritySelection[cols == x, "specificString"] != ""){
+      ignore_case <- ifelse(userSimilaritySelection[cols == x, "textSimilarity"] == "Case Insensitive", TRUE, FALSE)
+      containIndex <- grepl(userSimilaritySelection[cols == x, "specificString"], adjustedData, ignore.case = ignore_case)
+      adjustedData <- 1:length(adjustedData)
+      adjustedData[containIndex] <- 0
+    }
+    adjustedData
   })
 
   checkData <- data.frame(preparedData[, cols], row.names = row.names(data))
