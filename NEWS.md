@@ -1,5 +1,12 @@
 # MpiIsoApp development version
 
+## Version 23.02.3
+
+### Updates
+- Option to decide if column with duplicate rows is added
+- Option to ignore spaces during duplicate detection
+- Option to specify a string that is used for duplicate detection
+
 ## Version 23.02.2
 
 ### Updates
