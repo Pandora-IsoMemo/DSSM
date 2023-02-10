@@ -60,7 +60,7 @@ createDuplicateModal <- function(vars, session) {
           )
         ),
         column(
-          3,
+          4,
           shinyjs::hidden(
             selectizeInput(
               inputId = ns("textSimilarity"),
@@ -88,7 +88,7 @@ createDuplicateModal <- function(vars, session) {
           condition = "input.numericSimilarity == 'Rounded Match'",
           ns = ns,
           column(
-            2,
+            4,
             numericInput(
               inputId = ns("rounding"),
               label = "Rounding Factor",
@@ -97,16 +97,28 @@ createDuplicateModal <- function(vars, session) {
               max = 10
             )
           )
-        ),
+        )
+      ),
+      fluidRow(
         column(
-          3,
-          div(style = "margin-top: 30px;"),
+          4,
+          # div(style = "margin-top: 30px;"), # align checkbox with selectizeInput
           checkboxInput(
             inputId = ns("ignoreEmpty"),
             label = "Ignore Empty Cells",
             value = TRUE
           )
-        )
+          ),
+          column(
+            4,
+            shinyjs::hidden(
+              checkboxInput(
+                inputId = ns("ignoreSpaces"),
+                label = "Ignore Spaces",
+                value = FALSE
+              )
+          )
+      )
       ),
       hr(),
       checkboxInput(

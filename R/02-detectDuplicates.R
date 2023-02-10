@@ -34,7 +34,8 @@ detectDuplicatesServer <- function(id, inputData) {
           textSimilarity = NA,
           numericSimilarity = NA,
           rounding = NA,
-          ignoreEmpty = NA
+          ignoreEmpty = NA,
+          ignoreSpaces = NA
         )
       )
 
@@ -61,7 +62,8 @@ detectDuplicatesServer <- function(id, inputData) {
               textSimilarity = "Case Sensitive",
               numericSimilarity = "Exact Match",
               rounding = 0,
-              ignoreEmpty = TRUE
+              ignoreEmpty = TRUE,
+              ignoreSpaces = FALSE
             )
           )
         }
@@ -98,10 +100,12 @@ detectDuplicatesServer <- function(id, inputData) {
 
         if (isNumeric(data[, input[["selectedVariable"]]])) {
           shinyjs::hide(id = "textSimilarity")
+          shinyjs::hide(id = "ignoreSpaces")
           shinyjs::show(id = "numericSimilarity")
         } else {
           shinyjs::hide(id = "numericSimilarity")
           shinyjs::show(id = "textSimilarity")
+          shinyjs::show(id = "ignoreSpaces")
         }
 
         updateSelectizeInput(
@@ -124,6 +128,11 @@ detectDuplicatesServer <- function(id, inputData) {
           inputId = "ignoreEmpty",
           value = userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"]
         )
+        updateCheckboxInput(
+          session = session,
+          inputId = "ignoreSpaces",
+          value = userData[userData$cols == input[["selectedVariable"]], "ignoreSpaces"]
+        )
       }) %>%
         bindEvent(input[["selectedVariable"]])
 
@@ -133,6 +142,7 @@ detectDuplicatesServer <- function(id, inputData) {
         req(!is.null(input[["selectedVariable"]]) && input[["selectedVariable"]] != "")
         userData <- userSimilaritySelection()
         userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"] <- input[["ignoreEmpty"]]
+        userData[userData$cols == input[["selectedVariable"]], "ignoreSpaces"] <- input[["ignoreSpaces"]]
         userData[userData$cols == input[["selectedVariable"]], "textSimilarity"] <- input[["textSimilarity"]]
         userData[userData$cols == input[["selectedVariable"]], "numericSimilarity"] <- input[["numericSimilarity"]]
         userData[userData$cols == input[["selectedVariable"]], "rounding"] <- input[["rounding"]]
@@ -142,7 +152,8 @@ detectDuplicatesServer <- function(id, inputData) {
           input[["textSimilarity"]],
           input[["numericSimilarity"]],
           input[["rounding"]],
-          input[["ignoreEmpty"]]
+          input[["ignoreEmpty"]],
+          input[["ignoreSpaces"]]
         ))
 
       # show table when highlight duplicates is clicked
