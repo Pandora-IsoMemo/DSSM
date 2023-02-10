@@ -149,7 +149,8 @@ detectDuplicatesServer <- function(id, inputData) {
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$inputData)
@@ -184,7 +185,8 @@ detectDuplicatesServer <- function(id, inputData) {
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$allDuplicatesDF)
@@ -206,7 +208,8 @@ detectDuplicatesServer <- function(id, inputData) {
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$uniqueData)

@@ -109,12 +109,17 @@ createDuplicateModal <- function(vars, session) {
         )
       ),
       hr(),
+      checkboxInput(
+        inputId = ns("addColumn"),
+        label = "Add Column With Duplicate Row Indices",
+        value = TRUE
+      ),
       fluidRow(
         column(
           12,
           actionButton(
             inputId = ns("highlightDuplicates"),
-            label = "All Rows With duplicateRows Column"
+            label = "All Rows"
           ),
           actionButton(
             inputId = ns("showDuplicates"),
