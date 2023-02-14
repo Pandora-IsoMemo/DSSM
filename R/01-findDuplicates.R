@@ -5,7 +5,7 @@
 #' @param addColumn logical should a column with duplicate row indices be added
 findDuplicates <- function(data, userSimilaritySelection, addColumn) {
   cols <- userSimilaritySelection$cols
-print(userSimilaritySelection)
+
   preparedData <- data
 
   preparedData <- data.frame(lapply(preparedData, function(x) {
@@ -35,6 +35,7 @@ print(userSimilaritySelection)
     }
     if (userSimilaritySelection[cols == x, "ignoreSpaces"]) {
       adjustedData <- gsub(" ","",adjustedData)
+      userSimilaritySelection[cols == x, "specificString"] <- gsub(" ","",userSimilaritySelection[cols == x, "specificString"])
     }
     if(userSimilaritySelection[cols == x, "specificString"] != ""){
       ignore_case <- ifelse(userSimilaritySelection[cols == x, "textSimilarity"] == "Case Insensitive", TRUE, FALSE)
