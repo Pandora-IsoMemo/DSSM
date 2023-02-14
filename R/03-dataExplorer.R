@@ -560,7 +560,18 @@ dataExplorerServer <- function(id) {
                      "Please select a database in the sidebar panel."
                    ))
                    if(!is.na(input[["maxCharLength"]])){
-                     tabData <- cutAllLongStrings(isoDataFull(), cutAt = input[["maxCharLength"]])
+                     # convert factor to character just for table display
+                     tabData <- data.frame(lapply(isoDataFull(), function(x) {
+                       if (is.factor(x)) {
+                         as.character(x)
+                       } else {
+                         x
+                       }
+                     }))
+                     # cut long strings
+                     tabData <- cutAllLongStrings(tabData, cutAt = input[["maxCharLength"]])
+                     # use uncut column names
+                     names(tabData) <- names(isoDataFull())
                    } else {
                      tabData <- isoDataFull()
                    }
