@@ -28,7 +28,7 @@ createDuplicateModal <- function(vars, session) {
                 You can also enter negative numbers, which will result in rounding to the power of ten, e.g. the value -2 rounds to the nearest hundred.<br><br>
                 For text columns you can choose between 'Case Sensitive', where a distinction is made between upper and lower case letters and
                 'Case Insensitive', where no distinction is made. Furthermore you have the option to ignore empty cells and spaces.
-                Optional you can specify a specific string. If you do so, rows that contain this string in the selected column are marked as duplicate.
+                Optionally, you can specify a specific string. If you do so, rows that contain this string in the selected column are marked as duplicate.
                 By default, the most strict method is used for the selected columns, e.g. Exact Match (no rounding) and Case Sensitive.<br><br>
                 You then have the option to display the duplicates and/or remove them from the dataset."),
       hr(),
