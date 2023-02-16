@@ -30,14 +30,17 @@ test_that("findDuplicates", {
   userSimilaritySelection <- data.frame(
     cols = c("id1"),
     textSimilarity = "Case Sensitive",
+    specificString = "",
     numericSimilarity = NA,
     rounding = NA,
-    ignoreEmpty = TRUE
+    ignoreEmpty = TRUE,
+    ignoreSpaces = FALSE
   )
 
   findDuplicatesResult <- findDuplicates(
     data = testdata,
-    userSimilaritySelection = userSimilaritySelection
+    userSimilaritySelection = userSimilaritySelection,
+    addColumn = TRUE
   )
 
   expect_equal(length(findDuplicatesResult), 4)
@@ -52,14 +55,17 @@ test_that("findDuplicates", {
   userSimilaritySelection <- data.frame(
     cols = c("id4"),
     textSimilarity = NA,
+    specificString = "",
     numericSimilarity = "Rounded Match",
     rounding = 1,
-    ignoreEmpty = FALSE
+    ignoreEmpty = FALSE,
+    ignoreSpaces = FALSE
   )
 
   findDuplicatesResult <- findDuplicates(
     data = testdata,
-    userSimilaritySelection = userSimilaritySelection
+    userSimilaritySelection = userSimilaritySelection,
+    addColumn = TRUE
   )
 
   expect_equal(length(findDuplicatesResult), 4)
