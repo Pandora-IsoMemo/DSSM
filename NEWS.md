@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.02.4
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: option to use GPT3 for creation of SQL queries
+
 ## Version 23.02.3
 
 ### Updates
