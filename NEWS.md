@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.03.1
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: confirm using GPT3 before option to upload a key
+
 ## Version 23.02.4
 
 ### Updates
