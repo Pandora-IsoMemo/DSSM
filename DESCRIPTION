@@ -1,5 +1,6 @@
 Package: MpiIsoApp
 Title: Pandora & IsoMemo spatiotemporal modeling
+Version: 23.03.2
 Version: 23.03.1
 Author: INWT Statistics GmbH
 Maintainer: INWT <marcus.gross@inwt-statistics.de>
@@ -22,6 +23,7 @@ Imports:
   geometry (>= 0.4.0),
   ggplot2,
   grDevices (>= 3.4.4),
+  DataTools (>= 23.02.6),
   ks (>= 1.0.0),
   leaflet (>= 1.1.0),
   magrittr (>= 1.5),
