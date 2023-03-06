@@ -1,9 +1,26 @@
 # MpiIsoApp development version
 
-## Version 23.02.3
+## Version 23.03.2
 
 ### Updates
 - Option to set max number of characters to be displayed in the table.
+
+## Version 23.03.1
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: confirm using GPT3 before option to upload a key
+
+## Version 23.02.4
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: option to use GPT3 for creation of SQL queries
+
+## Version 23.02.3
+
+### Updates
+- Option to decide if column with duplicate rows is added
+- Option to ignore spaces during duplicate detection
+- Option to specify a string that is used for duplicate detection
 
 ## Version 23.02.2
 

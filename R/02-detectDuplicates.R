@@ -32,9 +32,11 @@ detectDuplicatesServer <- function(id, inputData) {
         data.frame(
           cols = NA,
           textSimilarity = NA,
+          specificString = "",
           numericSimilarity = NA,
           rounding = NA,
-          ignoreEmpty = NA
+          ignoreEmpty = NA,
+          ignoreSpaces = NA
         )
       )
 
@@ -59,9 +61,11 @@ detectDuplicatesServer <- function(id, inputData) {
             data.frame(
               cols = i,
               textSimilarity = "Case Sensitive",
+              specificString = "",
               numericSimilarity = "Exact Match",
               rounding = 0,
-              ignoreEmpty = TRUE
+              ignoreEmpty = TRUE,
+              ignoreSpaces = FALSE
             )
           )
         }
@@ -98,16 +102,25 @@ detectDuplicatesServer <- function(id, inputData) {
 
         if (isNumeric(data[, input[["selectedVariable"]]])) {
           shinyjs::hide(id = "textSimilarity")
+          shinyjs::hide(id = "ignoreSpaces")
+          shinyjs::hide(id = "specificString")
           shinyjs::show(id = "numericSimilarity")
         } else {
           shinyjs::hide(id = "numericSimilarity")
           shinyjs::show(id = "textSimilarity")
+          shinyjs::show(id = "ignoreSpaces")
+          shinyjs::show(id = "specificString")
         }
 
         updateSelectizeInput(
           session = session,
           inputId = "textSimilarity",
           selected = userData[userData$cols == input[["selectedVariable"]], "textSimilarity"]
+        )
+        updateTextInput(
+          session = session,
+          inputId = "specificString",
+          value = userData[userData$cols == input[["selectedVariable"]], "specificString"]
         )
         updateSelectizeInput(
           session = session,
@@ -124,6 +137,11 @@ detectDuplicatesServer <- function(id, inputData) {
           inputId = "ignoreEmpty",
           value = userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"]
         )
+        updateCheckboxInput(
+          session = session,
+          inputId = "ignoreSpaces",
+          value = userData[userData$cols == input[["selectedVariable"]], "ignoreSpaces"]
+        )
       }) %>%
         bindEvent(input[["selectedVariable"]])
 
@@ -133,23 +151,28 @@ detectDuplicatesServer <- function(id, inputData) {
         req(!is.null(input[["selectedVariable"]]) && input[["selectedVariable"]] != "")
         userData <- userSimilaritySelection()
         userData[userData$cols == input[["selectedVariable"]], "ignoreEmpty"] <- input[["ignoreEmpty"]]
+        userData[userData$cols == input[["selectedVariable"]], "ignoreSpaces"] <- input[["ignoreSpaces"]]
         userData[userData$cols == input[["selectedVariable"]], "textSimilarity"] <- input[["textSimilarity"]]
+        userData[userData$cols == input[["selectedVariable"]], "specificString"] <- input[["specificString"]]
         userData[userData$cols == input[["selectedVariable"]], "numericSimilarity"] <- input[["numericSimilarity"]]
         userData[userData$cols == input[["selectedVariable"]], "rounding"] <- input[["rounding"]]
         userSimilaritySelection(userData)
       }) %>%
         bindEvent(c(
           input[["textSimilarity"]],
+          input[["specificString"]],
           input[["numericSimilarity"]],
           input[["rounding"]],
-          input[["ignoreEmpty"]]
+          input[["ignoreEmpty"]],
+          input[["ignoreSpaces"]]
         ))
 
       # show table when highlight duplicates is clicked
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$inputData)
@@ -184,7 +207,8 @@ detectDuplicatesServer <- function(id, inputData) {
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$allDuplicatesDF)
@@ -206,7 +230,8 @@ detectDuplicatesServer <- function(id, inputData) {
       observe({
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
-          userSimilaritySelection = userSimilaritySelection()
+          userSimilaritySelection = userSimilaritySelection(),
+          addColumn = input[["addColumn"]]
         )
 
         tableData(duplicateDataFrames$uniqueData)

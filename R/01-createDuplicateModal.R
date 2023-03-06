@@ -25,9 +25,10 @@ createDuplicateModal <- function(vars, session) {
                 For this reason, you can specify a rounding factor if you have selected 'Rounded Match'.
                 A value of 2, for example, means that the values are rounded to 2 decimal places before being checked for equality.
                 A value of 0 means that the values are rounded to whole numbers.
-                You can also enter negative numbers, which will result in rounding to the power of ten, e.g. the value -2 rounds to the nearest hundred.
+                You can also enter negative numbers, which will result in rounding to the power of ten, e.g. the value -2 rounds to the nearest hundred.<br><br>
                 For text columns you can choose between 'Case Sensitive', where a distinction is made between upper and lower case letters and
-                'Case Insensitive', where no distinction is made.
+                'Case Insensitive', where no distinction is made. Furthermore you have the option to ignore empty cells and spaces.
+                Optionally, you can specify a specific string. If you do so, rows that contain this string in the selected column are marked as duplicate.
                 By default, the most strict method is used for the selected columns, e.g. Exact Match (no rounding) and Case Sensitive.<br><br>
                 You then have the option to display the duplicates and/or remove them from the dataset."),
       hr(),
@@ -60,7 +61,7 @@ createDuplicateModal <- function(vars, session) {
           )
         ),
         column(
-          3,
+          4,
           shinyjs::hidden(
             selectizeInput(
               inputId = ns("textSimilarity"),
@@ -84,11 +85,19 @@ createDuplicateModal <- function(vars, session) {
             )
           )
         ),
-        conditionalPanel(
-          condition = "input.numericSimilarity == 'Rounded Match'",
-          ns = ns,
           column(
-            2,
+            4,
+            shinyjs::hidden(
+              textInput(
+                inputId = ns("specificString"),
+                label = "Optional: Duplicated String",
+                value = "",
+                placeholder = "Find duplicates for a specific string"
+              )
+            ),
+            conditionalPanel(
+              condition = "input.numericSimilarity == 'Rounded Match'",
+              ns = ns,
             numericInput(
               inputId = ns("rounding"),
               label = "Rounding Factor",
@@ -97,24 +106,41 @@ createDuplicateModal <- function(vars, session) {
               max = 10
             )
           )
-        ),
+        )
+      ),
+      fluidRow(
         column(
-          3,
-          div(style = "margin-top: 30px;"),
+          4,
+          # div(style = "margin-top: 30px;"), # align checkbox with selectizeInput
           checkboxInput(
             inputId = ns("ignoreEmpty"),
             label = "Ignore Empty Cells",
             value = TRUE
           )
-        )
+          ),
+          column(
+            4,
+            shinyjs::hidden(
+              checkboxInput(
+                inputId = ns("ignoreSpaces"),
+                label = "Ignore Spaces",
+                value = FALSE
+              )
+          )
+      )
       ),
       hr(),
+      checkboxInput(
+        inputId = ns("addColumn"),
+        label = "Add Column With Duplicate Row Indices",
+        value = TRUE
+      ),
       fluidRow(
         column(
           12,
           actionButton(
             inputId = ns("highlightDuplicates"),
-            label = "All Rows With duplicateRows Column"
+            label = "All Rows"
           ),
           actionButton(
             inputId = ns("showDuplicates"),
