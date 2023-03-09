@@ -1,5 +1,20 @@
 # MpiIsoApp development version
 
+## Version 23.03.2
+
+### Updates
+- Option to set max number of characters to be displayed in the table.
+
+## Version 23.03.1
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: confirm using GPT3 before option to upload a key
+
+## Version 23.02.4
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: option to use GPT3 for creation of SQL queries
+
 ## Version 23.02.3
 
 ### Updates
@@ -23,7 +38,7 @@
 
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
-
+m
 ## Version 23.01.4
 
 ### Updates
