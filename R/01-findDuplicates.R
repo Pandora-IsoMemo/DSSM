@@ -3,7 +3,8 @@
 #' @param data dataframe in which duplicates are searched for
 #' @param userSimilaritySelection dataframe containing similarity rules for each column to be considered
 #' @param addColumn logical should a column with duplicate row indices be added
-findDuplicates <- function(data, userSimilaritySelection, addColumn) {
+#' @param keepFirst logical keep first (TRUE) or last (FALSE) duplicate row
+findDuplicates <- function(data, userSimilaritySelection, addColumn, keepFirst) {
   cols <- userSimilaritySelection$cols
 
   preparedData <- data
@@ -54,7 +55,11 @@ findDuplicates <- function(data, userSimilaritySelection, addColumn) {
   allDuplicatesDF <- allDuplicatesDF[as.vector(keepNotEmpty), ]
 
   allDuplicateRows <- rownames(allDuplicatesDF)
-  uniqueData <- data[!duplicated(checkData), ]
+  if(keepFirst){
+    uniqueData <- data[!duplicated(checkData), ]
+  } else {
+    uniqueData <- data[!duplicated(checkData, fromLast = TRUE), ]
+  }
 
   if(addColumn){
   # add column with duplicate rows
