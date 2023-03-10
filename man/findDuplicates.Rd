@@ -4,7 +4,7 @@
 \alias{findDuplicates}
 \title{Finds duplicates in data using user specified similarity rules}
 \usage{
-findDuplicates(data, userSimilaritySelection, addColumn)
+findDuplicates(data, userSimilaritySelection, addColumn, keepFirst)
 }
 \arguments{
 \item{data}{dataframe in which duplicates are searched for}
@@ -12,6 +12,8 @@ findDuplicates(data, userSimilaritySelection, addColumn)
 \item{userSimilaritySelection}{dataframe containing similarity rules for each column to be considered}
 
 \item{addColumn}{logical should a column with duplicate row indices be added}
+
+\item{keepFirst}{logical keep first (TRUE) or last (FALSE) duplicate row}
 }
 \description{
 Finds duplicates in data using user specified similarity rules
