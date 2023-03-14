@@ -172,7 +172,8 @@ detectDuplicatesServer <- function(id, inputData) {
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection(),
-          addColumn = input[["addColumn"]]
+          addColumn = input[["addColumn"]],
+          keepFirst = ifelse(input[["keepFirstOrLast"]] == "Keep First Duplicate Row", TRUE, FALSE)
         )
 
         tableData(duplicateDataFrames$inputData)
@@ -208,7 +209,8 @@ detectDuplicatesServer <- function(id, inputData) {
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection(),
-          addColumn = input[["addColumn"]]
+          addColumn = input[["addColumn"]],
+          keepFirst = ifelse(input[["keepFirstOrLast"]] == "Keep First Duplicate Row", TRUE, FALSE)
         )
 
         tableData(duplicateDataFrames$allDuplicatesDF)
@@ -231,7 +233,8 @@ detectDuplicatesServer <- function(id, inputData) {
         duplicateDataFrames <- findDuplicates(
           data = inputData(),
           userSimilaritySelection = userSimilaritySelection(),
-          addColumn = input[["addColumn"]]
+          addColumn = input[["addColumn"]],
+          keepFirst = ifelse(input[["keepFirstOrLast"]] == "Keep First Duplicate Row", TRUE, FALSE)
         )
 
         tableData(duplicateDataFrames$uniqueData)

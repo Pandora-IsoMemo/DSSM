@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.03.3
+
+### Updates
+Option to decide whether to keep the first or last duplicate row.
+
 ## Version 23.03.2
 
 ### Updates
@@ -38,7 +43,6 @@
 
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
-
 ## Version 23.01.4
 
 ### Updates

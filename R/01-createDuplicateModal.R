@@ -130,6 +130,15 @@ createDuplicateModal <- function(vars, session) {
       )
       ),
       hr(),
+      selectizeInput(
+        inputId = ns("keepFirstOrLast"),
+        label = "Unique Rows: Keep First or Last Row",
+        choices = c(
+          "Keep First Duplicate Row",
+          "Keep Last Duplicate Row"
+        ),
+        selected = "Keep First Duplicate Row"
+      ),
       checkboxInput(
         inputId = ns("addColumn"),
         label = "Add Column With Duplicate Row Indices",
