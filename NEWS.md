@@ -43,7 +43,6 @@ Option to decide whether to keep the first or last duplicate row.
 
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
-m
 ## Version 23.01.4
 
 ### Updates
