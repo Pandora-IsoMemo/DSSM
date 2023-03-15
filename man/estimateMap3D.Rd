@@ -12,6 +12,7 @@ estimateMap3D(
   Latitude,
   DateOne,
   DateTwo,
+  IndependentType = "numeric",
   Site = "",
   DateType = "Interval",
   dateUnc = "uniform",
@@ -48,6 +49,8 @@ estimateMap3D(
 \item{DateOne}{character: name of date variable 1 (lower interval point / mean / single point)}
 
 \item{DateTwo}{character: name of date variable 2 (upper interval point / sd / )}
+
+\item{IndependentType}{character: type ("numeric" or "categorical") of independent variable}
 
 \item{Site}{character: name of site variable (optional)}
 

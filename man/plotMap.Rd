@@ -6,6 +6,7 @@
 \usage{
 plotMap(
   model,
+  IndSelect = NULL,
   estType = "Mean",
   estQuantile = 0.9,
   points = TRUE,
@@ -71,6 +72,8 @@ plotMap(
 \arguments{
 \item{model}{return object of spatial or spread model
 from estimateMap() or estimateMapSpread() functions}
+
+\item{IndSelect}{for categorical model: selected category}
 
 \item{estType}{one of "Mean", "SE" and "Quantile". defaults to "Mean"}
 

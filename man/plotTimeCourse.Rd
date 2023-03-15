@@ -6,6 +6,7 @@
 \usage{
 plotTimeCourse(
   model,
+  IndSelect = NULL,
   independent = "",
   trange = range(model$data$Date),
   resolution = 500,
@@ -25,6 +26,8 @@ plotTimeCourse(
 }
 \arguments{
 \item{model}{return object of a spatio-temporal model from estimateMap3D() function}
+
+\item{IndSelect}{for categorical model: selected category}
 
 \item{independent}{name of independent variable shown in plot}
 
