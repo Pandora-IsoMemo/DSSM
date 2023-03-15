@@ -4,6 +4,15 @@
 
 ### Updates
 - Categorical target/dependent variable option for AverageR/TimeR models. This follows a 1vsall approach using logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable during Gibbs-sampling (https://arxiv.org/abs/1205.0310)
+## Version 23.03.3
+
+### Updates
+Option to decide whether to keep the first or last duplicate row.
+
+## Version 23.03.2
+
+### Updates
+- Option to set max number of characters to be displayed in the table.
 
 ## Version 23.03.1
 
@@ -38,7 +47,6 @@
 
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
-
 ## Version 23.01.4
 
 ### Updates

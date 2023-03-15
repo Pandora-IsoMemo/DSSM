@@ -40,7 +40,8 @@ test_that("findDuplicates", {
   findDuplicatesResult <- findDuplicates(
     data = testdata,
     userSimilaritySelection = userSimilaritySelection,
-    addColumn = TRUE
+    addColumn = TRUE,
+    keepFirst = TRUE
   )
 
   expect_equal(length(findDuplicatesResult), 4)
@@ -65,7 +66,8 @@ test_that("findDuplicates", {
   findDuplicatesResult <- findDuplicates(
     data = testdata,
     userSimilaritySelection = userSimilaritySelection,
-    addColumn = TRUE
+    addColumn = TRUE,
+    keepFirst = TRUE
   )
 
   expect_equal(length(findDuplicatesResult), 4)
