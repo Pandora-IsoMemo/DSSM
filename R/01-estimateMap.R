@@ -1153,7 +1153,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
   lam <- 1E-5
   beta <- rep(0, ncol(XX))
 
-  if(sdVar){
+  if(sdVar & IndependentType == "numeric"){
     sigmaSigma <- rep(1, nrow(data))
     betaSigma<- rep(0, ncol(XXV))
     lamSigma <- 1E-5
@@ -1284,7 +1284,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
         shape = lam.mu + M / 2,
         scale = (lam.sigma + 0.5 * crossprod(beta, P) %*% beta) ^ - 1
       ) * smoothConst
-      if(sdVar){
+      if(sdVar & IndependentType == "numeric"){
         lamSigma <<- rgamma(
           1,
           shape = lam.mu + MV / 2,
@@ -1334,7 +1334,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
   # #Vektor der tatsaechlich benutzten Beobachtungen
   # usedsamples <- seq(from = burnin, to = iter, by = every)
   if(IndependentType == "numeric"){
-  if(sdVar){
+  if(sdVar & IndependentType == "numeric"){
     seTotal = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
       (XX %*% betamc[x, ]) * sRe + mRe), 1, var) +
         rowMeans(sapply(1:length(usedsamples), function(x)

@@ -882,11 +882,15 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observe({
     req(Model())
-    if(Model()$IndependentType != "numeric"){
+    if(class(Model()) != "character" && Model()$IndependentType != "numeric"){
       shinyjs::show(id = "IndSelect")
+      shinyjs::hide(id = "sdVar")
+
       updateSelectInput(session, "IndSelect", choices = names(Model()$model))
     } else {
       shinyjs::hide(id = "IndSelect")
+      shinyjs::show(id = "sdVar")
+
     }
   })
   ## Import Data ----
