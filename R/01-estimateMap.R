@@ -678,6 +678,7 @@ estimateMapSpreadWrapper <- function(data, input) {
 #'
 #' @param data data.frame: data
 #' @param independent character: name of independent variable
+#' @param IndependentType character: type ("numeric" or "categorical") of independent variable
 #' @param Longitude character: name of longitude variable
 #' @param Latitude character: name of latitude variable
 #' @param Site character: name of site variable (optional)
@@ -722,6 +723,7 @@ estimateMap3D <- function(data,
                           Latitude,
                           DateOne,
                           DateTwo,
+                          IndependentType = "numeric",
                           Site = "",
                           DateType = "Interval",
                           dateUnc = "uniform",
@@ -752,7 +754,7 @@ estimateMap3D <- function(data,
 
   if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
-  if (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) return("non-numeric independent variable")
+  if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
@@ -856,7 +858,7 @@ estimateMap3D <- function(data,
   data$Longitude <- data[, Longitude]
   data$Latitude <- data[, Latitude]
 
-  if(outlierD == TRUE){
+  if(outlierD == TRUE & IndependentType == "numeric"){
     moD <- mean(data[, independent], na.rm = TRUE)
     soD <- sd(data[, independent], na.rm = TRUE)
     data <- data[data[, independent] >= moD - outlierValueD * soD, ]
@@ -920,45 +922,77 @@ estimateMap3D <- function(data,
   }
 
   if (Bayes == FALSE){
-    if(length(unique(data2$Site)) < nrow(data2)){
-      model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
-                        random = list(Site = ~ 1), data = data2), silent = TRUE)
-      if(!is.null(data2$independentUncertainty)){
-        weights <- pmax(1E-7,pmax(data2$independentUncertainty ^ 2, (data2$independentUncertainty ^ 2 + sd(residuals(model$gam)) ^ 2 - mean(data2$independentUncertainty ^ 2 ))))
-        model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
-                          random = list(Site = ~ 1), data = data2, weights = weights), silent = TRUE)
-      }
-    } else{
-      model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
-                        data = data2), silent = TRUE)
-      if(!is.null(data2$independentUncertainty)){
-        weights <- pmax(1E-7,pmax(data2$independentUncertainty ^ 2, (data2$independentUncertainty ^ 2 + sd(residuals(model$gam)) ^ 2 - mean(data2$independentUncertainty ^ 2 ))))
-        model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
-                          data = data2, weights = weights), silent = TRUE)
-      }
-    }
-    if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
+    #outlier
     sc <- NULL
     scV <- NULL
-    if(outlier == TRUE){
-      data2 <- dataOrg[as.numeric(rownames(data2)[which(abs(scale(residuals(model$lme))) < outlierValue)]), ]
-      return(list(model = model, data = data2, sc = sc, independent = independent))
+    if(IndependentType == "numeric"){
+      fm = "gaussian"
+      model <- estimateModel3D(data2, fm, independent, splineExpr)
+      if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
+      if(outlier == TRUE){
+        data2 <- dataOrg[as.numeric(rownames(data2)[which(abs(scale(residuals(model$lme))) < outlierValue)]), ]
+        return(list(model = model, data = data2, sc = sc, scV = scV, independent = independent, IndependentType = IndependentType))
+      }
+      predRange <- predict(model$gam, se.fit = TRUE)
+      model$range <- list(mean = range(predRange$fit), se = range(predRange$se.fit),
+                          seTotal = sqrt(range(var(residuals(model$gam)) + max(predRange$se.fit)^2)))
+    } else {
+      fm = "binomial"
+      dummy_matrix <- model.matrix(~ . -1, data = data2[,independent, drop = FALSE])
+      colnames(dummy_matrix) <- sapply(strsplit(colnames(dummy_matrix), split = independent), function(x) x[2])
+      data2 <- cbind(data2, dummy_matrix)
+      model <- lapply(colnames(dummy_matrix), function(x){
+        model <- estimateModel3D(data2, fm, x, splineExpr)
+        if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
+        if(outlier == TRUE){
+          data2 <- dataOrg[as.numeric(rownames(data2)[which(abs(scale(residuals(model$lme))) < outlierValue)]), ]
+          return(list(model = model, data = data2, sc = sc, scV = scV, independent = independent, IndependentType = IndependentType))
+        }
+        predRange <- predict(model$gam, se.fit = TRUE)
+        model$range <- list(mean = range(predRange$fit), se = range(predRange$se.fit),
+                            seTotal = sqrt(range(var(residuals(model$gam)) + max(predRange$se.fit)^2)))
+        model
+      })
+      names(model) <- colnames(dummy_matrix)
     }
-    predRange <- predict(model$gam, se.fit = TRUE)
-    model$range <- list(mean = range(predRange$fit), se = range(predRange$se.fit),
-                        seTotal = sqrt(range(var(residuals(model$gam)) + max(predRange$se.fit)^2)))
-  } else {
-    model <- try(modelLocalTempAvgMC(data = data2, K = K, KT = KT, iter = iter,
+    } else {
+      if(IndependentType == "numeric"){
+      model <- try(modelLocalTempAvgMC(data = data2, K = K, KT = KT, iter = iter,
                                      burnin = burnin, nChains = nChains,
                                      independent = independent,
                                      smoothConst = smoothConst,
                                      penalty = penalty, splineType = splineType,
                                      sdVar = sdVar, dateUnc = dateUnc, thinning = thinning), silent = TRUE)
     if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
-    return(list(model = model, data = data, sc = model$sc, scV = model$scV, independent = independent,
-                mRe = model$mRe, sRe = model$sRe, nChains = nChains))
+      sRe = model$sRe
+      mRe = model$mRe
+      sc = model$sc
+      scV = model$scV
+
+      } else {
+        dummy_matrix <- model.matrix(~ . -1, data = data2[,independent, drop = FALSE])
+        colnames(dummy_matrix) <- sapply(strsplit(colnames(dummy_matrix), split = independent), function(x) x[2])
+        data2 <- cbind(data2, dummy_matrix)
+        model <- lapply(colnames(dummy_matrix), function(x){
+          model <- try(modelLocalTempAvgMC(data = data2, K = K, KT = KT, iter = iter,
+                                           burnin = burnin, nChains = nChains,
+                                           independent = x,
+                                           smoothConst = smoothConst,
+                                           penalty = penalty, splineType = splineType,
+                                           sdVar = sdVar, dateUnc = dateUnc, thinning = thinning), silent = TRUE)
+          if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
+          model
+        })
+        names(model) <- colnames(dummy_matrix)
+        sRe = 1
+        mRe = 0
+        sc = model[[1]]$sc
+        scV = model[[1]]$scV
+      }
+    return(list(model = model, data = data, sc = sc, scV = scV, independent = independent,
+                mRe = mRe, sRe = sRe, nChains = nChains, IndependentType = IndependentType))
   }
-  return(list(model = model, data = data, sc = sc, scV = scV, independent = independent, nChains = nChains))
+  return(list(model = model, data = data, sc = sc, scV = scV, independent = independent, nChains = nChains, IndependentType = IndependentType))
 }
 
 estimateMap3DWrapper <- function(data, input) {
@@ -987,6 +1021,7 @@ estimateMap3DWrapper <- function(data, input) {
 
         data <- estimateMap3D(data = data, Bayes = FALSE, independent = input$Independent,
                             independentUncertainty = input$IndependentUnc,
+                            IndependentType = input$IndependentType,
                             Longitude = input$Longitude, Latitude = input$Latitude,
                             Site = input$Site, CoordType = input$coordType,
                             iter = input$Iter, burnin = input$burnin,
@@ -1016,6 +1051,7 @@ estimateMap3DWrapper <- function(data, input) {
     withProgress(
       model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$Independent,
                     independentUncertainty = input$IndependentUnc,
+                    IndependentType = input$IndependentType,
                     Longitude = input$Longitude, Latitude = input$Latitude,
                     Site = input$Site, CoordType = input$coordType,
                     iter = input$Iter, burnin = input$burnin,
@@ -1036,6 +1072,7 @@ estimateMap3DWrapper <- function(data, input) {
   } else {
     model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$Independent,
                   independentUncertainty = input$IndependentUnc,
+                  IndependentType = input$IndependentType,
                   Longitude = input$Longitude, Latitude = input$Latitude,
                   Site = input$Site, CoordType = input$coordType,
                   iter = input$Iter, burnin = input$burnin,
@@ -1360,12 +1397,13 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
 
 
 modelLocalTempAvgMC <- function(data, K, KT, iter, burnin, independent,
-                                smoothConst, penalty, dateUnc = "uniform",
+                                smoothConst, IndependentType = "numeric", penalty, dateUnc = "uniform",
                                 splineType = 1, sdVar = FALSE, nChains = 1, thinning = thinning){
   ret <- lapply(1:nChains, function(x){
     modelLocalTempAvg(data = data, K = K, KT = KT, iter = iter,
                       burnin = burnin, independent = independent,
                   smoothConst = smoothConst,
+                  IndependentType = IndependentType,
                   penalty = penalty, dateUnc = dateUnc,
                   splineType = splineType, sdVar = sdVar,
                   nChains = x, thinning = thinning)
@@ -1379,9 +1417,9 @@ modelLocalTempAvgMC <- function(data, K, KT, iter, burnin, independent,
 }
 
 modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
-                              smoothConst, penalty, dateUnc = "uniform",
-                              splineType = 1, sdVar = FALSE, nChains = 1,
-                              thinning = 2){
+                              smoothConst, IndependentType = "numeric", penalty,
+                              dateUnc = "uniform",splineType = 1, sdVar = FALSE,
+                              nChains = 1, thinning = 2){
   data$Date4 <- data$Date2
   set.seed(1234)
   data$Date2 <- sapply(1:length(data$Date2), function(x)
@@ -1462,7 +1500,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   ###Starting Values
   #####################################
   #Chain 1
-  if(!sdVar){
+  if(!sdVar | IndependentType != "numeric"){
     sigma <- 1
   } else {
     sigma <- rep(1, nrow(data))
@@ -1512,9 +1550,14 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   changeX <- which(data$Uncertainty2 > 0)
 
   #rescale
+  if(IndependentType == "numeric"){
   mRe <- mean(data$Y)
   sRe <- sd(data$Y)
   data$Y <- (data$Y - mRe) / sRe
+  } else {
+    mRe = 0
+    sRe = 1
+  }
   if(!is.null(data$independentUncertainty)){
     data$independentUncertainty <- data$independentUncertainty / sRe
   }
@@ -1526,16 +1569,32 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
         sdmY <- 1 / (1 / sigma + 1 / (data$independentUncertainty ^ 2 + 1E-6))
         mY <- ((XX2 %*% beta + U %*% gamma) / sigma +
                  YMean / (data$independentUncertainty ^ 2 + 1E-6)) * sdmY
-        data$Y <- rnorm(length(data$independentUncertainty), mY, sd = sqrt(sdmY))
+        if(IndependentType == "numeric"){
+          data$Y <- rnorm(length(data$independentUncertainty), mY, sd = sqrt(sdmY))
+        } else {
+          data$Y <- pmax(0, pmin(1, rnorm(length(data$independentUncertainty), mY, sd = sqrt(sdmY))))
+        }
       }
       #Betas
       if (splineType == 2){
+        if(IndependentType == "numeric"){
         inverse <- spdinv(Crossprod(XX2 / sigma, XX2) + lam * P + lam2 * P2)
+        } else {
+          inverse <- spdinv(crossprod((XX2*sigma), (XX2)) + lam * P + lam2 * P2)
+        }
       } else {
-        inverse <- spdinv(Crossprod(XX2 / sigma, XX2) + lam * P)
+        if(IndependentType == "numeric"){
+          inverse <- spdinv(Crossprod(XX2 / sigma, XX2) + lam * P)
+        } else {
+          inverse <- spdinv(crossprod((XX2*sigma), (XX2)) + lam * P)
+        }
       }
-      beta <<- as.vector(rmvnorm(1, mu = inverse %*% crossprod(XX2 / sigma, (data$Y - U %*% gamma)), sigma = inverse))
-      #beta <<- mvrnorm(mu = inverse %*% crossprod(XX2 / sigma, (data$Y - U %*% gamma)), Sigma = inverse, tol = 1E-5)
+      if(IndependentType == "numeric"){
+        beta <<- as.vector(rmvnorm(1, mu = inverse %*% crossprod(XX2 / sigma, (data$Y - U %*% gamma)), sigma = inverse))
+      } else {
+        beta <<- as.vector(rmvnorm(1, mu = inverse %*% (crossprod(XX2, (data$Y - 0.5)) - crossprod(XX2*sigma, U %*% gamma)), sigma = inverse))
+      }
+        #beta <<- mvrnorm(mu = inverse %*% crossprod(XX2 / sigma, (data$Y - U %*% gamma)), Sigma = inverse, tol = 1E-5)
       # #MH-step for time
       if ((i %% 10 == 0) & length(changeX) > 0){
         data$Date3 <- sapply(1:length(data$Date4), function(x)
@@ -1554,7 +1613,8 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
                                           U[changeX, ],
                                           sigmaChange,
                                           beta, gamma,
-                                          dateUnc = dateUnc)
+                                          dateUnc = dateUnc,
+                                          IndependentType = IndependentType)
         alphas[is.na(alphas)] <- 0
         randomAlpha <- runif(n)
         updated <- which(randomAlpha < alphas)
@@ -1565,17 +1625,22 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
       }
       #gamma
       # nolint start
-      if(!sdVar){
-        inverse2 <-  1 / (cU / sigma + 1 / tau)
-        gamma <<-  rnorm(n = length(inverse2), mean = (tU * inverse2 / sigma) %*%
-                           ((data$Y - (XX2) %*% beta)), sd = sqrt(inverse2))
+      if(IndependentType == "numeric"){
+        if(!sdVar){
+          inverse2 <-  1 / (cU / sigma + 1 / tau)
+          gamma <<-  rnorm(n = length(inverse2), mean = (tU * inverse2 / sigma) %*%
+                            ((data$Y - (XX2) %*% beta)), sd = sqrt(inverse2))
+        } else {
+          uTmp <- sapply(1:length(cU), function(i) mean(sigma[uMatch[(1 + c(0, cumsum(cU))[i]): c(0, cumsum(cU))[i+1]]]))
+          inverse2 <-  1 / (cU / uTmp + 1 / tau)
+          gamma <<-  rnorm(n = length(inverse2), mean = (tU * inverse2 / uTmp) %*%
+                            ((data$Y - (XX2) %*% beta)), sd = sqrt(inverse2))
+        }
       } else {
-        uTmp <- sapply(1:length(cU), function(i) mean(sigma[uMatch[(1 + c(0, cumsum(cU))[i]): c(0, cumsum(cU))[i+1]]]))
-        inverse2 <-  1 / (cU / uTmp + 1 / tau)
-        gamma <<-  rnorm(n = length(inverse2), mean = (tU * inverse2 / uTmp) %*%
-                           ((data$Y - (XX2) %*% beta)), sd = sqrt(inverse2))
+          uTmp <- sapply(1:length(cU), function(i) mean(sigma[uMatch[(1 + c(0, cumsum(cU))[i]): c(0, cumsum(cU))[i+1]]]))
+          inverse2 <-  1 / (cU * uTmp + 1 / tau)
+          gamma <<-  rnorm(n = length(inverse2), mean = (inverse2) * (crossprod(U,data$Y - 0.5) - (crossprod(U*sigma, XX2 %*% beta))), sd = sqrt(inverse2))
       }
-
       if(length(unique(data$Site)) == nrow(data)){
         gamma <<- rep(0, length(gamma))
       }
@@ -1603,31 +1668,34 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
 
       # nolint start
       #conditional posterioris:
-      if(!sdVar){
-        scale <- (b.eps + 0.5 * sum((((data$Y - XX2 %*% beta - U %*% gamma)) ^ 2))) ^ - 1
-        sigma <<- 1 / rgamma(1, shape = a.eps + n / 2, scale = scale)
-
-      } else {
-        scale0 <- (b.eps + 0.5 * sum((((data$Y - XX2 %*% beta - U %*% gamma)) ^ 2))) ^ - 1
-        sigma0 <- 1 / rgamma(1, shape = a.eps + n / 2, scale = scale0)
-
-        scaleSigma <- (b.eps + 0.5 * sum((log((data$Y - XX2 %*% beta - U %*% gamma)^2) - (XXV %*% betaSigma)) ^ 2)) ^ - 1
-        sigmaSigma <<- 1 / rgamma(1, shape = a.eps + n / 2, scale = scaleSigma)
-        if (splineType == 2){
-          inverseSigma <- spdinv(Crossprod(XXV / sigmaSigma, XXV) + lamSigma * PV)
+      if(IndependentType == "numeric"){
+        if(!sdVar){
+          scale <- (b.eps + 0.5 * sum((((data$Y - XX2 %*% beta - U %*% gamma)) ^ 2))) ^ - 1
+          sigma <<- 1 / rgamma(1, shape = a.eps + n / 2, scale = scale)
         } else {
-          inverseSigma <- spdinv(Crossprod(XXV / sigmaSigma, XXV) + lamSigma * PV)
+          scale0 <- (b.eps + 0.5 * sum((((data$Y - XX2 %*% beta - U %*% gamma)) ^ 2))) ^ - 1
+          sigma0 <- 1 / rgamma(1, shape = a.eps + n / 2, scale = scale0)
+
+          scaleSigma <- (b.eps + 0.5 * sum((log((data$Y - XX2 %*% beta - U %*% gamma)^2) - (XXV %*% betaSigma)) ^ 2)) ^ - 1
+          sigmaSigma <<- 1 / rgamma(1, shape = a.eps + n / 2, scale = scaleSigma)
+          if (splineType == 2){
+            inverseSigma <- spdinv(Crossprod(XXV / sigmaSigma, XXV) + lamSigma * PV)
+          } else {
+            inverseSigma <- spdinv(Crossprod(XXV / sigmaSigma, XXV) + lamSigma * PV)
+          }
+          betaSigma <<- as.vector(rmvnorm(1, mu = inverseSigma %*%
+                                            crossprod((XXV / sigmaSigma),
+                                                      log((data$Y - XX2 %*% beta - U %*% gamma) ^ 2)),
+                                          sigma = inverseSigma))
+          sigmaTmp <-  as.numeric(exp(XXV %*% (betaSigma)))
+          sigma0 <- mean(sigmaTmp) / sigma0
+          sigma <<- sigmaTmp / sigma0 + 1E-4
         }
-        betaSigma <<- as.vector(rmvnorm(1, mu = inverseSigma %*%
-                                          crossprod((XXV / sigmaSigma),
-                                                    log((data$Y - XX2 %*% beta - U %*% gamma) ^ 2)),
-                                        sigma = inverseSigma))
-        sigmaTmp <-  as.numeric(exp(XXV %*% (betaSigma)))
-        sigma0 <- mean(sigmaTmp) / sigma0
-        sigma <<- sigmaTmp / sigma0 + 1E-4
+      } else{
+        sigma <<- pgdraw(1, XX2 %*% beta + U %*% gamma)
       }
 
-      if(sdVar){
+      if(sdVar & IndependentType == "numeric"){
         lamSigma <<- rgamma(
           1,
           shape = lam.mu + MV / 2,
@@ -1664,11 +1732,17 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
     return(betamc)
   }
 
+  if(IndependentType == "numeric"){
+    msg <- "Calculating Spatio-Temporal Average Model"
+  } else {
+    msg <- paste0("Calculating Spatio-Temporal Average Model - ", independent)
+  }
+
   for ( k in 1:10) {
     j <- seq(1, iter, iter / 10)[k]
     showMessage(
       MCMC_LocalTempAvg,
-      msg = "Calculating Spatio-Temporal Average Model",
+      msg = msg,
       detail = paste0("Chain ", nChains),
       value = k / 10)(
         start = j, iter = j + iter / 10 - 1
@@ -1679,15 +1753,21 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   #
   # #Vektor der tatsaechlich benutzten Beobachtungen
   # usedsamples <- seq(from = burnin, to = iter, by = every)
-  if(sdVar){
-    seTotal = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
+  if(IndependentType == "numeric"){
+    if(sdVar & IndependentType == "numeric"){
+      seTotal = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
       (XX2 %*% betamc[x, ]) * sRe + mRe), 1, var) +
         rowMeans(sapply(1:length(usedsamples), function(x)
           exp((XXV %*% betamcSigma[x, ])) / smc[x] * sRe^2))))
-  } else {
+    } else {
+      betamcSigma <- NULL
+      seTotal = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
+        (XX2 %*% betamc[x, ]) * sRe + mRe), 1, var) + mean(smc)))
+    }
+  } else{
     betamcSigma <- NULL
-    seTotal = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
-      (XX2 %*% betamc[x, ]) * sRe + mRe), 1, var) + mean(smc)))
+    pred_probs <- sapply(1:length(usedsamples), function(x) invLogit(XX2 %*% betamc[x, ]) * sRe + mRe)
+    seTotal = range(sqrt(apply(pred_probs, 1, var) + pred_probs * (1-pred_probs)))
   }
   return(list(beta = betamc, betaSigma = betamcSigma, sc = s, scV = sV, sigma = smc,
               tau = taumc, mRe = mRe, sRe = sRe,
@@ -1699,7 +1779,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   ))
 }
 
-AcceptanceTime <- function(data, XX, XX2, U, sigma, beta, gamma, dateUnc){
+AcceptanceTime <- function(data, XX, XX2, U, sigma, beta, gamma, dateUnc, IndependentType){
   pmin(1, exp(
     cpostX(
       XX = XX,
@@ -1711,7 +1791,8 @@ AcceptanceTime <- function(data, XX, XX2, U, sigma, beta, gamma, dateUnc){
       U = U,
       gamma = gamma,
       y = data$Y,
-      dateUnc = dateUnc) -
+      dateUnc = dateUnc,
+      IndependentType = IndependentType) -
       cpostX(
         XX = XX2,
         xtru = data$Date2,
@@ -1722,7 +1803,8 @@ AcceptanceTime <- function(data, XX, XX2, U, sigma, beta, gamma, dateUnc){
         U = U,
         gamma = gamma,
         y = data$Y,
-        dateUnc = dateUnc
+        dateUnc = dateUnc,
+        IndependentType = IndependentType
       )
   ))
 }
@@ -1741,8 +1823,15 @@ cpostX <- function(XX,
                    U,
                    gamma,
                    y,
-                   dateUnc) {
-  ret <- (y - XX %*% beta - U %*% gamma) ^ 2 / (-2 * sigma.eps)
+                   dateUnc,
+                   IndependentType) {
+  pred <- XX %*% beta + U %*% gamma
+  if(IndependentType == "numeric"){
+    ret <- (y - pred) ^ 2 / (-2 * sigma.eps)
+  } else {
+    ret <- log(pred) * y * log(1-pred) * (1-y)
+  }
+
   if(dateUnc == "uniform"){
     return(ret + log(dunif (
                 xtru,
@@ -2538,7 +2627,7 @@ estimateModel2D <- function(data2, fm, independent, penalty, K, bs){
       model <- try(gamm(as.formula(paste(independent, " ~ s(Latitude, Longitude, m =", penalty, ",k = K, bs =",bs, ")")),
                         random = list(Site = ~ 1), data = data2, weights = weights, family = fm), silent = TRUE)
     }
-  } else{
+  } else {
     model <- try(gamm(as.formula(paste(independent, " ~ s(Latitude, Longitude, m =", penalty, ",k = K, bs =",bs, ")")),
                       data = data2, family = fm), silent = TRUE)
     if(!is.null(data2$independentUncertainty)){
@@ -2548,4 +2637,25 @@ estimateModel2D <- function(data2, fm, independent, penalty, K, bs){
     }
   }
   return(model)
+}
+
+estimateModel3D <- function(data2, fm, independent, splineExpr){
+  if(length(unique(data2$Site)) < nrow(data2)){
+    model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
+                      random = list(Site = ~ 1), data = data2, family = fm), silent = TRUE)
+    if(!is.null(data2$independentUncertainty)){
+      weights <- pmax(1E-7,pmax(data2$independentUncertainty ^ 2, (data2$independentUncertainty ^ 2 + sd(residuals(model$gam)) ^ 2 - mean(data2$independentUncertainty ^ 2 ))))
+      model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
+                      random = list(Site = ~ 1), data = data2, weights = weights, family = fm), silent = TRUE)
+    }
+  } else {
+    model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
+                    data = data2, family = fm), silent = TRUE)
+    if(!is.null(data2$independentUncertainty)){
+      weights <- pmax(1E-7,pmax(data2$independentUncertainty ^ 2, (data2$independentUncertainty ^ 2 + sd(residuals(model$gam)) ^ 2 - mean(data2$independentUncertainty ^ 2 ))))
+      model <- try(gamm(as.formula(paste(independent, " ~ ", splineExpr)),
+                      data = data2, weights = weights, family = fm), silent = TRUE)
+    }
+  }
+return(model)
 }
