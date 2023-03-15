@@ -9,6 +9,7 @@ estimateMap(
   independent,
   Longitude,
   Latitude,
+  IndependentType = "numeric",
   Site = "",
   independentUncertainty = "",
   burnin = 500,
@@ -38,6 +39,8 @@ estimateMap(
 \item{Longitude}{character: name of longitude variable}
 
 \item{Latitude}{character: name of latitude variable}
+
+\item{IndependentType}{character: type ("numeric" or "categorical") of independent variable}
 
 \item{Site}{character: name of site variable (optional)}
 

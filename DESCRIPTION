@@ -30,6 +30,7 @@ Imports:
   MASS (>= 7.3.5),
   mgcv (>= 1.8.23),
   openxlsx (>= 4.0.17),
+  pgdraw,
   raster (>= 2.6.7),
   rcarbon (>= 1.4.0),
   RColorBrewer (>= 1.1.2),
@@ -49,4 +50,4 @@ Suggests:
   lintr (>= 1.0.2),
   testthat (>= 2.0.0),
   ReSources (>= 0.7.9)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
