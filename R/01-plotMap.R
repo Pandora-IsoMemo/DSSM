@@ -2435,7 +2435,11 @@ plotTimeCourse <- function(model, IndSelect = NULL,
         if(model$IndependentType == "numeric"){
           ind <- model$independent
         } else {
-          ind <- IndSelect
+          if(IndSelect == "" | is.null(IndSelect)){
+            ind <- model$independent
+          } else {
+            ind <- IndSelect
+          }
         }
       }
       points(pointPlotData[, ind] ~ pointPlotData$Date)

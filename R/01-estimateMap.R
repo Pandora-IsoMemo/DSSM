@@ -941,6 +941,10 @@ estimateMap3D <- function(data,
       dummy_matrix <- model.matrix(~ . -1, data = data2[,independent, drop = FALSE])
       colnames(dummy_matrix) <- sapply(strsplit(colnames(dummy_matrix), split = independent), function(x) x[2])
       data2 <- cbind(data2, dummy_matrix)
+      #only data instead of data2 is exported, dummy matrix is important for time course plot
+      dummy_matrix1 <- model.matrix(~ . -1, data = data[,independent, drop = FALSE])
+      colnames(dummy_matrix1) <- sapply(strsplit(colnames(dummy_matrix1), split = independent), function(x) x[2])
+      data <- cbind(data, dummy_matrix1)
       model <- lapply(colnames(dummy_matrix), function(x){
         model <- estimateModel3D(data2, fm, x, splineExpr)
         if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
@@ -973,6 +977,10 @@ estimateMap3D <- function(data,
         dummy_matrix <- model.matrix(~ . -1, data = data2[,independent, drop = FALSE])
         colnames(dummy_matrix) <- sapply(strsplit(colnames(dummy_matrix), split = independent), function(x) x[2])
         data2 <- cbind(data2, dummy_matrix)
+        #only data instead of data2 is exported, dummy matrix is important for time course plot
+        dummy_matrix1 <- model.matrix(~ . -1, data = data[,independent, drop = FALSE])
+        colnames(dummy_matrix1) <- sapply(strsplit(colnames(dummy_matrix1), split = independent), function(x) x[2])
+        data <- cbind(data, dummy_matrix1)
         model <- lapply(colnames(dummy_matrix), function(x){
           model <- try(modelLocalTempAvgMC(data = data2, K = K, KT = KT, iter = iter,
                                            burnin = burnin, nChains = nChains,
