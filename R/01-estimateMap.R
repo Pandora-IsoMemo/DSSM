@@ -2449,25 +2449,43 @@ estimateMap3DKernel <- function(data,
     data <- merge(data, clust, sort = FALSE)
   } else if (clusterMethod == "mclust"){
 
+    dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
+                    ((data$Date + 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date + 2*data$Uncertainty) >= clusterTimeRange[1]) |
+                    ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
+
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
     for(i in 1:length(numClusters)){
       set.seed(1234)
-      cluster_list[[i]] <- mclust::Mclust(data[,c("Longitude","Latitude")], G = numClusters[i])
+      cluster_list[[i]] <- mclust::Mclust(dataC[,c("Longitude","Latitude")], G = numClusters[i])
     }
 
     # select best cluster solution based on bic
     cluster_solution <- cluster_list[[which.max(sapply(1:length(cluster_list),
                                                        function(x) cluster_list[[x]]$bic))]]
 
+    #optimal centroids:
+    clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
+                                                                                                                      Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
+                                                                                                                                   length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
     # assign cluster to data
-    data$cluster <- cluster_solution$classification
+    dataC$cluster <- cluster_solution$classification
 
-    # merge cluster centers
-    cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
-    colnames(cluster_centers) <- c("clustMeanLongitude", "clustMeanLatitude")
-    cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data <- merge(data, cluster_centers, sort = FALSE)
+    densM <- colMeans(clustDens)
+    densSD <- apply(clustDens, 2, sd)
+    densQ <- densM / densSD
+
+    clusterCentroids <- do.call("rbind", (lapply(1:nClust, function(j){
+      dataC[dataC$cluster == j, ][which.max(densQ[dataC$cluster == j]), c("Longitude", "Latitude")]
+    })))
+
+    data$cluster <- sapply(1:nrow(data),
+                           function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
+                                                            as.matrix(clusterCentroids))^2)))
+    clust <- clusterCentroids
+    names(clust) <- c("clustMeanLongitude", "clustMeanLatitude")
+    clust$cluster <- 1:nrow(clust)
+    data <- merge(data, clust, sort = FALSE)
   }
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL
