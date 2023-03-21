@@ -2,7 +2,7 @@
 #'
 #' @param model return object of spatial or spread model
 #'  from estimateMap() or estimateMapSpread() functions
-#' @param IndSelect for categorical model: selected category
+#' @param IndSelect for categorical model: selected category; shifts between categories in the center
 #' @param arrow display north arrow TRUE/FALSE
 #' @param scale display scale TRUE/FALSE
 #' @param terrestrial show only estimates on land masses (1), oceans (-1) or all (0)
