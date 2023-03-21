@@ -100,6 +100,8 @@ dataExplorerUI <- function(id, title = "") {
           step  = 0.01
         ),
         tags$hr(),
+        detectDuplicatesUI(id = ns("detectDuplicates")),
+        tags$hr(),
         downloadButton(ns("saveOptions"), "Save data selection"),
         fileInput(
           ns("optionsFile"),
@@ -124,11 +126,23 @@ dataExplorerUI <- function(id, title = "") {
           selected = "txt",
           choices = c("txt", "xml", "json")
         ),
-        downloadButton(ns("exportCitation"), "Export Citation")
+        downloadButton(ns("exportCitation"), "Export Citation"),
+        hr(),
+        numericInput(
+          inputId = ns("maxCharLength"),
+          label = "Maximum Length Character Columns",
+          value = NA,
+          min = 1,
+          max = NA,
+          step = 1
+        )
       ),
       mainPanel(
         div(class = "last-updated",
             textOutput(ns("lastUpdate"))),
+        shinyjs::hidden(
+          div(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"), id = ns("previewText"))
+        ),
         DT::dataTableOutput(ns("dataTable"))
       )
     )
@@ -187,6 +201,12 @@ dataExplorerServer <- function(id) {
                  isoData <- reactiveVal(NULL)
                  dataColumns <- reactiveVal(NULL)
 
+                 # detectDuplicates module
+                 detectDuplicatesServer(
+                   id = "detectDuplicates",
+                   inputData = isoDataFull
+                 )
+
                  ## Load Data (isomemo skin) ----
                  observeEvent(input$load, {
                    # reset isoData
@@ -205,6 +225,18 @@ dataExplorerServer <- function(id) {
                    )
                  })
 
+                 # show preview text when maxCharLength is selected
+                observe({
+                  if (!is.na(input[["maxCharLength"]])) {
+                    shinyjs::show(id = "previewText")
+                  } else {
+                    shinyjs::hide(id = "previewText")
+                  }
+                }) %>%
+                  bindEvent(
+                    input[["maxCharLength"]]
+                  )
+
                  ## Load Data from file (pandora skin) ----
                  importedData <- importDataServer("localData")
 
@@ -217,7 +249,8 @@ dataExplorerServer <- function(id) {
                    dataColumns(NULL)
                    isoData(NULL)
 
-                   d <- importedData()[[1]]
+                   d <- importedData()[[1]] %>%
+                     convertNumeric()
 
                    isoDataRaw(d)
 
@@ -526,8 +559,16 @@ dataExplorerServer <- function(id) {
                      !is.null(isoDataFull()),
                      "Please select a database in the sidebar panel."
                    ))
+                   if(!is.na(input[["maxCharLength"]])){
+                     # cut long strings
+                     tabData <- cutAllLongStrings(isoDataFull(), cutAt = input[["maxCharLength"]])
+                     # use uncut column names
+                     names(tabData) <- names(isoDataFull())
+                   } else {
+                     tabData <- isoDataFull()
+                   }
                    req(dataColumns())
-                   datTable(isoDataFull(), columns = dataColumns())
+                   datTable(tabData, columns = dataColumns())
                  })
 
                  decriptionTableClick <- reactive({

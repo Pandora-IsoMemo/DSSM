@@ -1,6 +1,6 @@
 Package: MpiIsoApp
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 23.01.3
+Version: 23.03.3
 Author: INWT Statistics GmbH
 Maintainer: INWT <marcus.gross@inwt-statistics.de>
 Description: Shiny App contains: a data explorer tab, an interactive map and a static map, which should present model results.
@@ -8,14 +8,16 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.5.0)
+Remotes:
+  github::ben-aaron188/rgpt3
 Imports:
   animation,
   coda,
   colourpicker,
-  DT (>= 0.4),
+  DataTools (>= 23.03.1),
   dplyr,
+  DT (>= 0.4),
   futile.logger,
-  httr,
   jsonlite (>= 1.5),
   geometry (>= 0.4.0),
   ggplot2,
@@ -31,28 +33,20 @@ Imports:
   raster (>= 2.6.7),
   rcarbon (>= 1.4.0),
   RColorBrewer (>= 1.1.2),
-  readODS,
-  readxl,
-  readr,
   Rfast (>= 2.0.0),
   rgdal,
   rgeos,
   rlang,
-  RSQLite,
   shiny (>= 1.0.5),
-  shinyAce,
   shinyjs (>= 1.0),
   shinyMatrix (>= 0.2.1),
   shinythemes (>= 1.1.1),
   shinyWidgets (>= 0.4.1),
   sp (>= 1.2.7),
   stringi (>= 1.1.7),
-  templates,
-  tidyr,
-  webshot,
   zip
 Suggests:
   lintr (>= 1.0.2),
   testthat (>= 2.0.0),
   ReSources (>= 0.7.9)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
