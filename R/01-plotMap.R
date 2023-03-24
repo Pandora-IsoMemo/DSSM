@@ -628,7 +628,12 @@ plotMap <- function(model,
                         }
                         if(cluster & !is.null(data$cluster)){
                           pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                          if("clustMeanLongitude" %in% names(data)){
+                            data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                          } else {
+                            data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          }
+                          centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
                           if(centerMap != "Europe"){
                             centroids2 <- centroids
@@ -832,7 +837,12 @@ plotMap <- function(model,
                       }
                       if(cluster & !is.null(data$cluster)){
                         pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -1557,7 +1567,12 @@ plotMap3D <- function(model,
                             pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster))[dataT$cluster]
                           }
                         }
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids

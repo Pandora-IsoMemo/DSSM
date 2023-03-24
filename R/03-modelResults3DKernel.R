@@ -91,10 +91,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                                     "MacQueen")),
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1),
-            sliderInput(inputId = ns("timeClust"),
-                        label = "Cluster time range",
-                        min = 0, max = 15000, value = c(1000, 5000), step = 100)
+                        value = 5, min = 2, max = 15, step = 1)
           ),
           conditionalPanel(
             condition = "input.clusterMethod == 'mclust'",
@@ -102,6 +99,13 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("nClustRange"),
                         label = "Number of clusters (range)",
                         value = c(2,10), min = 2, max = 20, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
+            ns = ns,
+            sliderInput(inputId = ns("timeClust"),
+                        label = "Cluster time range",
+                        min = 0, max = 15000, value = c(1000, 5000), step = 100)
           ),
           checkboxInput(inputId = ns("modelUnc"),
                         label = "Include dating uncertainty", value = TRUE),
@@ -1122,7 +1126,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "clustMeanLongitude", "clustMeanLatitude", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("cluster",
+                                         "long_cluster_all_centroid",
+                                         "lat_cluster_all_centroid",
+                                         "long_cluster_slice_centroid",
+                                         "lat_cluster_slice_centroid",
+                                         "long_temporal_centroid",
+                                         "lat_temporal_centroid",
+                                         "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       } else {

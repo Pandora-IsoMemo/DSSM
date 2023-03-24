@@ -14,8 +14,9 @@ estimateMap3DKernel(
   DateType = "Interval",
   CoordType = "decimal degrees",
   Weighting = NULL,
-  kMeans = FALSE,
+  clusterMethod = NULL,
   nClust = 5,
+  nClustRange = c(2, 10),
   kMeansAlgo = "Hartigan-Wong",
   clusterTimeRange = c(0, 1000),
   modelUnc = FALSE,
@@ -45,9 +46,11 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 
 \item{Weighting}{character: name of weighting variable}
 
-\item{kMeans}{boolean: Do clustering with k-means}
+\item{clusterMethod}{character: cluster method}
 
 \item{nClust}{numeric: how many clusters}
+
+\item{nClustRange}{numeric: range of potential mclust cluster}
 
 \item{kMeansAlgo}{character: kmeans algorithm as in stats:kmeans}
 
