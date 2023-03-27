@@ -324,7 +324,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     req(length(importedData()) > 0)
     dataPred <- importedData()[[1]]
     if ((!is.null(input$numVars) && input$numVars %in% names(dataPred)) || (!is.null(input$catVars) && input$catVars %in% names(dataPred))) {
-      dataPred <- dataPred[, c(input$catVars, input$numVars)]
+      dataPred <- dataPred[, c(input$catVars, input$numVars), drop = FALSE]
       dataPred[, input$catVars] <- trimws(dataPred[, input$catVars])
       dataPred <- na.omit(dataPred)
       models <- Model()$models
