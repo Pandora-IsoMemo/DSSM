@@ -10,6 +10,10 @@ utils::globalVariables(c("Longitude", "Latitude", "Longitude2", "Latitude2", "Da
 
 #' Estimates spatial average model with (optional) random effects (GAMM /Generalized Additive Mixed Model)
 #'
+#' Note regarding IndependentType = "categorical": This follows a one vs. all approach using
+#' logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable
+#' during Gibbs-sampling (https://arxiv.org/abs/1205.0310).
+#'
 #' @param data data.frame: data
 #' @param independent character: name of independent variable
 #' @param IndependentType character: type ("numeric" or "categorical") of independent variable
@@ -675,6 +679,10 @@ estimateMapSpreadWrapper <- function(data, input) {
 
 #' Estimates spatio-temporal average model with (optional) random effects
 #' (GAMM /Generalized Additive Mixed Model)
+#'
+#' Note regarding IndependentType = "categorical": This follows a one vs. all approach using
+#' logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable
+#' during Gibbs-sampling (https://arxiv.org/abs/1205.0310).
 #'
 #' @param data data.frame: data
 #' @param independent character: name of independent variable

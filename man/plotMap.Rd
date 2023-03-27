@@ -73,7 +73,7 @@ plotMap(
 \item{model}{return object of spatial or spread model
 from estimateMap() or estimateMapSpread() functions}
 
-\item{IndSelect}{for categorical model: selected category}
+\item{IndSelect}{for categorical model: selected category; shifts between categories in the center}
 
 \item{estType}{one of "Mean", "SE" and "Quantile". defaults to "Mean"}
 

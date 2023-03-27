@@ -82,7 +82,9 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 \item{thinning}{numeric: mcmc thinning for bayesian models}
 }
 \description{
-Estimates spatial average model with (optional) random effects (GAMM /Generalized Additive Mixed Model)
+Note regarding IndependentType = "categorical": This follows a one vs. all approach using
+logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable
+during Gibbs-sampling (https://arxiv.org/abs/1205.0310).
 }
 \examples{
 \dontrun{
