@@ -3,6 +3,8 @@
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
+#' @importFrom DataTools cutAllLongStrings downloadModelServer downloadModelUI
+#'  importDataUI importDataServer uploadModelServer uploadModelUI
 #' @importFrom dplyr group_by_at select summarise left_join
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
@@ -12,7 +14,6 @@
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices colorRampPalette chull png pdf tiff svg dev.off recordPlot replayPlot
 #'  cm.colors pdfFonts
-#' @importFrom DataTools importDataUI importDataServer cutAllLongStrings
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers

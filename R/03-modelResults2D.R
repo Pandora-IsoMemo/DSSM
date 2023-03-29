@@ -17,6 +17,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        uploadModelUI(ns("modelUpload"), label = NULL),
+        downloadModelUI(ns("modelDownload"), label = NULL),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
@@ -395,9 +398,10 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param activeTab active tab
 #'
 #' @export
-modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData, activeTab){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "localAvg")
 
@@ -448,6 +452,45 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   Model <- reactiveVal(NULL)
 
+  # MODEL DOWN- / UPLOAD ----
+  # no download of model output since it is too large to be uploadad again
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = "MpiIsoApp",
+                      helpHTML = getHelp(id = "model2D"),
+                      onlySettings = FALSE,
+                      compress = TRUE)
+
+  uploadedData <- uploadModelServer("modelUpload",
+                                    githubRepo = "iso-app",
+                                    rPackageName = "MpiIsoApp",
+                                    onlySettings = FALSE,
+                                    folderOnGithub = "/predefinedModels/model2D")
+
+  observe({
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe({
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    for (i in 1:length(uploadedData$inputs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe({
+  ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)

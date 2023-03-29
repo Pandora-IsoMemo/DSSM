@@ -11,7 +11,7 @@ server <- function(input, output, session) {
   isoData <- dataExplorerServer("dataExplorer")
   callModule(interactiveMap, "interactivemap", isoData = isoData)
   callModule(modelResults2D, "model2D", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
+             fruitsData = fruitsData, activeTab = reactive(input$tab))
   callModule(modelResults3D, "model3D", isoData = isoData, savedMaps = savedMaps,
              fruitsData = fruitsData)
   callModule(modelResultsSpread, "spread", isoData = isoData, savedMaps = savedMaps,
