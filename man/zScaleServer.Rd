@@ -12,7 +12,8 @@ zScaleServer(
   restrictOption,
   zValuesFun,
   zValuesFactor,
-  mapType = reactive("Map")
+  mapType = reactive("Map"),
+  IndSelect = NULL
 )
 }
 \arguments{
@@ -31,8 +32,9 @@ restrict the z scale.}
 
 \item{zValuesFactor}{(numeric) factor applied to zValues}
 
-\item{mapType}{(reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
-"Minima/Maxima"}
+\item{mapType}{(character)}
+
+\item{IndSelect}{(character) select category in case of categorical model}
 }
 \description{
 Server function of the module
