@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.03.5
+
+### Updates
+- Show type of user created maps (#19)
+
 ## Version 23.03.4
 
 ### Updates
@@ -8,7 +13,7 @@
 ## Version 23.03.3
 
 ### Updates
-Option to decide whether to keep the first or last duplicate row.
+- Option to decide whether to keep the first or last duplicate row.
 
 ## Version 23.03.2
 
