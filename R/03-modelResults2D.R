@@ -54,6 +54,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           selectInput(inputId = ns("Independent"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
+          radioButtons(inputId = ns("IndependentType"),
+                      label = "Dependent variable type:",
+                      choices = c("numeric", "categorical")),
           selectInput(inputId = ns("IndependentUnc"),
                       label = "Uncertainty(optional) of dep. var.:",
                       choices = c("")),
@@ -168,6 +171,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
+          selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
           textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
@@ -475,7 +479,11 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
-    val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
+      if(Model()$IndependentType == "numeric"){
+        val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
+      } else {
+        val <- 0.5
+      }
     updateSliderInput(session, "StdErr", value = signif(5 * val, 2),
                       min = 0, max = signif(5 * val, 2),
                       step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
@@ -514,7 +522,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                             )),
                             restrictOption = reactive("show"),
                             zValuesFun = getZvalues,
-                            zValuesFactor = 3
+                            zValuesFactor = 3,
+                            IndSelect = input$IndSelect
                             )
 
   mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
@@ -735,6 +744,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       plotMap(
         model,
+        IndSelect = input$IndSelect,
         points = input$points,
         pointSize = input$pointSize,
         StdErr = input$StdErr,
@@ -870,6 +880,19 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       selected = selectedTextLabel)
   })
 
+  observe({
+    req(Model())
+    if(class(Model()) != "character" && Model()$IndependentType != "numeric"){
+      shinyjs::show(id = "IndSelect")
+      shinyjs::hide(id = "sdVar")
+
+      updateSelectInput(session, "IndSelect", choices = names(Model()$model))
+    } else {
+      shinyjs::hide(id = "IndSelect")
+      shinyjs::show(id = "sdVar")
+
+    }
+  })
   ## Import Data ----
   importedDat <- importDataServer("importData")
 

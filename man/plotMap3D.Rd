@@ -7,6 +7,7 @@
 plotMap3D(
   model,
   time,
+  IndSelect = NULL,
   estType = "Mean",
   estQuantile = 0.9,
   points = TRUE,
@@ -71,6 +72,8 @@ plotMap3D(
 \item{model}{return object of a spatio-temporal model from estimateMap3D() function}
 
 \item{time}{time slice value for map}
+
+\item{IndSelect}{for categorical model: selected category}
 
 \item{estType}{one of "Mean", "SE" and "Quantile". defaults to "Mean"}
 
