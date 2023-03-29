@@ -40,5 +40,6 @@
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom webshot is_phantomjs_installed
 #' @importFrom zip zipr
 NULL
