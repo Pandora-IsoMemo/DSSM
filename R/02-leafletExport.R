@@ -40,12 +40,12 @@ leafletExport <- function(input,
   ns <- session$ns
 
   observe({
-    #if (webshot::is_phantomjs_installed()) {
-    #  shinyjs::enable("exportLeaflet")
-    #  shinyjs::hide("phantomjsHelp")
-    #} else {
+    if (webshot::is_phantomjs_installed()) {
+     shinyjs::enable("exportLeaflet")
+     shinyjs::hide("phantomjsHelp")
+    } else {
       shinyjs::disable("exportLeaflet")
-    #}
+    }
   })
 
   observeEvent(input$exportLeaflet, {
