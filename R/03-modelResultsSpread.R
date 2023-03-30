@@ -488,7 +488,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   Independent <- reactive({
     if (input$dataSource == "model") names(Model()$data)[1]
-    else input$Independent
+    else input$IndependentX
   })
 
   zoomFromModel <- reactiveVal(50)

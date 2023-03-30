@@ -54,7 +54,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         conditionalPanel(
           condition = "input.dataSource != 'model'",
           ns = ns,
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
           radioButtons(inputId = ns("IndependentType"),
@@ -470,23 +470,24 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     helpHTML = getHelp(id = "model2D"),
     compressionLevel = 1)
 
-  observe(priority = 10, {
+  observe(priority = 100, {
     ## update data ----
     data(uploadedData$data)
   }) %>%
     bindEvent(uploadedData$data)
 
-  observe(priority = 5, {
+  observe(priority = 50, {
     ## update inputs ----
     inputIDs <- names(uploadedData$inputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
+
     for (i in 1:length(inputIDs)) {
       session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
     }
   }) %>%
     bindEvent(uploadedData$inputs)
 
-  observe(priority = 1, {
+  observe(priority = 10, {
   ## update model ----
     Model(uploadedData$model)
   }) %>%
@@ -501,7 +502,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
-    if (input$Independent == "" | input$Latitude == "" | input$Longitude == "") {
+    if (input$IndependentX == "" | input$Latitude == "" | input$Longitude == "") {
       Model(NULL)
       return()
     }
@@ -872,7 +873,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     centerEstimate$text()
   })
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -907,7 +908,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
     selectedTextLabel <- NULL
 
-    updateSelectInput(session, "Independent", choices = c("", numVars),
+    updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
     updateSelectInput(session, "IndependentUnc", choices = c("", numVars),
                       selected = selectedIndependentUnc)
@@ -923,7 +924,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       selected = selectedTextLabel)
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
                       selected = selectedTextLabel)
-  })
+  }) %>%
+    bindEvent(data())
 
   observe({
     req(Model())

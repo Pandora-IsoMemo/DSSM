@@ -47,7 +47,7 @@ batchModeling <- function(input, output, session, data, plotFun, modelParams, ty
         )
 
         params <- modelParams()
-        params$Independent <- currentVariable()
+        params$IndependentX <- currentVariable()
 
         model <- try({
             estimateWrapper(data(), params)

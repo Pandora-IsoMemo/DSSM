@@ -50,7 +50,7 @@ modelResults3DUI <- function(id, title = ""){
         conditionalPanel(
           condition = "input.dataSource != 'model'",
           ns = ns,
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
           radioButtons(inputId = ns("IndependentType"),
@@ -549,7 +549,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
     values$set <- 0
 
-    if (input$Independent == "" | input$Latitude == "" |
+    if (input$IndependentX == "" | input$Latitude == "" |
           input$Longitude == "" | input$DateOne == "" |
         (input$DateTwo == "" & input$DateType != "Single point")) {
       Model(NULL)
@@ -1048,7 +1048,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     if (input$dataSource == "db" & ("site" %in% names(data()))){
       selectedSite <- "site"
     }
-    updateSelectInput(session, "Independent", choices = c("", setdiff(numVars, timeVars)))
+    updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
     updateSelectInput(session, "IndependentUnc", choices = c("", setdiff(numVars, timeVars)))
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),

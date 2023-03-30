@@ -57,7 +57,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           selectInput(inputId = ns("Latitude"),
                       label = "Latitude variable:",
                       choices = c("Latitude")),
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Presence/Absence variable (optional):",
                       choices = c("")),
           selectInput(inputId = ns("Weighting"),
@@ -434,7 +434,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     data <- data()
 
     model <- withProgress(
-      estimateMapKernel(data = data, independent = input$Independent,
+      estimateMapKernel(data = data, independent = input$IndependentX,
                   Longitude = input$Longitude, Latitude = input$Latitude,
                   CoordType = coordType(),
                   Weighting = input$Weighting,
@@ -806,7 +806,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       selectedLatitude <- "latitude"
     }
 
-    updateSelectInput(session, "Independent", choices = c("", numVars),
+    updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
     updateSelectInput(session, "Weighting", choices = c("", numVars))
     updateSelectInput(session, "Longitude", choices = c("", names(data())),

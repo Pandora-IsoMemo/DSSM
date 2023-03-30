@@ -69,7 +69,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Latitude"),
                       label = "Latitude variable:",
                       choices = c("Latitude")),
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Presence/Absence variable (optional):",
                       choices = c("")),
           selectInput(inputId = ns("Weighting"),
@@ -532,7 +532,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     data <- data()
 
       model <- withProgress(
-        estimateMap3DKernel(data = data, independent = input$Independent,
+        estimateMap3DKernel(data = data, independent = input$IndependentX,
                       Longitude = input$Longitude, Latitude = input$Latitude,
                       CoordType = coordType(), DateOne = input$DateOne,
                       DateTwo = input$DateTwo, DateType = input$DateType,
@@ -554,7 +554,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   Independent <- reactive({
     if (input$dataSource == "model") names(Model()$data)[1]
-    else input$Independent
+    else input$IndependentX
   })
 
   zoomFromModel <- reactiveVal(50)
@@ -1059,7 +1059,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       selectedLatitude <- "latitude"
     }
 
-    updateSelectInput(session, "Independent", choices = c("", setdiff(numVars, timeVars)))
+    updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),
                       selected = selectedLongitude)

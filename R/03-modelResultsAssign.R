@@ -46,7 +46,7 @@ modelResultsAssignUI <- function(id, title = "") {
           condition = "input.dataSource != 'model'",
           ns = ns,
           selectInput(
-            inputId = ns("Independent"),
+            inputId = ns("IndependentX"),
             label = "Dependent variable:",
             choices = NULL
           ),
@@ -210,9 +210,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
     data <- data()
     if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
       if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
-        dataAssignR <- data[, c(input$Independent, input$numVars, input$catVars), drop = F]
+        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
       } else {
-        dataAssignR <- data[, c(input$Independent, input$numVars, input$catVars), drop = F]
+        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
         if (!is.null(input$numVarsUnc) && input$numVarsUnc != "" && length(input$numVarsUnc) == length(input$numVars)) {
           dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
         } else {
@@ -229,11 +229,11 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
       dataAssignR <- na.omit(dataAssignR)
       dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
-      if (is.null(input$Independent) || (is.null(input$numVars) && is.null(input$catVars))) {
+      if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
         alert("Please specify dependent and at least one numeric or categorical variable")
         return(NULL)
       }
-      y <- trimws(dataAssignR[, input$Independent])
+      y <- trimws(dataAssignR[, input$IndependentX])
       cats <- sort(unique(y))
       value <- 0
       models <- lapply(cats, function(x) {
@@ -264,7 +264,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
           xUncCAT <- NULL
         }
 
-        yCat <- as.numeric(dataAssignR[, input$Independent] == modelCat)
+        yCat <- as.numeric(dataAssignR[, input$IndependentX] == modelCat)
         model <- modelAssignRMC(
           XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
           nChains = input$nChains, thinning = input$thinning, cat = modelCat
@@ -514,7 +514,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
   observe({
     allVars <- names(data())
-    updateSelectInput(session, "Independent", choices = c("", allVars))
+    updateSelectInput(session, "IndependentX",  choices = c("", allVars))
     updateSelectInput(session, "numVars", choices = c("", allVars))
     updateSelectInput(session, "catVars", choices = c("", allVars))
     updateSelectInput(session, "catAgg", choices = c("", allVars))
