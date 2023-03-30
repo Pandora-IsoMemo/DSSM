@@ -2419,6 +2419,7 @@ estimateMap3DKernel <- function(data,
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
   if(clusterMethod == "kmeans"){
+    data$id <- 1:nrow(data)
     set.seed(1234)
     # Clustering on filtered data
     dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
@@ -2438,12 +2439,13 @@ estimateMap3DKernel <- function(data,
     data$cluster <- NULL
 
     # Filtered data
-    # Find nearest cluster (center) for observations not used for clustering
-    data$cluster <- predictNearestCluster(clust, cbind(data$Longitude, data$Latitude))
+    dataC$cluster <- clust$cluster
     clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
-    names(clust_centroid) <- c("cluster","long_cluster_slice_centroid","lat_cluster_slice_centroid")
-    data <- merge(data, clust_centroid, by = "cluster", sort = FALSE)
-    data$cluster <- NULL
+    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
+    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data$id <- NULL
+    dataC$cluster <- NULL
 
     # Optimal Centroids
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2469,6 +2471,7 @@ estimateMap3DKernel <- function(data,
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   } else if (clusterMethod == "mclust"){
+    data$id <- 1:nrow(data)
 
     # Clustering on filtered data
     dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
@@ -2500,12 +2503,13 @@ estimateMap3DKernel <- function(data,
     data$cluster <- NULL
 
     # Filtered data
-    # Find nearest cluster (center) for observations not used for clustering
-    data$cluster <- predict(cluster_solution, cbind(data$Longitude, data$Latitude))$classification
+    dataC$cluster <- cluster_solution$classification
     clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
-    names(clust_centroid) <- c("cluster","long_cluster_slice_centroid","lat_cluster_slice_centroid")
-    data <- merge(data, clust_centroid, by = "cluster", sort = FALSE)
-    data$cluster <- NULL
+    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
+    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data$id <- NULL
+    dataC$cluster <- NULL
 
     #optimal centroids:
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2525,6 +2529,10 @@ estimateMap3DKernel <- function(data,
     data$cluster <- sapply(1:nrow(data),
                            function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
                                                             as.matrix(clusterCentroids))^2)))
+    if(length(unique(data$cluster)) < length(unique(dataC$cluster))){
+    showNotification(paste0("Note: mclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
+    }
+
     clust <- clusterCentroids
     names(clust) <- c("long_temporal_centroid", "lat_temporal_centroid")
     clust$cluster <- 1:nrow(clust)
