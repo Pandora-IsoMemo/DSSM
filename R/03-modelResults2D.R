@@ -464,21 +464,19 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     inputs = input,
     model = Model,
     rPackageName = "MpiIsoApp",
-    helpHTML = getHelp(id = "model2D"),
-    onlySettings = FALSE,
-    compress = TRUE,
     githubRepo = "iso-app",
     folderOnGithub = "/predefinedModels/model2D",
-    silent = FALSE,
-    reset = reactive(FALSE))
+    pathToLocal = file.path(".","predefinedModels", "model2D"),
+    helpHTML = getHelp(id = "model2D"),
+    compressionLevel = 1)
 
-  observe({
+  observe(priority = 10, {
     ## update data ----
     data(uploadedData$data)
   }) %>%
     bindEvent(uploadedData$data)
 
-  observe({
+  observe(priority = 5, {
     ## update inputs ----
     inputIDs <- names(uploadedData$inputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
@@ -488,7 +486,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   }) %>%
     bindEvent(uploadedData$inputs)
 
-  observe({
+  observe(priority = 1, {
   ## update model ----
     Model(uploadedData$model)
   }) %>%
