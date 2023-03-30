@@ -2,7 +2,7 @@
 
 ## Version 23.03.4
 
-### Updates
+### New Features
 - Adds mclust as new clustering option for KernelR and KernelTimeR
 - Unifies colors for clustering map and clustering plot within KernelTimeR
 - Adds columns to excel for KernelTimeR: centroid full data, centroid sliced data, centroid temporal data
