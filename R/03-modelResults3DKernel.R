@@ -353,8 +353,8 @@ modelResults3DKernelUI <- function(id, title = ""){
               #               label = "Show all cluster locations",
               #               value = FALSE, width = "100%"),
               radioButtons(inputId = ns("clusterAll"),
-                           label = "Show all cluster locations",
-                           choices = c("Show only centroids" = "-1", "Show clustering all times" = "0", "Show clustering time slice" = "1"),
+                           label = "Cluster visibility",
+                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -703,6 +703,20 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   )
     }
   })
+
+  observe({
+  if(input[["clusterMethod"]] %in% c("kmeans","mclust")){
+  value <- TRUE
+  } else {
+  value <- FALSE
+  }
+  updateCheckboxInput(
+    session,
+    "cluster",
+    value = value
+  )
+  }) %>%
+    bindEvent(input[["clusterMethod"]])
 
   observe({
     validate(validInput(Model()))
