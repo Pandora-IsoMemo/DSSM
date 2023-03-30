@@ -17,8 +17,8 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        uploadModelUI(ns("modelUpload"), label = NULL),
-        downloadModelUI(ns("modelDownload"), label = NULL),
+        tags$h4("Load a Model"),
+        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -430,13 +430,17 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateTextInput(session, "saveMapName", value = "")
   })
 
-  data <- reactive({
-    switch(
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
+
 
   coordType <- reactive({
     switch(
@@ -453,21 +457,20 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-  # no download of model output since it is too large to be uploadad again
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = "MpiIsoApp",
-                      helpHTML = getHelp(id = "model2D"),
-                      onlySettings = FALSE,
-                      compress = TRUE)
 
-  uploadedData <- uploadModelServer("modelUpload",
-                                    githubRepo = "iso-app",
-                                    rPackageName = "MpiIsoApp",
-                                    onlySettings = FALSE,
-                                    folderOnGithub = "/predefinedModels/model2D")
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    helpHTML = getHelp(id = "model2D"),
+    onlySettings = FALSE,
+    compress = TRUE,
+    githubRepo = "iso-app",
+    folderOnGithub = "/predefinedModels/model2D",
+    silent = FALSE,
+    reset = reactive(FALSE))
 
   observe({
     ## update data ----
@@ -478,7 +481,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe({
     ## update inputs ----
     inputIDs <- names(uploadedData$inputs)
-    for (i in 1:length(uploadedData$inputs)) {
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+    for (i in 1:length(inputIDs)) {
       session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
     }
   }) %>%
