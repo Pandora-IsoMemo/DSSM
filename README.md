@@ -14,3 +14,4 @@ Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initi
 
 ### Release notes:
 - see `NEWS.md`
+

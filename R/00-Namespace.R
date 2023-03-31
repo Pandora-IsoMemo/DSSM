@@ -25,12 +25,13 @@
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
 #' @importFrom openxlsx read.xlsx write.xlsx
+#' @importFrom pgdraw pgdraw
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
-#' @importFrom shinyjs alert runjs useShinyjs
+#' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dnorm dunif kmeans
@@ -40,5 +41,6 @@
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom webshot is_phantomjs_installed
 #' @importFrom zip zipr
 NULL

@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.03.4
+## Version 23.03.6
 
 ### New Features
 - Adds mclust as new clustering option for KernelR and KernelTimeR
@@ -8,10 +8,21 @@
 ### Bug Fixes
 
 - Unifies colors for clustering map and clustering plot within KernelTimeR
+
+## Version 23.03.5
+
+### Updates
+- Show type of user created maps (#19)
+
+## Version 23.03.4
+
+### Updates
+- Categorical target/dependent variable option for AverageR/TimeR models. This follows a 1vsall approach using logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable during Gibbs-sampling (https://arxiv.org/abs/1205.0310)
+
 ## Version 23.03.3
 
 ### Updates
-Option to decide whether to keep the first or last duplicate row.
+- Option to decide whether to keep the first or last duplicate row.
 
 ## Version 23.03.2
 

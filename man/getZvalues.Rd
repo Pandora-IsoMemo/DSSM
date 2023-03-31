@@ -4,7 +4,7 @@
 \alias{getZvalues}
 \title{Get Z Values}
 \usage{
-getZvalues(estimationType, model, mapType, factor = 3)
+getZvalues(estimationType, model, mapType, factor = 3, IndSelect = NULL)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -14,6 +14,8 @@ getZvalues(estimationType, model, mapType, factor = 3)
 \item{mapType}{(character) type of map, either "Map" or "Time course"}
 
 \item{factor}{(numeric) factor applied to estimates}
+
+\item{IndSelect}{(character) select category in case of categorical model}
 }
 \description{
 Get Z Values

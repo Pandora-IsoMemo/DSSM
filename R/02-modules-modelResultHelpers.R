@@ -460,6 +460,8 @@ zScaleUI <-
 #' @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
 #'  "Minima/Maxima"
 #' @param zValuesFactor (numeric) factor applied to zValues
+#' @param mapType (character)
+#' @param IndSelect (character) select category in case of categorical model
 zScaleServer <- function(id,
                          Model,
                          fixCol,
@@ -467,7 +469,8 @@ zScaleServer <- function(id,
                          restrictOption,
                          zValuesFun,
                          zValuesFactor,
-                         mapType = reactive("Map")) {
+                         mapType = reactive("Map"),
+                         IndSelect = NULL) {
   moduleServer(id,
                function(input, output, session) {
                  zModelValues <- reactiveVal(NULL)
@@ -504,7 +507,8 @@ zScaleServer <- function(id,
                          estimationType = input$estType,
                          model = Model(),
                          mapType = mapType(),
-                         factor = zValuesFactor
+                         factor = zValuesFactor,
+                         IndSelect = IndSelect
                        )
                      )
                    else
@@ -729,15 +733,26 @@ getZValuesKernel <-
 #' @param model (list) model output
 #' @param mapType (character) type of map, either "Map" or "Time course"
 #' @param factor (numeric) factor applied to estimates
-getZvalues <- function(estimationType, model, mapType, factor = 3) {
-  model <- model$model
-  if (is.null(model))
-    return(NULL)
-
+#' @param IndSelect (character) select category in case of categorical model
+getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = NULL) {
   zValues <- list(
     minInput = list(value = 0, min = 0, max = 10),
     maxInput = list(value = 10, min = 0, max = 10)
   )
+
+  if(model$IndependentType != "numeric"){
+    if(IndSelect == "" | is.null(IndSelect)){
+      zValues$minInput <- list(value = 0,   min = 0, max = 1)
+      zValues$maxInput <- list(value = 1, min = 0, max = 1)
+      return(zValues)
+    }
+    model$model <- model$model[[IndSelect]]
+  }
+
+  model <- model$model
+  if (is.null(model))
+    return(NULL)
+
 
   if(mapType == "Speed"){
     maxValue <- signif(50000 / diff(model$range$mean), 1)

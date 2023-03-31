@@ -7,6 +7,7 @@ getTabId <- function(mapType){
     difference = "OperatoR",
     similarity = "LocateR",
     kernel2d = "KernelR",
-    kernel3d = "KernelTimeR"
+    kernel3d = "KernelTimeR",
+    user = "Shape vector"
   )
 }
