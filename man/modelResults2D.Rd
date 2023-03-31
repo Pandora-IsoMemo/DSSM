@@ -4,15 +4,7 @@
 \alias{modelResults2D}
 \title{server function of model Results module}
 \usage{
-modelResults2D(
-  input,
-  output,
-  session,
-  isoData,
-  savedMaps,
-  fruitsData,
-  activeTab
-)
+modelResults2D(input, output, session, isoData, savedMaps, fruitsData)
 }
 \arguments{
 \item{input}{input}
@@ -26,8 +18,6 @@ modelResults2D(
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
-
-\item{activeTab}{active tab}
 }
 \description{
 server function of model Results module

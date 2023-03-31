@@ -93,9 +93,6 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           checkboxInput(inputId = ns("Outlier"),
                         label = "Remove model outliers",
                         value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("OutlierD"),
-                        label = "Remove data outliers",
-                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.Outlier == true",
             sliderInput(inputId = ns("OutlierValue"),
@@ -103,6 +100,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                         min = 2, max = 8, value = 4, step = 0.1),
             ns = ns
           ),
+          checkboxInput(inputId = ns("OutlierD"),
+                        label = "Remove data outliers",
+                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.OutlierD == true",
             sliderInput(inputId = ns("OutlierValueD"),
@@ -115,17 +115,19 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                         label = "Set lower latitude restriction",
+                         label = "Lower",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                         label = "Set upper latitude restriction",
+                         label = "Upper",
                          min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                         label = "Set lower longitude restriction",
+                         label = "Lower",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                         label = "Set upper longitude restriction",
+                         label = "Upper",
                          min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           ),
@@ -398,10 +400,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param activeTab active tab
 #'
 #' @export
-modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData, activeTab){
+modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "localAvg")
 
@@ -465,8 +466,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     model = Model,
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
-    folderOnGithub = "/predefinedModels/model2D",
-    pathToLocal = file.path(".","predefinedModels", "model2D"),
+    folderOnGithub = "/predefinedModels/AverageR",
+    pathToLocal = file.path(".","predefinedModels", "AverageR"),
     helpHTML = getHelp(id = "model2D"),
     compressionLevel = 1)
 
@@ -849,7 +850,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
