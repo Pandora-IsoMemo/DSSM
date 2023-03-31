@@ -131,7 +131,7 @@ plotMap <- function(model,
   }
   independent <- model$independent
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
