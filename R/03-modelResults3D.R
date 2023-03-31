@@ -16,6 +16,9 @@ modelResults3DUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        tags$h4("Load a Model"),
+        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -116,10 +119,6 @@ modelResults3DUI <- function(id, title = ""){
           checkboxInput(inputId = ns("Outlier"),
                         label = "Remove model outliers",
                         value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("OutlierD"),
-                        label = "Remove data outliers",
-                        value = FALSE, width = "100%"),
-
           conditionalPanel(
             condition = "input.Outlier == true",
             sliderInput(inputId = ns("OutlierValue"),
@@ -127,6 +126,9 @@ modelResults3DUI <- function(id, title = ""){
                         min = 2, max = 8, value = 4, step = 0.1),
             ns = ns
           ),
+          checkboxInput(inputId = ns("OutlierD"),
+                        label = "Remove data outliers",
+                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.OutlierD == true",
             sliderInput(inputId = ns("OutlierValueD"),
@@ -139,17 +141,19 @@ modelResults3DUI <- function(id, title = ""){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                        label = "Set lower latitude restriction",
+                        label = "Lower",
                         min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                        label = "Set upper latitude restriction",
+                        label = "Upper",
                         min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                        label = "Set lower longitude restriction",
+                        label = "Lower",
                         min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                        label = "Set upper longitude restriction",
+                        label = "Upper",
                         min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           ),
@@ -518,12 +522,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
 
-  data <- reactive({
-    switch(
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
 
   coordType <- reactive({
@@ -540,6 +547,43 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   Model <- reactiveVal()
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    folderOnGithub = "/predefinedModels/TimeR",
+    pathToLocal = file.path(".","predefinedModels", "TimeR"),
+    helpHTML = getHelp(id = "model3D"),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
@@ -1003,7 +1047,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
@@ -1016,7 +1062,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -1071,7 +1117,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       updateSelectInput(session, "DateOne", choices = c("", numVars))
       updateSelectInput(session, "DateTwo", choices = c("", numVars))
     #}
-  })
+  }) %>%
+    bindEvent(data())
 
   observe({
     if(input$DateType == "Interval"){
