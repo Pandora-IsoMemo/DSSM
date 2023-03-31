@@ -611,22 +611,22 @@ zScaleServer <- function(id,
 #' @inheritParams getZvalues
 getZValuesMapSim <-
   function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
-    if (is.null(model))
-      return(NULL)
-
-    zValues <- list(
-      minInput = list(value = 0, min = 0, max = 10),
-      maxInput = list(value = 10, min = 0, max = 10)
-    )
-
-    # zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
-    # if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
-    #   return(zValues)
-    # }
-    #
-    # model <- getModel(model = model, IndSelect = IndSelect)
     # if (is.null(model))
     #   return(NULL)
+    #
+    # zValues <- list(
+    #   minInput = list(value = 0, min = 0, max = 10),
+    #   maxInput = list(value = 10, min = 0, max = 10)
+    # )
+
+    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
+      return(zValues)
+    }
+
+    model <- getModel(model = model, IndSelect = IndSelect)
+    if (is.null(model))
+      return(NULL)
 
     if (estimationType %in% c("Mean", "Quantile")) {
       zRange <- model$Est
@@ -655,22 +655,22 @@ getZValuesMapSim <-
 #' @inheritParams getZvalues
 getZValuesMapDiff <-
   function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
-    if (is.null(model))
-      return(NULL)
-
-    zValues <- list(
-      minInput = list(value = 0, min = 0, max = 10),
-      maxInput = list(value = 10, min = 0, max = 10)
-    )
-
-    # zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
-    # if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
-    #   return(zValues)
-    # }
-    #
-    # model <- getModel(model = model, IndSelect = IndSelect)
     # if (is.null(model))
     #   return(NULL)
+    #
+    # zValues <- list(
+    #   minInput = list(value = 0, min = 0, max = 10),
+    #   maxInput = list(value = 10, min = 0, max = 10)
+    # )
+
+    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
+      return(zValues)
+    }
+
+    model <- getModel(model = model, IndSelect = IndSelect)
+    if (is.null(model))
+      return(NULL)
 
     if (estimationType %in% c("Mean", "Quantile", "Significance (p-value)", "Significance (z-value)")) {
       zRange <- model$Est
@@ -707,23 +707,23 @@ getZValuesMapDiff <-
 #' @inheritParams getZvalues
 getZValuesKernel <-
   function(estimationType, model, mapType, factor = 1.25, IndSelect = NULL) {
-    model <- model$model
-    if (is.null(model))
-      return(NULL)
-
-    zValues <- list(
-      minInput = list(value = 0, min = 0, max = 10),
-      maxInput = list(value = 10, min = 0, max = 10)
-    )
-
-    # zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
-    # if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
-    #   return(zValues)
-    # }
-    #
-    # model <- getModel(model = model, IndSelect = IndSelect)
+    # model <- model$model
     # if (is.null(model))
     #   return(NULL)
+    #
+    # zValues <- list(
+    #   minInput = list(value = 0, min = 0, max = 10),
+    #   maxInput = list(value = 10, min = 0, max = 10)
+    # )
+
+    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
+      return(zValues)
+    }
+
+    model <- getModel(model = model, IndSelect = IndSelect)
+    if (is.null(model))
+      return(NULL)
 
     if (estimationType %in% c("1 SE", "2 SE")) {
       sdVal <- ifelse(grepl("2", estimationType), 2, 1)
