@@ -240,7 +240,7 @@ plotMap <- function(model,
       sapply(1:nrow(betas), function(x)
         (PredMatr %*% betas[x, ]) * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -250,7 +250,7 @@ plotMap <- function(model,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -305,7 +305,7 @@ plotMap <- function(model,
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       varM = Est$fit * (1-Est$fit)
     }  else {
       varM = var(residuals(model$model$gam))
@@ -1091,7 +1091,7 @@ plotMap3D <- function(model,
   }
   independent <- model$independent
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
@@ -1258,7 +1258,7 @@ plotMap3D <- function(model,
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -1271,7 +1271,7 @@ plotMap3D <- function(model,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -1328,7 +1328,7 @@ plotMap3D <- function(model,
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       varM = Est$fit * (1-Est$fit)
     }  else {
       varM = var(residuals(model$model$gam))
@@ -2259,7 +2259,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
     maxVal <- 1
   }
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
@@ -2302,7 +2302,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -2312,7 +2312,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -2447,7 +2447,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
         pointPlotData$ind <- 0
         ind <- "ind"
       } else {
-        if(model$IndependentType == "numeric"){
+        if(!is.null(model$IndependentType) && model$IndependentType == "numeric"){
           ind <- model$independent
         } else {
           if(IndSelect == "" | is.null(IndSelect)){
