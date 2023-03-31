@@ -619,7 +619,7 @@ getZValuesMapSim <-
     #   maxInput = list(value = 10, min = 0, max = 10)
     # )
 
-    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
     if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
       return(zValues)
     }
@@ -663,7 +663,7 @@ getZValuesMapDiff <-
     #   maxInput = list(value = 10, min = 0, max = 10)
     # )
 
-    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
     if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
       return(zValues)
     }
@@ -716,7 +716,7 @@ getZValuesKernel <-
     #   maxInput = list(value = 10, min = 0, max = 10)
     # )
 
-    zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+    zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
     if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
       return(zValues)
     }
@@ -768,7 +768,7 @@ getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = N
   #
   # model <- model$model
 
-  zValues <- getZValuesDefaults(IndependentType = model$IndependentType, IndSelect = IndSelect)
+  zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
   if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
     return(zValues)
   }
@@ -810,7 +810,7 @@ getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = N
 }
 
 
-getZValuesDefaults <- function(IndependentType, IndSelect) {
+getZValuesInitial <- function(IndependentType, IndSelect) {
   if(IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
     list(
       minInput = list(value = 0, min = 0, max = 10),
