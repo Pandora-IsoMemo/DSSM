@@ -131,7 +131,7 @@ plotMap <- function(model,
   }
   independent <- model$independent
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
@@ -240,7 +240,7 @@ plotMap <- function(model,
       sapply(1:nrow(betas), function(x)
         (PredMatr %*% betas[x, ]) * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -250,7 +250,7 @@ plotMap <- function(model,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -305,7 +305,7 @@ plotMap <- function(model,
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       varM = Est$fit * (1-Est$fit)
     }  else {
       varM = var(residuals(model$model$gam))
@@ -650,7 +650,12 @@ plotMap <- function(model,
                         }
                         if(cluster & !is.null(data$cluster)){
                           pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                          if("clustMeanLongitude" %in% names(data)){
+                            data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                          } else {
+                            data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          }
+                          centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
                           if(centerMap != "Europe"){
                             centroids2 <- centroids
@@ -854,7 +859,12 @@ plotMap <- function(model,
                       }
                       if(cluster & !is.null(data$cluster)){
                         pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -1081,7 +1091,7 @@ plotMap3D <- function(model,
   }
   independent <- model$independent
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
@@ -1248,7 +1258,7 @@ plotMap3D <- function(model,
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -1261,7 +1271,7 @@ plotMap3D <- function(model,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -1318,7 +1328,7 @@ plotMap3D <- function(model,
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       varM = Est$fit * (1-Est$fit)
     }  else {
       varM = var(residuals(model$model$gam))
@@ -1602,7 +1612,12 @@ plotMap3D <- function(model,
                             pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster))[dataT$cluster]
                           }
                         }
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -2244,7 +2259,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
     maxVal <- 1
   }
 
-  if(model$IndependentType != "numeric"){
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
     if(IndSelect == "" | is.null(IndSelect)){
       return(NULL)
     }
@@ -2287,7 +2302,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
-    if(model$IndependentType != "numeric"){
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
       Predictions <- invLogit(Predictions)
     }
 
@@ -2297,7 +2312,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      if(model$IndependentType != "numeric"){
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
         PredictionsSigma <- sqrt(Predictions * (1-Predictions))
       } else {
         PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
@@ -2432,7 +2447,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
         pointPlotData$ind <- 0
         ind <- "ind"
       } else {
-        if(model$IndependentType == "numeric"){
+        if(!is.null(model$IndependentType) && model$IndependentType == "numeric"){
           ind <- model$independent
         } else {
           if(IndSelect == "" | is.null(IndSelect)){
@@ -2483,19 +2498,22 @@ addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
 plotTimeIntervals <- function(Model,
                               trange = c(0, 1000),
                               AxisSize = 1,
-                              AxisLSize = 1
+                              AxisLSize = 1,
+                              clusterCol = "Set1"
 ){
   dat <- Model$data
   if(!is.null(dat$cluster)){
+    dat$cluster_color <- colorRampPalette(brewer.pal(8, clusterCol))(max(dat$cluster))[dat$cluster]
     dat$cluster <- factor(dat$cluster)
     g <- ggplot(dat, aes_(~Date, ~cluster)) + theme_light() + coord_cartesian(xlim = trange) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor.x = element_blank(),
             axis.text=element_text(size=12 * AxisLSize),
             axis.title=element_text(size=14 * AxisSize), legend.position = "none") +
-      geom_point(aes_(color = ~ cluster), position = position_dodge(0.3), alpha = 0.3) +
+      geom_point(color=dat$cluster_color, position = position_dodge(0.3), alpha = 0.3) +
       geom_errorbar(
-        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty, color = ~ cluster),
+        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty),
+        color=dat$cluster_color,
         position = position_dodge(0.3), width = 0.1, alpha = 0.3)
     print(g)
   } else {

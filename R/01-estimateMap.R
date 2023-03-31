@@ -2132,9 +2132,10 @@ invLogit <- function(x){
 #' @param CoordType character: type of longitude/latitude coordinates.
 #'  One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes"
 #' @param Weighting character: name of weighting variable
-#' @param kMeans boolean: Do clustering with k-means
+#' @param clusterMethod character: cluster method
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param nClust numeric: how many clusters
+#' @param nClustRange numeric: range of potential mclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
 #' @param nSim numeric: number of bootstrap samples
 #' @param kdeType character: "1" for correlated bandwidth, "2" for diagonal bandwidth, "3" for diagonal, equal long/lat bandwidth
@@ -2159,8 +2160,9 @@ estimateMapKernel <- function(data,
                               independent = NULL,
                               CoordType = "decimal degrees",
                               Weighting = NULL,
-                              kMeans = FALSE,
+                              clusterMethod = NULL,
                               nClust = 5,
+                              nClustRange = c(2,10),
                               kMeansAlgo = "Hartigan-Wong",
                               restriction = c(-90, 90, -180, 180),
                               nSim = 10,
@@ -2257,13 +2259,34 @@ estimateMapKernel <- function(data,
     data2 <- data
   }
   set.seed(1234)
-  if(kMeans){
+  if(clusterMethod == "kmeans"){
     clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
     data$cluster <- clust$cluster
     clust <- as.data.frame(clust$centers)
     names(clust) <- c("clustMeanLongitude", "clustMeanLatitude")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
+  } else if (clusterMethod == "mclust"){
+
+    numClusters <- seq(nClustRange[1],nClustRange[2])
+    cluster_list <- vector("list", length(numClusters))
+    for(i in 1:length(numClusters)){
+        set.seed(1234)
+      cluster_list[[i]] <- mclust::Mclust(data[,c("Longitude","Latitude")], G = numClusters[i])
+    }
+
+    # select best cluster solution based on bic
+    cluster_solution <- cluster_list[[which.max(sapply(1:length(cluster_list),
+                                             function(x) cluster_list[[x]]$bic))]]
+
+    # assign cluster to data
+    data$cluster <- cluster_solution$classification
+
+    # merge cluster centers
+    cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
+    colnames(cluster_centers) <- c("clustMeanLongitude", "clustMeanLatitude")
+    cluster_centers$cluster <- 1:nrow(cluster_centers)
+    data <- merge(data, cluster_centers, sort = FALSE)
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
@@ -2317,8 +2340,9 @@ estimateMapKernelWrapper <- function(data, input) {
                 Longitude = input$Longitude, Latitude = input$Latitude,
                 CoordType = input$CoordType,
                 Weighting = input$Weighting,
-                kMeans = input$kMeans,
+                clusterMethod = input$clusterMethod,
                 nClust = input$nClust,
+                nClustRange = input$nClustRange,
                 kMeansAlgo = input$kMeansAlgo,
                 restriction = restriction,
                 nSim = input$nSim,
@@ -2338,8 +2362,9 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param CoordType character: type of longitude/latitude coordinates.
 #'  One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes"
 #' @param Weighting character: name of weighting variable
-#' @param kMeans boolean: Do clustering with k-means
+#' @param clusterMethod character: cluster method
 #' @param nClust numeric: how many clusters
+#' @param nClustRange numeric: range of potential mclust cluster
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param clusterTimeRange numeric vector: time range of cluster
 #' @param modelUnc boolean: Include dating uncertainty
@@ -2367,8 +2392,9 @@ estimateMap3DKernel <- function(data,
                                 DateType = "Interval",
                                 CoordType = "decimal degrees",
                                 Weighting = NULL,
-                                kMeans = FALSE,
+                                clusterMethod = NULL,
                                 nClust = 5,
+                                nClustRange = c(2,10),
                                 kMeansAlgo = "Hartigan-Wong",
                                 clusterTimeRange = c(0,1000),
                                 modelUnc = FALSE,
@@ -2573,12 +2599,36 @@ estimateMap3DKernel <- function(data,
       }
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
-  if(kMeans){
+  if(clusterMethod == "kmeans"){
+    data$id <- 1:nrow(data)
+    set.seed(1234)
+    # Clustering on filtered data
     dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
                      ((data$Date + 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date + 2*data$Uncertainty) >= clusterTimeRange[1]) |
                      ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
     clust <- kmeans(cbind(dataC$Longitude, dataC$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
-    #optimal centroids:
+
+    # Clustering on full data
+    clust_full <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
+
+    # Add centroids to data
+    # Full data
+    clust_full_centroid <- data.frame(cluster=1:nrow(clust_full$centers),clust_full$centers)
+    names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
+    data$cluster <- clust_full$cluster
+    data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
+    data$cluster <- NULL
+
+    # Filtered data
+    dataC$cluster <- clust$cluster
+    clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
+    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
+    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data$id <- NULL
+    dataC$cluster <- NULL
+
+    # Optimal Centroids
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
                                   Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
                                                length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
@@ -2596,9 +2646,76 @@ estimateMap3DKernel <- function(data,
     data$cluster <- sapply(1:nrow(data),
                            function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
                                                         as.matrix(clusterCentroids))^2)))
-    #data$cluster <- clust$cluster
+
     clust <- clusterCentroids
-    names(clust) <- c("clustMeanLongitude", "clustMeanLatitude")
+    names(clust) <- c("long_temporal_centroid", "lat_temporal_centroid")
+    clust$cluster <- 1:nrow(clust)
+    data <- merge(data, clust, sort = FALSE)
+  } else if (clusterMethod == "mclust"){
+    data$id <- 1:nrow(data)
+
+    # Clustering on filtered data
+    dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
+                    ((data$Date + 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date + 2*data$Uncertainty) >= clusterTimeRange[1]) |
+                    ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
+
+    numClusters <- seq(nClustRange[1],nClustRange[2])
+    cluster_list <- vector("list", length(numClusters))
+    for(i in 1:length(numClusters)){
+      set.seed(1234)
+      cluster_list[[i]] <- mclust::Mclust(dataC[,c("Longitude","Latitude")], G = numClusters[i])
+    }
+
+    # select best cluster solution based on bic
+    best_solution_idx <- which.max(sapply(1:length(cluster_list),function(x) cluster_list[[x]]$bic))
+    best_solution_cluster <- numClusters[[best_solution_idx]]
+    cluster_solution <- cluster_list[[best_solution_idx]]
+
+    # Clustering on full data
+    set.seed(1234)
+    clust_full <- mclust::Mclust(data[,c("Longitude","Latitude")], G = best_solution_cluster)
+
+    # Add centroids to data
+    # Full data
+    clust_full_centroid <- data.frame(cluster=1:nrow(t(clust_full$parameters$mean)),t(clust_full$parameters$mean))
+    names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
+    data$cluster <- clust_full$classification
+    data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
+    data$cluster <- NULL
+
+    # Filtered data
+    dataC$cluster <- cluster_solution$classification
+    clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
+    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
+    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data$id <- NULL
+    dataC$cluster <- NULL
+
+    #optimal centroids:
+    clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
+                                                                                                                      Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
+                                                                                                                                   length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
+    # assign cluster to data
+    dataC$cluster <- cluster_solution$classification
+
+    densM <- colMeans(clustDens)
+    densSD <- apply(clustDens, 2, sd)
+    densQ <- densM / densSD
+
+    clusterCentroids <- do.call("rbind", (lapply(1:nClust, function(j){
+      dataC[dataC$cluster == j, ][which.max(densQ[dataC$cluster == j]), c("Longitude", "Latitude")]
+    })))
+
+    data$cluster <- sapply(1:nrow(data),
+                           function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
+                                                            as.matrix(clusterCentroids))^2)))
+    if(length(unique(data$cluster)) < length(unique(dataC$cluster))){
+    showNotification(paste0("Note: mclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
+    }
+
+    clust <- clusterCentroids
+    names(clust) <- c("long_temporal_centroid", "lat_temporal_centroid")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   }
@@ -2622,10 +2739,11 @@ estimateMap3DKernelWrapper <- function(data, input) {
     CoordType = input$coordType, DateOne = input$DateOne,
     DateTwo = input$DateTwo, DateType = input$DateType,
     Weighting = input$Weighting,
-    kMeans = input$kMeans,
+    clusterMethod = NULL,
     dateUnc = input$dateUnc,
     kMeansAlgo = input$kMeansAlgo,
     nClust = input$nClust,
+    nClustRange = input$nClustRange,
     clusterTimeRange = input$timeClust,
     modelUnc = input$modelUnc,
     restriction = restriction,

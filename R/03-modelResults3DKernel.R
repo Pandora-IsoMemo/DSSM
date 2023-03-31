@@ -75,11 +75,15 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          checkboxInput(inputId = ns("kMeans"),
-                        label = "Do k-means clustering",
-                        value = FALSE, width = "100%"),
+          selectizeInput(inputId = ns("clusterMethod"),
+                         label = "Cluster Method (optional):",
+                         choices = c("kmeans","mclust"),
+                         options = list(
+                           placeholder = '',
+                           onInitialize = I('function() { this.setValue(""); }')
+                         )),
           conditionalPanel(
-            condition = "input.kMeans == true",
+            condition = "input.clusterMethod == 'kmeans'",
             ns = ns,
             selectInput(inputId = ns("kMeansAlgo"),
                         label = "K-means algorithm:",
@@ -87,7 +91,18 @@ modelResults3DKernelUI <- function(id, title = ""){
                                     "MacQueen")),
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1),
+                        value = 5, min = 2, max = 15, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust'",
+            ns = ns,
+            sliderInput(inputId = ns("nClustRange"),
+                        label = "Number of clusters (range)",
+                        value = c(2,10), min = 2, max = 20, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
+            ns = ns,
             sliderInput(inputId = ns("timeClust"),
                         label = "Cluster time range",
                         min = 0, max = 15000, value = c(1000, 5000), step = 100)
@@ -338,8 +353,8 @@ modelResults3DKernelUI <- function(id, title = ""){
               #               label = "Show all cluster locations",
               #               value = FALSE, width = "100%"),
               radioButtons(inputId = ns("clusterAll"),
-                           label = "Show all cluster locations",
-                           choices = c("Show only centroids" = "-1", "Show clustering all times" = "0", "Show clustering time slice" = "1"),
+                           label = "Cluster visibility",
+                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -537,10 +552,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       CoordType = coordType(), DateOne = input$DateOne,
                       DateTwo = input$DateTwo, DateType = input$DateType,
                       Weighting = input$Weighting,
-                      kMeans = input$kMeans,
+                      clusterMethod = input$clusterMethod,
                       dateUnc = input$dateUnc,
                       kMeansAlgo = input$kMeansAlgo,
                       nClust = input$nClust,
+                      nClustRange = input$nClustRange,
                       clusterTimeRange = input$timeClust,
                       modelUnc = input$modelUnc,
                       restriction = restriction,
@@ -687,6 +703,20 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   )
     }
   })
+
+  observe({
+  if(input[["clusterMethod"]] %in% c("kmeans","mclust")){
+  value <- TRUE
+  } else {
+  value <- FALSE
+  }
+  updateCheckboxInput(
+    session,
+    "cluster",
+    value = value
+  )
+  }) %>%
+    bindEvent(input[["clusterMethod"]])
 
   observe({
     validate(validInput(Model()))
@@ -942,6 +972,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
+                            clusterCol = input$clusterCol,
                             ...)
         },
           value = 0,
@@ -1109,8 +1140,17 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "clustMeanLongitude", "clustMeanLatitude", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("cluster",
+                                         "long_cluster_all_centroid",
+                                         "lat_cluster_all_centroid",
+                                         "long_cluster_filtered_centroid",
+                                         "lat_cluster_filtered_centroid",
+                                         "long_temporal_centroid",
+                                         "lat_temporal_centroid",
+                                         "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        # filter data that was filtered out for clustering
+        modelData <- modelData[!is.na(modelData$lat_cluster_filtered_centroid),]
         return(modelData)
       } else {
         allData <- data()
