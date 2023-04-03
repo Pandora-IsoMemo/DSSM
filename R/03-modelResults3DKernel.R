@@ -16,6 +16,10 @@ modelResults3DKernelUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        tags$h4("Load a Model"),
+        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -113,17 +117,19 @@ modelResults3DKernelUI <- function(id, title = ""){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                         label = "Set lower latitude restriction",
+                         label = "Lower",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                         label = "Set upper latitude restriction",
+                         label = "Upper",
                          min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                         label = "Set lower longitude restriction",
+                         label = "Lower",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                         label = "Set upper longitude restriction",
+                         label = "Upper",
                          min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           )
@@ -489,13 +495,15 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     centerEstimate$text()
   })
 
-
-  data <- reactive({
-    switch(
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
 
   coordType <- reactive({
@@ -506,6 +514,46 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    modelSubFolder = "KernelTimeR",
+    helpHTML = getHelp(id = "model3DKernel"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
@@ -1017,7 +1065,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
@@ -1030,7 +1080,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -1080,7 +1130,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       updateSelectInput(session, "DateOne", choices = c("", numVars))
       updateSelectInput(session, "DateTwo", choices = c("", numVars))
     }
-  })
+  }) %>%
+    bindEvent(data())
 
   ## Import Data ----
   importedDat <- importDataServer("importData")
