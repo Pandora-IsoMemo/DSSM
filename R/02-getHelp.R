@@ -4,7 +4,7 @@
 #'
 #' @export
 getHelp <- function(id) {
-  if (id == "dataExplorer") {
+  if (id == "dataExplorer") { # id == "dataExplorer" ----
     tagList(
       tags$b("Welcome to the IsoMemo app!"),
       tags$p(
@@ -52,7 +52,7 @@ getHelp <- function(id) {
       shinyjs::useShinyjs()
       )
   }
-  else if (id == "interactivemap") {
+  else if (id == "interactivemap") { # id == "interactivemap" ----
     tagList(
       tags$b("The \"Interactive map\" tab"),
       tags$p(
@@ -76,7 +76,7 @@ getHelp <- function(id) {
       ),
       shinyjs::useShinyjs()
       )
-  } else if (id == "model2D") {
+  } else if (id == "model2D") { # id == "model2D" ----
     tagList(
       tags$b("The \"Modeling\" tab - \"Local average model\""),
       tags$p(
@@ -169,7 +169,7 @@ getHelp <- function(id) {
         ),
       shinyjs::useShinyjs()
         )
-  } else if (id == "model3D") {
+  } else if (id == "model3D") { # id == "model3D" ----
     tagList(
       tags$b("The \"Modeling\" tab - \"Spatio-temporal average model\""),
       tags$p(
@@ -267,7 +267,7 @@ getHelp <- function(id) {
         ),
       shinyjs::useShinyjs()
         )
-  } else if (id == "spread") {
+  } else if (id == "spread") { # id == "spread" ----
     tagList(
       tags$b("The \"Modeling\" tab - \"Spread model\""),
       tags$p(
@@ -372,5 +372,13 @@ getHelp <- function(id) {
         ),
       shinyjs::useShinyjs()
         )
+  } else { # id == other ----
+      tagList(
+        tags$b("The \"Modeling\" tab - ..."),
+        tags$p(
+          "Help not yet available for this model."
+        ),
+        shinyjs::useShinyjs()
+      )
   }
 }
