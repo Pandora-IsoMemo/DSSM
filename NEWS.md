@@ -4,7 +4,7 @@
 
 ### New Features
 - _Model tabs_: Option to load a model
-  - download a model (all user inputs, data and the model output) as a .zip file
+  - download a model (all user inputs, data and/or the model output) as a .zip file
   - upload online models that are stored in github
   - upload local models that were downloaded in a past session
 
