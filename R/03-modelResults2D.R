@@ -432,7 +432,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateTextInput(session, "saveMapName", value = "")
   })
 
-  # use only if updating isoData / fileImport instead of data
+  # use only if updating isoData / fileImport instead of data, see below
   # data <- reactive({
   #   switch(
   #     input$dataSource,
@@ -482,7 +482,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe(priority = 100, {
     ## update data ----
     # updating isoData could influence the update of isoData in other modelling tabs ... !
-    # First check if desired!
+    # First check if desired! If ok, than:
     # if (uploadedData$inputs$dataSource == "file") {
     #   fileImport(uploadedData$data)
     # } else {
