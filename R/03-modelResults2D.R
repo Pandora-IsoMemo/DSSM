@@ -432,6 +432,15 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateTextInput(session, "saveMapName", value = "")
   })
 
+  # use only if updating isoData / fileImport instead of data
+  # data <- reactive({
+  #   switch(
+  #     input$dataSource,
+  #     db = isoData(),
+  #     file = fileImport()
+  #   )
+  # })
+
   data <- reactiveVal()
   observe({
     activeData <- switch(
@@ -442,7 +451,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     data(activeData)
   })
-
 
   coordType <- reactive({
     switch(
@@ -473,6 +481,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observe(priority = 100, {
     ## update data ----
+    # updating isoData could influence the update of isoData in other modelling tabs ... !
+    # First check if desired!
+    # if (uploadedData$inputs$dataSource == "file") {
+    #   fileImport(uploadedData$data)
+    # } else {
+    #   isoData(uploadedData$data)
+    # }
+
     data(uploadedData$data)
   }) %>%
     bindEvent(uploadedData$data)
