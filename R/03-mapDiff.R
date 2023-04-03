@@ -17,6 +17,10 @@ modelResultsDiffUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        tags$h4("Load a Model"),
+        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create map" = "create",
@@ -248,6 +252,46 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   MapDiff <- reactiveVal(NULL)
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = savedMaps,
+    inputs = input,
+    model = MapDiff,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    modelSubFolder = "OperatoR",
+    helpHTML = getHelp(id = "difference"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    savedMaps(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    MapDiff(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$createDiffMap, {
     if (!is.null(input$targetMap1) & !is.null(input$targetMap2)) {
       withProgress(
@@ -538,7 +582,9 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   output$DistMap <- renderPlot({
     validate(validInput(MapDiff()))
-    res <- plotFun()()
+    withProgress({
+      res <- plotFun()()
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
