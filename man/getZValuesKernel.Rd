@@ -4,7 +4,13 @@
 \alias{getZValuesKernel}
 \title{Get Z Values Kernel}
 \usage{
-getZValuesKernel(estimationType, model, mapType, factor = 1.25)
+getZValuesKernel(
+  estimationType,
+  model,
+  mapType,
+  factor = 1.25,
+  IndSelect = NULL
+)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -14,6 +20,8 @@ getZValuesKernel(estimationType, model, mapType, factor = 1.25)
 \item{mapType}{(character) type of map, either "Map" or "Time course"}
 
 \item{factor}{(numeric) factor applied to estimates}
+
+\item{IndSelect}{(character) select category in case of categorical model}
 }
 \description{
 Get Z Values Kernel

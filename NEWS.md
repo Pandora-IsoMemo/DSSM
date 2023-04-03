@@ -1,5 +1,15 @@
 # MpiIsoApp development version
 
+## Version 23.03.6
+
+### New Features
+- Adds mclust as new clustering option for KernelR and KernelTimeR
+- Adds columns to excel for KernelTimeR: centroid full data, centroid sliced data, centroid temporal data
+### Bug Fixes
+- Unifies colors for clustering map and clustering plot within KernelTimeR
+- Fixing crash in mapSim, mapDiff and kernel plotting function after updates regarding categorical
+target/dependent variable
+
 ## Version 23.03.5
 
 ### Updates

@@ -67,11 +67,15 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          checkboxInput(inputId = ns("kMeans"),
-                        label = "Do k-means clustering",
-                        value = FALSE, width = "100%"),
+          selectizeInput(inputId = ns("clusterMethod"),
+                      label = "Cluster Method (optional):",
+                      choices = c("kmeans","mclust"),
+                      options = list(
+                        placeholder = '',
+                        onInitialize = I('function() { this.setValue(""); }')
+                      )),
           conditionalPanel(
-            condition = "input.kMeans == true",
+            condition = "input.clusterMethod == 'kmeans'",
             ns = ns,
             selectInput(inputId = ns("kMeansAlgo"),
                         label = "K-means algorithm:",
@@ -80,6 +84,13 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
                         value = 5, min = 2, max = 15, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust'",
+            ns = ns,
+            sliderInput(inputId = ns("nClustRange"),
+                        label = "Number of clusters (range)",
+                        value = c(2,10), min = 2, max = 20, step = 1)
           ),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
@@ -487,8 +498,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   Longitude = input$Longitude, Latitude = input$Latitude,
                   CoordType = coordType(),
                   Weighting = input$Weighting,
-                  kMeans = input$kMeans,
+                  clusterMethod = input$clusterMethod,
                   nClust = input$nClust,
+                  nClustRange = input$nClustRange,
                   kMeansAlgo = input$kMeansAlgo,
                   restriction = restriction,
                   nSim = input$nSim,

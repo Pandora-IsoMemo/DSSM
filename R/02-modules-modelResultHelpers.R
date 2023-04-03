@@ -606,15 +606,11 @@ zScaleServer <- function(id,
                })
 }
 
-
 #' Get Z Values Map Sim
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesMapSim <-
-  function(estimationType, model, mapType, factor = 1) {
+  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -647,12 +643,9 @@ getZValuesMapSim <-
 
 #' Get Z Values Map Diff
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesMapDiff <-
-  function(estimationType, model, mapType, factor = 1) {
+  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -693,12 +686,9 @@ getZValuesMapDiff <-
 
 #' Get Z Values Kernel
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesKernel <-
-  function(estimationType, model, mapType, factor = 1.25) {
+  function(estimationType, model, mapType, factor = 1.25, IndSelect = NULL) {
     model <- model$model
     if (is.null(model))
       return(NULL)
@@ -735,24 +725,14 @@ getZValuesKernel <-
 #' @param factor (numeric) factor applied to estimates
 #' @param IndSelect (character) select category in case of categorical model
 getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = NULL) {
-  zValues <- list(
-    minInput = list(value = 0, min = 0, max = 10),
-    maxInput = list(value = 10, min = 0, max = 10)
-  )
-
-  if(model$IndependentType != "numeric"){
-    if(IndSelect == "" | is.null(IndSelect)){
-      zValues$minInput <- list(value = 0,   min = 0, max = 1)
-      zValues$maxInput <- list(value = 1, min = 0, max = 1)
-      return(zValues)
-    }
-    model$model <- model$model[[IndSelect]]
+  zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
+  if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
+    return(zValues)
   }
 
-  model <- model$model
+  model <- getModel(model = model, IndSelect = IndSelect)
   if (is.null(model))
     return(NULL)
-
 
   if(mapType == "Speed"){
     maxValue <- signif(50000 / diff(model$range$mean), 1)
@@ -784,6 +764,29 @@ getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = N
   zValues$minInput <- list(value = 0,   min = 0, max = val * factor)
   zValues$maxInput <- list(value = val, min = 0, max = val * factor)
   return(zValues)
+}
+
+
+getZValuesInitial <- function(IndependentType, IndSelect) {
+  if(IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
+    list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+  } else {
+    list(
+      minInput = list(value = 0,   min = 0, max = 1),
+      maxInput = list(value = 1, min = 0, max = 1)
+    )
+  }
+}
+
+getModel <- function(model, IndSelect) {
+  if (model$IndependentType != "numeric" && !is.null(IndSelect) && IndSelect != "") {
+    model$model[[IndSelect]]
+  } else {
+    model$model
+  }
 }
 
 
