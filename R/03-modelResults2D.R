@@ -19,6 +19,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         tags$h4("Load a Model"),
         downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -458,7 +459,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-
   uploadedData <- downUploadButtonServer(
     "downUpload",
     dat = data,
@@ -466,9 +466,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     model = Model,
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
-    folderOnGithub = "/predefinedModels/AverageR",
-    pathToLocal = file.path(".","predefinedModels", "AverageR"),
+    modelSubFolder = "AverageR",
     helpHTML = getHelp(id = "model2D"),
+    modelNotes = reactive(input$modelNotes),
     compressionLevel = 1)
 
   observe(priority = 100, {
@@ -478,6 +478,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     bindEvent(uploadedData$data)
 
   observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
     ## update inputs ----
     inputIDs <- names(uploadedData$inputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
