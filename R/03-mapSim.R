@@ -17,6 +17,11 @@ modelResultsSimUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
+        # tags$h4("Load a Model"),
+        # downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        # textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        # tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create map" = "create",
@@ -290,6 +295,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       savedMaps()[[as.numeric(m)]]$predictions
     })
     values$predictionList <- res
+    # values are cleaned here -> uploading of inputs is not working
     values$simDataList <- list()
     values$simDataListM <- list()
   })
@@ -301,6 +307,48 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   })
 
   Model <- reactiveVal(NULL)
+
+  # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
+  # # MODEL DOWN- / UPLOAD ----
+  # uploadedData <- downUploadButtonServer(
+  #   "downUpload",
+  #   dat = savedMaps,
+  #   inputs = input,
+  #   model = Model,
+  #   rPackageName = "MpiIsoApp",
+  #   githubRepo = "iso-app",
+  #   modelSubFolder = "LocateR",
+  #   helpHTML = getHelp(id = "similarity"),
+  #   modelNotes = reactive(input$modelNotes),
+  #   compressionLevel = 1)
+  #
+  # observe(priority = 100, {
+  #   ## update data ----
+  #   savedMaps(uploadedData$data)
+  # }) %>%
+  #   bindEvent(uploadedData$data)
+  #
+  # observe(priority = 50, {
+  #   ## reset input of model notes
+  #   updateTextAreaInput(session, "modelNotes", value = "")
+  #
+  #   ## update inputs ----
+  #   inputIDs <- names(uploadedData$inputs)
+  #   inputIDs <- inputIDs[inputIDs %in% names(input)]
+  #
+  #   for (i in 1:length(inputIDs)) {
+  #     session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+  #   }
+  # }) %>%
+  #   bindEvent(uploadedData$inputs)
+  #
+  # observe(priority = 10, {
+  #   ## update model ----
+  #   Model(uploadedData$model)
+  # }) %>%
+  #   bindEvent(uploadedData$model)
+  #
+  # # RUN MODEL ----
   observeEvent(input$start, {
     values$simDataListM <- values$simDataList
 
