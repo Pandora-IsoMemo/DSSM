@@ -15,6 +15,10 @@ modelResultsAssignUI <- function(id, title = "") {
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        tags$h4("Load a Model"),
+        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
           "Data source",
           choices = c(
@@ -171,6 +175,8 @@ modelResultsAssignUI <- function(id, title = "") {
           column(8,
                  DT::dataTableOutput(ns("dataTable")),
           )),
+        tags$br(),
+        tags$br(),
         tags$hr(),
         modelDiagButton(ns("modelDiag")),
         dataExportButton(ns("exportData"))
@@ -205,6 +211,57 @@ modelResultsAssign <- function(input, output, session, isoData) {
       fileImport(data)
     }
   }) %>% bindEvent(importedDat())
+
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(input$dataSource,
+                         db = isoData(),
+                         file = fileImport()
+    )
+
+    data(activeData)
+  })
+
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    modelSubFolder = "AssignR",
+    helpHTML = getHelp(id = "assign"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
 
   Model <- eventReactive(input$start, ignoreNULL = FALSE, {
     data <- data()
@@ -378,13 +435,6 @@ modelResultsAssign <- function(input, output, session, isoData) {
     list(predictions = predictions, data = dataPred, X = X)
   })
 
-  data <- reactive({
-    switch(input$dataSource,
-      db = isoData(),
-      file = fileImport()
-    )
-  })
-
   output$dataTable <- DT::renderDataTable({
     validate(validInput(Model()))
     estimate <- dataFun()()
@@ -512,7 +562,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
   callModule(modelDiagnostics, "modelDiag", model = Model, choice = TRUE)
   callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
 
-  observe({
+  observe(priority = 75, {
     allVars <- names(data())
     updateSelectInput(session, "IndependentX",  choices = c("", allVars))
     updateSelectInput(session, "numVars", choices = c("", allVars))
@@ -520,5 +570,6 @@ modelResultsAssign <- function(input, output, session, isoData) {
     updateSelectInput(session, "catAgg", choices = c("", allVars))
     updateSelectInput(session, "numVarsUnc", choices = c("", allVars))
     updateSelectInput(session, "catVarsUnc", choices = c("", allVars))
-  })
+  }) %>%
+    bindEvent(data())
 }
