@@ -726,7 +726,9 @@ getZValuesKernel <-
 #' @param IndSelect (character) select category in case of categorical model
 getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = NULL) {
   zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
-  if(model$IndependentType != "numeric" && (is.null(IndSelect) || IndSelect == "")){
+  if(!is.null(model$IndependentType) &&
+     model$IndependentType != "numeric" &&
+     (is.null(IndSelect) || IndSelect == "")){
     return(zValues)
   }
 
@@ -768,7 +770,7 @@ getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = N
 
 
 getZValuesInitial <- function(IndependentType, IndSelect) {
-  if(IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
+  if(is.null(IndependentType) || IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
     list(
       minInput = list(value = 0, min = 0, max = 10),
       maxInput = list(value = 10, min = 0, max = 10)
@@ -782,13 +784,14 @@ getZValuesInitial <- function(IndependentType, IndSelect) {
 }
 
 getModel <- function(model, IndSelect) {
-  if (model$IndependentType != "numeric" && !is.null(IndSelect) && IndSelect != "") {
+  if (!is.null(model$IndependentType) &&
+      model$IndependentType != "numeric" &&
+      !is.null(IndSelect) && IndSelect != "") {
     model$model[[IndSelect]]
   } else {
     model$model
   }
 }
-
 
 #' Get Default Z Error
 #'
