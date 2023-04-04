@@ -157,10 +157,12 @@ interactiveMap <- function(input, output, session, isoData) {
       if (is.null(isoData())) {
         leafletMap()
       } else {
+        withProgress({
         # add data with default point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
+        }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
       }
     })
   })
@@ -225,8 +227,10 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # Update data
   observe({
-    leafletProxy("map") %>%
-      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+    withProgress({
+      leafletProxy("map") %>%
+        updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+    }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
   })
 
   # When map is clicked, show a popup with info

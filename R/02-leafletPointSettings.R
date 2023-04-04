@@ -363,7 +363,7 @@ updateDataOnLeafletMap <-
     if (!is.null(plotData$Longitude_jit))
       plotData$longitude <- plotData$Longitude_jit
 
-    drawCirclesOnMap(
+    drawSymbolsOnMap(
       map,
       plotData,
       pointRadius = leafletPointValues$pointRadius,
@@ -483,9 +483,11 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   if (is.null(df) || is.null(columnForPointSize) || is.null(sizeFactor))
     return(NULL)
 
+  defaultPointSizeInPxl <- 4
+
   nPoints <- nrow(df)
   defaultPointSize <-
-    rep(sizeFactor * defaultPointSizeInPxl(), nPoints)
+    rep(sizeFactor * defaultPointSizeInPxl, nPoints)
 
   if (columnForPointSize %in% c("",  "none"))
     return(defaultPointSize)
@@ -497,26 +499,106 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   if (length(unique(na.omit(sizeColumn))) < 2)
     return(defaultPointSize)
 
-  # normalize values
+  # normalize sizes to intervall [0,1]
   varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)
   varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
 
+  # map to intervall: [1/defaultPointSizeInPxl, 1-(1/defaultPointSizeInPxl)] instead of (0,1)
+  # because the minimal factor should be at least 1/defaultPointSizeInPxl
+  varSizeFactor <- (1 - 2/defaultPointSizeInPxl) * varSizeFactor + 1/defaultPointSizeInPxl
+
   # the mean of the data (== 0.5) should have a factor of 1
   varSizeFactor <- 2 * varSizeFactor
-
-  # give zero values a small factor
-  varSizeFactor[varSizeFactor < 0.1 / defaultPointSizeInPxl()] <-
-    0.1 / defaultPointSizeInPxl()
 
   # give missing values zero factor
   varSizeFactor[is.na(varSizeFactor)] <- 0
 
   # multiply with default
-  pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl()
+  pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl
 
   pointSizes
 }
 
-defaultPointSizeInPxl <- function() {
-  4
+drawSymbolsOnMap <-
+  function(map,
+           isoData,
+           pointRadius,
+           colourPal,
+           columnForColour,
+           pointOpacity) {
+    if (is.null(colourPal) | is.null(pointRadius))
+      return(map)
+
+    # create colour for each point
+    colourList <- lapply(colourPal(isoData[[columnForColour]]), col2rgb)
+    colourVec <- sapply(1:nrow(isoData), function(i) {
+      rgb(red = colourList[[i]][1],
+          green = colourList[[i]][2],
+          blue = colourList[[i]][3],
+          max = 255,
+          alpha = pointOpacity * 255)
+    })
+
+    # create icon for each point
+    iconFiles <- sapply(1:nrow(isoData), function(x) {
+      createPchPoints(pch = 16,
+                      width = pointRadius[x] * 2,
+                      height = pointRadius[x] * 2,
+                      col = colourVec[x],
+                      lwd = 4)
+    })
+
+    map %>%
+      addMarkers(
+        data = isoData,
+        lat = ~ latitude,
+        lng =  ~ longitude,
+        group = "dataPoints",
+        icon = ~ icons(
+          iconUrl = iconFiles,
+          popupAnchorX = 20, popupAnchorY = 0
+        )
+      )
+  }
+
+
+# from: https://stackoverflow.com/questions/41372139/using-diamond-triangle-and-star-shapes-in-r-leaflet
+#' Create PCH Points Vector
+#'
+#' @param pch plotting ‘character’, i.e., symbol to use. See graphics::points for details
+#' @param width width in pixel
+#' @param height height in pixel
+#' @param bg initial background colour
+#' @param col color code or name
+createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transparent", col = "black", ...) {
+  n = length(pch)
+  files = character(n)
+  # create a sequence of png images
+  for (i in seq_len(n)) {
+    f = tempfile(fileext = '.png')
+    png(f, width = width, height = height, bg = bg)
+    par(mar = c(0, 0, 0, 0))
+    plot.new()
+    points(.5, .5, pch = pch[i], col = col[i], cex = min(width, height) / 8, ...)
+    dev.off()
+    files[i] = f
+  }
+  files
+}
+
+#' Create PCH Points
+#'
+#' @param pch plotting ‘character’, i.e., symbol to use. See graphics::points for details
+#' @param width width in pixel
+#' @param height height in pixel
+#' @param bg initial background colour
+#' @param col color code or name
+createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent", col = "black", ...) {
+  files <- tempfile(fileext = '.png')
+  png(files, width = width, height = height, bg = bg)
+  par(mar = c(0, 0, 0, 0))
+  plot.new()
+  points(.5, .5, pch = pch, col = col, cex = min(width, height) / 8, ...)
+  dev.off()
+  files
 }

@@ -17,7 +17,7 @@
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers
 #'  addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
-#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds
+#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
 #'  leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magrittr "%>%"
