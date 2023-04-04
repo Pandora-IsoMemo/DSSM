@@ -15,9 +15,8 @@ modelResultsAssignUI <- function(id, title = "") {
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        tags$h4("Load a Model"),
-        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
         tags$hr(),
         selectInput(ns("dataSource"),
           "Data source",
@@ -230,7 +229,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     model = Model,
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
-    modelSubFolder = "AssignR",
+    subFolder = "AssignR",
     helpHTML = getHelp(id = "assign"),
     modelNotes = reactive(input$modelNotes),
     compressionLevel = 1)

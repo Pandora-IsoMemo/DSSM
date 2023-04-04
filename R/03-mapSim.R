@@ -18,9 +18,8 @@ modelResultsSimUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
-        # tags$h4("Load a Model"),
-        # downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
-        # textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        # downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        # textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
         # tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -317,7 +316,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #   model = Model,
   #   rPackageName = "MpiIsoApp",
   #   githubRepo = "iso-app",
-  #   modelSubFolder = "LocateR",
+  #   subFolder = "LocateR",
   #   helpHTML = getHelp(id = "similarity"),
   #   modelNotes = reactive(input$modelNotes),
   #   compressionLevel = 1)

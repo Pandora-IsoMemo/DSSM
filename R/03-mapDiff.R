@@ -17,9 +17,8 @@ modelResultsDiffUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        tags$h4("Load a Model"),
-        downUploadButtonUI(ns("downUpload"), label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Model description ..."),
+        downUploadButtonUI(ns("downUpload"), title = "Load a Map", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -260,10 +259,13 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     model = MapDiff,
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
-    modelSubFolder = "OperatoR",
+    subFolder = "OperatoR",
     helpHTML = getHelp(id = "difference"),
     modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+    compressionLevel = 1,
+    title = "Download and Upload of Maps",
+    labelRemote = "Load online map",
+    labelLocal = "Load local map")
 
   observe(priority = 100, {
     ## update data ----
