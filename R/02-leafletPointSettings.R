@@ -39,7 +39,8 @@ leafletPointSettingsUI <- function(id) {
         step = 0.1
       ),
       pointColourUI(ns("pointColor")),
-      pointSizeUI(ns("pointSize"))
+      pointSizeUI(ns("pointSize")),
+      pointSymbolUI(ns("pointSymbol"))
     )
   )
 }
@@ -67,6 +68,14 @@ leafletPointSettingsServer <- function(id, loadedData) {
 
                  pointSizeVals <-
                    pointSizeServer("pointSize", loadedData)
+                 observe({
+                   for (i in names(pointSizeVals)) {
+                     values[[i]] <- pointSizeVals[[i]]
+                   }
+                 })
+
+                 pointSymbolVals <-
+                   pointSymbolServer("pointSymbol", loadedData)
                  observe({
                    for (i in names(pointSizeVals)) {
                      values[[i]] <- pointSizeVals[[i]]
@@ -324,6 +333,68 @@ pointSizeServer <- function(id, loadedData) {
                    bindEvent(list(input$columnForPointSize, input$sizeFactor))
 
                  return(sizeValues)
+               })
+}
+
+
+#' ui function of leaflet point symbol settings module
+#'
+#' @param id namespace
+pointSymbolUI <- function(id) {
+  ns <- NS(id)
+
+  symbolFiles <- createPchPointsVec(pch = 1:20, width = 5, height = 5)
+
+  symbolImage <- sapply(1:20, function(pch) {
+    sprintf(fmt = "<img src='%s' width=30px><div class='symSel'>%s</div></img>", symbolFiles[pch], pch)
+  })
+
+  tagList(fluidRow(
+    column(
+      8,
+      selectInput(
+        ns("columnForPointSymbol"),
+        "Point symbol variable",
+        choices = c("Add data ..." = "")
+      )
+    ),
+    column(4,
+           style = "margin-top: -0.5em;",
+           #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
+           tags$head(tags$style("
+                       .symSel{
+                       display: inline;
+                       vertical-align: middle;
+                       padding-left: 10px;
+                       }")),
+           pickerInput(
+             ns("symbelSelection"),
+             "Symbols",
+             choices = 1:20,
+             choicesOpt = list(content = symbolImage),
+             options = list(
+               `actions-box` = FALSE,
+               size = 10,
+               `none-selected-text` = "No symbols selected",
+               `selected-text-format` = "count > 8"
+             ),
+             multiple = TRUE
+           )
+    )
+  ))
+}
+
+
+#' server function of leaflet point symbol settings module
+#'
+#' @inheritParams leafletPointSettingsServer
+pointSymbolServer <- function(id, loadedData) {
+  moduleServer(id,
+               function(input, output, session) {
+                 symbols <- reactiveValues()
+
+
+                 return(symbols)
                })
 }
 
