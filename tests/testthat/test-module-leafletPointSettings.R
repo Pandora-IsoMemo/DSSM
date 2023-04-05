@@ -21,7 +21,9 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                    "pointColourPalette",
                    "pointRadius",
                    "pointSymbol",
-                   "clusterPoints"
+                   "clusterPoints",
+                   "columnForPointSymbol",
+                   "showSymbolLegend"
                  )
                )
                expect_true(is.na(session$returned$jitterMaxKm))
@@ -60,6 +62,8 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                    "pointRadius",
                    "pointSymbol",
                    "clusterPoints",
+                   "columnForPointSymbol",
+                   "showSymbolLegend",
                    "pointOpacity"
                  )
                )
@@ -85,7 +89,7 @@ test_that("Test module pointColourServer", {
                # Act
                session$setInputs(
                  columnForPointColour = "source",
-                 showLegend = FALSE,
+                 showColourLegend = FALSE,
                  paletteName = "Dark2",
                  isReversePalette = FALSE
                )
@@ -95,12 +99,12 @@ test_that("Test module pointColourServer", {
                expect_equal(
                  names(session$returned),
                  c(
-                   "showLegend",
+                   "showColourLegend",
                    "columnForPointColour",
                    "pointColourPalette"
                  )
                )
-               expect_false(session$returned$showLegend)
+               expect_false(session$returned$showColourLegend)
                expect_equal(session$returned$columnForPointColour, "source")
                expect_true(is.function(session$returned$pointColourPalette))
              })
@@ -139,21 +143,21 @@ test_that("Test getPointSize", {
 
   expect_null(getPointSize(df = NULL, columnForPointSize = "b"))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "b"),
-               c(2, 4, 6))
+               c(2, 5, 8))
   expect_equal(getPointSize(
     df = testDf,
     columnForPointSize = "b",
     sizeFactor = 2
   ),
-  c(4, 8, 12))
+  c(4, 10, 16))
   expect_equal(
     getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1),
-    c(2.0, 2.6, 6.0)
+    c(2.0, 2.9, 8.0)
   )
   expect_equal(getPointSize(df = testDf, columnForPointSize = "a"),
-               c(2, 0, 6))
+               c(2, 0, 8))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "d"),
-               c(4, 4, 4))
+               c(5, 5, 5))
 })
 
 test_that("Test getPointSymbols", {
@@ -177,29 +181,29 @@ test_that("Test getPointSymbols", {
 
   # test columns for symbols
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "a", symbols = pchChoices()),
+    getPointSymbols(testDf, columnForPointSymbols = "a"),
     list(0, "", 1)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "b", symbols = pchChoices()),
+    getPointSymbols(testDf, columnForPointSymbols = "b"),
     list(0, 1, 2)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = pchChoices()),
+    getPointSymbols(testDf, columnForPointSymbols = "c"),
     list(0, 1, 2)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "d", symbols = pchChoices()[5:10]),
+    getPointSymbols(testDf, columnForPointSymbols = "d", symbols = unlist(pchChoices())[5:10]),
     list(4, 4, 4)
   )
   # test case if not enough symbols selected
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = pchChoices()[c(1, 7)]),
+    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = unlist(pchChoices())[c(1, 7)]),
     list(0, 6, 1)
   )
   # test case if not enough symbols available
   expect_equal(
-    getPointSymbols(data.frame(x = 1:25), columnForPointSymbols = "x", symbols = pchChoices()),
+    getPointSymbols(data.frame(x = 1:25), columnForPointSymbols = "x", symbols = unlist(pchChoices())),
     list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
          17, 18, 19, 20, 0, 1, 2, 3)
   )

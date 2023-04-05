@@ -23,6 +23,8 @@ createPchPoints(
 \item{bg}{initial background colour}
 
 \item{col}{color code or name}
+
+\item{...}{Further graphical parameters that are passed to graphics::points()}
 }
 \description{
 Create PCH Points
