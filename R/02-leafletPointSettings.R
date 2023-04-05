@@ -343,12 +343,6 @@ pointSizeServer <- function(id, loadedData) {
 pointSymbolUI <- function(id) {
   ns <- NS(id)
 
-  symbolFiles <- createPchPointsVec(pch = 1:20, width = 5, height = 5)
-
-  symbolImage <- sapply(1:20, function(pch) {
-    sprintf(fmt = "<img src='%s' width=30px><div class='symSel'>%s</div></img>", symbolFiles[pch], pch)
-  })
-
   tagList(fluidRow(
     column(
       8,
@@ -361,21 +355,14 @@ pointSymbolUI <- function(id) {
     column(4,
            style = "margin-top: -0.5em;",
            #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
-           tags$head(tags$style("
-                       .symSel{
-                       display: inline;
-                       vertical-align: middle;
-                       padding-left: 10px;
-                       }")),
            pickerInput(
              ns("symbelSelection"),
              "Symbols",
-             choices = 1:20,
-             choicesOpt = list(content = symbolImage),
+             choices = pchChoices(),
+             selected = pchChoices(),
              options = list(
-               `actions-box` = FALSE,
+               `actions-box` = TRUE,
                size = 10,
-               `none-selected-text` = "No symbols selected",
                `selected-text-format` = "count > 8"
              ),
              multiple = TRUE
@@ -672,4 +659,30 @@ createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent
   points(.5, .5, pch = pch, col = col, cex = min(width, height) / 8, ...)
   dev.off()
   files
+}
+
+pchChoices <- function() {
+  c(
+    "square" = 0,
+    "circle" = 1,
+    "triangle point up" = 2,
+    "plus" = 3,
+    "cross" = 4,
+    "diamond" = 5,
+    "triangle point down" = 6,
+    "square cross" = 7,
+    "star" = 8,
+    "diamond plus" = 9,
+    "circle plus" = 10,
+    "triangles up and down" = 11,
+    "square plus" = 12,
+    "circle cross" = 13,
+    "square and triangle down" = 14,
+    "filled square" = 15,
+    "filled circle" = 16,
+    "filled triangle point-up" = 17,
+    "filled diamond" = 18,
+    "solid circle" = 19,
+    "bullet (smaller circle)" = 20
+  )
 }
