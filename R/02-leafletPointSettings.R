@@ -345,32 +345,44 @@ pointSizeServer <- function(id, loadedData) {
 pointSymbolUI <- function(id) {
   ns <- NS(id)
 
-  tagList(fluidRow(
-    column(
-      8,
-      selectInput(
-        ns("columnForPointSymbol"),
-        "Point symbol variable",
-        choices = c("Add data ..." = "")
+  tagList(
+    fluidRow(
+      column(8,
+             selectInput(
+               ns("columnForPointSymbol"),
+               "Point symbol variable",
+               choices = c("Add data ..." = "")
+             )
       )
     ),
-    column(4,
-           style = "margin-top: -0.5em;",
-           #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
-           pickerInput(
-             ns("pointSymbol"),
-             "Symbols",
-             choices = pchChoices(),
-             selected = "",
-             options = list(
-               `actions-box` = TRUE,
-               size = 21,
-               `selected-text-format` = "count > 8"
-             ),
-             multiple = TRUE
-           )
+    fluidRow(
+      column(8,
+             #style = "margin-top: -0.5em;",
+             #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
+             pickerInput(
+               ns("pointSymbol"),
+               "Symbols",
+               choices = pchChoices(),
+               selected = "",
+               options = list(
+                 `actions-box` = TRUE,
+                 size = 25,
+                 `selected-text-format` = "count > 8"
+               ),
+               multiple = TRUE
+             )
+      ),
+      column(4,
+             numericInput(
+               ns("pointWidth"),
+               "Width",
+               value = 1,
+               min = 1,
+               max = 10
+             )
+             )
     )
-  ))
+  )
 }
 
 
@@ -433,6 +445,11 @@ pointSymbolServer <- function(id, loadedData) {
                  }) %>%
                    bindEvent(list(input$columnForPointSymbol, input$pointSymbol))
 
+                 observe({
+                   symbolValues$pointWidth <- input$pointWidth
+                 }) %>%
+                   bindEvent(input$pointWidth)
+
                  return(symbolValues)
                })
 }
@@ -480,7 +497,8 @@ updateDataOnLeafletMap <-
       colourPal = leafletPointValues$pointColourPalette,
       columnForColour = leafletPointValues$columnForPointColour,
       pointOpacity = leafletPointValues$pointOpacity,
-      pointSymbol = leafletPointValues$pointSymbol
+      pointSymbol = leafletPointValues$pointSymbol,
+      pointWidth = leafletPointValues$pointWidth
     ) %>%
       setColorLegend(
         showLegend = leafletPointValues$showLegend,
@@ -594,7 +612,7 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   if (is.null(df) || is.null(columnForPointSize) || is.null(sizeFactor))
     return(NULL)
 
-  defaultPointSizeInPxl <- 4
+  defaultPointSizeInPxl <- 5
 
   nPoints <- nrow(df)
   defaultPointSize <-
@@ -637,7 +655,8 @@ drawSymbolsOnMap <-
            colourPal,
            columnForColour,
            pointOpacity,
-           pointSymbol) {
+           pointSymbol,
+           pointWidth) {
     if (is.null(colourPal) | is.null(pointRadius))
       return(map)
 
@@ -657,7 +676,7 @@ drawSymbolsOnMap <-
                       width = pointRadius[x] * 2,
                       height = pointRadius[x] * 2,
                       col = colourVec[x],
-                      lwd = 4)
+                      lwd = pointWidth)
     })
 
     map %>%
@@ -705,7 +724,8 @@ createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transpar
 #' @param height height in pixel
 #' @param bg initial background colour
 #' @param col color code or name
-createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent", col = "black", ...) {
+createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent",
+                            col = "black", ...) {
   files <- tempfile(fileext = '.png')
   png(files, width = width, height = height, bg = bg)
   par(mar = c(0, 0, 0, 0))
@@ -716,28 +736,34 @@ createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent
 }
 
 pchChoices <- function() {
-  c(
-    "square" = 0,
-    "circle" = 1,
-    "triangle point up" = 2,
-    "plus" = 3,
-    "cross" = 4,
-    "diamond" = 5,
-    "triangle point down" = 6,
-    "square cross" = 7,
-    "star" = 8,
-    "diamond plus" = 9,
-    "circle plus" = 10,
-    "triangles up and down" = 11,
-    "square plus" = 12,
-    "circle cross" = 13,
-    "square and triangle down" = 14,
-    "filled square" = 15,
-    "filled circle" = 16,
-    "filled triangle point-up" = 17,
-    "filled diamond" = 18,
-    "solid circle" = 19,
-    "bullet (smaller circle)" = 20
+  list(
+    simple = c(
+      "square" = 0,
+      "circle" = 1,
+      "triangle point up" = 2,
+      "plus" = 3,
+      "cross" = 4,
+      "diamond" = 5,
+      "triangle point down" = 6
+    ),
+    combined = c(
+      "square cross" = 7,
+      "star" = 8,
+      "diamond plus" = 9,
+      "circle plus" = 10,
+      "triangles up and down" = 11,
+      "square plus" = 12,
+      "circle cross" = 13,
+      "square and triangle down" = 14
+    ),
+    filled = c(
+      "filled square" = 15,
+      "filled circle" = 16,
+      "filled triangle point-up" = 17,
+      "filled diamond" = 18,
+      "solid circle" = 19,
+      "bullet (smaller circle)" = 20
+    )
   )
 }
 
