@@ -271,7 +271,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                           selected = "RdYlGn"),
               ns = ns),
             selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                        choices = 0:25, selected = 4),
+                        choices = pchChoices(), selected = 4),
             ns = ns),
           checkboxInput(inputId = ns("cluster"),
                         label = "Show Clustering",
