@@ -450,6 +450,7 @@ dataExplorerServer <- function(id) {
                  })
 
                  observe({
+                   ### filter isoData ----
                    if (is.null(isoDataFull()) || is.null(input$dataTable_rows_all)) {
                      isoData(NULL)
                    } else {
@@ -457,7 +458,9 @@ dataExplorerServer <- function(id) {
                                            names(isoDataFull()) %in% dataColumns(),
                                            drop = FALSE])
                    }
-                 })
+                 }) %>%
+                   bindEvent(list(isoDataFull(), input$dataTable_rows_all, dataColumns()),
+                             ignoreNULL = FALSE, ignoreInit = TRUE)
 
                  # IsoData export ----
                  isoDataExport <- reactive({
@@ -553,7 +556,7 @@ dataExplorerServer <- function(id) {
                  })
 
 
-                 ## Output table ----
+                 ## Output TABLE ----
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),

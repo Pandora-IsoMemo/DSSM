@@ -17,6 +17,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
@@ -51,7 +54,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         conditionalPanel(
           condition = "input.dataSource != 'model'",
           ns = ns,
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
           radioButtons(inputId = ns("IndependentType"),
@@ -90,9 +93,6 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           checkboxInput(inputId = ns("Outlier"),
                         label = "Remove model outliers",
                         value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("OutlierD"),
-                        label = "Remove data outliers",
-                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.Outlier == true",
             sliderInput(inputId = ns("OutlierValue"),
@@ -100,6 +100,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                         min = 2, max = 8, value = 4, step = 0.1),
             ns = ns
           ),
+          checkboxInput(inputId = ns("OutlierD"),
+                        label = "Remove data outliers",
+                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.OutlierD == true",
             sliderInput(inputId = ns("OutlierValueD"),
@@ -112,17 +115,19 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                         label = "Set lower latitude restriction",
+                         label = "Lower",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                         label = "Set upper latitude restriction",
+                         label = "Upper",
                          min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                         label = "Set lower longitude restriction",
+                         label = "Lower",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                         label = "Set upper longitude restriction",
+                         label = "Upper",
                          min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           ),
@@ -426,12 +431,24 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateTextInput(session, "saveMapName", value = "")
   })
 
-  data <- reactive({
-    switch(
+  # use only if updating isoData / fileImport instead of data, see below
+  # data <- reactive({
+  #   switch(
+  #     input$dataSource,
+  #     db = isoData(),
+  #     file = fileImport()
+  #   )
+  # })
+
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
 
   coordType <- reactive({
@@ -448,6 +465,54 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   Model <- reactiveVal(NULL)
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    subFolder = "AverageR",
+    helpHTML = getHelp(id = "model2D"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    # updating isoData could influence the update of isoData in other modelling tabs ... !
+    # First check if desired! If ok, than:
+    # if (uploadedData$inputs$dataSource == "file") {
+    #   fileImport(uploadedData$data)
+    # } else {
+    #   isoData(uploadedData$data)
+    # }
+
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+  ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
@@ -456,7 +521,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
-    if (input$Independent == "" | input$Latitude == "" | input$Longitude == "") {
+    if (input$IndependentX == "" | input$Latitude == "" | input$Longitude == "") {
       Model(NULL)
       return()
     }
@@ -803,7 +868,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
@@ -827,7 +894,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     centerEstimate$text()
   })
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -862,7 +929,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
     selectedTextLabel <- NULL
 
-    updateSelectInput(session, "Independent", choices = c("", numVars),
+    updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
     updateSelectInput(session, "IndependentUnc", choices = c("", numVars),
                       selected = selectedIndependentUnc)
@@ -878,7 +945,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       selected = selectedTextLabel)
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
                       selected = selectedTextLabel)
-  })
+  }) %>%
+    bindEvent(data())
 
   observe({
     req(Model())

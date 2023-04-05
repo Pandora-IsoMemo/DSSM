@@ -286,14 +286,14 @@ estimateMapWrapper <- function(data, input) {
     withProgress({
       dataOld <- data
       dataD <- data
-      moD <- mean(dataD[, input$Independent], na.rm = TRUE)
-      soD <- sd(dataD[, input$Independent], na.rm = TRUE)
-      dataD <- dataD[dataD[, input$Independent] >= moD - input$OutlierValueD * soD, ]
-      dataD <- dataD[dataD[, input$Independent] <= moD + input$OutlierValueD * soD, ]
+      moD <- mean(dataD[, input$IndependentX], na.rm = TRUE)
+      soD <- sd(dataD[, input$IndependentX], na.rm = TRUE)
+      dataD <- dataD[dataD[, input$IndependentX] >= moD - input$OutlierValueD * soD, ]
+      dataD <- dataD[dataD[, input$IndependentX] <= moD + input$OutlierValueD * soD, ]
       outlierDR <- rownames(dataOld)[which(!(rownames(dataOld) %in% rownames(dataD)))]
       rm(dataD)
       data <- estimateMap(
-        data = data, Bayes = FALSE, independent = input$Independent,
+        data = data, Bayes = FALSE, independent = input$IndependentX,
         independentUncertainty = input$IndependentUnc,
         IndependentType = input$IndependentType,
         Longitude = input$Longitude, Latitude = input$Latitude,
@@ -323,7 +323,7 @@ estimateMapWrapper <- function(data, input) {
   if(input$Bayes != TRUE){
     withProgress(
       model <- estimateMap(
-        data = data, Bayes = input$Bayes, independent = input$Independent,
+        data = data, Bayes = input$Bayes, independent = input$IndependentX,
         independentUncertainty = input$IndependentUnc,
         IndependentType = input$IndependentType,
         Longitude = input$Longitude, Latitude = input$Latitude,
@@ -344,7 +344,7 @@ estimateMapWrapper <- function(data, input) {
     )
   } else {
     model <- estimateMap(
-      data = data, Bayes = input$Bayes, independent = input$Independent,
+      data = data, Bayes = input$Bayes, independent = input$IndependentX,
       independentUncertainty = input$IndependentUnc,
       IndependentType = input$IndependentType,
       Longitude = input$Longitude, Latitude = input$Latitude,
@@ -1028,14 +1028,14 @@ estimateMap3DWrapper <- function(data, input) {
       withProgress({
         dataOld <- data
         dataD <- data
-        moD <- mean(dataD[, input$Independent], na.rm = TRUE)
-        soD <- sd(dataD[, input$Independent], na.rm = TRUE)
-        dataD <- dataD[dataD[, input$Independent] >= moD - input$OutlierValueD * soD, ]
-        dataD <- dataD[dataD[, input$Independent] <= moD + input$OutlierValueD * soD, ]
+        moD <- mean(dataD[, input$IndependentX], na.rm = TRUE)
+        soD <- sd(dataD[, input$IndependentX], na.rm = TRUE)
+        dataD <- dataD[dataD[, input$IndependentX] >= moD - input$OutlierValueD * soD, ]
+        dataD <- dataD[dataD[, input$IndependentX] <= moD + input$OutlierValueD * soD, ]
         outlierDR <- rownames(dataOld)[which(!(rownames(dataOld) %in% rownames(dataD)))]
         rm(dataD)
 
-        data <- estimateMap3D(data = data, Bayes = FALSE, independent = input$Independent,
+        data <- estimateMap3D(data = data, Bayes = FALSE, independent = input$IndependentX,
                             independentUncertainty = input$IndependentUnc,
                             IndependentType = input$IndependentType,
                             Longitude = input$Longitude, Latitude = input$Latitude,
@@ -1065,7 +1065,7 @@ estimateMap3DWrapper <- function(data, input) {
 
   if(input$Bayes != TRUE){
     withProgress(
-      model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$Independent,
+      model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$IndependentX,
                     independentUncertainty = input$IndependentUnc,
                     IndependentType = input$IndependentType,
                     Longitude = input$Longitude, Latitude = input$Latitude,
@@ -1086,7 +1086,7 @@ estimateMap3DWrapper <- function(data, input) {
       message = "Generating spatio-temporal model"
     )
   } else {
-    model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$Independent,
+    model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$IndependentX,
                   independentUncertainty = input$IndependentUnc,
                   IndependentType = input$IndependentType,
                   Longitude = input$Longitude, Latitude = input$Latitude,
@@ -2336,7 +2336,7 @@ estimateMapKernelWrapper <- function(data, input) {
       restriction <- c(-90, 90, -180, 180)
     }
 
-    estimateMapKernel(data = data, independent = input$Independent,
+    estimateMapKernel(data = data, independent = input$IndependentX,
                 Longitude = input$Longitude, Latitude = input$Latitude,
                 CoordType = input$CoordType,
                 Weighting = input$Weighting,
@@ -2734,7 +2734,7 @@ estimateMap3DKernelWrapper <- function(data, input) {
   }
 
   estimateMap3DKernel(
-    data = data, independent = input$Independent,
+    data = data, independent = input$IndependentX,
     Longitude = input$Longitude, Latitude = input$Latitude,
     CoordType = input$coordType, DateOne = input$DateOne,
     DateTwo = input$DateTwo, DateType = input$DateType,

@@ -2,7 +2,7 @@ validInput <- function(model){
   if (is.list(model)){
      NULL
   } else if (is.null(model)) {
-    "Please select an the independent and other necessary variables in the drop-down menu on the
+    "Please select a dependent and other necessary variables in the drop-down menu on the
     left sidebar panel and click the Start-Button"
   } else if (model == "non-numeric latitude or longitude") {
     "Non-numeric latitude or longitude variables in your data. Please check the coordinate format
