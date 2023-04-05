@@ -132,19 +132,19 @@ test_that("Test getPointSize", {
   )
 
   expect_equal(getPointSize(df = testDf, columnForPointSize = "b"),
-               c(0.1, 4, 8))
+               c(2, 4, 6))
   expect_equal(getPointSize(
     df = testDf,
     columnForPointSize = "b",
     sizeFactor = 2
   ),
-  c(0.2, 8, 16))
+  c(4, 8, 12))
   expect_equal(
     getPointSize(df = testDf, columnForPointSize = "c") %>% round(digits = 1),
-    c(0.1, 1.1, 8)
+    c(2.0, 2.6, 6.0)
   )
   expect_equal(getPointSize(df = testDf, columnForPointSize = "a"),
-               c(0.1, 0, 8))
+               c(2, 0, 6))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "d"),
                c(4, 4, 4))
 })
