@@ -1,5 +1,14 @@
 # MpiIsoApp development version
 
+## Version 23.04.1
+
+### New Features
+- _Model tabs_: Option to load a model
+  - download a model (all user inputs, data and/or the model output) as a .zip file
+  - upload online models that are stored in github
+  - upload local models that were downloaded in a past session
+  - check if the model to be uploaded comes from the active tab
+
 ## Version 23.03.6
 
 ### New Features
