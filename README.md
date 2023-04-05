@@ -16,3 +16,6 @@ Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initi
 
 ### Release notes:
 - see `NEWS.md`
+
+### Folder for online models
+- [`inst/app/predefinedModels`](https://github.com/Pandora-IsoMemo/iso-app/tree/main/inst/app/predefinedModels)
