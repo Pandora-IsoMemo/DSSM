@@ -68,7 +68,8 @@ testthat::test_that("function drawSymbolsOnMap", {
       reverse = FALSE
     ),
     columnForColour = "source",
-    pointOpacity = c(1, 1, 0, 0, 0.5, 0.5)
+    pointOpacity = c(1, 1, 0, 0, 0.5, 0.5),
+    pointSymbol = c(1, 2, 3, 4, 5, 6)
   )
   testthat::expect_is(testMap, "leaflet")
 })

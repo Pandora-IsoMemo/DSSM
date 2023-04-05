@@ -9,6 +9,7 @@ leafletPointSettingsUI <- function(id) {
     conditionalPanel(
       condition = "input.clusterPoints == false",
       ns = ns,
+      tags$hr(),
       fluidRow(
         column(8,
                checkboxInput(
@@ -38,6 +39,7 @@ leafletPointSettingsUI <- function(id) {
         max = 1,
         step = 0.1
       ),
+      # show legend pickerInput ...
       pointColourUI(ns("pointColor")),
       pointSizeUI(ns("pointSize")),
       pointSymbolUI(ns("pointSymbol"))
@@ -77,8 +79,8 @@ leafletPointSettingsServer <- function(id, loadedData) {
                  pointSymbolVals <-
                    pointSymbolServer("pointSymbol", loadedData)
                  observe({
-                   for (i in names(pointSizeVals)) {
-                     values[[i]] <- pointSizeVals[[i]]
+                   for (i in names(pointSymbolVals)) {
+                     values[[i]] <- pointSymbolVals[[i]]
                    }
                  })
 
@@ -356,13 +358,13 @@ pointSymbolUI <- function(id) {
            style = "margin-top: -0.5em;",
            #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
            pickerInput(
-             ns("symbelSelection"),
+             ns("pointSymbol"),
              "Symbols",
              choices = pchChoices(),
-             selected = pchChoices(),
+             selected = "",
              options = list(
                `actions-box` = TRUE,
-               size = 10,
+               size = 21,
                `selected-text-format` = "count > 8"
              ),
              multiple = TRUE
@@ -378,10 +380,60 @@ pointSymbolUI <- function(id) {
 pointSymbolServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
-                 symbols <- reactiveValues()
+                 symbolValues <- reactiveValues(
+                   pointSymbol = 19
+                 )
 
+                 observe({
+                   if (is.null(loadedData())) {
+                     choices <- c("Add data ..." = "")
+                     selectedDefault <- ""
+                     #showLegendVal <- FALSE
+                   } else {
+                     facCols <- factorColumns(loadedData())
+                     if (length(facCols) == 0) {
+                       choices <- c("No character columns ..." = "")
+                       selectedDefault <- ""
+                       #showLegendVal <- FALSE
+                     } else {
+                       choices <- c("None" = "", facCols)
+                     }
+                     selectedDefault <- ""
+                     #showLegendVal <- TRUE
+                   }
 
-                 return(symbols)
+                   updateSelectInput(
+                     session = session,
+                     "columnForPointSymbol",
+                     choices = choices,
+                     selected = selectedDefault
+                   )
+                   updatePickerInput(
+                     session = session,
+                     "pointSymbol",
+                     selected = 19
+                   )
+                   #updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+
+                   symbolValues$pointSymbol <- getPointSymbols(
+                     df = loadedData(),
+                     columnForPointSymbol = selectedDefault,
+                     symbols = input$pointSymbol
+                   )
+                   #symbolValues$showLegend <- input$showLegend
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   symbolValues$pointSymbol <- getPointSymbols(
+                     df = loadedData(),
+                     columnForPointSymbol = input$columnForPointSymbol,
+                     symbols = input$pointSymbol
+                   )
+                 }) %>%
+                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol))
+
+                 return(symbolValues)
                })
 }
 
@@ -427,7 +479,8 @@ updateDataOnLeafletMap <-
       pointRadius = leafletPointValues$pointRadius,
       colourPal = leafletPointValues$pointColourPalette,
       columnForColour = leafletPointValues$columnForPointColour,
-      pointOpacity = leafletPointValues$pointOpacity
+      pointOpacity = leafletPointValues$pointOpacity,
+      pointSymbol = leafletPointValues$pointSymbol
     ) %>%
       setColorLegend(
         showLegend = leafletPointValues$showLegend,
@@ -583,7 +636,8 @@ drawSymbolsOnMap <-
            pointRadius,
            colourPal,
            columnForColour,
-           pointOpacity) {
+           pointOpacity,
+           pointSymbol) {
     if (is.null(colourPal) | is.null(pointRadius))
       return(map)
 
@@ -599,7 +653,7 @@ drawSymbolsOnMap <-
 
     # create icon for each point
     iconFiles <- sapply(1:nrow(isoData), function(x) {
-      createPchPoints(pch = 16,
+      createPchPoints(pch = pointSymbol[[x]], # pointSymbol is a list, while others are vectors
                       width = pointRadius[x] * 2,
                       height = pointRadius[x] * 2,
                       col = colourVec[x],
@@ -685,4 +739,59 @@ pchChoices <- function() {
     "solid circle" = 19,
     "bullet (smaller circle)" = 20
   )
+}
+
+#' Get Point Size
+#'
+#' @param df (data.frame) loaded data
+#' @param columnForPointSymbols (character) name of the column that determines the point symbol
+#' @param symbols (numeric) selected symbols
+getPointSymbols <- function(df, columnForPointSymbols, symbols = pchChoices()) {
+  if (is.null(df) || is.null(columnForPointSymbols))
+    return(NULL)
+
+  # create default symbols
+  pointSymbol <- 19
+
+  if (length(symbols) > 0 && !any(symbols %in% c("",  "none"))) {
+    pointSymbol <- symbols[1] %>%
+      as.numeric()
+  }
+
+  # create a list of symbols, one symbol for each point
+  # use list to enable different types of values, we need numeric and ""
+  pointSymbol <- rep(pointSymbol, nrow(df)) %>%
+    as.list()
+
+  # create symbols based on columnForPointSymbols if there are more than one unique values
+  if (!(columnForPointSymbols %in% c("",  "none"))) {
+    symbolColumn <- df[, columnForPointSymbols] %>%
+      as.numeric() %>%
+      suppressWarnings()
+
+    uniqueValues <- unique(na.omit(symbolColumn))
+    if (length(uniqueValues) > 1) {
+      # add more symbols if not selected enough, repeat values to fill to full length if needed
+      if (length(uniqueValues) > length(symbols)) {
+        symbols <- pchChoices() %>%
+          orderBySelection(pchSel = symbols) %>%
+          rep_len(length.out = length(uniqueValues))
+      }
+
+      # overwrite default symbols based on factors from the symbolColumn
+      pointSymbol <- symbols[symbolColumn %>% as.factor()] %>%
+        as.numeric() %>%
+        as.list()
+
+      # hide missing values: pch == "" means no point is displayed
+      pointSymbol[sapply(pointSymbol, is.na)] <- ""
+    }
+  }
+
+  pointSymbol
+}
+
+orderBySelection <- function(pchSel, pchAll = pchChoices()) {
+  index <- match(pchSel, pchAll)
+  c(pchAll[index], pchAll[-index])
 }

@@ -97,14 +97,12 @@ interactiveMapUI <- function(id, title = "") {
       absolutePanel(
         id = "controls",
         class = "panel panel-default",
-        fixed = TRUE,
         draggable = TRUE,
         top = 110,
         right = "auto",
         left = 50,
         bottom = "auto",
-        width = 330,
-        height = "auto",
+        style = "position:fixed; width:330px; overflow-y:auto; height:85%",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
         leafletPointSettingsUI(ns("mapPointSettings")),
         leafletExportButton(ns("exportLeaflet"))

@@ -16,7 +16,13 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints")
+                 c(
+                   "jitterMaxKm",
+                   "pointColourPalette",
+                   "pointRadius",
+                   "pointSymbol",
+                   "clusterPoints"
+                 )
                )
                expect_true(is.na(session$returned$jitterMaxKm))
                expect_true(session$returned$clusterPoints)
@@ -48,8 +54,14 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
                expect_equal(
                  names(session$returned),
-                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints",
-                   "pointOpacity")
+                 c(
+                   "jitterMaxKm",
+                   "pointColourPalette",
+                   "pointRadius",
+                   "pointSymbol",
+                   "clusterPoints",
+                   "pointOpacity"
+                 )
                )
                expect_false(session$returned$clusterPoints)
                expect_equal(session$returned$pointOpacity, 0.5)
@@ -106,19 +118,13 @@ test_that("Test module pointSizeServer", {
                print("test pointSizeServer")
 
                # Act
-               session$setInputs(
-                 columnForPointSize = "b",
-                 sizeFactor = FALSE
-               )
+               session$setInputs(columnForPointSize = "b",
+                                 sizeFactor = FALSE)
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(
-                 names(session$returned),
-                 c(
-                   "pointRadius"
-                 )
-               )
+               expect_equal(names(session$returned),
+                            c("pointRadius"))
                expect_equal(session$returned$pointRadius, c(0, 0, 0))
              })
 })
@@ -131,6 +137,7 @@ test_that("Test getPointSize", {
     d = c(4, 4, 4)
   )
 
+  expect_null(getPointSize(df = NULL, columnForPointSize = "b"))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "b"),
                c(2, 4, 6))
   expect_equal(getPointSize(
@@ -147,4 +154,53 @@ test_that("Test getPointSize", {
                c(2, 0, 6))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "d"),
                c(4, 4, 4))
+})
+
+test_that("Test getPointSymbols", {
+  testDf <- data.frame(
+    a = c(1, NA, 3),
+    b = 5:7,
+    c = c(3, 4, 10),
+    d = c(4, 4, 4)
+  )
+
+  # test case if data is missing
+  expect_null(getPointSymbols(NULL, columnForPointSymbols = ""))
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "", symbols = ""),
+    list(19, 19, 19)
+  )
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "", symbols = "5"),
+    list(5, 5, 5)
+  )
+
+  # test columns for symbols
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "a", symbols = pchChoices()),
+    list(0, "", 1)
+  )
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "b", symbols = pchChoices()),
+    list(0, 1, 2)
+  )
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = pchChoices()),
+    list(0, 1, 2)
+  )
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "d", symbols = pchChoices()[5:10]),
+    list(4, 4, 4)
+  )
+  # test case if not enough symbols selected
+  expect_equal(
+    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = pchChoices()[c(1, 7)]),
+    list(0, 6, 1)
+  )
+  # test case if not enough symbols available
+  expect_equal(
+    getPointSymbols(data.frame(x = 1:25), columnForPointSymbols = "x", symbols = pchChoices()),
+    list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+         17, 18, 19, 20, 0, 1, 2, 3)
+  )
 })
