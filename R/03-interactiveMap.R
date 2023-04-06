@@ -102,7 +102,7 @@ interactiveMapUI <- function(id, title = "") {
         right = "auto",
         left = 50,
         bottom = "auto",
-        style = "position:fixed; width:330px; overflow-y:auto; height:85%",
+        style = "position:fixed; width:330px; overflow-y:auto; height:80%",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
         leafletPointSettingsUI(ns("mapPointSettings")),
         leafletExportButton(ns("exportLeaflet"))
@@ -128,7 +128,7 @@ interactiveMap <- function(input, output, session, isoData) {
   leafletPointValues <-
     leafletPointSettingsServer("mapPointSettings", loadedData = isoData)
 
-  # Create the map
+  # Create the map ----
   leafletMap <- reactiveVal({
     leaflet() %>%
       setView(lng = 30,
@@ -147,7 +147,7 @@ interactiveMap <- function(input, output, session, isoData) {
   #zoomSlow <- newZoom %>% debounce(1000)
   #zoomSlow <- newZoom %>% throttle(1000)
 
-  # render output map ####
+  # render output map ----
   output$map <- renderLeaflet({
     req(leafletMap())
 
@@ -156,7 +156,7 @@ interactiveMap <- function(input, output, session, isoData) {
         leafletMap()
       } else {
         withProgress({
-        # add data with default point values
+        ## add data with default point values ----
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
@@ -166,7 +166,7 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # adjust the view
+  # adjust the view ----
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
     # not exact bounds, only fit to input$map_bounds
@@ -189,7 +189,7 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # adjust map type
+  # adjust map type ----
   observeEvent(leafletValues()$leafletType, {
     req(leafletValues()$leafletType)
     leafletProxy("map") %>%
@@ -197,7 +197,7 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # add icons to map
+  # add icons to map ----
   observeEvent(list(
     leafletValues()$scalePosition,
     leafletValues()$northArrowPosition
@@ -212,8 +212,7 @@ interactiveMap <- function(input, output, session, isoData) {
       )
   })
 
-
-  # draw/hide a square at bounds
+  # draw/hide a square at bounds ----
   observeEvent(list(leafletValues()$showBounds, leafletValues()$bounds), {
     req(leafletValues()$bounds)
 
@@ -222,16 +221,60 @@ interactiveMap <- function(input, output, session, isoData) {
                        bounds = leafletValues()$bounds)
   })
 
-
-  # Update data
+  # show/hide legends ----
   observe({
+    req(isoData(), leafletPointValues$pointColourPalette, isolate(input$map_groups))
+
+    leafletProxy("map") %>%
+      # setColorLegend(title = leafletPointValues$columnForPointColour,
+      #                pal = leafletPointValues$pointColourPalette,
+      #                values = leafletPointValues$pointColourData) %>% #isoData()[[leafletPointValues$columnForPointColour]]) %>%
+      # setSizeLegend(title = leafletPointValues$columnForPointSize,
+      #               values = leafletPointValues$sizeData,
+      #               factor = leafletPointValues$sizeFactor) %>%
+      #clearGroup("Colour Legend") %>%
+      addLegend(
+        "topleft",
+        pal = leafletPointValues$pointColourPalette,
+        values = leafletPointValues$pointColourData, # isoData()[[leafletPointValues$columnForPointColour]],
+        title = leafletPointValues$columnForPointColour,
+        group = "Colour Legend",
+        layerId = "colorLgnd"
+      ) %>%
+      addLegendSize(
+        values = leafletPointValues$sizeData,
+        baseSize = 5 * leafletPointValues$sizeFactor,
+        color = 'black',
+        fillColor = 'black',
+        opacity = 0.7,
+        title = leafletPointValues$columnForPointSize,
+        shape = "circle",
+        orientation = 'horizontal',
+        breaks = 5,
+        group = "Size Legend",
+        layerId = "sizeLgnd"
+      ) %>%
+      addLayersControl(
+        overlayGroups = c("Data Points", "Colour Legend", "Size Legend"),
+        position = "bottomleft",
+        options = layersControlOptions(collapsed = FALSE)) #%>%
+      #hideGroup("Size Legend")
+  })
+
+  observe({
+    print(input$map_groups)
+  })
+
+  # Update data ----
+  observe({
+    req(isolate(input$map_groups))
     withProgress({
       leafletProxy("map") %>%
         updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
     }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
   })
 
-  # When map is clicked, show a popup with info
+  # When map is clicked, show a popup with info ----
   observe({
     req(input$map_shape_click)
     leafletProxy("map") %>% clearPopups()
@@ -244,7 +287,7 @@ interactiveMap <- function(input, output, session, isoData) {
     })
   })
 
-  # Show Histograms and Scatterplot in Sidebar
+  # Show Histograms and Scatterplot in right Sidebar ----
   observe({
     req(isoData())
     numVars <- unlist(lapply(names(isoData()), function(x) {
@@ -272,6 +315,7 @@ interactiveMap <- function(input, output, session, isoData) {
     isoData()[[input$var2]]
   })
 
+  # export map ----
   callModule(
     leafletExport,
     "exportLeaflet",

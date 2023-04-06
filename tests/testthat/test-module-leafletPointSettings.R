@@ -89,7 +89,6 @@ test_that("Test module pointColourServer", {
                # Act
                session$setInputs(
                  columnForPointColour = "source",
-                 showColourLegend = FALSE,
                  paletteName = "Dark2",
                  isReversePalette = FALSE
                )
@@ -99,12 +98,10 @@ test_that("Test module pointColourServer", {
                expect_equal(
                  names(session$returned),
                  c(
-                   "showColourLegend",
                    "columnForPointColour",
                    "pointColourPalette"
                  )
                )
-               expect_false(session$returned$showColourLegend)
                expect_equal(session$returned$columnForPointColour, "source")
                expect_true(is.function(session$returned$pointColourPalette))
              })

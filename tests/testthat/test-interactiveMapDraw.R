@@ -54,23 +54,57 @@ testthat::test_that("function drawSymbolsOnMap", {
   )
 
   testMap <- NULL
-  testMap <- drawSymbolsOnMap(
+  #testMap <-
+  drawSymbolsOnMap(
     map = leaflet() %>%
       setView(lng = 30,
               lat = 50,
               zoom = 4) %>%
       addProviderTiles("CartoDB.Positron"),
     isoData = testIsoData,
-    pointRadius = c(10, 20, 3.5, 80, 10, 20),
+    #pointRadius = c(10, 20, 3.5, 80, 10, 20),
+    sizeData = testIsoData[["longitude"]],
+    sizeFactor = 1,
     colourPal = colorFactor(
       palette = "Dark2",
       domain = testIsoData[["source"]],
       reverse = FALSE
     ),
     columnForColour = "source",
-    pointOpacity = c(1, 1, 0, 0, 0.5, 0.5),
-    pointSymbol = c(1, 2, 3, 4, 5, 6),
+    pointOpacity = c(1, 1, 0.3, 0.3, 0.5, 0.5),
+    pointSymbol = rep("circle", 6),#c(1, 2, 3, 4, 5, 6),
     pointWidth = 1
-  )
+  ) %>%
+    setColorLegend(title = "Col",
+                   pal = colorFactor(
+                     palette = "Dark2",
+                     domain = testIsoData[["source"]],
+                     reverse = FALSE
+                   ),
+                   values = testIsoData[["source"]]
+                   ) %>%
+      setSizeLegend(title = "Size",
+                    values = 5, #testIsoData[["longitude"]],
+                    factor = 1) %>%
+      addLayersControl(
+        overlayGroups = c("Size Legend", "Colour Legend"),
+        position = "bottomleft",
+        options = layersControlOptions(collapsed = FALSE)) %>%
+    setColorLegend(title = "Col",
+                   pal = colorFactor(
+                     palette = "Dark2",
+                     domain = testIsoData[["source"]],
+                     reverse = FALSE
+                   ),
+                   values = testIsoData[["source"]]
+    ) %>%
+    setSizeLegend(title = "Size",
+                  values = 5, #testIsoData[["longitude"]],
+                  factor = 1) %>%
+    addLayersControl(
+      overlayGroups = c("Size Legend", "Colour Legend"),
+      position = "bottomleft",
+      options = layersControlOptions(collapsed = FALSE))
+
   testthat::expect_is(testMap, "leaflet")
 })

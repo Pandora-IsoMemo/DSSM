@@ -16,10 +16,11 @@
 #'  cm.colors pdfFonts
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
-#' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers
-#'  addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
-#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
-#'  leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
+#' @importFrom leaflegend addLegendNumeric addLegendSize makeSymbolsSize
+#' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLayersControl addLegend
+#'  addMarkers addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
+#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds hideGroup icons
+#'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
