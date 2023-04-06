@@ -225,6 +225,7 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # Update data
   observe({
+    req(isolate(input$map_groups))
     withProgress({
       leafletProxy("map") %>%
         updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)

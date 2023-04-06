@@ -208,3 +208,9 @@ test_that("Test getPointSymbols", {
          17, 18, 19, 20, 0, 1, 2, 3)
   )
 })
+
+
+test_that("Test getSymbolLegend", {
+  expect_type(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0)), "character")
+  expect_length(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0)), 1)
+})
