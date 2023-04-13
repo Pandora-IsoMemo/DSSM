@@ -2600,6 +2600,7 @@ estimateMap3DKernel <- function(data,
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
   if(clusterMethod == "kmeans"){
+
     data$id <- 1:nrow(data)
     set.seed(1234)
     # Clustering on filtered data
@@ -2627,6 +2628,7 @@ estimateMap3DKernel <- function(data,
     data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
     data$id <- NULL
     dataC$cluster <- NULL
+    dataC <- dataC[order(dataC$id),]
 
     # Optimal Centroids
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2691,6 +2693,7 @@ estimateMap3DKernel <- function(data,
     data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
     data$id <- NULL
     dataC$cluster <- NULL
+    dataC <- dataC[order(dataC$id),]
 
     #optimal centroids:
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2703,12 +2706,12 @@ estimateMap3DKernel <- function(data,
     densSD <- apply(clustDens, 2, sd)
     densQ <- densM / densSD
 
-    clusterCentroids <- do.call("rbind", (lapply(1:nClust, function(j){
+    clusterCentroids <- do.call("rbind", (lapply(1:best_solution_cluster, function(j){
       dataC[dataC$cluster == j, ][which.max(densQ[dataC$cluster == j]), c("Longitude", "Latitude")]
     })))
 
     data$cluster <- sapply(1:nrow(data),
-                           function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
+                           function(x) which.min(rowSums((data[rep(x, best_solution_cluster), c("Longitude", "Latitude")] -
                                                             as.matrix(clusterCentroids))^2)))
     if(length(unique(data$cluster)) < length(unique(dataC$cluster))){
     showNotification(paste0("Note: mclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
