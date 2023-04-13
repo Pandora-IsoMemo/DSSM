@@ -100,8 +100,8 @@ modelResults3DKernelUI <- function(id, title = ""){
             condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
-                        label = "Number of clusters (range)",
-                        value = c(2,10), min = 2, max = 20, step = 1)
+                        label = "Possible range for clusters",
+                        value = c(2,10), min = 2, max = 50, step = 1)
           ),
           conditionalPanel(
             condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
