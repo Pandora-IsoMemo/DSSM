@@ -54,25 +54,30 @@ testthat::test_that("function drawSymbolsOnMap", {
   )
 
   testMap <- NULL
-  testMap <- drawSymbolsOnMap(
-    map = leaflet() %>%
-      setView(lng = 30,
-              lat = 50,
-              zoom = 4) %>%
-      addProviderTiles("CartoDB.Positron"),
-    isoData = testIsoData,
-    pointRadius = c(10, 20, 3.5, 80, 10, 20),
-    colourPal = colorFactor(
-      palette = "Dark2",
-      domain = testIsoData[["source"]],
-      reverse = FALSE
-    ),
-    columnForColour = "source",
-    pointOpacity = c(1, 1, 0.3, 0.3, 0.6, 0.6),
-    pointSymbol = c(1, 2, 3, 4, 5, 6),
-    pointWidth = 4
-  ) %>%
-    setSymbolLegend(c("all" = 19)) %>%
+
+  # Note: the path to symbol icons is not found locally (the parameter "html" of addControl() is
+  # wrong inside tests), the figure in the symbol legend is missing.
+  # However, it works outside of testing and the checks should pass.
+  testMap <-
+    drawSymbolsOnMap(
+      map = leaflet() %>%
+        setView(lng = 30,
+                lat = 50,
+                zoom = 4) %>%
+        addProviderTiles("CartoDB.Positron"),
+      isoData = testIsoData,
+      pointRadius = c(10, 20, 3.5, 80, 10, 20),
+      colourPal = colorFactor(
+        palette = "Dark2",
+        domain = testIsoData[["source"]],
+        reverse = FALSE
+      ),
+      columnForColour = "source",
+      pointOpacity = c(1, 1, 0.3, 0.3, 0.6, 0.6),
+      pointSymbol = c(1, 2, 3, 4, 5, 6),
+      pointWidth = 4
+    ) %>%
+    setSymbolLegend(c("all" = 19), isTest = TRUE) %>%
     setColorLegend(
       showLegend = TRUE,
       title = "source",
@@ -86,7 +91,8 @@ testthat::test_that("function drawSymbolsOnMap", {
     addLayersControl(
       overlayGroups = c("Data Points", "Colour Legend"),
       position = "bottomleft",
-      options = layersControlOptions(collapsed = FALSE))
+      options = layersControlOptions(collapsed = FALSE)
+    )
 
   testthat::expect_is(testMap, "leaflet")
 })

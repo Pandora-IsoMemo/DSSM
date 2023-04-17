@@ -720,32 +720,49 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
 
 # Symbols ----
 
-setSymbolLegend <- function(map, symbolLegend) {
-  if (!is.null(symbolLegend)) {
-    paths <- getSymbolLegend(symbolLegend)
-    map %>%
-      addControl(
-        html = "<img src='http://leafletjs.com/examples/custom-icons/leaf-green.png' >all", #paths,
-        position = "topleft",
-        #group = "Symbol Legend",
-        layerId = "symbolLegend"
-      )
+setSymbolLegend <- function(map, symbolLegend, isTest = FALSE) {
+  if (is.null(symbolLegend))  return(map)
+
+  if (isTest) {
+    pathToSymbols <- file.path("inst", "app", "www")
   } else {
-    map
+    pathToSymbols <- "www"
   }
+
+  htmlString <- getSymbolLegend(symbolLegend, pathToSymbols = pathToSymbols)
+
+  map %>%
+    addControl(
+      html = htmlString,
+      position = "topleft",
+      layerId = "symbolLegend"
+    )
 }
 
-getSymbolLegend <- function(symbolLegend) {
+getSymbolLegend <- function(symbolLegend, pathToSymbols) {
+  # remove old icons: remove all files with the pattern "symbolFile"
+  oldSymbolFiles <- dir(pathToSymbols)
+  oldSymbolFiles <- oldSymbolFiles[grepl("symbolFile", oldSymbolFiles)]
+  sapply(oldSymbolFiles, function(oldFile) {
+    file.remove(file.path(pathToSymbols, oldFile))
+  })
+
   # create icon for each point
   iconFiles <- sapply(symbolLegend, function(x) {
     createPchPoints(pch = x,
                     width = 10,
                     height = 10,
-                    lwd = 4)
+                    lwd = 4,
+                    tmpDir = pathToSymbols)
     })
 
+  # create one html string over all used icons
   sapply(seq_along(symbolLegend), function(x) {
-    sprintf("<img src='%s'>%s", iconFiles[x], names(iconFiles[x]))
+    label <- names(iconFiles[x])
+    pathToIcon <- iconFiles[x]
+    pathToIcon <- pathToIcon %>%
+      gsub(pattern = ".*www", replacement = "")
+    sprintf("<img src='%s'> %s", pathToIcon, label)
   }) %>%
     paste0(collapse = "<br/>")
 }
@@ -782,10 +799,12 @@ createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transpar
 #' @param height height in pixel
 #' @param bg initial background colour
 #' @param col color code or name
+#' @param tmpDir directory for storing the icons
 #' @param ... Further graphical parameters that are passed to graphics::points()
 createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent",
-                            col = "black", ...) {
-  file <- tempfile(fileext = '.png')
+                            col = "black", tmpDir = tempdir(), ...) {
+  file <- tempfile(pattern = "symbolFile", fileext = '.png', tmpdir = tmpDir)
+
   png(file, width = width, height = height, bg = bg)
   par(mar = c(0, 0, 0, 0))
   plot.new()

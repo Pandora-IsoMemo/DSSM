@@ -10,6 +10,7 @@ createPchPoints(
   height = 50,
   bg = "transparent",
   col = "black",
+  tmpDir = tempdir(),
   ...
 )
 }
@@ -23,6 +24,8 @@ createPchPoints(
 \item{bg}{initial background colour}
 
 \item{col}{color code or name}
+
+\item{tmpDir}{directory for storing the icons}
 
 \item{...}{Further graphical parameters that are passed to graphics::points()}
 }
