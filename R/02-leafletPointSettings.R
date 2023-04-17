@@ -714,33 +714,49 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   if (length(unique(na.omit(sizeColumn))) < 2)
     return(list(pointSizes = pointSizes))
 
-  # normalize sizes to intervall [0,1]
   minSize <- min(sizeColumn, na.rm = TRUE)
   maxSize <- max(sizeColumn, na.rm = TRUE)
-  if (minSize >= 0) {
-    varSizeFactor <- sizeColumn - minSize
-  } else {
-    varSizeFactor <- sizeColumn + abs(minSize)
-  }
 
-  varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
-
-  # map to intervall: [1/defaultPointSizeInPxl, 1-(1/defaultPointSizeInPxl)] instead of (0,1)
-  # because the minimal factor should be at least 1/defaultPointSizeInPxl
-  varSizeFactor <- (1 - 2/defaultPointSizeInPxl) * varSizeFactor + 1/defaultPointSizeInPxl
-
-  # the mean of the data (== 0.5) should have a factor of 1
-  varSizeFactor <- 2 * varSizeFactor
-
-  # give missing values zero factor
-  varSizeFactor[is.na(varSizeFactor)] <- 0
-
-  # multiply with default
-  pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl
+  pointSizes <- mapToPixel(val = sizeColumn,
+                           minVal = minSize,
+                           maxVal = maxSize,
+                           defaultPxlVal = defaultPointSizeInPxl,
+                           sizeFactor = sizeFactor)
 
   # get sizes for legend
 
   list(pointSizes = pointSizes)
+}
+
+mapToPixel <- function(val, minVal, maxVal, defaultPxlVal, sizeFactor) {
+  # normalize sizes to intervall [0,1]
+  pointSizes <- val %>%
+    shiftToZero(minVal = minVal)
+
+  pointSizes <- pointSizes / shiftToZero(maxVal, minVal = minVal)
+
+  # map to intervall: [1/defaultPxlVal, 1-(1/defaultPxlVal)] instead of (0,1)
+  # because the minimal factor should be at least 1/defaultPxlVal
+  pointSizes <- (1 - 2/defaultPxlVal) * pointSizes + 1/defaultPxlVal
+
+  # the mean of the data (== 0.5) should have a factor of 1
+  pointSizes <- 2 * pointSizes
+
+  # give missing values zero factor
+  pointSizes[is.na(pointSizes)] <- 0
+
+  # multiply with default
+  pointSizes * sizeFactor * defaultPxlVal
+}
+
+shiftToZero <- function(val, minVal) {
+  if (minVal >= 0) {
+    val <- val - minVal
+  } else {
+    val <- val + abs(minVal)
+  }
+
+  return(val)
 }
 
 # Symbols ----
