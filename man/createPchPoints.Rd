@@ -28,6 +28,8 @@ createPchPoints(
 
 \item{tmpDir}{directory for storing the icons}
 
+\item{pattern}{pattern to be used in filenames}
+
 \item{...}{Further graphical parameters that are passed to graphics::points()}
 }
 \description{

@@ -818,6 +818,7 @@ createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transpar
 #' @param bg initial background colour
 #' @param col color code or name
 #' @param tmpDir directory for storing the icons
+#' @param pattern pattern to be used in filenames
 #' @param ... Further graphical parameters that are passed to graphics::points()
 createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent",
                             col = "black", tmpDir = tempdir(), pattern = "symbolFile", ...) {
