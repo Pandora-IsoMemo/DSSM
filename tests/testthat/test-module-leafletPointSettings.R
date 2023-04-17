@@ -211,6 +211,8 @@ test_that("Test getPointSymbols", {
 
 
 test_that("Test getSymbolLegend", {
-  expect_type(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0)), "character")
-  expect_length(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0)), 1)
+  expect_type(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0),
+                              pathToSymbols = file.path("inst", "app", "www")), "character")
+  expect_length(getSymbolLegend(c("expert" = 19, "radiocarbon" = 0),
+                                pathToSymbols = file.path("inst", "app", "www")), 1)
 })
