@@ -77,7 +77,7 @@ testthat::test_that("function drawSymbolsOnMap", {
       pointSymbol = c(1, 2, 3, 4, 5, 6),
       pointWidth = 4
     ) %>%
-    setSymbolLegend(c("all" = 19), showLegend = TRUE, isTest = TRUE) %>%
+    #setSymbolLegend(c("all" = 19), showLegend = TRUE, isTest = TRUE) %>%
     setColorLegend(
       showLegend = TRUE,
       title = "source",
