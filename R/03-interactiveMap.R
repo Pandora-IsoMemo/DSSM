@@ -238,19 +238,6 @@ interactiveMap <- function(input, output, session, isoData) {
   # show / hide legend ----
   observe({
     req(isoData(),
-        !is.null(leafletPointValues$showSymbolLegend),
-        !is.null(leafletPointValues$symbolLegendValues),
-        isolate(input$map_groups))
-
-    leafletProxy("map") %>%
-      setSymbolLegend(
-        symbolLegend = leafletPointValues$symbolLegendValues,
-        showLegend = leafletPointValues$showSymbolLegend
-      )
-  })
-
-  observe({
-    req(isoData(),
         !is.null(leafletPointValues$showColourLegend),
         !is.null(leafletPointValues$pointColourPalette),
         isolate(input$map_groups))
@@ -261,6 +248,32 @@ interactiveMap <- function(input, output, session, isoData) {
         title = leafletPointValues$columnForPointColour,
         pal = leafletPointValues$pointColourPalette,
         values = isoData()[[leafletPointValues$columnForPointColour]]
+      )
+  })
+
+  observe({
+    req(isoData(),
+        !is.null(leafletPointValues$showSizeLegend),
+        !is.null(leafletPointValues$sizeLegendValues),
+        isolate(input$map_groups))
+
+    leafletProxy("map") %>%
+      setSizeLegend(
+        sizeLegend = leafletPointValues$sizeLegendValues,
+        showLegend = leafletPointValues$showSizeLegend
+      )
+  })
+
+  observe({
+    req(isoData(),
+        !is.null(leafletPointValues$showSymbolLegend),
+        !is.null(leafletPointValues$symbolLegendValues),
+        isolate(input$map_groups))
+
+    leafletProxy("map") %>%
+      setSymbolLegend(
+        symbolLegend = leafletPointValues$symbolLegendValues,
+        showLegend = leafletPointValues$showSymbolLegend
       )
   })
 

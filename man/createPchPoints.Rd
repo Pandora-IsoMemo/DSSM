@@ -11,6 +11,7 @@ createPchPoints(
   bg = "transparent",
   col = "black",
   tmpDir = tempdir(),
+  pattern = "symbolFile",
   ...
 )
 }

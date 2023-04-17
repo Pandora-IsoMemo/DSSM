@@ -313,24 +313,26 @@ pointSizeServer <- function(id, loadedData) {
                    )
                    updateCheckboxInput(session = session, "showSizeLegend", value = showLegendVal)
 
-                   sizeValues$pointRadius <- getPointSize(
+                   radiusAndLegend <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = selectedDefault,
                      sizeFactor = input$sizeFactor
                    )
+                   sizeValues$pointRadius <- radiusAndLegend$pointSizes
                    sizeValues$showSizeLegend <- showLegendVal
                  }) %>%
                    bindEvent(loadedData())
 
                  observe({
                    req(loadedData())
-                   sizeValues$pointRadius <- getPointSize(
+                   radiusAndLegend <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = input$columnForPointSize,
                      sizeFactor = input$sizeFactor
                    )
+                   sizeValues$pointRadius <- radiusAndLegend$pointSizes
                  }) %>%
-                   bindEvent(list(input$columnForPointSize, input$sizeFactor))
+                   bindEvent(list(input$columnForPointSize, input$sizeFactor), ignoreInit = TRUE)
 
                  observe({
                    sizeValues$showSizeLegend <- input$showSizeLegend
@@ -445,7 +447,7 @@ pointSymbolServer <- function(id, loadedData) {
                    bindEvent(loadedData())
 
                  observe({
-                   req(input$pointSymbol)
+                   req(loadedData(), input$pointSymbol)
                    symbolsAndLegend <- getPointSymbols(
                      df = loadedData(),
                      columnForPointSymbol = input$columnForPointSymbol,
@@ -667,6 +669,24 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 
 # Point Size ----
 
+setSizeLegend <- function(map, showLegend, sizeLegend) {
+  if (is.null(sizeLegend) || !showLegend) {
+    map <- map %>%
+      removeControl("sizeLegend")
+
+    return(map)
+  }
+
+  htmlString <- getSizeLegend(sizeLegend, pathToIcons = "www")
+
+  map %>%
+    addControl(
+      html = htmlString,
+      position = "topleft",
+      layerId = "sizeLegend"
+    )
+}
+
 #' Get Point Size
 #'
 #' Get point size in pixel
@@ -681,21 +701,22 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   defaultPointSizeInPxl <- 5
 
   nPoints <- nrow(df)
-  defaultPointSize <-
+  pointSizes <-
     rep(sizeFactor * defaultPointSizeInPxl, nPoints)
 
   if (columnForPointSize %in% c("",  "none"))
-    return(defaultPointSize)
+    return(list(pointSizes = pointSizes))
 
   sizeColumn <- df[, columnForPointSize] %>%
     as.numeric() %>%
     suppressWarnings()
 
   if (length(unique(na.omit(sizeColumn))) < 2)
-    return(defaultPointSize)
+    return(list(pointSizes = pointSizes))
 
   # normalize sizes to intervall [0,1]
   minSize <- min(sizeColumn, na.rm = TRUE)
+  maxSize <- max(sizeColumn, na.rm = TRUE)
   if (minSize >= 0) {
     varSizeFactor <- sizeColumn - minSize
   } else {
@@ -717,7 +738,9 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
   # multiply with default
   pointSizes <- varSizeFactor * sizeFactor * defaultPointSizeInPxl
 
-  pointSizes
+  # get sizes for legend
+
+  list(pointSizes = pointSizes)
 }
 
 # Symbols ----
@@ -744,34 +767,6 @@ setSymbolLegend <- function(map, showLegend, symbolLegend, isTest = FALSE) {
       position = "topleft",
       layerId = "symbolLegend"
     )
-}
-
-getSymbolLegend <- function(symbolLegend, pathToSymbols) {
-  # remove old icons: remove all files with the pattern "symbolFile"
-  oldSymbolFiles <- dir(pathToSymbols)
-  oldSymbolFiles <- oldSymbolFiles[grepl("symbolFile", oldSymbolFiles)]
-  sapply(oldSymbolFiles, function(oldFile) {
-    file.remove(file.path(pathToSymbols, oldFile))
-  })
-
-  # create icon for each point
-  iconFiles <- sapply(symbolLegend, function(x) {
-    createPchPoints(pch = x,
-                    width = 10,
-                    height = 10,
-                    lwd = 1,
-                    tmpDir = pathToSymbols)
-    })
-
-  # create one html string over all used icons
-  sapply(seq_along(symbolLegend), function(x) {
-    label <- names(iconFiles[x])
-    pathToIcon <- iconFiles[x]
-    pathToIcon <- pathToIcon %>%
-      gsub(pattern = ".*www", replacement = "")
-    sprintf("<img src='%s'> %s", pathToIcon, label)
-  }) %>%
-    paste0(collapse = "<br/>")
 }
 
 # from: https://stackoverflow.com/questions/41372139/using-diamond-triangle-and-star-shapes-in-r-leaflet
@@ -809,8 +804,8 @@ createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transpar
 #' @param tmpDir directory for storing the icons
 #' @param ... Further graphical parameters that are passed to graphics::points()
 createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent",
-                            col = "black", tmpDir = tempdir(), ...) {
-  file <- tempfile(pattern = "symbolFile", fileext = '.png', tmpdir = tmpDir)
+                            col = "black", tmpDir = tempdir(), pattern = "symbolFile", ...) {
+  file <- tempfile(pattern = pattern, fileext = '.png', tmpdir = tmpDir)
 
   png(file, width = max(width, 1), height = max(height, 1), bg = bg, units = "px")
   par(mar = c(0, 0, 0, 0))
@@ -915,4 +910,64 @@ getPointSymbols <- function(df, columnForPointSymbol, symbols = unlist(pchChoice
 orderBySelection <- function(pchSel, pchAll = unlist(pchChoices())) {
   index <- match(pchSel, pchAll)
   c(pchAll[index], pchAll[-index])
+}
+
+
+# get Legend HTML String ----
+
+getSizeLegend <- function(sizeLegend, pathToIcons) {
+  # remove old icons: remove all files with the pattern "sizeFile"
+  oldSymbolFiles <- dir(pathToIcons)
+  oldSymbolFiles <- oldSymbolFiles[grepl("sizeFile", oldSymbolFiles)]
+  sapply(oldSymbolFiles, function(oldFile) {
+    file.remove(file.path(pathToIcons, oldFile))
+  })
+
+  # create icon for each point
+  iconFiles <- sapply(sizeLegend, function(x) {
+    createPchPoints(pch = 19,
+                    width = 2 * x,
+                    height = 2 * x,
+                    lwd = 1,
+                    tmpDir = pathToIcons,
+                    pattern = "sizeFile")
+  })
+
+  # create one html string over all used icons
+  sapply(seq_along(symbolLegend), function(x) {
+    label <- names(iconFiles[x])
+    pathToIcon <- iconFiles[x]
+    pathToIcon <- pathToIcon %>%
+      gsub(pattern = ".*www", replacement = "")
+    sprintf("<img src='%s'> %s", pathToIcon, label)
+  }) %>%
+    paste0(collapse = "<br/>")
+}
+
+getSymbolLegend <- function(symbolLegend, pathToSymbols) {
+  # remove old icons: remove all files with the pattern "symbolFile"
+  oldSymbolFiles <- dir(pathToSymbols)
+  oldSymbolFiles <- oldSymbolFiles[grepl("symbolFile", oldSymbolFiles)]
+  sapply(oldSymbolFiles, function(oldFile) {
+    file.remove(file.path(pathToSymbols, oldFile))
+  })
+
+  # create icon for each point
+  iconFiles <- sapply(symbolLegend, function(x) {
+    createPchPoints(pch = x,
+                    width = 10,
+                    height = 10,
+                    lwd = 1,
+                    tmpDir = pathToSymbols)
+  })
+
+  # create one html string over all used icons
+  sapply(seq_along(symbolLegend), function(x) {
+    label <- names(iconFiles[x])
+    pathToIcon <- iconFiles[x]
+    pathToIcon <- pathToIcon %>%
+      gsub(pattern = ".*www", replacement = "")
+    sprintf("<img src='%s'> %s", pathToIcon, label)
+  }) %>%
+    paste0(collapse = "<br/>")
 }
