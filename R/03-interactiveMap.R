@@ -156,11 +156,11 @@ interactiveMap <- function(input, output, session, isoData) {
         leafletMap()
       } else {
         withProgress({
-        # add data with default point values
+        # add data to new map with given (e.g. default) point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
-        }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
+        }, min = 0, max = 1, value = 0.8, message = "Updating map ...")
       }
     })
   })
@@ -225,7 +225,9 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # Update data
   observe({
-    req(isolate(input$map_groups))
+    isolate(print(input$map_groups))
+    #req(isolate(input$map_groups))
+
     withProgress({
       leafletProxy("map") %>%
         updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)

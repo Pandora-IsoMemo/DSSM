@@ -436,23 +436,24 @@ pointSymbolServer <- function(id, loadedData) {
                      symbols = 19
                    )
                    symbolValues$pointSymbol <- symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegend <- symbolsAndLegend$symbolLegend
+                   symbolValues$symbolLegendValues <- symbolsAndLegend$symbolLegendValues
                    symbolValues$columnForPointSymbol <- selectedDefault
                    symbolValues$showSymbolLegend <- input$showSymbolLegend
                  }) %>%
                    bindEvent(loadedData())
 
                  observe({
+                   req(input$pointSymbol)
                    symbolsAndLegend <- getPointSymbols(
                      df = loadedData(),
                      columnForPointSymbol = input$columnForPointSymbol,
-                     symbols = input$pointSymbol
+                     symbols = as.numeric(input$pointSymbol)
                    )
                    symbolValues$pointSymbol <- symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegend <- symbolsAndLegend$symbolLegend
+                   symbolValues$symbolLegendValues <- symbolsAndLegend$symbolLegendValues
                    symbolValues$columnForPointSymbol <- input$columnForPointSymbol
                  }) %>%
-                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol))
+                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol), ignoreInit = TRUE)
 
                  observe({
                    symbolValues$pointWidth <- input$pointWidth
@@ -506,7 +507,7 @@ updateDataOnLeafletMap <-
 
     map %>%
       setSymbolLegend(
-        symbolLegend = leafletPointValues$symbolLegend
+        symbolLegend = leafletPointValues$symbolLegendValues
       ) %>%
       drawSymbolsOnMap(
         plotData,
@@ -752,7 +753,7 @@ getSymbolLegend <- function(symbolLegend, pathToSymbols) {
     createPchPoints(pch = x,
                     width = 10,
                     height = 10,
-                    lwd = 4,
+                    lwd = 1,
                     tmpDir = pathToSymbols)
     })
 
@@ -862,11 +863,11 @@ getPointSymbols <- function(df, columnForPointSymbols, symbols = unlist(pchChoic
       as.numeric()
   }
 
-  symbolLegend <- c("all" = pointSymbol)
+  symbolLegendValues <- c("all" = pointSymbol)
 
   # create a list of symbols, one symbol for each point
   # use list to enable different types of values, we need numeric and ""
-  pointSymbol <- rep(pointSymbol, nrow(df)) %>%
+  pointSymbols <- rep(pointSymbol, nrow(df)) %>%
     as.list()
 
   # create symbols based on columnForPointSymbols if there are more than one unique values
@@ -889,20 +890,20 @@ getPointSymbols <- function(df, columnForPointSymbols, symbols = unlist(pchChoic
       }
 
       # overwrite default symbols based on factors from the symbolColumn
-      pointSymbol <- symbols[symbolColumn %>% as.factor()] %>%
+      pointSymbols <- symbols[symbolColumn %>% as.factor()] %>%
         as.numeric() %>%
         as.list()
 
       # hide missing values: pch == "" means no point is displayed
-      pointSymbol[sapply(pointSymbol, is.na)] <- ""
+      pointSymbols[sapply(pointSymbols, is.na)] <- ""
 
       # create legend values
       names(symbols) <- symbolColumn %>% as.factor() %>% levels()
-      symbolLegend <- symbols
+      symbolLegendValues <- symbols
     }
   }
 
-  list(pointSymbol = pointSymbol, symbolLegend = symbolLegend)
+  list(pointSymbols = pointSymbols, symbolLegendValues = symbolLegendValues)
 }
 
 orderBySelection <- function(pchSel, pchAll = unlist(pchChoices())) {
