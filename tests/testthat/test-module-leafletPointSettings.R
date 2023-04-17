@@ -21,6 +21,7 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                    "pointColourPalette",
                    "pointRadius",
                    "pointSymbol",
+                   "symbolLegendValues",
                    "clusterPoints",
                    "columnForPointSymbol",
                    "showSymbolLegend"
@@ -61,6 +62,7 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                    "pointColourPalette",
                    "pointRadius",
                    "pointSymbol",
+                   "symbolLegendValues",
                    "clusterPoints",
                    "columnForPointSymbol",
                    "showSymbolLegend",
@@ -169,41 +171,41 @@ test_that("Test getPointSymbols", {
   )
 
   # test case if data is missing
-  expect_null(getPointSymbols(NULL, columnForPointSymbols = ""))
+  expect_null(getPointSymbols(NULL, columnForPointSymbol = ""))
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "", symbols = ""),
+    getPointSymbols(testDf, columnForPointSymbol = "", symbols = "")$pointSymbols,
     list(19, 19, 19)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "", symbols = "5"),
+    getPointSymbols(testDf, columnForPointSymbol = "", symbols = "5")$pointSymbols,
     list(5, 5, 5)
   )
 
   # test columns for symbols
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "a"),
+    getPointSymbols(testDf, columnForPointSymbol = "a")$pointSymbols,
     list(0, "", 1)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "b"),
+    getPointSymbols(testDf, columnForPointSymbol = "b")$pointSymbols,
     list(0, 1, 2)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "c"),
+    getPointSymbols(testDf, columnForPointSymbol = "c")$pointSymbols,
     list(0, 1, 2)
   )
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "d", symbols = unlist(pchChoices())[5:10]),
+    getPointSymbols(testDf, columnForPointSymbol = "d", symbols = unlist(pchChoices())[5:10])$pointSymbols,
     list(4, 4, 4)
   )
   # test case if not enough symbols selected
   expect_equal(
-    getPointSymbols(testDf, columnForPointSymbols = "c", symbols = unlist(pchChoices())[c(1, 7)]),
+    getPointSymbols(testDf, columnForPointSymbol = "c", symbols = unlist(pchChoices())[c(1, 7)])$pointSymbols,
     list(0, 6, 1)
   )
   # test case if not enough symbols available
   expect_equal(
-    getPointSymbols(data.frame(x = 1:25), columnForPointSymbols = "x", symbols = unlist(pchChoices())),
+    getPointSymbols(data.frame(x = 1:25), columnForPointSymbol = "x", symbols = unlist(pchChoices()))$pointSymbols,
     list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
          17, 18, 19, 20, 0, 1, 2, 3)
   )

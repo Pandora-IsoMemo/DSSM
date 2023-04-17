@@ -611,7 +611,7 @@ drawSymbolsOnMap <-
       rgb(red = colourList[[i]][1],
           green = colourList[[i]][2],
           blue = colourList[[i]][3],
-          max = 255,
+          maxColorValue = 255,
           alpha = pointOpacity * 255)
     })
 
