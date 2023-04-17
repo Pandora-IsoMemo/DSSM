@@ -319,6 +319,7 @@ pointSizeServer <- function(id, loadedData) {
                      sizeFactor = input$sizeFactor
                    )
                    sizeValues$pointRadius <- radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <- radiusAndLegend$sizeLegendValues
                    sizeValues$showSizeLegend <- showLegendVal
                  }) %>%
                    bindEvent(loadedData())
@@ -331,6 +332,7 @@ pointSizeServer <- function(id, loadedData) {
                      sizeFactor = input$sizeFactor
                    )
                    sizeValues$pointRadius <- radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <- radiusAndLegend$sizeLegendValues
                  }) %>%
                    bindEvent(list(input$columnForPointSize, input$sizeFactor), ignoreInit = TRUE)
 
@@ -724,8 +726,36 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
                            sizeFactor = sizeFactor)
 
   # get sizes for legend
+  sizesDf <- data.frame(
+    values = sizeColumn,
+    sizes = pointSizes
+  )
 
-  list(pointSizes = pointSizes)
+  sizesDf$ceiledSizes <- ceiling(sizesDf$sizes)
+
+  sizesDf <- sizesDf %>%
+    group_by(.data$ceiledSizes) %>%
+    filter(.data$sizes == max(.data$sizes)) %>%
+    ungroup() %>%
+    distinct() %>%
+    arrange(.data$sizes)
+
+  sizesDf$labels <- sizesDf$values %>%
+    signif(digits = 1)
+
+  sizesDf$newSizes <- mapToPixel(val = sizesDf$labels,
+                                 minVal = minSize,
+                                 maxVal = maxSize,
+                                 defaultPxlVal = defaultPointSizeInPxl,
+                                 sizeFactor = sizeFactor)
+
+  sizesDf <- sizesDf %>%
+    filter(.data$labels >= min(.data$values))
+
+  sizeLegendValues <- sizesDf$newSizes
+  names(sizeLegendValues) <- sizesDf$labels
+
+  list(pointSizes = pointSizes, sizeLegendValues = sizeLegendValues)
 }
 
 mapToPixel <- function(val, minVal, maxVal, defaultPxlVal, sizeFactor) {

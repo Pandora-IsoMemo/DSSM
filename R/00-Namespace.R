@@ -5,7 +5,7 @@
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
 #' importDataUI importDataServer
-#' @importFrom dplyr group_by_at select summarise left_join
+#' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
