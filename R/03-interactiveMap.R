@@ -223,15 +223,45 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # Update data
+  # Update data ----
   observe({
-    isolate(print(input$map_groups))
+    req(isoData(), !is.null(leafletPointValues$clusterPoints))
+    isolate(print(paste("Update data:", input$map_groups)))
     #req(isolate(input$map_groups))
 
     withProgress({
       leafletProxy("map") %>%
         updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
     }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
+  })
+
+  # show / hide legend ----
+  observe({
+    req(isoData(),
+        !is.null(leafletPointValues$showSymbolLegend),
+        !is.null(leafletPointValues$symbolLegendValues),
+        isolate(input$map_groups))
+
+    leafletProxy("map") %>%
+      setSymbolLegend(
+        symbolLegend = leafletPointValues$symbolLegendValues,
+        showLegend = leafletPointValues$showSymbolLegend
+      )
+  })
+
+  observe({
+    req(isoData(),
+        !is.null(leafletPointValues$showColourLegend),
+        !is.null(leafletPointValues$pointColourPalette),
+        isolate(input$map_groups))
+
+    leafletProxy("map") %>%
+      setColorLegend(
+        showLegend = leafletPointValues$showColourLegend,
+        title = leafletPointValues$columnForPointColour,
+        pal = leafletPointValues$pointColourPalette,
+        values = isoData()[[leafletPointValues$columnForPointColour]]
+      )
   })
 
   # When map is clicked, show a popup with info

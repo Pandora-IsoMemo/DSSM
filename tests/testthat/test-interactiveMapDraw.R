@@ -77,7 +77,7 @@ testthat::test_that("function drawSymbolsOnMap", {
       pointSymbol = c(1, 2, 3, 4, 5, 6),
       pointWidth = 4
     ) %>%
-    setSymbolLegend(c("all" = 19), isTest = TRUE) %>%
+    setSymbolLegend(c("all" = 19), showLegend = TRUE, isTest = TRUE) %>%
     setColorLegend(
       showLegend = TRUE,
       title = "source",
@@ -89,7 +89,7 @@ testthat::test_that("function drawSymbolsOnMap", {
       values = testIsoData[["source"]]
     ) %>%
     addLayersControl(
-      overlayGroups = c("Data Points", "Colour Legend"),
+      overlayGroups = c("Data Points"),
       position = "bottomleft",
       options = layersControlOptions(collapsed = FALSE)
     )
