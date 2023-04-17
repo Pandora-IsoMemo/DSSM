@@ -12,8 +12,8 @@
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab
 #' @importFrom graphics axis filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
-#' @importFrom grDevices colorRampPalette chull png pdf tiff svg dev.off recordPlot replayPlot
-#'  cm.colors pdfFonts
+#' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off png pdf pdfFonts
+#'  recordPlot replayPlot rgb svg tiff
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLayersControl addLegend
@@ -35,7 +35,7 @@
 #' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
-#' @importFrom stats aggregate as.formula cor cov density dnorm dunif kmeans
+#' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans
 #'  mahalanobis median model.matrix na.exclude na.omit pchisq  pf pnorm predict
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints

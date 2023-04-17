@@ -4,12 +4,12 @@
 \alias{getPointSymbols}
 \title{Get Point Size}
 \usage{
-getPointSymbols(df, columnForPointSymbols, symbols = unlist(pchChoices()))
+getPointSymbols(df, columnForPointSymbol, symbols = unlist(pchChoices()))
 }
 \arguments{
 \item{df}{(data.frame) loaded data}
 
-\item{columnForPointSymbols}{(character) name of the column that determines the point symbol}
+\item{columnForPointSymbol}{(character) name of the column that determines the point symbol}
 
 \item{symbols}{(numeric) selected symbols}
 }

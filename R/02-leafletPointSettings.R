@@ -849,10 +849,10 @@ pchChoices <- function() {
 #' Get Point Size
 #'
 #' @param df (data.frame) loaded data
-#' @param columnForPointSymbols (character) name of the column that determines the point symbol
+#' @param columnForPointSymbol (character) name of the column that determines the point symbol
 #' @param symbols (numeric) selected symbols
-getPointSymbols <- function(df, columnForPointSymbols, symbols = unlist(pchChoices())) {
-  if (is.null(df) || is.null(columnForPointSymbols))
+getPointSymbols <- function(df, columnForPointSymbol, symbols = unlist(pchChoices())) {
+  if (is.null(df) || is.null(columnForPointSymbol))
     return(NULL)
 
   # create default symbols
@@ -870,9 +870,9 @@ getPointSymbols <- function(df, columnForPointSymbols, symbols = unlist(pchChoic
   pointSymbols <- rep(pointSymbol, nrow(df)) %>%
     as.list()
 
-  # create symbols based on columnForPointSymbols if there are more than one unique values
-  if (!(columnForPointSymbols %in% c("",  "none"))) {
-    symbolColumn <- df[, columnForPointSymbols] #%>%
+  # create symbols based on columnForPointSymbol if there are more than one unique values
+  if (!(columnForPointSymbol %in% c("",  "none"))) {
+    symbolColumn <- df[, columnForPointSymbol] #%>%
       #as.numeric() %>%
       #suppressWarnings()
 
