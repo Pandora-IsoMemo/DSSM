@@ -264,8 +264,6 @@ pointSizeUI <- function(id) {
       )
     ),
     column(4,
-           #style = "margin-top: -0.5em;",
-           #checkboxInput(ns("showLegend"), "Legend", value = FALSE)
            numericInput(
              ns("sizeFactor"),
              "Factor",
@@ -274,7 +272,8 @@ pointSizeUI <- function(id) {
              max = 20,
              step = 0.1,
              width = "100%"
-           )
+           ),
+           checkboxInput(ns("showSizeLegend"), "Legend", value = FALSE)
            )
   ))
 }
@@ -288,27 +287,22 @@ pointSizeServer <- function(id, loadedData) {
                function(input, output, session) {
                  sizeValues <- reactiveValues()
 
-                 # observe({
-                 #   sizeValues$showLegend <- input$showLegend
-                 # }) %>%
-                 #   bindEvent(input$showLegend)
-
                  observe({
                    if (is.null(loadedData())) {
                      choices <- c("Add data ..." = "")
                      selectedDefault <- ""
-                     #showLegendVal <- FALSE
+                     showLegendVal <- FALSE
                    } else {
-                     numCols <- partialNumericColumns(loadedData())
+                     numCols <- numericColumns(loadedData())
                      if (length(numCols) == 0) {
                        choices <- c("No numeric columns ..." = "")
                        selectedDefault <- ""
-                       #showLegendVal <- FALSE
+                       showLegendVal <- FALSE
                      } else {
                        choices <- c("Size variable ..." = "", numCols)
                      }
                      selectedDefault <- ""
-                     #showLegendVal <- TRUE
+                     showLegendVal <- TRUE
                    }
 
                    updateSelectInput(
@@ -317,18 +311,19 @@ pointSizeServer <- function(id, loadedData) {
                      choices = choices,
                      selected = selectedDefault
                    )
-                   #updateCheckboxInput(session = session, "showLegend", value = showLegendVal)
+                   updateCheckboxInput(session = session, "showSizeLegend", value = showLegendVal)
 
                    sizeValues$pointRadius <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = selectedDefault,
                      sizeFactor = input$sizeFactor
                    )
-                   #sizeValues$showLegend <- input$showLegend
+                   sizeValues$showSizeLegend <- showLegendVal
                  }) %>%
                    bindEvent(loadedData())
 
                  observe({
+                   req(loadedData())
                    sizeValues$pointRadius <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = input$columnForPointSize,
@@ -336,6 +331,11 @@ pointSizeServer <- function(id, loadedData) {
                    )
                  }) %>%
                    bindEvent(list(input$columnForPointSize, input$sizeFactor))
+
+                 observe({
+                   sizeValues$showSizeLegend <- input$showSizeLegend
+                 }) %>%
+                   bindEvent(input$showSizeLegend)
 
                  return(sizeValues)
                })
@@ -669,6 +669,8 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
 
 #' Get Point Size
 #'
+#' Get point size in pixel
+#'
 #' @param df (data.frame) loaded data
 #' @param columnForPointSize (character) name of the column that determines the point size
 #' @param sizeFactor (numeric) general factor for point size
@@ -693,7 +695,13 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
     return(defaultPointSize)
 
   # normalize sizes to intervall [0,1]
-  varSizeFactor <- sizeColumn - min(sizeColumn, na.rm = TRUE)
+  minSize <- min(sizeColumn, na.rm = TRUE)
+  if (minSize >= 0) {
+    varSizeFactor <- sizeColumn - minSize
+  } else {
+    varSizeFactor <- sizeColumn + abs(minSize)
+  }
+
   varSizeFactor <- varSizeFactor / max(varSizeFactor, na.rm = TRUE)
 
   # map to intervall: [1/defaultPointSizeInPxl, 1-(1/defaultPointSizeInPxl)] instead of (0,1)
@@ -804,7 +812,7 @@ createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent
                             col = "black", tmpDir = tempdir(), ...) {
   file <- tempfile(pattern = "symbolFile", fileext = '.png', tmpdir = tmpDir)
 
-  png(file, width = width, height = height, bg = bg)
+  png(file, width = max(width, 1), height = max(height, 1), bg = bg, units = "px")
   par(mar = c(0, 0, 0, 0))
   plot.new()
   points(.5, .5, pch = pch, col = col, cex = min(width, height) / 8, ...)
