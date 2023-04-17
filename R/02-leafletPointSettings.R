@@ -951,7 +951,7 @@ getSizeLegend <- function(sizeLegend, pathToIcons) {
   })
 
   # create one html string over all used icons
-  sapply(seq_along(symbolLegend), function(x) {
+  sapply(seq_along(sizeLegend), function(x) {
     label <- names(iconFiles[x])
     pathToIcon <- iconFiles[x]
     pathToIcon <- pathToIcon %>%
