@@ -767,6 +767,7 @@ mapToPixel <- function(val, minVal, maxVal, defaultPxlVal, sizeFactor) {
 
   # map to intervall: [1/defaultPxlVal, 1-(1/defaultPxlVal)] instead of (0,1)
   # because the minimal factor should be at least 1/defaultPxlVal
+  # smaller values produce errors in the plotting function
   pointSizes <- (1 - 2/defaultPxlVal) * pointSizes + 1/defaultPxlVal
 
   # the mean of the data (== 0.5) should have a factor of 1
@@ -961,14 +962,9 @@ orderBySelection <- function(pchSel, pchAll = unlist(pchChoices())) {
 
 
 # get Legend HTML String ----
-
 getSizeLegend <- function(sizeLegend, pathToIcons) {
   # remove old icons: remove all files with the pattern "sizeFile"
-  oldSymbolFiles <- dir(pathToIcons)
-  oldSymbolFiles <- oldSymbolFiles[grepl("sizeFile", oldSymbolFiles)]
-  sapply(oldSymbolFiles, function(oldFile) {
-    file.remove(file.path(pathToIcons, oldFile))
-  })
+  removeOldIcons(pattern = "sizeFile", path = pathToIcons)
 
   # create icon for each point
   iconFiles <- sapply(sizeLegend, function(x) {
@@ -981,23 +977,12 @@ getSizeLegend <- function(sizeLegend, pathToIcons) {
   })
 
   # create one html string over all used icons
-  sapply(seq_along(sizeLegend), function(x) {
-    label <- names(iconFiles[x])
-    pathToIcon <- iconFiles[x]
-    pathToIcon <- pathToIcon %>%
-      gsub(pattern = ".*www", replacement = "")
-    sprintf("<img src='%s'> %s", pathToIcon, label)
-  }) %>%
-    paste0(collapse = "<br/>")
+  getHTMLFromPath(paths = iconFiles)
 }
 
 getSymbolLegend <- function(symbolLegend, pathToSymbols) {
   # remove old icons: remove all files with the pattern "symbolFile"
-  oldSymbolFiles <- dir(pathToSymbols)
-  oldSymbolFiles <- oldSymbolFiles[grepl("symbolFile", oldSymbolFiles)]
-  sapply(oldSymbolFiles, function(oldFile) {
-    file.remove(file.path(pathToSymbols, oldFile))
-  })
+  removeOldIcons(pattern = "symbolFile", path = pathToSymbols)
 
   # create icon for each point
   iconFiles <- sapply(symbolLegend, function(x) {
@@ -1005,16 +990,41 @@ getSymbolLegend <- function(symbolLegend, pathToSymbols) {
                     width = 10,
                     height = 10,
                     lwd = 1,
-                    tmpDir = pathToSymbols)
+                    tmpDir = pathToSymbols,
+                    pattern = "symbolFile")
   })
 
   # create one html string over all used icons
-  sapply(seq_along(symbolLegend), function(x) {
-    label <- names(iconFiles[x])
-    pathToIcon <- iconFiles[x]
-    pathToIcon <- pathToIcon %>%
+  getHTMLFromPath(paths = iconFiles)
+}
+
+#' Remove Old Icons
+#'
+#' Remove files of previous icons
+#'
+#' @param pattern pattern of the files
+#' @param path path to the folder that contains the files
+removeOldIcons <- function(pattern, path = "www") {
+  oldFiles <- dir(path)
+  oldFiles <- oldFiles[grepl(pattern, oldFiles)]
+  sapply(oldFiles, function(oldFile) {
+    file.remove(file.path(path, oldFile))
+  })
+}
+
+#' Get HTML from path
+#'
+#' Creates the HTML string that defines the legend
+#'
+#' @param paths named list of paths to the files containing an icon, names of the items are used as
+#'  labels
+getHTMLFromPath <- function(paths) {
+  sapply(seq_along(paths), function(x) {
+    label <- names(paths[x])
+    path <- paths[x]
+    path <- path %>%
       gsub(pattern = ".*www", replacement = "")
-    sprintf("<img src='%s'> %s", pathToIcon, label)
+    sprintf("<img src='%s'> %s", path, label)
   }) %>%
     paste0(collapse = "<br/>")
 }
