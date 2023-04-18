@@ -4,10 +4,12 @@
 \alias{leafletPointSettingsServer}
 \title{server funtion of leaflet point settings module}
 \usage{
-leafletPointSettingsServer(id)
+leafletPointSettingsServer(id, loadedData)
 }
 \arguments{
 \item{id}{An ID string that corresponds with the ID used to call the module's UI function.}
+
+\item{loadedData}{(reactive) loaded data}
 }
 \description{
 server funtion of leaflet point settings module

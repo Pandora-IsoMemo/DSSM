@@ -4,7 +4,7 @@
 \alias{getZValuesMapDiff}
 \title{Get Z Values Map Diff}
 \usage{
-getZValuesMapDiff(estimationType, model, mapType, factor = 1)
+getZValuesMapDiff(estimationType, model, mapType, factor = 1, IndSelect = NULL)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -14,6 +14,8 @@ getZValuesMapDiff(estimationType, model, mapType, factor = 1)
 \item{mapType}{(character) type of map, either "Map" or "Time course"}
 
 \item{factor}{(numeric) factor applied to estimates}
+
+\item{IndSelect}{(character) select category in case of categorical model}
 }
 \description{
 Get Z Values Map Diff

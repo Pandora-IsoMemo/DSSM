@@ -9,8 +9,6 @@ Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initi
   - Search: https://isomemoapp.com/app/iso-memo-data-app-beta
   - Search & Modeling: https://isomemoapp.com/app/iso-memo-app-beta
 
-
-
 ### Help and installation instructions:
 - https://github.com/Pandora-IsoMemo/iso-app/wiki
 

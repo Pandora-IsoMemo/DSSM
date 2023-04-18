@@ -14,6 +14,10 @@ modelResultsAssignUI <- function(id, title = "") {
       class = "modeling-content",
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
           "Data source",
           choices = c(
@@ -25,26 +29,9 @@ modelResultsAssignUI <- function(id, title = "") {
         ),
         conditionalPanel(
           condition = "input.dataSource == 'file'",
-          selectInput(ns("fileType"),
-            "File type",
-            choices = c("xlsx", "csv"),
-            selected = "xlsx"
-          ),
-          conditionalPanel(
-            condition = "input.fileType == 'csv'",
-            div(
-              style = "display: inline-block;horizontal-align:top; width: 80px;",
-              textInput(ns("colseparator"), "column separator:", value = ",")
-            ),
-            div(
-              style = "display: inline-block;horizontal-align:top; width: 80px;",
-              textInput(ns("decseparator"), "decimal separator:", value = ".")
-            ),
-            ns = ns
-          ),
-          helpText(
-            "The first row in your file need to contain variable names."
-          ),
+          importDataUI(ns("importData"), "Import Data"),
+          tags$br(),
+          tags$br(),
           radioButtons(
             inputId = ns("CoordType"),
             label = "Coordinate format",
@@ -55,7 +42,6 @@ modelResultsAssignUI <- function(id, title = "") {
             ),
             choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")
           ),
-          fileInput(ns("file"), "Upload file"),
           tags$hr(),
           ns = ns
         ),
@@ -63,7 +49,7 @@ modelResultsAssignUI <- function(id, title = "") {
           condition = "input.dataSource != 'model'",
           ns = ns,
           selectInput(
-            inputId = ns("Independent"),
+            inputId = ns("IndependentX"),
             label = "Dependent variable:",
             choices = NULL
           ),
@@ -188,6 +174,8 @@ modelResultsAssignUI <- function(id, title = "") {
           column(8,
                  DT::dataTableOutput(ns("dataTable")),
           )),
+        tags$br(),
+        tags$br(),
         tags$hr(),
         modelDiagButton(ns("modelDiag")),
         dataExportButton(ns("exportData"))
@@ -205,40 +193,82 @@ modelResultsAssignUI <- function(id, title = "") {
 #'
 #' @export
 modelResultsAssign <- function(input, output, session, isoData) {
-  fileImport <- reactive({
-    inFile <- input$file
+  importedDat <- importDataServer("importData")
 
-    if (is.null(inFile)) {
-      return(NULL)
-    }
+  fileImport <- reactiveVal(NULL)
+  observe({
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
-    decseparator <- input$decseparator
-    if (decseparator == "" & input$colseparator == ";") decseparator <- ","
-    if (decseparator == "" & input$colseparator == ",") decseparator <- "."
-
-    data <- readFile(
-      inFile$datapath, input$fileType, input$colseparator,
-      decseparator
-    )
-
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE)
 
-    if (!valid) {
-      reset("file")
-      NULL
+    if (!valid){
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
     }
-    else {
-      data
-    }
+  }) %>% bindEvent(importedDat())
+
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(input$dataSource,
+                         db = isoData(),
+                         file = fileImport()
+    )
+
+    data(activeData)
   })
+
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    subFolder = "AssignR",
+    helpHTML = getHelp(id = "assign"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
 
   Model <- eventReactive(input$start, ignoreNULL = FALSE, {
     data <- data()
     if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
       if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
-        dataAssignR <- data[, c(input$Independent, input$numVars, input$catVars), drop = F]
+        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
       } else {
-        dataAssignR <- data[, c(input$Independent, input$numVars, input$catVars), drop = F]
+        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
         if (!is.null(input$numVarsUnc) && input$numVarsUnc != "" && length(input$numVarsUnc) == length(input$numVars)) {
           dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
         } else {
@@ -255,11 +285,11 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
       dataAssignR <- na.omit(dataAssignR)
       dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
-      if (is.null(input$Independent) || (is.null(input$numVars) && is.null(input$catVars))) {
+      if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
         alert("Please specify dependent and at least one numeric or categorical variable")
         return(NULL)
       }
-      y <- trimws(dataAssignR[, input$Independent])
+      y <- trimws(dataAssignR[, input$IndependentX])
       cats <- sort(unique(y))
       value <- 0
       models <- lapply(cats, function(x) {
@@ -290,7 +320,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
           xUncCAT <- NULL
         }
 
-        yCat <- as.numeric(dataAssignR[, input$Independent] == modelCat)
+        yCat <- as.numeric(dataAssignR[, input$IndependentX] == modelCat)
         model <- modelAssignRMC(
           XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
           nChains = input$nChains, thinning = input$thinning, cat = modelCat
@@ -350,7 +380,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     req(length(importedData()) > 0)
     dataPred <- importedData()[[1]]
     if ((!is.null(input$numVars) && input$numVars %in% names(dataPred)) || (!is.null(input$catVars) && input$catVars %in% names(dataPred))) {
-      dataPred <- dataPred[, c(input$catVars, input$numVars)]
+      dataPred <- dataPred[, c(input$catVars, input$numVars), drop = FALSE]
       dataPred[, input$catVars] <- trimws(dataPred[, input$catVars])
       dataPred <- na.omit(dataPred)
       models <- Model()$models
@@ -402,13 +432,6 @@ modelResultsAssign <- function(input, output, session, isoData) {
       X <- NULL
     }
     list(predictions = predictions, data = dataPred, X = X)
-  })
-
-  data <- reactive({
-    switch(input$dataSource,
-      db = isoData(),
-      file = fileImport()
-    )
   })
 
   output$dataTable <- DT::renderDataTable({
@@ -538,13 +561,14 @@ modelResultsAssign <- function(input, output, session, isoData) {
   callModule(modelDiagnostics, "modelDiag", model = Model, choice = TRUE)
   callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
 
-  observe({
+  observe(priority = 75, {
     allVars <- names(data())
-    updateSelectInput(session, "Independent", choices = c("", allVars))
+    updateSelectInput(session, "IndependentX",  choices = c("", allVars))
     updateSelectInput(session, "numVars", choices = c("", allVars))
     updateSelectInput(session, "catVars", choices = c("", allVars))
     updateSelectInput(session, "catAgg", choices = c("", allVars))
     updateSelectInput(session, "numVarsUnc", choices = c("", allVars))
     updateSelectInput(session, "catVarsUnc", choices = c("", allVars))
-  })
+  }) %>%
+    bindEvent(data())
 }

@@ -15,6 +15,10 @@ modelResults3DKernelUI <- function(id, title = ""){
       # left sidebar ----
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -23,29 +27,16 @@ modelResults3DKernelUI <- function(id, title = ""){
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'file'",
-          selectInput(ns("fileType"),
-                      "File type",
-                      choices = c("xlsx", "csv"),
-                      selected = "xlsx"
-          ),
-          conditionalPanel(
-            condition = "input.fileType == 'csv'",
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("colseparator"), "column separator:", value = ",")),
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("decseparator"), "decimal separator:", value = ".")),
-            ns = ns
-          ),
-          helpText(
-            "The first row in your file need to contain variable names."
-          ),
-          radioButtons(inputId = ns("CoordType"),
-                       label = "Coordinate format",
-                       choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-                                       "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-                                       "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
-                       choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
-          fileInput(ns("file"), "Upload file"),
+          importDataUI(ns("importData"), "Import Data"),
+          tags$br(),
+          tags$br(),
+          radioButtons(
+            inputId = ns("CoordType"),
+            label = "Coordinate format",
+            choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
+                            "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
+                            "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
+            choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
           tags$hr(),
           ns = ns
         ),
@@ -81,17 +72,21 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Latitude"),
                       label = "Latitude variable:",
                       choices = c("Latitude")),
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Presence/Absence variable (optional):",
                       choices = c("")),
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          checkboxInput(inputId = ns("kMeans"),
-                        label = "Do k-means clustering",
-                        value = FALSE, width = "100%"),
+          selectizeInput(inputId = ns("clusterMethod"),
+                         label = "Cluster Method (optional):",
+                         choices = c("kmeans","mclust"),
+                         options = list(
+                           placeholder = '',
+                           onInitialize = I('function() { this.setValue(""); }')
+                         )),
           conditionalPanel(
-            condition = "input.kMeans == true",
+            condition = "input.clusterMethod == 'kmeans'",
             ns = ns,
             selectInput(inputId = ns("kMeansAlgo"),
                         label = "K-means algorithm:",
@@ -99,7 +94,18 @@ modelResults3DKernelUI <- function(id, title = ""){
                                     "MacQueen")),
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1),
+                        value = 5, min = 2, max = 15, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust'",
+            ns = ns,
+            sliderInput(inputId = ns("nClustRange"),
+                        label = "Number of clusters (range)",
+                        value = c(2,10), min = 2, max = 20, step = 1)
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
+            ns = ns,
             sliderInput(inputId = ns("timeClust"),
                         label = "Cluster time range",
                         min = 0, max = 15000, value = c(1000, 5000), step = 100)
@@ -125,17 +131,19 @@ modelResults3DKernelUI <- function(id, title = ""){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                         label = "Set lower latitude restriction",
+                         label = "Lower",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                         label = "Set upper latitude restriction",
+                         label = "Upper",
                          min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                         label = "Set lower longitude restriction",
+                         label = "Lower",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                         label = "Set upper longitude restriction",
+                         label = "Upper",
                          min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           )
@@ -222,6 +230,7 @@ modelResults3DKernelUI <- function(id, title = ""){
       # right sidebar ----
         sidebarPanel(
           width = 2,
+          style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
@@ -349,8 +358,8 @@ modelResults3DKernelUI <- function(id, title = ""){
               #               label = "Show all cluster locations",
               #               value = FALSE, width = "100%"),
               radioButtons(inputId = ns("clusterAll"),
-                           label = "Show all cluster locations",
-                           choices = c("Show only centroids" = "-1", "Show clustering all times" = "0", "Show clustering time slice" = "1"),
+                           label = "Cluster visibility",
+                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -500,13 +509,15 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     centerEstimate$text()
   })
 
-
-  data <- reactive({
-    switch(
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
 
   coordType <- reactive({
@@ -517,6 +528,46 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    subFolder = "KernelTimeR",
+    helpHTML = getHelp(id = "model3DKernel"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
@@ -543,15 +594,16 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     data <- data()
 
       model <- withProgress(
-        estimateMap3DKernel(data = data, independent = input$Independent,
+        estimateMap3DKernel(data = data, independent = input$IndependentX,
                       Longitude = input$Longitude, Latitude = input$Latitude,
                       CoordType = coordType(), DateOne = input$DateOne,
                       DateTwo = input$DateTwo, DateType = input$DateType,
                       Weighting = input$Weighting,
-                      kMeans = input$kMeans,
+                      clusterMethod = input$clusterMethod,
                       dateUnc = input$dateUnc,
                       kMeansAlgo = input$kMeansAlgo,
                       nClust = input$nClust,
+                      nClustRange = input$nClustRange,
                       clusterTimeRange = input$timeClust,
                       modelUnc = input$modelUnc,
                       restriction = restriction,
@@ -565,7 +617,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   Independent <- reactive({
     if (input$dataSource == "model") names(Model()$data)[1]
-    else input$Independent
+    else input$IndependentX
   })
 
   zoomFromModel <- reactiveVal(50)
@@ -698,6 +750,20 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   )
     }
   })
+
+  observe({
+  if(input[["clusterMethod"]] %in% c("kmeans","mclust")){
+  value <- TRUE
+  } else {
+  value <- FALSE
+  }
+  updateCheckboxInput(
+    session,
+    "cluster",
+    value = value
+  )
+  }) %>%
+    bindEvent(input[["clusterMethod"]])
 
   observe({
     validate(validInput(Model()))
@@ -953,6 +1019,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
+                            clusterCol = input$clusterCol,
                             ...)
         },
           value = 0,
@@ -1028,7 +1095,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
@@ -1041,7 +1110,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -1070,7 +1139,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       selectedLatitude <- "latitude"
     }
 
-    updateSelectInput(session, "Independent", choices = c("", setdiff(numVars, timeVars)))
+    updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),
                       selected = selectedLongitude)
@@ -1091,30 +1160,27 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       updateSelectInput(session, "DateOne", choices = c("", numVars))
       updateSelectInput(session, "DateTwo", choices = c("", numVars))
     }
-  })
+  }) %>%
+    bindEvent(data())
 
-  ## Import Data
-  fileImport <- reactive({
-    inFile <- input$file
+  ## Import Data ----
+  importedDat <- importDataServer("importData")
 
-    if (is.null(inFile))
-      return(NULL)
+  fileImport <- reactiveVal(NULL)
+  observe({
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
-    decseparator = input$decseparator
-    if (decseparator == "" & input$colseparator == ";") decseparator <- ","
-    if (decseparator == "" & input$colseparator == ",") decseparator <- "."
-
-    data <- readFile(inFile$datapath, input$fileType, input$colseparator,
-                     decseparator)
-
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE)
 
     if (!valid){
-      reset("file")
-      NULL
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
     }
-    else data
-  })
+  }) %>% bindEvent(importedDat())
 
   dataFun <- reactive({
     req(Model())
@@ -1124,8 +1190,17 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "clustMeanLongitude", "clustMeanLatitude", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("cluster",
+                                         "long_cluster_all_centroid",
+                                         "lat_cluster_all_centroid",
+                                         "long_cluster_filtered_centroid",
+                                         "lat_cluster_filtered_centroid",
+                                         "long_temporal_centroid",
+                                         "lat_temporal_centroid",
+                                         "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        # filter data that was filtered out for clustering
+        modelData <- modelData[!is.na(modelData$lat_cluster_filtered_centroid),]
         return(modelData)
       } else {
         allData <- data()

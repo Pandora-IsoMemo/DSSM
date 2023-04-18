@@ -2,6 +2,7 @@
 #'
 #' @param model return object of spatial or spread model
 #'  from estimateMap() or estimateMapSpread() functions
+#' @param IndSelect for categorical model: selected category; shifts between categories in the center
 #' @param arrow display north arrow TRUE/FALSE
 #' @param scale display scale TRUE/FALSE
 #' @param terrestrial show only estimates on land masses (1), oceans (-1) or all (0)
@@ -69,6 +70,7 @@
 #'
 #' @export
 plotMap <- function(model,
+                    IndSelect = NULL,
                     estType = "Mean", estQuantile = 0.9,
                     points = TRUE, pointSize = 1, StdErr = Inf,
                     rangex = range(model$data$Longitude, na.rm = TRUE),
@@ -115,8 +117,8 @@ plotMap <- function(model,
                     nMin = 3,
                     minDist = 250,
                     showMinOnMap = FALSE){
-
   options(scipen=999)
+
   minRangeFactor <- 0.75
   if((diff(rangex) / diff(rangey)) < minRangeFactor){
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
@@ -127,8 +129,15 @@ plotMap <- function(model,
     rangey[1] <- max(-90, mean(rangey) - minRangeFactor / 2 * diff(rangex))
     rangey[2] <- min(90, mean(rangey) + minRangeFactor / 2 * diff(rangex))
   }
-
   independent <- model$independent
+
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+    if(IndSelect == "" | is.null(IndSelect)){
+      return(NULL)
+    }
+    model$model <- model$model[[IndSelect]]
+  }
+
   if(is.null(rangez)){
     rangez = range(model$data[, independent], na.rm = TRUE)
   }
@@ -230,13 +239,22 @@ plotMap <- function(model,
     Predictions <-
       sapply(1:nrow(betas), function(x)
         (PredMatr %*% betas[x, ]) * model$sRe + model$mRe)
+
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+      Predictions <- invLogit(Predictions)
+    }
+
     if(!is.null(betaSigma)){
       PredMatrV <- Predict.matrix(model$scV, data = XPred)
       PredictionsSigma <-
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
+      } else {
+        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      }
     }
     if(estType == "Mean"){
       Est <- rowMeans(Predictions)
@@ -280,44 +298,48 @@ plotMap <- function(model,
                         resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2))
   }
   if (Bayes == FALSE & GAM == FALSE){
-    Est <- predict(model$model$gam, XPred, se.fit = TRUE)
+    Est <- predict(model$model$gam, XPred, se.fit = TRUE, type = "response")
     if(estType == "1 SE"){
       Est$fit <- Est$se.fit
     }
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+      varM = Est$fit * (1-Est$fit)
+    }  else {
+      varM = var(residuals(model$model$gam))
+    }
     if(estType == "1 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + var(residuals(model$model$gam)))
+      Est$fit <- sqrt(Est$se.fit^2 + varM)
     }
     if(estType == "2 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + var(residuals(model$model$gam))) * 2
+      Est$fit <- sqrt(Est$se.fit^2 + varM) * 2
     }
     if(estType == "1 SD Population"){
-      Est$fit <- sd(residuals(model$model$gam)) * 1
+      Est$fit <- sqrt(varM) * 1
     }
     if(estType == "2 SD Population"){
-      Est$fit <- sd(residuals(model$model$gam)) * 2
+      Est$fit <- sqrt(varM) * 2
     }
-
     if(estType == "Quantile"){
       Est$fit <- Est$fit + qnorm(estQuantile) * Est$se.fit
     }
     if(estType == "QuantileTOTAL"){
       Est$fit <- Est$fit + qnorm(estQuantile) *
-        sqrt(Est$se.fit^2 + var(residuals(model$model$gam)))
+        sqrt(Est$se.fit^2 + varM)
     }
 
     XPred <- data.frame(XPred,
                         Est = Est$fit,
                         Sd = Est$se.fit,
-                        SDPop = sd(residuals(model$model$gam)),
-                        SdTotal = sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
+                        SDPop = sqrt(varM),
+                        SdTotal = sqrt(Est$se.fit^2 + varM),
                         IntLower = Est$fit - 1.96 * Est$se.fit,
                         IntUpper = Est$fit + 1.96 * Est$se.fit,
-                        IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
-                        IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
-                        resError = sqrt(mean((predict(model$model$gam) - model$model$gam$y)^2)))
+                        IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + varM),
+                        IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + varM),
+                        resError = sqrt(mean((predict(model$model$gam, type = "response") - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
     Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], x = XPred[, 1:2]))
@@ -628,7 +650,12 @@ plotMap <- function(model,
                         }
                         if(cluster & !is.null(data$cluster)){
                           pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                          if("clustMeanLongitude" %in% names(data)){
+                            data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                          } else {
+                            data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          }
+                          centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
                           if(centerMap != "Europe"){
                             centroids2 <- centroids
@@ -832,7 +859,12 @@ plotMap <- function(model,
                       }
                       if(cluster & !is.null(data$cluster)){
                         pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -932,6 +964,7 @@ plotMap <- function(model,
 #' Plots time slice map of a spatio-temporal model from estimateMap3D() function
 #'
 #' @param model return object of a spatio-temporal model from estimateMap3D() function
+#' @param IndSelect for categorical model: selected category
 #' @param time time slice value for map
 #' @param arrow display north arrow TRUE/FALSE
 #' @param scale display scale TRUE/FALSE
@@ -998,6 +1031,7 @@ plotMap <- function(model,
 #' @export
 plotMap3D <- function(model,
                       time,
+                      IndSelect = NULL,
                       estType = "Mean", estQuantile = 0.9,
                       points = TRUE, pointSize = 1, StdErr = Inf,
                       rangex = range(model$data$Longitude, na.rm = TRUE),
@@ -1056,6 +1090,14 @@ plotMap3D <- function(model,
     rangey[2] <- min(90, mean(rangey) + minRangeFactor / 2 * diff(rangex))
   }
   independent <- model$independent
+
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+    if(IndSelect == "" | is.null(IndSelect)){
+      return(NULL)
+    }
+    model$model <- model$model[[IndSelect]]
+  }
+
   if(is.null(rangez)){
     rangez = range(model$data[, independent], na.rm = TRUE)
   }
@@ -1216,6 +1258,10 @@ plotMap3D <- function(model,
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+      Predictions <- invLogit(Predictions)
+    }
+
     if(!is.null(betaSigma)){
       PredMatrV <- Predict.matrix(model$scV,
                                   data = data.frame(XPred,
@@ -1225,7 +1271,11 @@ plotMap3D <- function(model,
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
+      } else {
+        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      }
     }
     if(estType == "Mean"){
       Est <- rowMeans(Predictions)
@@ -1271,43 +1321,48 @@ plotMap3D <- function(model,
     Est <- predict(model$model$gam,
                    data.frame(XPred,
                               Date2 = (time - mean(data$Date)) /
-                                sd(data$Date)), se.fit = TRUE)
+                                sd(data$Date)), se.fit = TRUE, type = "response")
     if(estType == "1 SE"){
       Est$fit <- Est$se.fit
     }
     if(estType == "2 SE"){
       Est$fit <- Est$se.fit * 2
     }
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+      varM = Est$fit * (1-Est$fit)
+    }  else {
+      varM = var(residuals(model$model$gam))
+    }
     if(estType == "1 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + var(residuals(model$model$gam)))
+      Est$fit <- sqrt(Est$se.fit^2 + varM)
     }
     if(estType == "2 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + var(residuals(model$model$gam))) * 2
+      Est$fit <- sqrt(Est$se.fit^2 + varM) * 2
     }
     if(estType == "1 SD Population"){
-      Est$fit <- sd(residuals(model$model$gam)) * 1
+      Est$fit <- sqrt(varM) * 1
     }
     if(estType == "2 SD Population"){
-      Est$fit <- sd(residuals(model$model$gam)) * 2
+      Est$fit <- sqrt(varM) * 2
     }
     if(estType == "Quantile"){
       Est$fit <- Est$fit + qnorm(estQuantile) * Est$se.fit
     }
     if(estType == "QuantileTOTAL"){
       Est$fit <- Est$fit + qnorm(estQuantile) *
-        sqrt(Est$se.fit^2 + var(residuals(model$model$gam)))
+        sqrt(Est$se.fit^2 + varM)
     }
     XPred <- data.frame(XPred,
                         Est = Est$fit, Sd = Est$se.fit,
-                        SDPop = sd(residuals(model$model$gam)),
-                        SdTotal = sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
+                        SDPop = sqrt(varM),
+                        SdTotal = sqrt(Est$se.fit^2 + varM),
                         IntLower = Est$fit - 1.96 * Est$se.fit,
                         IntUpper = Est$fit + 1.96 * Est$se.fit,
                         IntLowerTotal = Est$fit - 1.96 *
-                          sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
+                          sqrt(Est$se.fit^2 + varM),
                         IntUpperTotal = Est$fit + 1.96 *
-                          sqrt(Est$se.fit^2 + var(residuals(model$model$gam))),
-                        resError = sqrt(mean((predict(model$model$gam) - model$model$gam$y)^2)))
+                          sqrt(Est$se.fit^2 + varM),
+                        resError = sqrt(mean((predict(model$model$gam, type = "response") - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
     Predictions <- sapply(1:length(model$model),
@@ -1557,7 +1612,12 @@ plotMap3D <- function(model,
                             pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster))[dataT$cluster]
                           }
                         }
-                        centroids <- unique(data[, c("cluster", "clustMeanLongitude", "clustMeanLatitude")])
+                        if("clustMeanLongitude" %in% names(data)){
+                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        } else {
+                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                        }
+                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -2154,6 +2214,7 @@ north.arrow = function(x, y, h, c, adj) {
 #' Plots time course map of a spatio-temporal model from estimateMap3D() function
 #'
 #' @param model return object of a spatio-temporal model from estimateMap3D() function
+#' @param IndSelect for categorical model: selected category
 #' @param independent name of independent variable shown in plot
 #' @param trange range of longitude values (x axis limits)
 #' @param resolution temporal grid resolution of displayed (higher is slower but better quality)
@@ -2171,7 +2232,8 @@ north.arrow = function(x, y, h, c, adj) {
 #' @param formatTimeCourse parameters for the plot format, e.g. axesDecPlace, nLabelsX, nLabelsY
 #'
 #' @export
-plotTimeCourse <- function(model, independent = "", trange = range(model$data$Date),
+plotTimeCourse <- function(model, IndSelect = NULL,
+                           independent = "", trange = range(model$data$Date),
                            resolution = 500, centerX = NA,
                            centerY = NA, Radius = NA, rangey = NULL,
                            seType = "2",
@@ -2195,6 +2257,15 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
   if(!is.null(limitz) && limitz == "0-1"){
     minVal <- 0
     maxVal <- 1
+  }
+
+  if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+    if(IndSelect == "" | is.null(IndSelect)){
+      return(NULL)
+    }
+    model$model <- model$model[[IndSelect]]
+    minVal <- max(minVal, 0)
+    maxVal <- min(maxVal, 1)
   }
 
   Bayes = TRUE
@@ -2231,13 +2302,21 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
       sapply(1:nrow(betas), function(x)
         PredMatr %*% betas[x, ] * model$sRe + model$mRe)
 
+    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+      Predictions <- invLogit(Predictions)
+    }
+
     if(!is.null(betaSigma)){
       PredMatrV <- Predict.matrix(model$scV, data = XPred)
       PredictionsSigma <-
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
           exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
     } else {
-      PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
+        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
+      } else {
+        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+      }
     }
 
     if(!is.null(betaSigma)){
@@ -2258,7 +2337,7 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
                       "(", centerY,",", centerX,")" ," with credible intervals")
   }
   if (Bayes == FALSE & GAM == FALSE){
-    Est <- predict(model$model$gam, XPred, se.fit = TRUE)
+    Est <- predict(model$model$gam, XPred, se.fit = TRUE, type = "response")
     XPred <- data.frame(XPred, Est = Est$fit, Sd = Est$se.fit,
                         SdTotal = sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
                         PredictionsSigma = sd(residuals(model$model$gam)),
@@ -2368,7 +2447,15 @@ plotTimeCourse <- function(model, independent = "", trange = range(model$data$Da
         pointPlotData$ind <- 0
         ind <- "ind"
       } else {
-        ind <- model$independent
+        if(!is.null(model$IndependentType) && model$IndependentType == "numeric"){
+          ind <- model$independent
+        } else {
+          if(IndSelect == "" | is.null(IndSelect)){
+            ind <- model$independent
+          } else {
+            ind <- IndSelect
+          }
+        }
       }
       points(pointPlotData[, ind] ~ pointPlotData$Date)
       if(intTime){
@@ -2411,19 +2498,22 @@ addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
 plotTimeIntervals <- function(Model,
                               trange = c(0, 1000),
                               AxisSize = 1,
-                              AxisLSize = 1
+                              AxisLSize = 1,
+                              clusterCol = "Set1"
 ){
   dat <- Model$data
   if(!is.null(dat$cluster)){
+    dat$cluster_color <- colorRampPalette(brewer.pal(8, clusterCol))(max(dat$cluster))[dat$cluster]
     dat$cluster <- factor(dat$cluster)
     g <- ggplot(dat, aes_(~Date, ~cluster)) + theme_light() + coord_cartesian(xlim = trange) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor.x = element_blank(),
             axis.text=element_text(size=12 * AxisLSize),
             axis.title=element_text(size=14 * AxisSize), legend.position = "none") +
-      geom_point(aes_(color = ~ cluster), position = position_dodge(0.3), alpha = 0.3) +
+      geom_point(color=dat$cluster_color, position = position_dodge(0.3), alpha = 0.3) +
       geom_errorbar(
-        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty, color = ~ cluster),
+        aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty),
+        color=dat$cluster_color,
         position = position_dodge(0.3), width = 0.1, alpha = 0.3)
     print(g)
   } else {

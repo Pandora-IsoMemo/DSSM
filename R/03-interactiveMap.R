@@ -126,8 +126,9 @@ interactiveMap <- function(input, output, session, isoData) {
   ns <- session$ns
 
   leafletValues <- callModule(leafletSettings, "mapSettings")
+
   leafletPointValues <-
-    leafletPointSettingsServer("mapPointSettings")
+    leafletPointSettingsServer("mapPointSettings", loadedData = isoData)
 
   # Create the map
   leafletMap <- reactiveVal({
@@ -159,7 +160,7 @@ interactiveMap <- function(input, output, session, isoData) {
         # add data with default point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
-                                 leafletPointValues = leafletPointValues())
+                                 leafletPointValues = leafletPointValues)
       }
     })
   })
@@ -225,7 +226,7 @@ interactiveMap <- function(input, output, session, isoData) {
   # Update data
   observe({
     leafletProxy("map") %>%
-      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues())
+      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
   })
 
   # When map is clicked, show a popup with info
@@ -472,10 +473,18 @@ addCirclesRelativeToZoom <-
     if (!is.null(isoData$Latitude_jit)) isoData$latitude <- isoData$Latitude_jit
     if (!is.null(isoData$Longitude_jit)) isoData$longitude <- isoData$Longitude_jit
 
+    colors <- appColors(c("red", "green", "purple", "black"),
+                        names = FALSE)[1:length(unique(isoData$source))]
+
     drawCirclesOnMap(
       map = map,
       isoData = isoData,
-      pointRadius = relateToZoom(radius = 20)
+      pointRadius = relateToZoom(radius = 20),
+      colourPal = colorFactor(
+        palette = colors,
+        domain = isoData$source
+      ),
+      columnForColour = "source"
     )
   }
 

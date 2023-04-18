@@ -1,5 +1,10 @@
 library(MpiIsoApp)
 
+# annoyingly calling mclust::Mclust yields an error
+# Error in mclustBIC: could not find function "mclustBIC"
+# Therefore we need to import and load the whole package mclust
+library(mclust)
+
 options(shiny.maxRequestSize = 200*1024^2)
 options(scipen=999)
 

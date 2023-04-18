@@ -73,9 +73,14 @@ locationFieldsServer <-
                      req(dataRaw())
 
                      # get possible column names for lat long
-                     latLongChoices <- switch(input$coordType,
-                                              "decimal degrees" = partialNumericColumns(dataRaw()),
-                                              colnames(dataRaw()))
+                     if (input$coordType == "decimal degrees") {
+                       latLongChoices <- partialNumericColumns(dataRaw())
+                       if (length(latLongChoices) == 0) {
+                         latLongChoices <- c("no numeric columns ..." = "")
+                       }
+                     } else {
+                       latLongChoices <- colnames(dataRaw())
+                     }
 
                      # get default column names
                      defaultLongCol <- getDefaultCoordColumn(

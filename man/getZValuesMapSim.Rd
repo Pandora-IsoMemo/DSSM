@@ -4,7 +4,7 @@
 \alias{getZValuesMapSim}
 \title{Get Z Values Map Sim}
 \usage{
-getZValuesMapSim(estimationType, model, mapType, factor = 1)
+getZValuesMapSim(estimationType, model, mapType, factor = 1, IndSelect = NULL)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -14,6 +14,8 @@ getZValuesMapSim(estimationType, model, mapType, factor = 1)
 \item{mapType}{(character) type of map, either "Map" or "Time course"}
 
 \item{factor}{(numeric) factor applied to estimates}
+
+\item{IndSelect}{(character) select category in case of categorical model}
 }
 \description{
 Get Z Values Map Sim

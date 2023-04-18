@@ -41,8 +41,8 @@ leafletExport <- function(input,
 
   observe({
     if (webshot::is_phantomjs_installed()) {
-      shinyjs::enable("exportLeaflet")
-      shinyjs::hide("phantomjsHelp")
+     shinyjs::enable("exportLeaflet")
+     shinyjs::hide("phantomjsHelp")
     } else {
       shinyjs::disable("exportLeaflet")
     }
@@ -82,7 +82,7 @@ leafletExport <- function(input,
 
         m <- m %>%
           updateDataOnLeafletMap(isoData = isoData(),
-                              leafletPointValues = leafletPointValues())
+                                 leafletPointValues = leafletPointValues)
 
         mapview::mapshot(
           m,

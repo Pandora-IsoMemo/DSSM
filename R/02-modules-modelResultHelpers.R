@@ -460,6 +460,8 @@ zScaleUI <-
 #' @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
 #'  "Minima/Maxima"
 #' @param zValuesFactor (numeric) factor applied to zValues
+#' @param mapType (character)
+#' @param IndSelect (character) select category in case of categorical model
 zScaleServer <- function(id,
                          Model,
                          fixCol,
@@ -467,7 +469,8 @@ zScaleServer <- function(id,
                          restrictOption,
                          zValuesFun,
                          zValuesFactor,
-                         mapType = reactive("Map")) {
+                         mapType = reactive("Map"),
+                         IndSelect = NULL) {
   moduleServer(id,
                function(input, output, session) {
                  zModelValues <- reactiveVal(NULL)
@@ -504,7 +507,8 @@ zScaleServer <- function(id,
                          estimationType = input$estType,
                          model = Model(),
                          mapType = mapType(),
-                         factor = zValuesFactor
+                         factor = zValuesFactor,
+                         IndSelect = IndSelect
                        )
                      )
                    else
@@ -602,15 +606,11 @@ zScaleServer <- function(id,
                })
 }
 
-
 #' Get Z Values Map Sim
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesMapSim <-
-  function(estimationType, model, mapType, factor = 1) {
+  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -643,12 +643,9 @@ getZValuesMapSim <-
 
 #' Get Z Values Map Diff
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesMapDiff <-
-  function(estimationType, model, mapType, factor = 1) {
+  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -689,12 +686,9 @@ getZValuesMapDiff <-
 
 #' Get Z Values Kernel
 #'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
+#' @inheritParams getZvalues
 getZValuesKernel <-
-  function(estimationType, model, mapType, factor = 1.25) {
+  function(estimationType, model, mapType, factor = 1.25, IndSelect = NULL) {
     model <- model$model
     if (is.null(model))
       return(NULL)
@@ -729,15 +723,18 @@ getZValuesKernel <-
 #' @param model (list) model output
 #' @param mapType (character) type of map, either "Map" or "Time course"
 #' @param factor (numeric) factor applied to estimates
-getZvalues <- function(estimationType, model, mapType, factor = 3) {
-  model <- model$model
+#' @param IndSelect (character) select category in case of categorical model
+getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = NULL) {
+  zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
+  if(!is.null(model$IndependentType) &&
+     model$IndependentType != "numeric" &&
+     (is.null(IndSelect) || IndSelect == "")){
+    return(zValues)
+  }
+
+  model <- getModel(model = model, IndSelect = IndSelect)
   if (is.null(model))
     return(NULL)
-
-  zValues <- list(
-    minInput = list(value = 0, min = 0, max = 10),
-    maxInput = list(value = 10, min = 0, max = 10)
-  )
 
   if(mapType == "Speed"){
     maxValue <- signif(50000 / diff(model$range$mean), 1)
@@ -772,6 +769,30 @@ getZvalues <- function(estimationType, model, mapType, factor = 3) {
 }
 
 
+getZValuesInitial <- function(IndependentType, IndSelect) {
+  if(is.null(IndependentType) || IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
+    list(
+      minInput = list(value = 0, min = 0, max = 10),
+      maxInput = list(value = 10, min = 0, max = 10)
+    )
+  } else {
+    list(
+      minInput = list(value = 0,   min = 0, max = 1),
+      maxInput = list(value = 1, min = 0, max = 1)
+    )
+  }
+}
+
+getModel <- function(model, IndSelect) {
+  if (!is.null(model$IndependentType) &&
+      model$IndependentType != "numeric" &&
+      !is.null(IndSelect) && IndSelect != "") {
+    model$model[[IndSelect]]
+  } else {
+    model$model
+  }
+}
+
 #' Get Default Z Error
 #'
 #' @param estType (character) type of estimate
@@ -799,111 +820,8 @@ getDefaultZMax <- function(mean) {
   ), 0) > 1)[1])
 }
 
-## Combined Input ----
 
-#' Slider And Input UI
-#'
-#' UI of the Slider And Input module
-#'
-#' @param id id of module
-#' @param label label
-#' @param min (numeric) minumum
-#' @param max (numeric) maximum
-#' @param value (numeric) default value
-#' @param step (numeric) step
-sliderAndNumericInputUI <-
-  function(id, label, min, max, value, step) {
-    ns <- NS(id)
-    tagList(fluidRow(
-      column(
-        width = 10,
-        sliderInput(
-          inputId = ns("sliderIn"),
-          label = label,
-          min = min,
-          max = max,
-          value = value,
-          step = step,
-          width = "100%"
-        )
-      ),
-      column(
-        width = 2,
-        style = "margin-top: 30px;",
-        numericInput(
-          inputId = ns("numIn"),
-          label = NULL,
-          min = min,
-          max = max,
-          value = value,
-          step = step
-        )
-      )
-    ))
-  }
-
-#' Slider And Input Server
-#'
-#' Server function of the Slider And Input module
-#' @param id id of module
-#' @param value value of input
-#' @param min min of input
-#' @param max max of input
-#' @param step step of input
-sliderAndNumericInputServer <- function(id,
-                                        value,
-                                        min,
-                                        max,
-                                        step) {
-  moduleServer(id,
-               function(input, output, session) {
-                 result <- reactiveVal(5000)
-
-                 observe({
-                   req(value(), min(), max(), step())
-
-                   updateSliderInput(
-                     session = session,
-                     "sliderIn",
-                     value = value(),
-                     min = min(),
-                     max = max(),
-                     step = step()
-                   )
-                   updateNumericInput(
-                     session = session,
-                     "numIn",
-                     value = value(),
-                     min = min(),
-                     max = max(),
-                     step = step()
-                   )
-
-                   result(value())
-                 })
-
-                 observeEvent(input$sliderIn, {
-                   req(!identical(input$sliderIn, input$numIn))
-                   updateNumericInput(session = session,
-                                      "numIn",
-                                      value = input$sliderIn)
-                   result(input$sliderIn)
-                 })
-
-                 observeEvent(input$numIn, {
-                   req(input$numIn, !identical(input$sliderIn, input$numIn))
-                   updateSliderInput(session = session,
-                                     "sliderIn",
-                                     value = input$numIn)
-                   result(input$numIn)
-                 })
-
-                 return(result)
-               })
-}
-
-
-# Collection of helper functions for the modelling tabs ----
+# Helper functions for the modelling tabs ----
 
 #' Extract Zoom From Long Range
 #'

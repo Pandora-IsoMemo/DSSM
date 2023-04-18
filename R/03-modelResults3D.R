@@ -15,6 +15,10 @@ modelResults3DUI <- function(id, title = ""){
       # left sidebar ----
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
+        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
+        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -23,29 +27,16 @@ modelResults3DUI <- function(id, title = ""){
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'file'",
-          selectInput(ns("fileType"),
-                      "File type",
-                      choices = c("xlsx", "csv"),
-                      selected = "xlsx"
-          ),
-          conditionalPanel(
-            condition = "input.fileType == 'csv'",
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("colseparator"), "column separator:", value = ",")),
-            div(style = "display: inline-block;horizontal-align:top; width: 80px;",
-                textInput(ns("decseparator"), "decimal separator:", value = ".")),
-            ns = ns
-          ),
-          helpText(
-            "The first row in your file need to contain variable names."
-          ),
-          radioButtons(inputId = ns("CoordType"),
-                          label = "Coordinate format",
-                        choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-                                        "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-                                        "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
-                        choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
-          fileInput(ns("file"), "Upload file"),
+          importDataUI(ns("importData"), "Import Data"),
+          tags$br(),
+          tags$br(),
+          radioButtons(
+            inputId = ns("CoordType"),
+            label = "Coordinate format",
+            choiceNames = c("decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
+                            "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
+                            "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"),
+            choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")),
           tags$hr(),
           ns = ns
         ),
@@ -62,9 +53,12 @@ modelResults3DUI <- function(id, title = ""){
         conditionalPanel(
           condition = "input.dataSource != 'model'",
           ns = ns,
-          selectInput(inputId = ns("Independent"),
+          selectInput(inputId = ns("IndependentX"),
                       label = "Dependent variable:",
                       choices = c("d15N", "d13C")),
+          radioButtons(inputId = ns("IndependentType"),
+                       label = "Dependent variable type:",
+                       choices = c("numeric", "categorical")),
           selectInput(inputId = ns("IndependentUnc"),
                       label = "Uncertainty(optional) of dep. var.:",
                       choices = c("")),
@@ -125,10 +119,6 @@ modelResults3DUI <- function(id, title = ""){
           checkboxInput(inputId = ns("Outlier"),
                         label = "Remove model outliers",
                         value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("OutlierD"),
-                        label = "Remove data outliers",
-                        value = FALSE, width = "100%"),
-
           conditionalPanel(
             condition = "input.Outlier == true",
             sliderInput(inputId = ns("OutlierValue"),
@@ -136,6 +126,9 @@ modelResults3DUI <- function(id, title = ""){
                         min = 2, max = 8, value = 4, step = 0.1),
             ns = ns
           ),
+          checkboxInput(inputId = ns("OutlierD"),
+                        label = "Remove data outliers",
+                        value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.OutlierD == true",
             sliderInput(inputId = ns("OutlierValueD"),
@@ -148,17 +141,19 @@ modelResults3DUI <- function(id, title = ""){
                         value = FALSE, width = "100%"),
           conditionalPanel(
             condition = "input.modelArea == true",
+            tags$strong("Latitude restriction:"),
             numericInput(inputId = ns("mALat1"),
-                        label = "Set lower latitude restriction",
+                        label = "Lower",
                         min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("mALat2"),
-                        label = "Set upper latitude restriction",
+                        label = "Upper",
                         min = -90, max = 90, value = c(90), width = "80%"),
+            tags$strong("Longitude restriction:"),
             numericInput(inputId = ns("mALong1"),
-                        label = "Set lower longitude restriction",
+                        label = "Lower",
                         min = -180, max = 180, value = c(-180), width = "80%"),
             numericInput(inputId = ns("mALong2"),
-                        label = "Set upper longitude restriction",
+                        label = "Upper",
                         min = -180, max = 180, value = c(180), width = "80%"),
             ns = ns
           ),
@@ -217,6 +212,7 @@ modelResults3DUI <- function(id, title = ""){
           )),
           conditionalPanel(
             condition = conditionPlot(ns("DistMap")),
+            selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
             textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             tags$br(),
             tags$br(),
@@ -278,6 +274,7 @@ modelResults3DUI <- function(id, title = ""){
       # right sidebar ----
       sidebarPanel(
         width = 2,
+        style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         radioButtons(inputId = ns("Centering"),
                      label = "Map Centering",
                      choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
@@ -525,12 +522,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
 
-  data <- reactive({
-    switch(
+  data <- reactiveVal()
+  observe({
+    activeData <- switch(
       input$dataSource,
       db = isoData(),
       file = fileImport()
     )
+
+    data(activeData)
   })
 
   coordType <- reactive({
@@ -547,6 +547,46 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   Model <- reactiveVal()
 
+  # MODEL DOWN- / UPLOAD ----
+  uploadedData <- downUploadButtonServer(
+    "downUpload",
+    dat = data,
+    inputs = input,
+    model = Model,
+    rPackageName = "MpiIsoApp",
+    githubRepo = "iso-app",
+    subFolder = "TimeR",
+    helpHTML = getHelp(id = "model3D"),
+    modelNotes = reactive(input$modelNotes),
+    compressionLevel = 1)
+
+  observe(priority = 100, {
+    ## update data ----
+    data(uploadedData$data)
+  }) %>%
+    bindEvent(uploadedData$data)
+
+  observe(priority = 50, {
+    ## reset input of model notes
+    updateTextAreaInput(session, "modelNotes", value = "")
+
+    ## update inputs ----
+    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- inputIDs[inputIDs %in% names(input)]
+
+    for (i in 1:length(inputIDs)) {
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+    }
+  }) %>%
+    bindEvent(uploadedData$inputs)
+
+  observe(priority = 10, {
+    ## update model ----
+    Model(uploadedData$model)
+  }) %>%
+    bindEvent(uploadedData$model)
+
+  # RUN MODEL ----
   observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
@@ -556,7 +596,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
     values$set <- 0
 
-    if (input$Independent == "" | input$Latitude == "" |
+    if (input$IndependentX == "" | input$Latitude == "" |
           input$Longitude == "" | input$DateOne == "" |
         (input$DateTwo == "" & input$DateType != "Single point")) {
       Model(NULL)
@@ -580,7 +620,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
-      val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
+      if(Model()$IndependentType == "numeric"){
+        val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
+      } else {
+        val <- 0.5
+      }
       updateSliderInput(session, "StdErr", value = signif(5 * val, 2),
                         min = 0, max = signif(5 * val, 2),
                         step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
@@ -642,7 +686,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                             estimationTypeChoices = estimationTypeChoices,
                             restrictOption = reactive("show"),
                             zValuesFun = getZvalues,
-                            zValuesFactor = 3
+                            zValuesFactor = 3,
+                            IndSelect = input$IndSelect
   )
 
   observeEvent(input$up, {
@@ -922,6 +967,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       if(input$mapType == "Time course"){
         plotTimeCourse(model,
+                       IndSelect = input$IndSelect,
                        trange = input$trange,
                        independent = isolate(Independent()),
                        resolution = input$resolution,
@@ -942,6 +988,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         req(zSettings$estType)
         plotMap3D(
           model,
+          IndSelect = input$IndSelect,
           time = time,
           estType = zSettings$estType,
           estQuantile = zSettings$Quantile,
@@ -1003,7 +1050,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
-    res <- plotFun()(Model())
+    withProgress({
+      res <- plotFun()(Model())
+    }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter
@@ -1016,7 +1065,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observe({
+  observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
         (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
@@ -1048,7 +1097,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     if (input$dataSource == "db" & ("site" %in% names(data()))){
       selectedSite <- "site"
     }
-    updateSelectInput(session, "Independent", choices = c("", setdiff(numVars, timeVars)))
+    updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
     updateSelectInput(session, "IndependentUnc", choices = c("", setdiff(numVars, timeVars)))
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),
@@ -1071,7 +1120,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       updateSelectInput(session, "DateOne", choices = c("", numVars))
       updateSelectInput(session, "DateTwo", choices = c("", numVars))
     #}
-  })
+  }) %>%
+    bindEvent(data())
 
   observe({
     if(input$DateType == "Interval"){
@@ -1088,29 +1138,39 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }
   })
 
+  observe({
+    req(Model())
+    if(class(Model()) != "character" && Model()$IndependentType != "numeric"){
+      shinyjs::show(id = "IndSelect")
+      shinyjs::hide(id = "sdVar")
 
-  ## Import Data
-  fileImport <- reactive({
-    inFile <- input$file
+      updateSelectInput(session, "IndSelect", choices = names(Model()$model))
+    } else {
+      shinyjs::hide(id = "IndSelect")
+      shinyjs::show(id = "sdVar")
 
-    if (is.null(inFile))
-      return(NULL)
+    }
+  })
 
-    decseparator = input$decseparator
-    if (decseparator == "" & input$colseparator == ";") decseparator <- ","
-    if (decseparator == "" & input$colseparator == ",") decseparator <- "."
+  ## Import Data ----
+  importedDat <- importDataServer("importData")
 
-    data <- readFile(inFile$datapath, input$fileType, input$colseparator,
-                     decseparator)
+  fileImport <- reactiveVal(NULL)
+  observe({
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE)
 
     if (!valid){
-      reset("file")
-      NULL
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
     }
-    else data
-  })
+  }) %>% bindEvent(importedDat())
+
   dataFun <- reactive({
     req(Model())
     function() {

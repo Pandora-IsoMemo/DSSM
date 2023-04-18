@@ -1,11 +1,146 @@
 # MpiIsoApp development version
 
+## Version 23.04.1
+
+### New Features
+- _Model tabs_: Option to load a model
+  - download a model (all user inputs, data and/or the model output) as a .zip file
+  - upload online models that are stored in github
+  - upload local models that were downloaded in a past session
+  - check if the model to be uploaded comes from the active tab
+
+## Version 23.03.6
+
+### New Features
+- Adds mclust as new clustering option for KernelR and KernelTimeR
+- Adds columns to excel for KernelTimeR: centroid full data, centroid sliced data, centroid temporal data
+### Bug Fixes
+- Unifies colors for clustering map and clustering plot within KernelTimeR
+- Fixing crash in mapSim, mapDiff and kernel plotting function after updates regarding categorical
+target/dependent variable
+
+## Version 23.03.5
+
+### Updates
+- Show type of user created maps (#19)
+
+## Version 23.03.4
+
+### Updates
+- Categorical target/dependent variable option for AverageR/TimeR models. This follows a 1vsall approach using logistic regression, which in the Bayesian case is performed using a Polya-Gamma latent variable during Gibbs-sampling (https://arxiv.org/abs/1205.0310)
+
+## Version 23.03.3
+
+### Updates
+- Option to decide whether to keep the first or last duplicate row.
+
+## Version 23.03.2
+
+### Updates
+- Option to set max number of characters to be displayed in the table.
+
+## Version 23.03.1
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: confirm using GPT3 before option to upload a key
+
+## Version 23.02.4
+
+### Updates
+- _Import Data_ module in the tab _Query with SQL_: option to use GPT3 for creation of SQL queries
+
+## Version 23.02.3
+
+### Updates
+- Option to decide if column with duplicate rows is added
+- Option to ignore spaces during duplicate detection
+- Option to specify a string that is used for duplicate detection
+
+## Version 23.02.2
+
+### Updates
+- the _Import Data_ module was now integrated into the modeling tabs _AverageR_, _TimeR_,
+  _SpreadR_, _KernelR_, _KernelTimeR_, and _AssignR_ (#91, PR #98)
+  - applicable when "Upload file" is selected under "Data source" in the left sidebar
+
+## Version 23.02.1
+
+### New features
+- A new button "detect duplicates" has been added that opens a pop-up where duplicates can be detected and removed from the dataset.
+
+## Version 23.01.4.1
+
+### Bug Fixes
+- inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
+## Version 23.01.4
+
+### Updates
+- when using _Pandora_ skin:
+  - the _Import Data_ module is now imported from the new package IsoAppTools (#91, PR 92)
+  - now changes of functionality
+  - all redundant code was removed
+
+## Version 23.01.3
+
+### New features
+- when using _Pandora_ skin, in _Import Data_:
+  - option to use SQL queries to prepare or combine data before import (#37, PR #89)
+    - use in-memory tables and columns
+    - provide and apply a query
+    - preview and accept the result
+    
+### Bug Fixes
+- fixed bug when importing data with no numeric columns:
+  - data was not displayed because no lat/long columns were found
+    
+## Version 23.01.2
+
+### New features
+- under Saved/Create Maps tab (#19)
+  - option to add a square
+  - update of the UI
+
+- fixed sidebars with auto scroll in all tabs (#4)
+
+## Version 23.01.1
+
+### New features
+- interactive map: 
+  - option to assign colour of symbol by selecting a certain data column (#13)
+    - choose a colour palette
+    - reverse colours
+  - option to assign size of symbol by selecting a certain data column (#13)
+    - set a factor to adjust the size
+    - if no column is selected, the factor sets the general point size
+  - option to adjust opacity
+
+## Version 22.12.4
+
+### New features
+- when using _Pandora_ skin, in _Import Data_:
+  - option to prepare data before import or merge
+    - rename columns
+    - join columns
+    - split columns
+    - delete columns
+  - option to merge two data tables before import (#37)
+    - optionally select all common columns
+    - specify the merge operation
+    - apply the merge for reviewing and error checking
+    - accept the merged file to finally import it into the app
+  - checks for correct column names in file imports
+  - update column names of files if naming conflicts
+  - new tests
+
+### Updates
+- disable accept button(s) by default in _Import Data_
+
 ## Version 22.12.3.1
 
 ### Bug Fixes
 - inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
 
-## MpiIsoApp 22.12.3
+## Version 22.12.3
 
 ### Updates
 - _export of plots_ after modelling: hide option to create a time series for
@@ -15,7 +150,7 @@ _Time Course_ plot type (#8)
 - fix naming issue when data contains columns exactly named "latitude" or "longitude"
   - columns will be renamed if coordinate conversion fails
 
-## MpiIsoApp 22.12.2
+## Version 22.12.2
 
 ### Updates
 - add notification if conversion of lng/lat was successful (#67)
@@ -23,12 +158,12 @@ _Time Course_ plot type (#8)
 ### Bug Fixes
 - fix reset of lng/lat columns when switching coord formats
 
-## MpiIsoApp 22.12.1
+## Version 22.12.1
 
 ### Bug Fixes
 - fix export of time plot as time series in TimeR and KernelTimeR (#8)
 
-## MpiIsoApp 22.11.1
+## Version 22.11.1
 
 ### Updates
 
@@ -46,8 +181,7 @@ before, that is, removing a restriction did not reset min/max values) (#27)
 are not implemented for "Time course"
 - debounce inputs for min/max range to prevent re-rendering of the map when typing min/max values 
 
-
-## MpiIsoApp 22.10.3
+## Version 22.10.3
 
 ### Updates
 - new UI to specify the section of maps of modelling tabs (_AverageR, TimeR, SpreadR, KernelR,
@@ -63,12 +197,12 @@ KernelTimeR, OperatorR, LocateR_)
 ### Bug fixes
 - removes the slow **automatic** updates for inputs of time and zoom (#8)
 
-## MpiIsoApp 22.10.2
+## Version 22.10.2
 
 ### Bug fixes
 - fixing the point radius changing with latitude, now set radius in pixel (#44)
 
-## MpiIsoApp 22.10.1
+## Version 22.10.1
 
 ### New features
 - specify the sheet of an xlsx/xls file in the import dialog
@@ -86,36 +220,34 @@ found (#67)
 equal "decimal degrees" (#62)
 - fix in the removal of points on the interactive map after using filters (#63)
 
-## MpiIsoApp 22.09.3
+## Version 22.09.3
 
 ### New features
 - export a time series of _spatio-temporal-average_ plots in the selected file format condensed
 into a zip file
 
-## MpiIsoApp 22.09.2
+## Version 22.09.2
 
 ### New features
 - option to adjust the format of the axes in time course plots (decimal places and number of labels)
 - option to adjust the decimal places of the center estimates for mapType == "Map" or "Spread"
 
-## MpiIsoApp 22.09.1
+## Version 22.09.1
 
 ### Enhancements
 - In the _Modelling_ tab under _TimeR_ and _KernelTimeR_: new (numeric) input field for the
 `Time selection` in addition to the slider input `Time selection`
 
-# MpiIsoApp 22.08.2.1
+# Version 22.08.2.1
 
 ## Updates
-
 - text update of the modeling tab for the _pandora / isomemo search app_ (#9)
 
-## MpiIsoApp 22.08.2
+## Version 22.08.2
 
 ### Enhancements
 - when using _Pandora_ skin: updates of the UI in the _Import Data_ pop-up menu (#39)
 - update label names in the _maps_ tab (#48)
 
 ### Bug fixes
-
 - fixes in the modeling tab _AssignR_: (#46)

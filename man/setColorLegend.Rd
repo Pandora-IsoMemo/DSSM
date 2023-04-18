@@ -4,12 +4,16 @@
 \alias{setColorLegend}
 \title{Set Colour Legend}
 \usage{
-setColorLegend(map, showLegend, values)
+setColorLegend(map, showLegend, title, pal, values)
 }
 \arguments{
 \item{map}{leaflet map}
 
 \item{showLegend}{logical show/hide legend}
+
+\item{title}{legend title}
+
+\item{pal}{colour palette}
 
 \item{values}{possible values that can be mapped, e.g. isoData$source}
 }

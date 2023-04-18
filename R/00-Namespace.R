@@ -3,6 +3,9 @@
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
+#' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
+#' importDataUI importDataServer
+#' @importFrom dplyr group_by_at select summarise left_join
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
@@ -13,31 +16,32 @@
 #'  cm.colors pdfFonts
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
-#' @importFrom leaflet addAwesomeMarkers awesomeIcons addCircleMarkers addLegend
-#'  addMarkers addPopups addRectangles addTiles clearMarkerClusters clearGroup clearPopups
-#'  colorFactor fitBounds leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
-#'  removeControl removeScaleBar removeShape renderLeaflet setMaxBounds setView addProviderTiles
-#'  addScaleBar scaleBarOptions addControl
+#' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLegend addMarkers
+#'  addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
+#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds
+#'  leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
+#'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
-#' @importFrom openxlsx loadWorkbook read.xlsx write.xlsx
+#' @importFrom openxlsx read.xlsx write.xlsx
+#' @importFrom pgdraw pgdraw
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom readr guess_encoding
-#' @importFrom readxl excel_sheets read_excel
 #' @importFrom Rfast spdinv Crossprod rmvnorm
-#' @importFrom shinyjs alert reset runjs useShinyjs
+#' @importFrom rgeos gCentroid
+#' @importFrom rlang .data
+#' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
-#' @importFrom stats aggregate as.formula dunif model.matrix na.exclude na.omit predict
-#'  quantile rgamma rnorm runif sd setNames mahalanobis pchisq cov pf rbeta
-#' @importFrom sp point.in.polygon plot
-#' @importFrom stats aggregate as.formula model.matrix na.exclude na.omit predict quantile dnorm
-#'  qnorm residuals pnorm var sd setNames cor density median kmeans
+#' @importFrom stats aggregate as.formula cor cov density dnorm dunif kmeans
+#'  mahalanobis median model.matrix na.exclude na.omit pchisq  pf pnorm predict
+#'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
+#' @importFrom sp point.in.polygon plot SpatialPoints
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head
-#'  packageVersion read.csv read.csv2 write.table installed.packages capture.output download.file
+#'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom webshot is_phantomjs_installed
 #' @importFrom zip zipr
 NULL
