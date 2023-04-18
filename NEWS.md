@@ -4,8 +4,8 @@
 
 ### New Features
 - _Interactive map_: 
-  - option to set the symbol dependent on values of a character column
-  - show/hide legends for size (if a variable is used) and symbols
+  - option to set the symbol dependent on values of a character column (#13)
+  - show/hide legends for size (if a variable is used) and symbols 
 
 ### Updates
 - optimized behavior of updating data and show/hide legends on the interactive map
