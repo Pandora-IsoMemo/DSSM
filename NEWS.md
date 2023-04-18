@@ -127,7 +127,6 @@ target/dependent variable
 ## Version 22.12.4
 
 ### New features
-
 - when using _Pandora_ skin, in _Import Data_:
   - option to prepare data before import or merge
     - rename columns
@@ -145,6 +144,11 @@ target/dependent variable
 
 ### Updates
 - disable accept button(s) by default in _Import Data_
+
+## Version 22.12.3.1
+
+### Bug Fixes
+- inputs for latitude and longitude were falsely hidden for time plots in TimeR and KernelTimeR (#94)
 
 ## Version 22.12.3
 
@@ -247,7 +251,6 @@ into a zip file
 # Version 22.08.2.1
 
 ## Updates
-
 - text update of the modeling tab for the _pandora / isomemo search app_ (#9)
 
 ## Version 22.08.2
@@ -257,5 +260,4 @@ into a zip file
 - update label names in the _maps_ tab (#48)
 
 ### Bug fixes
-
 - fixes in the modeling tab _AssignR_: (#46)
