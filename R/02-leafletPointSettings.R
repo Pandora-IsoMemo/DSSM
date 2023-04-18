@@ -659,7 +659,7 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
         "topleft",
         pal = pal,
         values = values,
-        title = title,
+        #title = title, # hide title here, since title is not available for addControl()
         layerId = "colorLegend"
       )
   } else {
@@ -750,7 +750,9 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
                                  sizeFactor = sizeFactor)
 
   sizesDf <- sizesDf %>%
-    filter(.data$labels >= min(.data$values))
+    filter(.data$labels >= min(.data$values)) %>%
+    select(.data$labels, .data$newSizes) %>%
+    distinct()
 
   sizeLegendValues <- sizesDf$newSizes
   names(sizeLegendValues) <- sizesDf$labels
