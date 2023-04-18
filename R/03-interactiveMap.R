@@ -225,9 +225,8 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # Update data ----
   observe({
-    req(isoData(), !is.null(leafletPointValues$clusterPoints))
-    isolate(print(paste("Update data:", input$map_groups)))
-    #req(isolate(input$map_groups))
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0)
 
     withProgress({
       leafletProxy("map") %>%
@@ -237,10 +236,10 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # show / hide legend ----
   observe({
-    req(isoData(),
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
         !is.null(leafletPointValues$showColourLegend),
-        !is.null(leafletPointValues$pointColourPalette),
-        isolate(input$map_groups))
+        !is.null(leafletPointValues$pointColourPalette))
 
     leafletProxy("map") %>%
       setColorLegend(
@@ -252,10 +251,10 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
   observe({
-    req(isoData(),
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
         !is.null(leafletPointValues$showSizeLegend),
-        !is.null(leafletPointValues$sizeLegendValues),
-        isolate(input$map_groups))
+        !is.null(leafletPointValues$sizeLegendValues))
 
     leafletProxy("map") %>%
       setSizeLegend(
@@ -265,10 +264,10 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
   observe({
-    req(isoData(),
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
         !is.null(leafletPointValues$showSymbolLegend),
-        !is.null(leafletPointValues$symbolLegendValues),
-        isolate(input$map_groups))
+        !is.null(leafletPointValues$symbolLegendValues))
 
     leafletProxy("map") %>%
       setSymbolLegend(
