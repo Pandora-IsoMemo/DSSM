@@ -3,6 +3,12 @@ callAPI <- function(action, ...) {
   params <- list(...)
   paramString <- paste(names(params), params, sep = "=", collapse = "&")
 
+  if (Sys.getenv("API_BASE_URL") == "") {
+    stop(paste0("Cannot reach API. Environment variable 'API_BASE_URL' is missing. ",
+                "If you are using the app locally, uncomment 'API_BASE_URL' in your local ",
+                ".Renviron file"))
+  }
+
   apiBaseURL <- Sys.getenv("API_BASE_URL")
   url <- paste(apiBaseURL, action, "?", paramString, sep = "")
   data <- fromJSON(url)

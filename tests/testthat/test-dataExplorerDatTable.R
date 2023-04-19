@@ -14,7 +14,9 @@ testthat::test_that("creates table", {
 
 })
 
+Sys.setenv(API_BASE_URL = "https://isomemodb.com/testapi/v1/")
 mapping <- getMappingTable()
+Sys.unsetenv("API_BASE_URL")
 
 testthat::test_that("function categoryChoices", {
   skip_if(is.null(mapping))
@@ -38,8 +40,6 @@ testthat::test_that("function columnDefault", {
 
 testthat::test_that("function getDataColumns", {
   skip_if(is.null(mapping))
-
-  mapping <- getMappingTable()
 
   input <- list("selectCategorySampledescription" = TRUE,
                 "selectCategoryIsotopicproxies" = FALSE,
