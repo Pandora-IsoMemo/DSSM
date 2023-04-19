@@ -1,4 +1,5 @@
-API_BASE_URL=https://isomemodb.com/testapi/v1/
+# API_BASE_URL is defined on shinyproxy and not here anymore
+#API_BASE_URL=https://isomemodb.com/testapi/v1/
 
 # Environment variable to switch to "only-data-search mode". Only use for developement.
 # In production this variable will be defined outside the app. Use isOnlyDataSearchMode() to check
