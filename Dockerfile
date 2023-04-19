@@ -5,4 +5,4 @@ ADD . .
 RUN installPackage ReSources \
     && installPackage
 
-CMD ["Rscript", "-e", "library(shiny);MpiIsoApp::startApplication(3838)"]
+CMD ["Rscript", "-e", "library(shiny);print(API_BASE_URL);MpiIsoApp::startApplication(3838)"]
