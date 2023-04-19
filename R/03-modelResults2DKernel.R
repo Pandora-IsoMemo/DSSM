@@ -88,8 +88,8 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
-                        label = "Number of clusters (range)",
-                        value = c(2,10), min = 2, max = 20, step = 1)
+                        label = "Possible range for clusters",
+                        value = c(2,10), min = 2, max = 50, step = 1)
           ),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
@@ -911,7 +911,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "clustMeanLongitude", "clustMeanLatitude", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("cluster", "cluster_geo_centroid_long", "cluster_geo_centroid_lat", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       } else {

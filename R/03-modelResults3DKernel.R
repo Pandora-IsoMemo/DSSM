@@ -359,7 +359,7 @@ modelResults3DKernelUI <- function(id, title = ""){
               #               value = FALSE, width = "100%"),
               radioButtons(inputId = ns("clusterAll"),
                            label = "Cluster visibility",
-                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
+                           choices = c("Show only spatial centroids" = "-2", "Show only temporal centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -1198,7 +1198,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                          "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
-        modelData <- modelData[!is.na(modelData$lat_cluster_filtered_centroid),]
+        modelData <- modelData[!is.na(modelData$cluster_geo_centroid_long),]
         return(modelData)
       } else {
         allData <- data()

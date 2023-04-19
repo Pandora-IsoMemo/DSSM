@@ -650,8 +650,8 @@ plotMap <- function(model,
                         }
                         if(cluster & !is.null(data$cluster)){
                           pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          if("clustMeanLongitude" %in% names(data)){
-                            data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                          if((!"cluster_temp_centroid_long" %in% names(data))){
+                            data_names <- c("cluster", "cluster_geo_centroid_long", "cluster_geo_centroid_lat")
                           } else {
                             data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
                           }
@@ -859,8 +859,8 @@ plotMap <- function(model,
                       }
                       if(cluster & !is.null(data$cluster)){
                         pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                        if("clustMeanLongitude" %in% names(data)){
-                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        if((!"cluster_temp_centroid_long" %in% names(data))){
+                          data_names <- c("cluster", "cluster_geo_centroid_long", "cluster_geo_centroid_lat")
                         } else {
                           data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
                         }
@@ -1612,12 +1612,16 @@ plotMap3D <- function(model,
                             pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster))[dataT$cluster]
                           }
                         }
-                        if("clustMeanLongitude" %in% names(data)){
-                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        if((!"cluster_temp_centroid_long" %in% names(data)) | clusterAll == -2){
+                          data_names <- c("cluster_geo_centroid_long", "cluster_geo_centroid_lat")
+                          centroids <- unique(data[, data_names])
+                          centroids <- na.omit(centroids)
+                          centroids$cluster <- 1:nrow(centroids)
+                          centroids <- centroids[,c(3,1,2)]
                         } else {
                           data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
+                          centroids <- unique(data[, data_names])
                         }
-                        centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -1638,13 +1642,12 @@ plotMap3D <- function(model,
                                  col = pColor, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                         } else {
-                          if(clusterAll != "-1"){
+                          if(!clusterAll %in% c("-1","-2")){
                           points(dataTPac$Latitude ~ dataTPac$Longitude,
                                  col = pColor, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                           }
-                        }
-
+}
                       } else {
                         if(cluster & clusterAll %in% c("0", "1")){
                           if(clusterAll == "0"){
@@ -1657,7 +1660,7 @@ plotMap3D <- function(model,
                                    pch = pointShape, cex = pointSize);
                           }
                         } else {
-                          if(clusterAll != "-1"){
+                          if(!clusterAll %in% c("-1","-2")){
                         points(dataT$Latitude ~ dataT$Longitude,
                                col = pColor, lwd = 2,
                                pch = pointShape, cex = pointSize);

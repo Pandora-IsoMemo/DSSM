@@ -2263,7 +2263,7 @@ estimateMapKernel <- function(data,
     clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
     data$cluster <- clust$cluster
     clust <- as.data.frame(clust$centers)
-    names(clust) <- c("clustMeanLongitude", "clustMeanLatitude")
+    names(clust) <- c("cluster_geo_centroid_long", "cluster_geo_centroid_lat")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   } else if (clusterMethod == "mclust"){
@@ -2284,7 +2284,7 @@ estimateMapKernel <- function(data,
 
     # merge cluster centers
     cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
-    colnames(cluster_centers) <- c("clustMeanLongitude", "clustMeanLatitude")
+    colnames(cluster_centers) <- c("cluster_geo_centroid_long", "cluster_geo_centroid_lat")
     cluster_centers$cluster <- 1:nrow(cluster_centers)
     data <- merge(data, cluster_centers, sort = FALSE)
   }
