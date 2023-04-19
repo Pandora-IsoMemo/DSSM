@@ -14,6 +14,7 @@ testthat::test_that("creates table", {
 
 })
 
+API_BASE_URL <- "https://isomemodb.com/testapi/v1/"
 mapping <- getMappingTable()
 
 testthat::test_that("function categoryChoices", {
@@ -39,6 +40,7 @@ testthat::test_that("function columnDefault", {
 testthat::test_that("function getDataColumns", {
   skip_if(is.null(mapping))
 
+  API_BASE_URL <- "https://isomemodb.com/testapi/v1/"
   mapping <- getMappingTable()
 
   input <- list("selectCategorySampledescription" = TRUE,
