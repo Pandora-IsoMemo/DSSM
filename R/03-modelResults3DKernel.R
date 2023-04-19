@@ -1191,12 +1191,10 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("cluster",
-                                         "long_cluster_all_centroid",
-                                         "lat_cluster_all_centroid",
-                                         "long_cluster_filtered_centroid",
-                                         "lat_cluster_filtered_centroid",
-                                         "long_temporal_centroid",
-                                         "lat_temporal_centroid",
+                                         "cluster_geo_centroid_long",
+                                         "cluster_geo_centroid_lat",
+                                         "cluster_temp_centroid_long",
+                                         "cluster_temp_centroid_lat",
                                          "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering

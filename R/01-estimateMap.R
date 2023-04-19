@@ -2609,23 +2609,23 @@ estimateMap3DKernel <- function(data,
                      ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
     clust <- kmeans(cbind(dataC$Longitude, dataC$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
 
-    # Clustering on full data
-    clust_full <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
-
-    # Add centroids to data
-    # Full data
-    clust_full_centroid <- data.frame(cluster=1:nrow(clust_full$centers),clust_full$centers)
-    names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
-    data$cluster <- clust_full$cluster
-    data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
-    data$cluster <- NULL
+    # Clustering on full data (implemented but then removed again)
+    # clust_full <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
+    #
+    # # Add centroids to data
+    # # Full data
+    # clust_full_centroid <- data.frame(cluster=1:nrow(clust_full$centers),clust_full$centers)
+    # names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
+    # data$cluster <- clust_full$cluster
+    # data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
+    # data$cluster <- NULL
 
     # Filtered data
     dataC$cluster <- clust$cluster
     clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
-    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
     dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data <- data %>% left_join(dataC[,c("id","cluster_geo_centroid_long","cluster_geo_centroid_lat")], by = "id")
     data$id <- NULL
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
@@ -2650,7 +2650,7 @@ estimateMap3DKernel <- function(data,
                                                         as.matrix(clusterCentroids))^2)))
 
     clust <- clusterCentroids
-    names(clust) <- c("long_temporal_centroid", "lat_temporal_centroid")
+    names(clust) <- c("cluster_temp_centroid_long", "cluster_temp_centroid_lat")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   } else if (clusterMethod == "mclust"){
@@ -2673,24 +2673,24 @@ estimateMap3DKernel <- function(data,
     best_solution_cluster <- numClusters[[best_solution_idx]]
     cluster_solution <- cluster_list[[best_solution_idx]]
 
-    # Clustering on full data
-    set.seed(1234)
-    clust_full <- mclust::Mclust(data[,c("Longitude","Latitude")], G = best_solution_cluster)
-
-    # Add centroids to data
-    # Full data
-    clust_full_centroid <- data.frame(cluster=1:nrow(t(clust_full$parameters$mean)),t(clust_full$parameters$mean))
-    names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
-    data$cluster <- clust_full$classification
-    data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
-    data$cluster <- NULL
+    # Clustering on full data (implemented but then removed again)
+    # set.seed(1234)
+    # clust_full <- mclust::Mclust(data[,c("Longitude","Latitude")], G = best_solution_cluster)
+    #
+    # # Add centroids to data
+    # # Full data
+    # clust_full_centroid <- data.frame(cluster=1:nrow(t(clust_full$parameters$mean)),t(clust_full$parameters$mean))
+    # names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
+    # data$cluster <- clust_full$classification
+    # data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
+    # data$cluster <- NULL
 
     # Filtered data
     dataC$cluster <- cluster_solution$classification
     clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
-    names(clust_centroid) <- c("cluster","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")
+    names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
     dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","long_cluster_filtered_centroid","lat_cluster_filtered_centroid")], by = "id")
+    data <- data %>% left_join(dataC[,c("id","cluster_geo_centroid_long","cluster_geo_centroid_lat")], by = "id")
     data$id <- NULL
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
@@ -2718,7 +2718,7 @@ estimateMap3DKernel <- function(data,
     }
 
     clust <- clusterCentroids
-    names(clust) <- c("long_temporal_centroid", "lat_temporal_centroid")
+    names(clust) <- c("cluster_temp_centroid_long", "cluster_temp_centroid_lat")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   }

@@ -653,7 +653,7 @@ plotMap <- function(model,
                           if("clustMeanLongitude" %in% names(data)){
                             data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
                           } else {
-                            data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                            data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
                           }
                           centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
@@ -862,7 +862,7 @@ plotMap <- function(model,
                         if("clustMeanLongitude" %in% names(data)){
                           data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
                         } else {
-                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
                         }
                         centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
@@ -1615,7 +1615,7 @@ plotMap3D <- function(model,
                         if("clustMeanLongitude" %in% names(data)){
                           data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
                         } else {
-                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          data_names <- c("cluster", "cluster_temp_centroid_long", "cluster_temp_centroid_lat")
                         }
                         centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
