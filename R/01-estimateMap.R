@@ -2601,6 +2601,8 @@ estimateMap3DKernel <- function(data,
   }
   if(clusterMethod == "kmeans"){
 
+    # discussion about the clustering here: https://github.com/Pandora-IsoMemo/iso-app/issues/54
+
     data$id <- 1:nrow(data)
     set.seed(1234)
     # Clustering on filtered data
