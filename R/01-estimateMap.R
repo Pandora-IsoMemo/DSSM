@@ -2602,6 +2602,13 @@ estimateMap3DKernel <- function(data,
   if(clusterMethod == "kmeans"){
 
     # discussion about the clustering here: https://github.com/Pandora-IsoMemo/iso-app/issues/54
+    # In KernelTimeR clustering is applied to filtered data according to clusterTimeRange.
+    # After clusters have been calculated the algorithm designed by marcus is recalculating the cluster centers by
+    # finding the point with the highest density in each cluster, while the density also takes the temporal aspect into account.
+    # In the last step all data points (not only the filtered points) are assigned to the cluster.
+    # This is done by assigning the cluster to the point for which the distance of the cluster center is closest.
+
+    # In the map, per default, all points are displayed. In the excel export only the filtered dataset is included.
 
     data$id <- 1:nrow(data)
     set.seed(1234)
