@@ -392,7 +392,7 @@ modelResults3DUI <- function(id, title = ""){
                         selected = "RdYlGn"),
             ns = ns),
           selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                      choices = 0:25, selected = 4),
+                      choices = pchChoices(), selected = 4),
           ns = ns),
         sliderInput(inputId = ns("AddU"),
                     label = "Location marks and convex hull: Add time uncertainty in years",

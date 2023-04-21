@@ -38,7 +38,7 @@ modelResultsSimUI <- function(id, title = ""){
           condition = "input.dataSource == 'create'",
           pickerInput(
           inputId = ns("SimMapSelect"),
-          label = "Select maps for similarity map:",
+          label = "Select baseline maps:",
           choices = NULL,
           options = list(
             `actions-box` = FALSE,
@@ -56,7 +56,7 @@ modelResultsSimUI <- function(id, title = ""){
           radioButtons(ns("normalType"), "Type of normalisation",
                        choices = c("Max value equal to 1" = "1", "Volume equal to 1" = "2")),
           ns = ns),
-        actionButton(ns("start"), "Create similarity map"),
+        actionButton(ns("start"), "Create probability map"),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           checkboxInput(inputId = ns("fixCol"),
