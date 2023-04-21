@@ -100,8 +100,8 @@ modelResults3DKernelUI <- function(id, title = ""){
             condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
-                        label = "Number of clusters (range)",
-                        value = c(2,10), min = 2, max = 20, step = 1)
+                        label = "Possible range for clusters",
+                        value = c(2,10), min = 2, max = 50, step = 1)
           ),
           conditionalPanel(
             condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
@@ -359,7 +359,7 @@ modelResults3DKernelUI <- function(id, title = ""){
               #               value = FALSE, width = "100%"),
               radioButtons(inputId = ns("clusterAll"),
                            label = "Cluster visibility",
-                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
+                           choices = c("Show only spatial centroids" = "-2", "Show only temporal centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -1191,16 +1191,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("cluster",
-                                         "long_cluster_all_centroid",
-                                         "lat_cluster_all_centroid",
-                                         "long_cluster_filtered_centroid",
-                                         "lat_cluster_filtered_centroid",
-                                         "long_temporal_centroid",
-                                         "lat_temporal_centroid",
+                                         "cluster_geo_centroid_long",
+                                         "cluster_geo_centroid_lat",
+                                         "cluster_temp_centroid_long",
+                                         "cluster_temp_centroid_lat",
                                          "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
-        modelData <- modelData[!is.na(modelData$lat_cluster_filtered_centroid),]
+        modelData <- modelData[!is.na(modelData$cluster_geo_centroid_long),]
         return(modelData)
       } else {
         allData <- data()

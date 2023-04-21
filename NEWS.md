@@ -1,5 +1,14 @@
 # MpiIsoApp development version
 
+## Version 23.04.3
+
+### Updates
+  - removing the calculation of clusters for unfiltered data
+  - renaming columns in the excel export
+  - renaming "Number of clusters (optional)" to "Possible range for clusters"
+  - increasing the maximum number of clusters from 20 to 50 for mclust
+  - add option to show spatial centroids
+
 ## Version 23.04.2
 
 ### New Features
