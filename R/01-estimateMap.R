@@ -2612,24 +2612,24 @@ estimateMap3DKernel <- function(data,
 
     data$id <- 1:nrow(data)
     set.seed(1234)
-    # Clustering on filtered data
+    ## Clustering on filtered data ----
     dataC <- data[((data$Date - 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date - 2*data$Uncertainty) >= clusterTimeRange[1]) |
                      ((data$Date + 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date + 2*data$Uncertainty) >= clusterTimeRange[1]) |
                      ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
     clust <- kmeans(cbind(dataC$Longitude, dataC$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
 
-    # Clustering on full data (implemented but then removed again)
+    ## Clustering on full data (implemented but then removed again) ----
     # clust_full <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
     #
-    # # Add centroids to data
-    # # Full data
+    # Add centroids to data ----
+    ## Full data ----
     # clust_full_centroid <- data.frame(cluster=1:nrow(clust_full$centers),clust_full$centers)
     # names(clust_full_centroid) <- c("cluster","long_cluster_all_centroid","lat_cluster_all_centroid")
     # data$cluster <- clust_full$cluster
     # data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
     # data$cluster <- NULL
 
-    # Filtered data
+    ## Filtered data ----
     dataC$cluster <- clust$cluster
     clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
     names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
@@ -2639,7 +2639,7 @@ estimateMap3DKernel <- function(data,
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
 
-    # Optimal Centroids
+    ## Optimal Centroids ----
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
                                   Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
                                                length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
@@ -2663,6 +2663,7 @@ estimateMap3DKernel <- function(data,
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
   } else if (clusterMethod == "mclust"){
+  # MCLUST Clustering ----
     data$id <- 1:nrow(data)
 
     # Clustering on filtered data
@@ -2682,7 +2683,7 @@ estimateMap3DKernel <- function(data,
     best_solution_cluster <- numClusters[[best_solution_idx]]
     cluster_solution <- cluster_list[[best_solution_idx]]
 
-    # Clustering on full data (implemented but then removed again)
+    ## Clustering on full data (implemented but then removed again) ----
     # set.seed(1234)
     # clust_full <- mclust::Mclust(data[,c("Longitude","Latitude")], G = best_solution_cluster)
     #
@@ -2694,7 +2695,7 @@ estimateMap3DKernel <- function(data,
     # data <- merge(data, clust_full_centroid, by = "cluster", sort = FALSE)
     # data$cluster <- NULL
 
-    # Filtered data
+    ## Filtered data ----
     dataC$cluster <- cluster_solution$classification
     clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
     names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
@@ -2704,7 +2705,7 @@ estimateMap3DKernel <- function(data,
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
 
-    #optimal centroids:
+    ## optimal centroids: ----
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
                                                                                                                       Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
                                                                                                                                    length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
