@@ -2600,7 +2600,7 @@ estimateMap3DKernel <- function(data,
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
   if(clusterMethod == "kmeans"){
-
+# K-Means Clustering ----
     # discussion about the clustering here: https://github.com/Pandora-IsoMemo/iso-app/issues/54
     # In KernelTimeR clustering is applied to filtered data according to clusterTimeRange.
     # After clusters have been calculated the algorithm designed by marcus is recalculating the cluster centers by
