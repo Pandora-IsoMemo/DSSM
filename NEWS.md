@@ -1,5 +1,15 @@
 # MpiIsoApp development version
 
+## Version 23.04.2
+
+### New Features
+- _Interactive map_: 
+  - option to set the symbol dependent on values of a character column (#13)
+  - show/hide legends for size (if a variable is used) and symbols 
+
+### Updates
+- optimized behavior of updating data and show/hide legends on the interactive map
+
 ## Version 23.04.1
 
 ### New Features

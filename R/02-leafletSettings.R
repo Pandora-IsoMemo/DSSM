@@ -12,13 +12,18 @@ leafletSettingsUI <- function(id, title = "") {
       "Map type",
       choices = c(
         "CartoDB Positron" = "CartoDB.Positron",
+        "CartoDB Positron No Labels" = "CartoDB.PositronNoLabels",
         "OpenStreetMap Mapnik" = "OpenStreetMap.Mapnik",
         "OpenStreetMap DE" = "OpenStreetMap.DE",
         "OpenTopoMap" = "OpenTopoMap",
         "Stamen TonerLite" = "Stamen.TonerLite",
         "Esri" = "Esri",
         "Esri WorldTopoMap" = "Esri.WorldTopoMap",
-        "Esri WorldImagery" = "Esri.WorldImagery"
+        "Esri WorldImagery" = "Esri.WorldImagery",
+        "Esri WorldTerrain" = "Esri.WorldTerrain",
+        "Esri WorldShadedRelief" = "Esri.WorldShadedRelief",
+        "Esri WorldPhysical" = "Esri.WorldPhysical",
+        "Esri OceanBasemap" = "Esri.OceanBasemap"
       )
     ),
     fluidRow(column(6, checkboxInput(
