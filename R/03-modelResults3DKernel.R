@@ -519,7 +519,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     # reset model
     Model(NULL)
-
     data(activeData)
   })
 
@@ -1176,9 +1175,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   fileImport <- reactiveVal(NULL)
   observe({
-    # reset model output
+    # reset model
     Model(NULL)
-
     if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
     req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
