@@ -702,3 +702,90 @@ loadOptions <- function(session, opt, mapping) {
 
   clickElement(session$ns("load"), delay = 500)
 }
+
+
+# helper functions ----
+
+#' Convert Lat Long Wrapper
+#'
+#' @inheritParams estimateMap
+convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType) {
+  if (is.null(Longitude) || is.null(Latitude) || Longitude != "" || Latitude != "")
+    return(data)
+
+  convertedDat <- data
+
+  dCoord <-
+    try({
+      convertLatLong(data,
+                     CoordType = CoordType,
+                     Latitude = Latitude,
+                     Longitude = Longitude)
+    }, silent = TRUE)
+
+  if (class(dCoord) == "try-error") {
+    ### Conversion failure ----
+    # if (Longitude == "longitude" ||
+    #     Latitude == "latitude") {
+    #   if (Longitude == "longitude") {
+    #     # rename original to avoid name conflicts
+    #     tmpIsoDataRaw <- isoDataRaw()
+    #     tmpIsoDataRaw[[paste0(Longitude, "_orig")]] <-
+    #       tmpIsoDataRaw[["longitude"]]
+    #     tmpIsoDataRaw[["longitude"]] <- NULL
+    #     isoDataRaw(tmpIsoDataRaw)
+    #   }
+    #
+    #   if (Latitude == "latitude") {
+    #     # rename original to avoid name conflicts
+    #     tmpIsoDataRaw <- isoDataRaw()
+    #     tmpIsoDataRaw[[paste0(Latitude, "_orig")]] <-
+    #       tmpIsoDataRaw[["latitude"]]
+    #     tmpIsoDataRaw[["latitude"]] <- NULL
+    #     isoDataRaw(tmpIsoDataRaw)
+    #   }
+    # } else {
+    message <- paste0(
+      "Conversion of coordinates has failed. Please select appropriate ",
+      "longitude / latitude fields and coordinate format. ",
+      "Columns longitude and latitude were removed (renamed)."
+    )
+    messageType <- "warning"
+    convertedDat$longitude <- NULL
+    convertedDat$latitude <- NULL
+    #}
+  } else {
+    ### Conversion success ----
+    message <- paste0(
+      "Conversion of coordinates succeeded. ",
+      "Columns longitude and latitude set successfully."
+    )
+    messageType <- "success"
+
+    convertedDat <- dCoord
+    convertedDat$id <- as.character(1:nrow(convertedDat))
+    convertedDat$longitude <- convertedDat[, Longitude]
+    convertedDat$latitude <- convertedDat[, Latitude]
+
+    if (Longitude != "longitude") {
+      # remove original
+      convertedDat[[Longitude]] <- NULL
+    }
+
+    if (Latitude != "latitude") {
+      # remove original
+      convertedDat[[Latitude]] <- NULL
+    }
+
+    # put lng/lat to beginning
+    oldColNames <- colnames(convertedDat)
+    oldColNames <-
+      oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
+    convertedDat <-
+      convertedDat[, c("longitude", "latitude", oldColNames)]
+  }
+
+  list(data = convertedDat,
+       message = message,
+       messageType = messageType)
+}
