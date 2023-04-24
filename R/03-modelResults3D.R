@@ -530,10 +530,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       file = fileImport()
     )
 
+    # reset model
+    Model(NULL)
     data(activeData)
   })
 
   coordType <- reactive({
+    # reset model
+    Model(NULL)
+
     switch(
       input$dataSource,
       db = "decimal degrees",
@@ -561,6 +566,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     compressionLevel = 1)
 
   observe(priority = 100, {
+    # reset model
+    Model(NULL)
     ## update data ----
     data(uploadedData$data)
   }) %>%
@@ -1157,6 +1164,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   fileImport <- reactiveVal(NULL)
   observe({
+    # reset model
+    Model(NULL)
     if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
     req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))

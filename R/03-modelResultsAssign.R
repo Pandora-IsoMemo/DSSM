@@ -30,18 +30,6 @@ modelResultsAssignUI <- function(id, title = "") {
         conditionalPanel(
           condition = "input.dataSource == 'file'",
           importDataUI(ns("importData"), "Import Data"),
-          tags$br(),
-          tags$br(),
-          radioButtons(
-            inputId = ns("CoordType"),
-            label = "Coordinate format",
-            choiceNames = c(
-              "decimal degrees \n (e.g. \"40.446\" or \"79.982\")",
-              "degrees decimal minutes \n (e.g. \"40\u00B0 26.767\u2032 N\" or \"79\u00B0 58.933 W\")",
-              "degrees minutes seconds \n (e.g. \"40\u00B0 26\u2032 46\u2033 N\" or \"79\u00B0 58\u2032 56\u2033 W\")"
-            ),
-            choiceValues = c("decimal degrees", "degrees decimal minutes", "degrees minutes seconds")
-          ),
           tags$hr(),
           ns = ns
         ),
@@ -193,10 +181,13 @@ modelResultsAssignUI <- function(id, title = "") {
 #'
 #' @export
 modelResultsAssign <- function(input, output, session, isoData) {
+  ## Import Data ----
   importedDat <- importDataServer("importData")
 
   fileImport <- reactiveVal(NULL)
   observe({
+    # reset model
+    Model(NULL)
     if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
 
     req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
@@ -211,6 +202,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
     }
   }) %>% bindEvent(importedDat())
 
+  Model <- reactiveVal(NULL)
+
   data <- reactiveVal()
   observe({
     activeData <- switch(input$dataSource,
@@ -218,6 +211,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
                          file = fileImport()
     )
 
+    # reset model
+    Model(NULL)
     data(activeData)
   })
 
@@ -235,6 +230,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
     compressionLevel = 1)
 
   observe(priority = 100, {
+    # reset model
+    Model(NULL)
     ## update data ----
     data(uploadedData$data)
   }) %>%
@@ -261,8 +258,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     bindEvent(uploadedData$model)
 
   # RUN MODEL ----
-
-  Model <- eventReactive(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, ignoreNULL = FALSE, {
     data <- data()
     if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
       if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
@@ -367,7 +363,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
       predictions <- normalizePredictions(predictions)
       names(predictions) <- cats
 
-      return(list(models = models, predictions = predictions, data = dataAssignR, X = X))
+      Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
     }
   })
 
@@ -556,6 +552,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     }
   })
 
+  ## Import Prediction Data ----
   importedData <- importDataServer("localData")
 
   callModule(modelDiagnostics, "modelDiag", model = Model, choice = TRUE)
