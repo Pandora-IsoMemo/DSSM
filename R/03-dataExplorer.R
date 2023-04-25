@@ -314,13 +314,17 @@ dataExplorerServer <- function(id) {
                          !is.null(locationFields$latitude()) &
                          locationFields$longitude() != "" &
                          locationFields$latitude() != "") {
+
                        dCoord <-
                          try({
                            convertLatLong(
                              d,
                              CoordType = locationFields$coordType(),
-                             Latitude = locationFields$longitude(),
-                             Longitude = locationFields$latitude()
+                             # names for Lat/Long had been corrected for better readability (see
+                             # "blame" on github), this did not effect the data since the columns
+                             # were assigned by the name that was given to the function
+                             Latitude = locationFields$latitude(),
+                             Longitude = locationFields$longitude()
                            )
                          }, silent = TRUE)
 
