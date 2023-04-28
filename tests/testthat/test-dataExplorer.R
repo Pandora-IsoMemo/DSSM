@@ -1,5 +1,4 @@
 testthat::test_that("convertLatLongWrapper", {
-
   testData <- structure(
     list(
       ID = c(1, 2, 3, 4, 5, 6),
@@ -14,7 +13,11 @@ testthat::test_that("convertLatLongWrapper", {
     class = "data.frame"
   )
 
-  convertedData <- convertLatLongWrapper(data = testData, Longitude = "Longitude", Latitude = "Latitude", CoordType = "decimal degrees")
-  testthat::expect_equal(convertedData$data$latitude, c(2.34, 2.34, 2.34, 2.34, 2.34, 2.34))
-  testthat::expect_equal(convertedData$data$longitude, c(36.28, 36.28, 36.28, 36.28, 36.28, 36.28))
+  convertedData <- convertLatLongWrapper(data = testData,
+                                         Longitude = "Longitude",
+                                         Latitude = "Latitude",
+                                         CoordType = "decimal degrees",
+                                         showMessage = FALSE)
+  testthat::expect_equal(convertedData$latitude, c(2.34, 2.34, 2.34, 2.34, 2.34, 2.34))
+  testthat::expect_equal(convertedData$longitude, c(36.28, 36.28, 36.28, 36.28, 36.28, 36.28))
 })

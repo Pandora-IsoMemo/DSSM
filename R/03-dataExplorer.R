@@ -315,13 +315,6 @@ dataExplorerServer <- function(id) {
                                                            Longitude = locationFields$longitude(),
                                                            Latitude = locationFields$latitude(),
                                                            CoordType = locationFields$coordType())
-
-                     d <- convertedDat$data
-
-                     if(!is.null(convertedDat$message)) {
-                       showNotification(HTML(convertedDat$message$text),
-                                        type = convertedDat$message$type)
-                     }
                    }
 
                    if (calibrate()) {
@@ -643,11 +636,11 @@ loadOptions <- function(session, opt, mapping) {
 
 #' Convert Lat Long Wrapper
 #'
+#' @param showMessage (logical) if TRUE showNotification() displays success or failure
 #' @inheritParams estimateMap
-convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType) {
+convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMessage = TRUE) {
   if (is.null(Longitude) || is.null(Latitude) || Longitude == "" || Latitude == "")
-    return(list(data = data,
-                message = NULL))
+    return(data)
 
   dCoord <-
     try({
@@ -701,6 +694,8 @@ convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType) {
     if (Latitude != "latitude") convertedDat[[Latitude]] <- NULL
   }
 
-  list(data = convertedDat,
-       message = message)
+  if(!is.null(message) && showMessage) showNotification(HTML(message$text),
+                                                        type = message$type)
+
+  return(convertedDat)
 }

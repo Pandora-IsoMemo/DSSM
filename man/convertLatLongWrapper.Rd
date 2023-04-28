@@ -4,7 +4,7 @@
 \alias{convertLatLongWrapper}
 \title{Convert Lat Long Wrapper}
 \usage{
-convertLatLongWrapper(data, Longitude, Latitude, CoordType)
+convertLatLongWrapper(data, Longitude, Latitude, CoordType, showMessage = TRUE)
 }
 \arguments{
 \item{data}{data.frame: data}
@@ -15,6 +15,8 @@ convertLatLongWrapper(data, Longitude, Latitude, CoordType)
 
 \item{CoordType}{character: type of longitude/latitude coordinates.
 One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes"}
+
+\item{showMessage}{(logical) if TRUE showNotification() displays success or failure}
 }
 \description{
 Convert Lat Long Wrapper
