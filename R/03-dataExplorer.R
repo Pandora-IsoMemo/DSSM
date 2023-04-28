@@ -311,10 +311,10 @@ dataExplorerServer <- function(id) {
                      }
 
                      ### Convert Lat/Long (pandora skin) ----
-                     convertedDat <- convertLatLongWrapper(data = d,
-                                                           Longitude = locationFields$longitude(),
-                                                           Latitude = locationFields$latitude(),
-                                                           CoordType = locationFields$coordType())
+                     d <- d %>%
+                       convertLatLongWrapper(Longitude = locationFields$longitude(),
+                                             Latitude = locationFields$latitude(),
+                                             CoordType = locationFields$coordType())
                    }
 
                    if (calibrate()) {
