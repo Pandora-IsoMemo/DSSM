@@ -442,7 +442,7 @@ estimateMapSpread <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
-  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
+  if (!(all(c(Longitude, Latitude, DateOne) %in% names(data)))) return(NULL)
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,

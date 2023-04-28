@@ -14,7 +14,7 @@ convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMess
                      Longitude = Longitude)
     }, silent = TRUE)
 
-  if (class(dCoord) == "try-error") {
+  if (inherits(dCoord, "try-error")) {
     ### Conversion failure ----
     message <- list(
       text = paste(
