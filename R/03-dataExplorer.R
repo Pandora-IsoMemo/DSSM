@@ -688,14 +688,9 @@ convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMess
       oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
     convertedDat <-
       convertedDat[, c("longitude", "latitude", oldColNames)]
-
-    # remove original Longitude and Latitude
-    if (Longitude != "longitude") convertedDat[[Longitude]] <- NULL
-    if (Latitude != "latitude") convertedDat[[Latitude]] <- NULL
   }
 
-  if(!is.null(message) && showMessage) showNotification(HTML(message$text),
-                                                        type = message$type)
+  if(showMessage) showNotification(HTML(message$text), type = message$type)
 
   return(convertedDat)
 }

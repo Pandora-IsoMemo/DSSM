@@ -81,13 +81,14 @@ estimateMap <- function(data,
   set.seed(1234)
   dataOrg <- data
   if (is.null(data)) return(NULL)
-  if (Longitude == "" || Latitude == "") return(NULL)
+  if (Longitude == "" || Latitude == "") return("Longitude or Latitude not selected.")
 
-  tryCatch({
-    data <- convertLatLong(data, CoordType, Latitude, Longitude)
-  }, error = function(w){
-    return("non-numeric latitude or longitude")
-  })
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
