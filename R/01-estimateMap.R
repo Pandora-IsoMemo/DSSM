@@ -2089,42 +2089,6 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
                   (XX %*% betamc[usedsamples[x], ]) * sRe + mRe), 1, var))))))
 }
 
-convertLatLong <- function(isoData, CoordType, Latitude = "Latitude", Longitude = "Longitude"){
-  isoData[, Longitude] <- convertCoordinates(isoData[, Longitude], CoordType)
-  isoData[, Latitude] <- convertCoordinates(isoData[, Latitude], CoordType)
-  if (all(is.na(isoData[, Longitude])) || all(is.na(isoData[, Latitude]))){
-    stop("Coordinate transformation failed")
-  }
-  isoData
-}
-
-convertCoordinates <- function(x, from = "decimal degrees"){
-  x <- gsub(",", ".", x)
-  if (from == "decimal degrees"){
-    return(as.numeric(x))
-  }
-  x <- gsub("\u2032", "'", x)
-  x <- gsub("`", "'", x)
-
-  if(from == "degrees decimal minutes"){
-    deg <- sapply(strsplit(x, c("\u00B0")), function(k) k[1])
-    min <- sapply(strsplit(x, c("\u00B0")), function(k) k[2])
-    min <- sapply(strsplit(min, split = "[']+"), function(k) k[1])
-    dd <- as.numeric(deg) + as.numeric(min) / 60
-    dd[grepl("W", x) | grepl("S", x)] <- -dd[grepl("W", x) | grepl("S", x)]
-  }
-  if(from == "degrees minutes seconds"){
-    deg <- sapply(strsplit(x, c("\u00B0")), function(k) k[1])
-    rest <- sapply(strsplit(x, c("\u00B0")), function(k) k[2])
-    min <- sapply(strsplit(rest, c("'")), function(k) k[1])
-    sec <- sapply(strsplit(rest, c("'")), function(k) k[2])
-    sec <- unlist(regmatches(sec, gregexpr("[-+.e0-9]*\\d", sec)))
-    dd <- as.numeric(deg) + as.numeric(min) / 60 + as.numeric(sec) / 3600
-    dd[grepl("W", x) | grepl("S", x)] <- -dd[grepl("W", x) | grepl("S", x)]
-  }
-  return(dd)
-}
-
 dALDFast <- function(x, mu, sigma, p){
   ret <- x
   ret[x < mu] <- (p * (1 - p) / sigma) * exp((1 - p) * (x[x < mu] - mu)/sigma)
