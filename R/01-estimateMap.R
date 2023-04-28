@@ -81,7 +81,7 @@ estimateMap <- function(data,
   set.seed(1234)
   dataOrg <- data
   if (is.null(data)) return(NULL)
-  if (Longitude == "" || Latitude == "") return("Longitude or Latitude not selected.")
+  if (Longitude == "" || Latitude == "") return(NULL)
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
@@ -443,7 +443,13 @@ estimateMapSpread <- function(data,
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
 
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -767,7 +773,14 @@ estimateMap3D <- function(data,
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -2172,12 +2185,13 @@ estimateMapKernel <- function(data,
   if ( is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
 
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
 
-  tryCatch({
-    data <- convertLatLong(data, CoordType, Latitude, Longitude)
-  }, error = function(w){
-    return("non-numeric latitude or longitude")
-  })
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -2411,7 +2425,14 @@ estimateMap3DKernel <- function(data,
       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
