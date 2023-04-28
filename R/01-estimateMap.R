@@ -82,13 +82,15 @@ estimateMap <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent) %in% names(data)))) return(NULL)
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -102,8 +104,6 @@ estimateMap <- function(data,
                        data[, Longitude] >= restriction[4]), ]
   }
 
-  if ( !is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
 
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
@@ -442,13 +442,15 @@ estimateMapSpread <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -462,9 +464,6 @@ estimateMapSpread <- function(data,
                        data[, Longitude] >= restriction[4]), ]
   }
 
-
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
@@ -766,9 +765,8 @@ estimateMap3D <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
 
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
@@ -779,7 +777,8 @@ estimateMap3D <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -2184,13 +2183,15 @@ estimateMapKernel <- function(data,
   dataOrg <- data
   if ( is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent) %in% names(data)))) return(NULL)
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -2203,9 +2204,6 @@ estimateMapKernel <- function(data,
                    !(data[, Longitude] <= restriction[3] &
                        data[, Longitude] >= restriction[4]), ]
   }
-
-  if ( !is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
 
   if(!is.null(independent) & !(independent == "")){
     if(!is.null(Weighting) & !(Weighting == "")){
@@ -2421,8 +2419,8 @@ estimateMap3DKernel <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
+  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
+
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
@@ -2431,7 +2429,8 @@ estimateMap3DKernel <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude])) return("Longitude or Latitude not available.")
+  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &

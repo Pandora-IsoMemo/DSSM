@@ -65,10 +65,10 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                       choices = c("")),
           selectInput(inputId = ns("Longitude"),
                       label = "Longitude variable:",
-                      choices = c("")),
+                      choices = c("Longitude")),
           selectInput(inputId = ns("Latitude"),
                       label = "Latitude variable:",
-                      choices = c("")),
+                      choices = c("Latitude")),
           selectInput(inputId = ns("Site"),
                       label = "Site/ID (optional):",
                       choices = c("")),
@@ -521,7 +521,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     bindEvent(uploadedData$model)
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, ignoreInit = TRUE, {
+  observeEvent(input$start, ignoreNULL = FALSE, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
