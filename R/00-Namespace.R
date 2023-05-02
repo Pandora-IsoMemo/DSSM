@@ -35,7 +35,7 @@
 #' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
-#' @importFrom stats aggregate as.formula cor cov density dnorm dunif kmeans
+#' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans
 #'  mahalanobis median model.matrix na.exclude na.omit pchisq  pf pnorm predict
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints
