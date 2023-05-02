@@ -4,13 +4,19 @@
 #' @inheritParams estimateMap
 convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMessage = TRUE) {
   if (
-    # data is missing or
-    is.null(data) || is.null(Longitude) || is.null(Latitude) || Longitude == "" || Latitude == "" ||
+    # data is missing
+    is.null(data) || is.null(Longitude) || is.null(Latitude) || Longitude == "" || Latitude == ""
+  )
+    return(data)
+
+  if (
     # data is already numeric
     (all(c(Longitude, Latitude) %in% names(data)) && is.numeric(data[[Longitude]]) &&
      is.numeric(data[[Latitude]])) && CoordType == "decimal degrees"
-  )
-    return(data)
+  ) {
+    return(putNewLatLongToBegin(data = data, Longitude = Longitude, Latitude = Latitude))
+  }
+
 
   dCoord <-
     try({
@@ -47,22 +53,34 @@ convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMess
       type = "message"
     )
 
-    convertedDat <- dCoord
-    convertedDat$id <- as.character(1:nrow(convertedDat))
-    convertedDat$longitude <- convertedDat[[Longitude]]
-    convertedDat$latitude <- convertedDat[[Latitude]]
-
-    # put longitude and latitude to beginning
-    oldColNames <- colnames(convertedDat)
-    oldColNames <-
-      oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
-    convertedDat <-
-      convertedDat[, c("longitude", "latitude", oldColNames)]
+    convertedDat <- dCoord %>%
+      putNewLatLongToBegin(Longitude = Longitude,
+                           Latitude = Latitude)
   }
 
   if(showMessage) showNotification(HTML(message$text), type = message$type)
 
   return(convertedDat)
+}
+
+#' Put Lat Long To Begin
+#'
+#' If not already present, than adds new columns "id", latitude" and "longitude" to the beginning of
+#' the dataframe. They are expected in the interactive map
+#'
+#' @inheritParams estimateMap
+putNewLatLongToBegin <- function(data, Longitude, Latitude) {
+  # add columns such that data is displayed in the interactive map
+  data$id <- as.character(1:nrow(data))
+  data$longitude <- data[[Longitude]]
+  data$latitude <- data[[Latitude]]
+
+  # put longitude and latitude to beginning
+  oldColNames <- colnames(data)
+  oldColNames <-
+    oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
+  data <-
+    data[, c("longitude", "latitude", oldColNames)]
 }
 
 convertLatLong <- function(isoData, CoordType, Latitude = "Latitude", Longitude = "Longitude"){

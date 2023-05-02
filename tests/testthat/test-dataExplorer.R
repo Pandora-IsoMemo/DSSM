@@ -18,6 +18,8 @@ testthat::test_that("convertLatLongWrapper", {
                                          Latitude = "Latitude",
                                          CoordType = "decimal degrees",
                                          showMessage = FALSE)
+  testthat::expect_equal(names(convertedData),
+                         c("longitude", "latitude", "ID", "Site", "Latitude", "Longitude", "id"))
   testthat::expect_equal(convertedData$latitude, c(2.34, 2.34, 2.34, 2.34, 2.34, 2.34))
   testthat::expect_equal(convertedData$longitude, c(36.28, 36.28, 36.28, 36.28, 36.28, 36.28))
 })
