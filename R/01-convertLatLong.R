@@ -3,7 +3,13 @@
 #' @param showMessage (logical) if TRUE showNotification() displays success or failure
 #' @inheritParams estimateMap
 convertLatLongWrapper <- function(data, Longitude, Latitude, CoordType, showMessage = TRUE) {
-  if (is.null(Longitude) || is.null(Latitude) || Longitude == "" || Latitude == "")
+  if (
+    # data is missing or
+    is.null(data) || is.null(Longitude) || is.null(Latitude) || Longitude == "" || Latitude == "" ||
+    # data is already numeric
+    (all(c(Longitude, Latitude) %in% names(data)) && is.numeric(data[[Longitude]]) &&
+     is.numeric(data[[Latitude]])) && CoordType == "decimal degrees"
+  )
     return(data)
 
   dCoord <-

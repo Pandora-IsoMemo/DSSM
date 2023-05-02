@@ -89,8 +89,9 @@ estimateMap <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
-      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) )
+    return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -449,7 +450,7 @@ estimateMapSpread <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
@@ -777,7 +778,7 @@ estimateMap3D <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
@@ -2154,7 +2155,7 @@ estimateMapKernel <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
@@ -2393,7 +2394,7 @@ estimateMap3DKernel <- function(data,
                           Latitude = Latitude,
                           CoordType = CoordType)
 
-  if (is.null(data[, Latitude]) || is.null(data[, Longitude]) ||
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
