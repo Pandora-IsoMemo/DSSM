@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.04.1.6
+
+### Bug Fixes
+- add default API_BASE_URL (#142)
+
 ## Version 23.04.1
 
 ### New Features
