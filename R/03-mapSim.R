@@ -604,7 +604,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
     res <- plotFun()()
-    if(class(res) == "character"){
+    if(inherits(res, "character")){
       alert(res)
     } else {
     values$predictions <- res$XPred

@@ -82,12 +82,16 @@ estimateMap <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent) %in% names(data)))) return(NULL)
 
-  tryCatch({
-    data <- convertLatLong(data, CoordType, Latitude, Longitude)
-  }, error = function(w){
-    return("non-numeric latitude or longitude")
-  })
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+  # if conversion fails Long/Lat are removed -> columns will be missing
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) )
+    return("Longitude or Latitude not available.")
 
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
@@ -101,8 +105,6 @@ estimateMap <- function(data,
                        data[, Longitude] >= restriction[4]), ]
   }
 
-  if ( !is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
 
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
@@ -441,8 +443,16 @@ estimateMapSpread <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, DateOne) %in% names(data)))) return(NULL)
 
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+  # if conversion fails Long/Lat are removed -> columns will be missing
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -455,9 +465,6 @@ estimateMapSpread <- function(data,
                        data[, Longitude] >= restriction[4]), ]
   }
 
-
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
@@ -759,14 +766,21 @@ estimateMap3D <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
 
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+  # if conversion fails Long/Lat are removed -> columns will be missing
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -2076,42 +2090,6 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
                   (XX %*% betamc[usedsamples[x], ]) * sRe + mRe), 1, var))))))
 }
 
-convertLatLong <- function(isoData, CoordType, Latitude = "Latitude", Longitude = "Longitude"){
-  isoData[, Longitude] <- convertCoordinates(isoData[, Longitude], CoordType)
-  isoData[, Latitude] <- convertCoordinates(isoData[, Latitude], CoordType)
-  if (all(is.na(isoData[, Longitude])) || all(is.na(isoData[, Latitude]))){
-    stop("Coordinate transformation failed")
-  }
-  isoData
-}
-
-convertCoordinates <- function(x, from = "decimal degrees"){
-  x <- gsub(",", ".", x)
-  if (from == "decimal degrees"){
-    return(as.numeric(x))
-  }
-  x <- gsub("\u2032", "'", x)
-  x <- gsub("`", "'", x)
-
-  if(from == "degrees decimal minutes"){
-    deg <- sapply(strsplit(x, c("\u00B0")), function(k) k[1])
-    min <- sapply(strsplit(x, c("\u00B0")), function(k) k[2])
-    min <- sapply(strsplit(min, split = "[']+"), function(k) k[1])
-    dd <- as.numeric(deg) + as.numeric(min) / 60
-    dd[grepl("W", x) | grepl("S", x)] <- -dd[grepl("W", x) | grepl("S", x)]
-  }
-  if(from == "degrees minutes seconds"){
-    deg <- sapply(strsplit(x, c("\u00B0")), function(k) k[1])
-    rest <- sapply(strsplit(x, c("\u00B0")), function(k) k[2])
-    min <- sapply(strsplit(rest, c("'")), function(k) k[1])
-    sec <- sapply(strsplit(rest, c("'")), function(k) k[2])
-    sec <- unlist(regmatches(sec, gregexpr("[-+.e0-9]*\\d", sec)))
-    dd <- as.numeric(deg) + as.numeric(min) / 60 + as.numeric(sec) / 3600
-    dd[grepl("W", x) | grepl("S", x)] <- -dd[grepl("W", x) | grepl("S", x)]
-  }
-  return(dd)
-}
-
 dALDFast <- function(x, mu, sigma, p){
   ret <- x
   ret[x < mu] <- (p * (1 - p) / sigma) * exp((1 - p) * (x[x < mu] - mu)/sigma)
@@ -2170,13 +2148,16 @@ estimateMapKernel <- function(data,
   dataOrg <- data
   if ( is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
+  if (!(all(c(Longitude, Latitude, independent) %in% names(data)))) return(NULL)
 
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+  # if conversion fails Long/Lat are removed -> columns will be missing
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
-  tryCatch({
-    data <- convertLatLong(data, CoordType, Latitude, Longitude)
-  }, error = function(w){
-    return("non-numeric latitude or longitude")
-  })
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
@@ -2188,9 +2169,6 @@ estimateMapKernel <- function(data,
                    !(data[, Longitude] <= restriction[3] &
                        data[, Longitude] >= restriction[4]), ]
   }
-
-  if ( !is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-       all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
 
   if(!is.null(independent) & !(independent == "")){
     if(!is.null(Weighting) & !(Weighting == "")){
@@ -2406,11 +2384,19 @@ estimateMap3DKernel <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
-  if (!is.numeric(data[, Latitude]) || all(is.na(data[, Latitude])) ||
-      all(is.na(data[, Longitude])) || !is.numeric(data[, Longitude])) return("non-numeric latitude or longitude")
+  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
+
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
-  data <- convertLatLong(data, CoordType, Latitude, Longitude)
+
+  data <- data %>%
+    convertLatLongWrapper(Longitude = Longitude,
+                          Latitude = Latitude,
+                          CoordType = CoordType)
+  # if conversion fails Long/Lat are removed -> columns will be missing
+  if (!all(c(Longitude, Latitude) %in% names(data)) ||
+      all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
+
   if(restriction[4] >= restriction[3]){
     data <- data[data[, Latitude] <= restriction[2] &
                    data[, Latitude] >= restriction[1] &
