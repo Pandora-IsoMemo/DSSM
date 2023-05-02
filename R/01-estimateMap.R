@@ -88,7 +88,7 @@ estimateMap <- function(data,
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
-
+  # if conversion fails Long/Lat are removed -> columns will be missing
   if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) )
     return("Longitude or Latitude not available.")
@@ -449,7 +449,7 @@ estimateMapSpread <- function(data,
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
-
+  # if conversion fails Long/Lat are removed -> columns will be missing
   if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
@@ -777,7 +777,7 @@ estimateMap3D <- function(data,
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
-
+  # if conversion fails Long/Lat are removed -> columns will be missing
   if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
@@ -2154,7 +2154,7 @@ estimateMapKernel <- function(data,
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
-
+  # if conversion fails Long/Lat are removed -> columns will be missing
   if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
@@ -2393,7 +2393,7 @@ estimateMap3DKernel <- function(data,
     convertLatLongWrapper(Longitude = Longitude,
                           Latitude = Latitude,
                           CoordType = CoordType)
-
+  # if conversion fails Long/Lat are removed -> columns will be missing
   if (!all(c(Longitude, Latitude) %in% names(data)) ||
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
