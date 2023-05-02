@@ -1,5 +1,15 @@
 # MpiIsoApp development version
 
+## Version 23.04.1.6
+
+### Bug Fixes
+- add default API_BASE_URL (#142)
+
+## Version 23.04.1.5
+
+### Bug Fixes
+- fix bug in conversion of lat/long when using import in modeling tabs (#122)
+
 ## Version 23.04.1
 
 ### New Features
