@@ -1,9 +1,14 @@
 # MpiIsoApp development version
 
-## Version 23.04.1.6
+## Version 23.04.1.7
 
 ### Bug Fixes
 - fix case if date columns are not numeric (#110)
+
+## Version 23.04.1.6
+
+### Bug Fixes
+- add default API_BASE_URL (#142)
 
 ## Version 23.04.1.5
 
