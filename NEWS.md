@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.05.1
+
+### Updates
+- _Interactive Map_: add option "[Fixed]" for point size, colour and symbol (#13)
+
 ## Version 23.04.3.3
 
 ### Bug Fixes

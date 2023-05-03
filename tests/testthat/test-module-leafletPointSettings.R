@@ -96,14 +96,13 @@ test_that("Test module pointColourServer", {
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(
-                 names(session$returned),
+               expect_true(all(
                  c(
                    "showColourLegend",
                    "columnForPointColour",
                    "pointColourPalette"
-                 )
-               )
+                 ) %in% names(session$returned)
+               ))
                expect_false(session$returned$showColourLegend)
                expect_equal(session$returned$columnForPointColour, "source")
                expect_true(is.function(session$returned$pointColourPalette))

@@ -148,8 +148,8 @@ pointColourUI <- function(id) {
     column(8,
            selectInput(
              ns("columnForPointColour"),
-             "Point colour",
-             choices = c("Add data ..." = "")
+             "Point colour variable",
+             choices = c("[Fixed]" = "")
            )),
     column(4,
            style = "margin-top: 1.5em;",
@@ -259,8 +259,8 @@ pointSizeUI <- function(id) {
       8,
       selectInput(
         ns("columnForPointSize"),
-        "Point size",
-        choices = c("Add data ..." = "")
+        "Point size variable",
+        choices = c("[Fixed]" = "")
       )
     ),
     column(4,
@@ -289,17 +289,17 @@ pointSizeServer <- function(id, loadedData) {
 
                  observe({
                    if (is.null(loadedData())) {
-                     choices <- c("Add data ..." = "")
+                     choices <- c("[Fixed]" = "")
                      selectedDefault <- ""
                      showLegendVal <- FALSE
                    } else {
                      numCols <- numericColumns(loadedData())
                      if (length(numCols) == 0) {
-                       choices <- c("No numeric columns ..." = "")
+                       choices <- c("[Fixed] (No numeric columns ...)" = "")
                        selectedDefault <- ""
                        showLegendVal <- FALSE
                      } else {
-                       choices <- c("Size variable ..." = "", numCols)
+                       choices <- c("[Fixed]" = "", numCols)
                      }
                      selectedDefault <- ""
                      showLegendVal <- TRUE
@@ -357,8 +357,8 @@ pointSymbolUI <- function(id) {
       column(8,
              selectInput(
                ns("columnForPointSymbol"),
-               "Point symbol",
-               choices = c("Add data ..." = "")
+               "Point symbol variable",
+               choices = c("[Fixed]" = "")
              )
       ),
       column(4,
@@ -407,17 +407,17 @@ pointSymbolServer <- function(id, loadedData) {
 
                  observe({
                    if (is.null(loadedData())) {
-                     choices <- c("Add data ..." = "")
+                     choices <- c("[Fixed]" = "")
                      selectedDefault <- ""
                      showLegendVal <- FALSE
                    } else {
                      facCols <- factorColumns(loadedData())
                      if (length(facCols) == 0) {
-                       choices <- c("No character columns ..." = "")
+                       choices <- c("[Fixed] (No character columns ...)" = "")
                        selectedDefault <- ""
                        showLegendVal <- FALSE
                      } else {
-                       choices <- c("Symbol variable ..." = "", facCols)
+                       choices <- c("[Fixed]" = "", facCols)
                      }
                      selectedDefault <- ""
                      showLegendVal <- TRUE
