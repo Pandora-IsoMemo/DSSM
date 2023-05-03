@@ -310,83 +310,11 @@ dataExplorerServer <- function(id) {
                        )
                      }
 
-                     if (!is.null(locationFields$longitude()) &
-                         !is.null(locationFields$latitude()) &
-                         locationFields$longitude() != "" &
-                         locationFields$latitude() != "") {
-                       dCoord <-
-                         try({
-                           convertLatLong(
-                             d,
-                             CoordType = locationFields$coordType(),
-                             Latitude = locationFields$longitude(),
-                             Longitude = locationFields$latitude()
-                           )
-                         }, silent = TRUE)
-
-                       if (class(dCoord) == "try-error") {
-                         ### Conversion failure ----
-                         if (locationFields$longitude() == "longitude" ||
-                             locationFields$latitude() == "latitude") {
-                           if (locationFields$longitude() == "longitude") {
-                             # rename original to avoid name conflicts
-                             tmpIsoDataRaw <- isoDataRaw()
-                             tmpIsoDataRaw[[paste0(locationFields$longitude(), "_orig")]] <-
-                               tmpIsoDataRaw[["longitude"]]
-                             tmpIsoDataRaw[["longitude"]] <- NULL
-                             isoDataRaw(tmpIsoDataRaw)
-                           }
-
-                           if (locationFields$latitude() == "latitude") {
-                             # rename original to avoid name conflicts
-                             tmpIsoDataRaw <- isoDataRaw()
-                             tmpIsoDataRaw[[paste0(locationFields$latitude(), "_orig")]] <-
-                               tmpIsoDataRaw[["latitude"]]
-                             tmpIsoDataRaw[["latitude"]] <- NULL
-                             isoDataRaw(tmpIsoDataRaw)
-                           }
-                         } else {
-                           alert(
-                             paste0(
-                               "Conversion of coordinates has failed. Please select appropriate ",
-                               "longitude / latitude fields and coordinate format. ",
-                               "Columns longitude and latitude were removed (renamed)."
-                             )
-                           )
-
-                           d$longitude <- NULL
-                           d$latitude <- NULL
-                         }
-                       } else {
-                         ### Conversion success ----
-                         showNotification(
-                           paste0(
-                             "Conversion of coordinates succeeded. ",
-                             "Columns longitude and latitude set successfully."
-                           )
-                         )
-                         d <- dCoord
-                         d$id <- as.character(1:nrow(d))
-                         d$longitude <- d[, locationFields$longitude()]
-                         d$latitude <- d[, locationFields$latitude()]
-
-                         if (locationFields$longitude() != "longitude") {
-                           # remove original
-                           d[[locationFields$longitude()]] <- NULL
-                         }
-
-                         if (locationFields$latitude() != "latitude") {
-                           # remove original
-                           d[[locationFields$latitude()]] <- NULL
-                         }
-
-                         # put lng/lat to beginning
-                         oldColNames <- colnames(d)
-                         oldColNames <- oldColNames[!(oldColNames %in% c("longitude", "latitude"))]
-                         d <- d[, c("longitude", "latitude", oldColNames)]
-                       }
-                     }
-
+                     ### Convert Lat/Long (pandora skin) ----
+                     d <- d %>%
+                       convertLatLongWrapper(Longitude = locationFields$longitude(),
+                                             Latitude = locationFields$latitude(),
+                                             CoordType = locationFields$coordType())
                    }
 
                    if (calibrate()) {

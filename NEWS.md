@@ -1,5 +1,20 @@
 # MpiIsoApp development version
 
+## Version 23.05.1
+
+### Updates
+- _Interactive Map_: add option "[Fixed]" for point size, colour and symbol (#13)
+
+## Version 23.04.3.3
+
+### Bug Fixes
+- apply bug fix from main on beta (#142)
+
+## Version 23.04.3.2
+
+### Bug Fixes
+- apply bug fix from main on beta (#122)
+
 ## Version 23.04.3
 
 ### Updates
@@ -18,6 +33,16 @@
 
 ### Updates
 - optimized behavior of updating data and show/hide legends on the interactive map
+
+## Version 23.04.1.6
+
+### Bug Fixes
+- add default API_BASE_URL (#142)
+
+## Version 23.04.1.5
+
+### Bug Fixes
+- fix bug in conversion of lat/long when using import in modeling tabs (#122)
 
 ## Version 23.04.1
 
