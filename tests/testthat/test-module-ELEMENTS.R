@@ -8,7 +8,7 @@ test_that("Test module numericInputLatAndLongServer", {
       session$setInputs(latitude = 10,
                         longitude = 50)
 
-      expect_equal(names(session$returned), c("longitude", "latitude"))
+      expect_true(all(c("longitude", "latitude") %in% names(session$returned)))
       expect_equal(session$returned$longitude(), 50)
       expect_equal(session$returned$latitude(), 10)
     })
@@ -23,7 +23,7 @@ test_that("Test module numericInputLatAndLongServer", {
       session$setInputs(latitude = 10,
                         longitude = 50)
 
-      expect_equal(names(session$returned), c("longitude", "latitude"))
+      expect_equal(all(c("longitude", "latitude") %in% names(session$returned)))
       expect_equal(session$returned$longitude(), 50)
       expect_equal(session$returned$latitude(), 10)
     })

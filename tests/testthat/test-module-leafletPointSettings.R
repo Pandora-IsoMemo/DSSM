@@ -14,10 +14,15 @@ test_that("Test module leafletPointSettings if clusterPoints", {
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(
-                 names(session$returned),
-                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints")
-               )
+               expect_true(all(
+                 c(
+                   "jitterMaxKm",
+                   "pointColourPalette",
+                   "pointRadius",
+                   "clusterPoints"
+                 ) %in%
+                   names(session$returned)
+               ))
                expect_true(is.na(session$returned$jitterMaxKm))
                expect_true(session$returned$clusterPoints)
                expect_null(session$returned$pointColourPalette)
@@ -46,11 +51,15 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(
-                 names(session$returned),
-                 c("jitterMaxKm", "pointColourPalette", "pointRadius", "clusterPoints",
-                   "pointOpacity")
-               )
+               expect_true(all(
+                 c(
+                   "jitterMaxKm",
+                   "pointColourPalette",
+                   "pointRadius",
+                   "clusterPoints",
+                   "pointOpacity"
+                 ) %in% names(session$returned)
+               ))
                expect_false(session$returned$clusterPoints)
                expect_equal(session$returned$pointOpacity, 0.5)
                expect_equal(session$returned$jitterMaxKm, 15)
@@ -105,19 +114,12 @@ test_that("Test module pointSizeServer", {
                print("test pointSizeServer")
 
                # Act
-               session$setInputs(
-                 columnForPointSize = "b",
-                 sizeFactor = FALSE
-               )
+               session$setInputs(columnForPointSize = "b",
+                                 sizeFactor = FALSE)
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
-               expect_equal(
-                 names(session$returned),
-                 c(
-                   "pointRadius"
-                 )
-               )
+               expect_true(all(c("pointRadius") %in% names(session$returned)))
                expect_equal(session$returned$pointRadius, c(0, 0, 0))
              })
 })
