@@ -41,6 +41,11 @@
 ### Updates
 - optimized behavior of updating data and show/hide legends on the interactive map
 
+## Version 23.04.1.7
+
+### Bug Fixes
+- fix case if date columns are not numeric (#110)
+
 ## Version 23.04.1.6
 
 ### Bug Fixes

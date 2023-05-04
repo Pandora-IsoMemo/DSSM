@@ -2148,7 +2148,10 @@ estimateMapKernel <- function(data,
   dataOrg <- data
   if ( is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "") return(NULL)
-  if (!(all(c(Longitude, Latitude, independent) %in% names(data)))) return(NULL)
+  if (!(all(c(Longitude, Latitude) %in% names(data)))) return(NULL)
+  if(!is.null(independent) & !(independent == "")){
+    if(!(independent %in% names(data))) return("independent variable is missing in data")
+  }
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
@@ -2384,7 +2387,10 @@ estimateMap3DKernel <- function(data,
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
-  if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
+  if (!(all(c(Longitude, Latitude, DateOne) %in% names(data)))) return(NULL)
+  if(!is.null(independent) & !(independent == "")){
+    if(!(independent %in% names(data))) return("independent variable is missing in data")
+  }
 
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
