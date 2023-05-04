@@ -95,8 +95,8 @@ plotExport <- function(input,
           intTime <- sign(-1) * abs(input$intTime)
         }
         withProgress(message = "Generating gif ...", value = 0, {
+          times <- seq(minTime, maxTime, by = intTime)
           saveGIF({
-            times <- seq(minTime, maxTime, by = intTime)
             for (i in times) {
               incProgress(1 / length(times), detail = paste("time: ", i))
               plotFun()(model = Model(), time = i, plotRetNull = TRUE)
@@ -122,12 +122,8 @@ plotExport <- function(input,
         dev.off()
       } else {
         ## export series of maps as zip ----
-        minTime <- input$minTime
-        maxTime <- input$maxTime
-        intTime <- abs(input$intTime)
-
         withProgress(message = "Generating series ...", value = 0, {
-          times <- seq(minTime, maxTime, by = intTime)
+          times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
 
           figFileNames <- sapply(times,
                                  function(i) {
@@ -201,4 +197,28 @@ writeGeoTiff <- function(XPred, file){
   writeRaster(r, filename = "out.tif", format="GTiff",
               options = c('TFW=YES'), overwrite = TRUE)
   file.rename("out.tif", file)
+}
+
+generateGif <- function(files) {
+  #files <- c("1.jpg", "2.jpg")
+  image_list <- lapply(files, image_read)
+  image_animate(image_list, loop = 0)
+  image_write(image_list, path = "animated.gif")
+}
+
+addGif <- function(file, gif) {
+  #file <- "3.jpg"
+  #gif <- "animated.gif"
+  #after the above is done a loop can sequentially add new images. Below I illustrate only how to add one image
+  #Create image object for new slide
+  new_slide <- image_read(file)
+
+  #Read in existing gif
+  existing_gif <- image_read(gif)
+
+  #Append new slide to existing gif
+  final_gif <- c(existing_gif, new_slide)
+
+  #Write new gif
+  image_write(final_gif, path = "animated.gif")
 }

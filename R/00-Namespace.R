@@ -21,6 +21,7 @@
 #'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
+#' @importFrom magick image_animate image_read image_write
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
