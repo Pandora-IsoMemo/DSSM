@@ -679,7 +679,7 @@ setSizeLegend <- function(map, showLegend, sizeLegend) {
     return(map)
   }
 
-  htmlString <- getSizeLegend(sizeLegend, pathToIcons = "www")
+  htmlString <- getSizeLegend(sizeLegend)
 
   map %>%
     addControl(
@@ -794,7 +794,7 @@ shiftToZero <- function(val, minVal) {
 
 # Symbols ----
 
-setSymbolLegend <- function(map, showLegend, symbolLegend, isTest = FALSE) {
+setSymbolLegend <- function(map, showLegend, symbolLegend) {
   if (is.null(symbolLegend) || !showLegend) {
     map <- map %>%
       removeControl("symbolLegend")
@@ -802,13 +802,7 @@ setSymbolLegend <- function(map, showLegend, symbolLegend, isTest = FALSE) {
     return(map)
   }
 
-  if (isTest) {
-    pathToSymbols <- file.path("inst", "app", "www")
-  } else {
-    pathToSymbols <- "www"
-  }
-
-  htmlString <- getSymbolLegend(symbolLegend, pathToSymbols = pathToSymbols)
+  htmlString <- getSymbolLegend(symbolLegend)
 
   map %>%
     addControl(
@@ -964,9 +958,11 @@ orderBySelection <- function(pchSel, pchAll = unlist(pchChoices())) {
 
 
 # get Legend HTML String ----
-getSizeLegend <- function(sizeLegend, pathToIcons) {
+getSizeLegend <- function(sizeLegend) {
+  path <- system.file("app", "www", package = "MpiIsoApp")
+
   # remove old icons: remove all files with the pattern "sizeFile"
-  removeOldIcons(pattern = "sizeFile", path = pathToIcons)
+  removeOldIcons(pattern = "sizeFile", path = path)
 
   # create icon for each point
   iconFiles <- sapply(sizeLegend, function(x) {
@@ -974,7 +970,7 @@ getSizeLegend <- function(sizeLegend, pathToIcons) {
                     width = 2 * x,
                     height = 2 * x,
                     lwd = 1,
-                    tmpDir = pathToIcons,
+                    tmpDir = path,
                     pattern = "sizeFile")
   })
 
@@ -982,9 +978,11 @@ getSizeLegend <- function(sizeLegend, pathToIcons) {
   getHTMLFromPath(paths = iconFiles)
 }
 
-getSymbolLegend <- function(symbolLegend, pathToSymbols) {
+getSymbolLegend <- function(symbolLegend) {
+  path <- system.file("app", "www", package = "MpiIsoApp")
+
   # remove old icons: remove all files with the pattern "symbolFile"
-  removeOldIcons(pattern = "symbolFile", path = pathToSymbols)
+  removeOldIcons(pattern = "symbolFile", path = path)
 
   # create icon for each point
   iconFiles <- sapply(symbolLegend, function(x) {
@@ -992,7 +990,7 @@ getSymbolLegend <- function(symbolLegend, pathToSymbols) {
                     width = 10,
                     height = 10,
                     lwd = 1,
-                    tmpDir = pathToSymbols,
+                    tmpDir = path,
                     pattern = "symbolFile")
   })
 
