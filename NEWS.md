@@ -4,7 +4,7 @@
 
 ### New Features
 - _Interactive Map_: 
-  - map types are grouped by having borders or names
+  - map types are grouped by having borders or names (#133)
   - option to add more maps from different providers: https://leaflet-extras.github.io/leaflet-providers/preview/
 
 ## Version 23.05.1
