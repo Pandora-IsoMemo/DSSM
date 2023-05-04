@@ -725,18 +725,35 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe({
     validate(validInput(data()))
     try({
+      # check if dateOne is numeric
+      dateOne <- data()[, (input$DateOne)]
+      if (!is.numeric(dateOne)) {
+        dateOne <- dateOne %>%
+          as.numeric() %>%
+          na.omit()
+      }
+      req(length(dateOne))
+      if(input$DateType == "Single point"){
+        d <- dateOne
+      }
+
+      # check if dateTwo is numeric
+      dateTwo <- data()[, (input$DateTwo)]
+      if (!is.numeric(dateTwo)) {
+        dateTwo <- dateTwo %>%
+          as.numeric() %>%
+          na.omit()
+      }
+      req(length(dateTwo))
       if(input$DateType == "Interval"){
-        d <- c(data()[, (input$DateOne)],
-               data()[, (input$DateTwo)])
+        d <- c(dateOne,
+               dateTwo)
       }
       if(input$DateType == "Mean + 1 SD uncertainty"){
-        d <- c(data()[, (input$DateOne)] + 2 *
-                 data()[, (input$DateTwo)],
-               data()[, (input$DateOne)] - 2 *
-                 data()[, (input$DateTwo)])
-      }
-      if(input$DateType == "Single point"){
-        d <- data()[, (input$DateOne)]
+        d <- c(dateOne + 2 *
+                 dateTwo,
+               dateOne - 2 *
+                 dateTwo)
       }
     }, silent = TRUE)
 
