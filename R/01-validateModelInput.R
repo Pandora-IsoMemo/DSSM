@@ -10,6 +10,8 @@ validInput <- function(model){
   } else if (model == "Longitude or Latitude not available.") {
     "Longitude or Latitude not available. Please check your data, the coordinate format
     and your variables in the \"Longitude\" and \"Latitude\" fields."
+  } else if (model == "independent variable is missing in data") {
+    "Dependent variable is missing in data. Please update the selection of the 'Dependent variable'!"
   } else if (model == "less than 4 rows") {
     "Not enough data, less than 4 rows or unique long/lat combinations. Please check your data!"
   } else if (model == "less than 11 rows") {
