@@ -7,25 +7,53 @@ leafletSettingsUI <- function(id, title = "") {
 
   tagList(
     tags$h2(title),
-    selectInput(
+    selectizeInput(
       ns("LeafletType"),
-      "Map type",
-      choices = c(
+      label = "Map type",
+      choices = list(
+        `borders & names`= c(
         "CartoDB Positron" = "CartoDB.Positron",
-        "CartoDB Positron No Labels" = "CartoDB.PositronNoLabels",
         "OpenStreetMap Mapnik" = "OpenStreetMap.Mapnik",
         "OpenStreetMap DE" = "OpenStreetMap.DE",
         "OpenTopoMap" = "OpenTopoMap",
         "Stamen TonerLite" = "Stamen.TonerLite",
         "Esri" = "Esri",
         "Esri WorldTopoMap" = "Esri.WorldTopoMap",
+        "Esri OceanBasemap" = "Esri.OceanBasemap"
+      ),
+      `only borders`= c(
+        "CartoDB Positron No Labels" = "CartoDB.PositronNoLabels"
+      ),
+      `plain maps`= c(
         "Esri WorldImagery" = "Esri.WorldImagery",
         "Esri WorldTerrain" = "Esri.WorldTerrain",
         "Esri WorldShadedRelief" = "Esri.WorldShadedRelief",
-        "Esri WorldPhysical" = "Esri.WorldPhysical",
-        "Esri OceanBasemap" = "Esri.OceanBasemap"
+        "Esri WorldPhysical" = "Esri.WorldPhysical"
+      ),
+      `custom maps` = c(
+        "Stamen.Watercolor" = "Stamen.Watercolor"
       )
     ),
+    options = list(create = TRUE)
+    ),
+    helpText(HTML(paste0("Find more maps: <br>",
+                         tags$a(href = "https://leaflet-extras.github.io/leaflet-providers/preview/",
+                                "https://leaflet-extras.github.io/leaflet-providers/preview/",
+                                target = "_blank"),
+                         " ",
+                         tags$i(
+                           class = "glyphicon glyphicon-info-sign",
+                           style = "color:#0072B2;",
+                           title = paste(
+                             "How to apply a new map:",
+                             " 1. Delete the input of the field 'Map type',",
+                             " 2. copy the name of the desired map into that field, and",
+                             " 3. click 'Add...'. ",
+                             "Some maps are not supported. Please try, e.g. 'OpenStreetMap',",
+                             " 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             sep = "\n"
+                           ))
+    ))),
     fluidRow(column(6, checkboxInput(
       ns("includeNorthArrow"), "North Arrow"
     )),
