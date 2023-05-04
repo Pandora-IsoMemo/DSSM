@@ -36,11 +36,24 @@ leafletSettingsUI <- function(id, title = "") {
     ),
     options = list(create = TRUE)
     ),
-    helpText(HTML(paste0("Find more maps at: <br>",
+    helpText(HTML(paste0("Find more maps: <br>",
                          tags$a(href = "https://leaflet-extras.github.io/leaflet-providers/preview/",
                                 "https://leaflet-extras.github.io/leaflet-providers/preview/",
                                 target = "_blank"),
-                         "<br> Type the name and click 'Add...'."))),
+                         " ",
+                         tags$i(
+                           class = "glyphicon glyphicon-info-sign",
+                           style = "color:#0072B2;",
+                           title = paste(
+                             "How to apply a new map:",
+                             " 1. Delete the input of the field 'Map type',",
+                             " 2. copy the name of the desired map into that field, and",
+                             " 3. click 'Add...'. ",
+                             "Some maps are not supported. Please try, e.g. 'OpenStreetMap',",
+                             " 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             sep = "\n"
+                           ))
+    ))),
     fluidRow(column(6, checkboxInput(
       ns("includeNorthArrow"), "North Arrow"
     )),
