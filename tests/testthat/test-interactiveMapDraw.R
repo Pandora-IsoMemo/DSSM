@@ -55,9 +55,6 @@ testthat::test_that("function drawSymbolsOnMap", {
 
   testMap <- NULL
 
-  # Note: the path to symbol icons is not found locally (the parameter "html" of addControl() is
-  # wrong inside tests), the figure in the symbol legend is missing.
-  # However, it works outside of testing and the checks should pass.
   testMap <-
     drawSymbolsOnMap(
       map = leaflet() %>%
@@ -77,7 +74,6 @@ testthat::test_that("function drawSymbolsOnMap", {
       pointSymbol = c(1, 2, 3, 4, 5, 6),
       pointWidth = 4
     ) %>%
-    #setSymbolLegend(c("all" = 19), showLegend = TRUE, isTest = TRUE) %>%
     setColorLegend(
       showLegend = TRUE,
       title = "source",
