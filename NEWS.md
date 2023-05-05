@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.05.2
+
+### New Features
+- _Export of time series_: optionally add a gif file or only export a gif
+
 ## Version 23.05.1
 
 ### Updates

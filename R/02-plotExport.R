@@ -21,15 +21,19 @@ plotExport <- function(input,
         session$ns("exportType"), "Filetype",
         choices = c(
           "png", "pdf", "svg", "tiff",
-          if(!is.null(predictions())) "geo-tiff" else NULL,
-          if(modelType == "spatio-temporal-average") "gif" else NULL
-        )
+          if(!is.null(predictions())) "geo-tiff" else NULL
+        ),
+        width = "50%"
       ),
       conditionalPanel(
         condition = "input.exportType != 'geo-tiff'",
         ns = session$ns,
-        numericInput(session$ns("width"), "Width (px)", value = 1280),
-        numericInput(session$ns("height"), "Height (px)", value = 800)
+        fluidRow(column(width = 6,
+                        numericInput(session$ns("width"), "Width (px)", value = 1280)
+        ),
+        column(width = 6,
+               numericInput(session$ns("height"), "Height (px)", value = 800)
+        ))
       ),
       conditionalPanel(
         condition = paste0("'", modelType, "' == 'spatio-temporal-average' & ",
@@ -37,23 +41,33 @@ plotExport <- function(input,
         ns = session$ns,
         checkboxInput(session$ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
-          condition = "input.isTimeSeries | input.exportType == 'gif'",
+          condition = "input.isTimeSeries",
           ns = session$ns,
           fluidRow(column(
-            width = 6,
-            numericInput(session$ns("minTime"), "Time begin of series", value = 0),
-            numericInput(session$ns("intTime"), "Time interval length of series", value = 1000)
-          ),
+            width = 4,
+            numericInput(session$ns("minTime"), "Time begin of series", value = 0)),
           column(
-            width = 6,
-            numericInput(session$ns("maxTime"), "Time end of series", value = 5000),
-            tags$br(),
-            conditionalPanel(
-              condition = "input.exportType == 'gif'",
-              ns = session$ns,
-              checkboxInput(session$ns("reverseGif"), "Reverse time order of animation")
+            width = 4,
+            numericInput(session$ns("maxTime"), "Time end of series", value = 5000)),
+          column(
+            width = 4,
+            numericInput(session$ns("intTime"), "Time interval length", value = 1000))
+          ),
+          fluidRow(
+            column(width = 6,
+                   selectInput(session$ns("typeOfSeries"), "Type of time series",
+                               choices = c(
+                                 "Zip: Gif + graphic files" = "gifAndZip",
+                                 "Zip: graphic files" = "onlyZip",
+                                 "Gif file" = "onlyGif"))),
+            column(width = 6,
+                   style = "margin-top: 1.5em;",
+                   conditionalPanel(
+                     condition = "input.typeOfSeries != 'onlyZip'",
+                     ns = session$ns,
+                     checkboxInput(session$ns("reverseGif"), "Reverse time order of animation")
+                   ))
             )
-          )),
         )
       ),
       downloadButton(session$ns("exportExecute"), "Export"),
@@ -61,18 +75,17 @@ plotExport <- function(input,
     ))
   })
 
-  observe({
-    if (input$exportType == "gif") {
-      updateCheckboxInput(session = session, "isTimeSeries", value = TRUE)
-    }
-  }) %>%
-    bindEvent(input$exportType)
-
   output$plot <- renderPlot({
     replayPlot(plotObj())
   })
 
   isTimeSeriesInput <- reactiveVal(FALSE)
+  exportType <- reactiveVal("png")
+
+  observe({
+    if (input$isTimeSeries && input$typeOfSeries == "onlyGif") exportType("gif") else exportType(input$exportType)
+  }) %>%
+    bindEvent(input$exportType)
 
   observe({
     req(!is.null(input$isTimeSeries))
@@ -81,10 +94,12 @@ plotExport <- function(input,
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      nameFile(plotType = modelType, exportType = input$exportType, isTimeSeries = isTimeSeriesInput())
+      nameFile(plotType = modelType, exportType = exportType(), isTimeSeries = isTimeSeriesInput())
     },
     content = function(file){
-      if (input$exportType == "gif") {
+      if (input$isTimeSeries && input$typeOfSeries == "onlyGif") {
+        ## option gif + graphic files is missing ----
+        ## extract code of all cases into single functions... ----
         ## export gif ----
         minTime <- input$minTime
         maxTime <- input$maxTime
@@ -94,6 +109,7 @@ plotExport <- function(input,
           maxTime <- input$minTime
           intTime <- sign(-1) * abs(input$intTime)
         }
+        ## APLY new fun here ----
         withProgress(message = "Generating gif ...", value = 0, {
           times <- seq(minTime, maxTime, by = intTime)
           saveGIF({
@@ -104,14 +120,14 @@ plotExport <- function(input,
           }, movie.name = file, ani.width = input$width, ani.height = input$height)
         })
       } else if (!isTimeSeriesInput()) {
-        ## export single map ----
-        if (input$exportType == "geo-tiff"){
+        ## export single graphic ----
+        if (exportType() == "geo-tiff"){
           writeGeoTiff(predictions(), file)
           return()
         }
 
         switch(
-          input$exportType,
+          exportType(),
           png = png(file, width = input$width, height = input$height),
           pdf = pdf(file, width = input$width / 72, height = input$height / 72),
           tiff = tiff(file, width = input$width, height = input$height),
@@ -121,13 +137,13 @@ plotExport <- function(input,
 
         dev.off()
       } else {
-        ## export series of maps as zip ----
+        ## export series of graphic files as zip ----
         withProgress(message = "Generating series ...", value = 0, {
           times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
 
           figFileNames <- sapply(times,
                                  function(i) {
-                                   nameFile(plotType = modelType, exportType = input$exportType,
+                                   nameFile(plotType = modelType, exportType = exportType(),
                                             isTimeSeries = isTimeSeriesInput(), i = i)
                                  })
 
@@ -135,11 +151,11 @@ plotExport <- function(input,
             incProgress(1 / length(times), detail = paste("time: ", i))
             figFilename <- figFileNames[[which(times == i)]]
 
-            if (input$exportType == "geo-tiff"){
+            if (exportType() == "geo-tiff"){
               writeGeoTiff(predictions(), figFilename)
             } else {
               switch(
-                input$exportType,
+                exportType(),
                 png = png(figFilename, width = input$width, height = input$height),
                 pdf = pdf(figFilename, width = input$width / 72, height = input$height / 72),
                 tiff = tiff(figFilename, width = input$width, height = input$height),
