@@ -1,9 +1,16 @@
 # MpiIsoApp development version
 
-## Version 23.05.2
+## Version 23.05.3
 
 ### New Features
 - _Export of time series_: optionally add a gif file or only export a gif (#107)
+
+## Version 23.05.2
+
+### New Features
+- _Interactive Map_: 
+  - map types are grouped by having borders or names (#133)
+  - option to add more maps from different providers: https://leaflet-extras.github.io/leaflet-providers/preview/
 
 ## Version 23.05.1
 
