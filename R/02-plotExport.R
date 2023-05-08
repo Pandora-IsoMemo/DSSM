@@ -120,55 +120,25 @@ plotExport <- function(input,
           }, movie.name = file, ani.width = input$width, ani.height = input$height)
         })
       } else if (!isTimeSeriesInput()) {
-        ## export single graphic ----
-        if (exportType() == "geo-tiff"){
-          writeGeoTiff(predictions(), file)
-          return()
-        }
-
-        switch(
-          exportType(),
-          png = png(file, width = input$width, height = input$height),
-          pdf = pdf(file, width = input$width / 72, height = input$height / 72),
-          tiff = tiff(file, width = input$width, height = input$height),
-          svg = svg(file, width = input$width / 72, height = input$height / 72)
-        )
-        replayPlot(plotObj())
-
-        dev.off()
+        exportGraphicSingle(exportType = exportType(),
+                            file = file,
+                            width = input$width,
+                            height = input$height,
+                            plotObj = plotObj(),
+                            predictions = predictions())
       } else {
-        ## export series of graphic files as zip ----
-        withProgress(message = "Generating series ...", value = 0, {
-          times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
-
-          figFileNames <- sapply(times,
-                                 function(i) {
-                                   nameFile(plotType = modelType, exportType = exportType(),
-                                            isTimeSeries = isTimeSeriesInput(), i = i)
-                                 })
-
-          for (i in times) {
-            incProgress(1 / length(times), detail = paste("time: ", i))
-            figFilename <- figFileNames[[which(times == i)]]
-
-            if (exportType() == "geo-tiff"){
-              writeGeoTiff(predictions(), figFilename)
-            } else {
-              switch(
-                exportType(),
-                png = png(figFilename, width = input$width, height = input$height),
-                pdf = pdf(figFilename, width = input$width / 72, height = input$height / 72),
-                tiff = tiff(figFilename, width = input$width, height = input$height),
-                svg = svg(figFilename, width = input$width / 72, height = input$height / 72)
-              )
-              plotFun()(model = Model(), time = i)
-              dev.off()
-            }
-          }
-
-          zipr(file, figFileNames)
-          unlink(figFileNames)
-        })
+        exportGraphicSeries(exportType = exportType(),
+                            file = file,
+                            width = input$width,
+                            height = input$height,
+                            plotFun = plotFun(),
+                            Model = Model(),
+                            predictions = predictions(),
+                            modelType = modelType,
+                            minTime = input$minTime,
+                            maxTime = input$maxTime,
+                            intTime = input$intTime,
+                            isTimeSeriesInput = isTimeSeriesInput())
       }
     }
   )
@@ -195,6 +165,58 @@ nameFile <- function(plotType, exportType, isTimeSeries, i = NULL) {
   }
 }
 
+exportGraphicSeries <- function(exportType, file, width, height, plotFun, Model, predictions,
+                                modelType, minTime, maxTime, intTime, isTimeSeriesInput) {
+  withProgress(message = "Generating series ...", value = 0, {
+    times <- seq(minTime, maxTime, by = abs(intTime))
+
+    figFileNames <- sapply(times,
+                           function(i) {
+                             nameFile(plotType = modelType, exportType = exportType,
+                                      isTimeSeries = isTimeSeriesInput, i = i)
+                           })
+
+    for (i in times) {
+      incProgress(1 / length(times), detail = paste("time: ", i))
+      figFilename <- figFileNames[[which(times == i)]]
+
+      if (exportType == "geo-tiff"){
+        # filter for i ???
+        writeGeoTiff(predictions, figFilename)
+      } else {
+        switch(
+          exportType,
+          png = png(figFilename, width = width, height = height),
+          pdf = pdf(figFilename, width = width / 72, height = height / 72),
+          tiff = tiff(figFilename, width = width, height = height),
+          svg = svg(figFilename, width = width / 72, height = height / 72)
+        )
+        plotFun(model = Model, time = i)
+        dev.off()
+      }
+    }
+
+    zipr(file, figFileNames)
+    unlink(figFileNames)
+  })
+}
+
+exportGraphicSingle <- function(exportType, file, width, height, plotObj, predictions) {
+  if (exportType == "geo-tiff"){
+    writeGeoTiff(predictions, file)
+    return()
+  }
+
+  switch(
+    exportType,
+    png = png(file, width = width, height = height),
+    pdf = pdf(file, width = width / 72, height = height / 72),
+    tiff = tiff(file, width = width, height = height),
+    svg = svg(file, width = width / 72, height = height / 72)
+  )
+  replayPlot(plotObj)
+  dev.off()
+}
 
 writeGeoTiff <- function(XPred, file){
   if(is.null(XPred)) return()
