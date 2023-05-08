@@ -45,12 +45,14 @@ leafletSettingsUI <- function(id, title = "") {
                            class = "glyphicon glyphicon-info-sign",
                            style = "color:#0072B2;",
                            title = paste(
-                             "How to apply a new map:",
-                             " 1. Delete the input of the field 'Map type',",
-                             " 2. copy the name of the desired map into that field, and",
-                             " 3. click 'Add...'. ",
-                             "Some maps are not supported. Please try, e.g. 'OpenStreetMap',",
-                             " 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             "How to select a new map:",
+                             " 1. Select a map from https://leaflet-extras.github.io/leaflet-providers/preview/",
+                             "  and copy the name.",
+                             " 2. Delete the input of the field 'Map type'.",
+                             " 3. Paste the name of the map into the field 'Map type'.",
+                             " 4. Click 'Add...'. ",
+                             "Some maps are not supported. Please try maps from e.g. following providers",
+                             " 'OpenStreetMap', 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
                              sep = "\n"
                            ))
     ))),
