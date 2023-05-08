@@ -4,7 +4,7 @@
 \alias{nameFile}
 \title{Name File}
 \usage{
-nameFile(plotType, exportType, isTimeSeries, i = NULL)
+nameFile(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
 }
 \arguments{
 \item{plotType}{(character) plot specification}
