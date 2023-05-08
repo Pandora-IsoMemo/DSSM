@@ -127,7 +127,6 @@ plotExport <- function(input,
                             minTime = input$minTime,
                             maxTime = input$maxTime,
                             intTime = input$intTime,
-                            isTimeSeriesInput = isTimeSeriesInput(),
                             typeOfSeries = input$typeOfSeries,
                             reverseGif = input$reverseGif,
                             fpsGif = input$fpsGif)
@@ -160,14 +159,14 @@ nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
 exportGraphicSeries <- function(exportType, file,
                                 width, height, plotFun, Model, predictions,
                                 modelType, minTime, maxTime, intTime,
-                                isTimeSeriesInput, typeOfSeries, reverseGif, fpsGif) {
+                                typeOfSeries, reverseGif, fpsGif) {
   withProgress(message = "Generating series ...", value = 0, {
     times <- seq(minTime, maxTime, by = abs(intTime))
 
     figFileNames <- sapply(times,
                            function(i) {
                              nameFile(plotType = modelType, exportType = exportType,
-                                      isTimeSeries = isTimeSeriesInput, i = i)
+                                      isTimeSeries = TRUE, i = i)
                            })
 
     for (i in times) {
