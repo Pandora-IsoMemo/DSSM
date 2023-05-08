@@ -2372,8 +2372,14 @@ estimateMap3DKernel <- function(data,
     if(!(independent %in% names(data))) return("independent variable is missing in data")
   }
 
-  if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
-  if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
+  data <- data %>%
+    prepareDate(DateOne = DateOne,
+                DateTwo = DateTwo,
+                DateType = DateType,
+                dateUnc = dateUnc,
+                useMaxUnc = FALSE)
+  if (all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
+  if (DateType != "Single point" && (all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
   data <- data %>%
     convertLatLongWrapper(Longitude = Longitude,
@@ -2396,9 +2402,6 @@ estimateMap3DKernel <- function(data,
   }
 
   if (DateType == "Interval"){
-    data$Date <- (data[, DateTwo] + data[, DateOne]) / 2
-    data$Uncertainty <- abs(data[, DateOne] - data[, DateTwo]) / 4
-
     if(!is.null(independent) & !(independent == "")){
       if(!is.null(Weighting) & !(Weighting == "")){
         if(!is.numeric(data[, Weighting]) || !(all(data[, Weighting] >= 0, na.rm = TRUE))) return("Weights must be non-negative numeric values.")
@@ -2418,15 +2421,9 @@ estimateMap3DKernel <- function(data,
                                  "Date", "Uncertainty")])
       }
     }
-    if(dateUnc == "normal2"){
-      dateUnc <- "normal"
-      data$Uncertainty <- data$Uncertainty / 2
-    }
     data$Uncertainty2 <- pmax(0, data$Uncertainty / sd(data$Date))
   }
   if (DateType == "Single point"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- 0
     if(!is.null(independent) & !(independent == "")){
       if(!is.null(Weighting) & !(Weighting == "")){
         if(!is.numeric(data[, Weighting]) || !(all(data[, Weighting] >= 0, na.rm = TRUE))) return("Weights must be non-negative numeric values.")
@@ -2449,8 +2446,6 @@ estimateMap3DKernel <- function(data,
     data$Uncertainty2 <- 0
   }
   if (DateType == "Mean + 1 SD uncertainty"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- data[, DateTwo]
     if(!is.null(independent) & !(independent == "")){
       if(!is.null(Weighting) & !(Weighting == "")){
         if(!is.numeric(data[, Weighting]) || !(all(data[, Weighting] >= 0, na.rm = TRUE))) return("Weights must be non-negative numeric values.")
@@ -2469,10 +2464,6 @@ estimateMap3DKernel <- function(data,
         data <- na.omit(data[, c(Longitude, Latitude,
                                  "Date", "Uncertainty")])
       }
-    }
-    if(dateUnc == "uniform2"){
-      dateUnc <- "uniform"
-      data$Uncertainty <- data$Uncertainty / 2
     }
     data$Uncertainty2 <- pmax(0, data$Uncertainty / sd(data$Date))
   }
