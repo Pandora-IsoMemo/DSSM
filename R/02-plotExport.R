@@ -141,6 +141,7 @@ plotExport <- function(input,
 #' @param plotType (character) plot specification
 #' @param exportType (character) file type of exported plot
 #' @param isTimeSeries (logical) if TRUE, set file names for a series of plots
+#' @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
 #' @param i (numeric) number of i-th plot of a series of plots
 nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL) {
   if (exportType == 'geo-tiff') exportType <- "tif"

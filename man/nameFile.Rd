@@ -13,6 +13,8 @@ nameFile(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
 
 \item{isTimeSeries}{(logical) if TRUE, set file names for a series of plots}
 
+\item{typeOfSeries}{one of "gifAndZip", "onlyZip", "onlyGif"}
+
 \item{i}{(numeric) number of i-th plot of a series of plots}
 }
 \description{
