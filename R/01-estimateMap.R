@@ -465,32 +465,15 @@ estimateMapSpread <- function(data,
                        data[, Longitude] >= restriction[4]), ]
   }
 
+  data <- data %>%
+    prepareDate(DateOne = DateOne, DateTwo = DateTwo, DateType = DateType, dateUnc = dateUnc)
+
   if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
   if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
-  if (DateType == "Interval"){
-    data$Date <- (data[, DateTwo] + data[, DateOne]) / 2
-    data$Uncertainty <- pmax(0, abs(data[, DateOne] - data[, DateTwo]) / 4)
-    if(dateUnc == "normal2"){
-      dateUnc <- "normal"
-      data$Uncertainty <- data$Uncertainty / 2
-    }
-    data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
-  }
-  if (DateType == "Single point"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- 0
-    data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
-  }
-  if (DateType == "Mean + 1 SD uncertainty"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- pmax(0, data[, DateTwo])
-    if(dateUnc == "uniform2"){
-      dateUnc <- "uniform"
-      data$Uncertainty <- data$Uncertainty / 2
-    }
-    data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
-  }
+  # select columns
+  data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
+
   if (nrow(unique(data[, c(Longitude, Latitude)])) <= K) {
     K <- ceiling(0.9 * (nrow(unique(data[, c(Longitude, Latitude)])) - 1))
     if (K < 4) {return("less than 4 rows")}
@@ -2784,4 +2767,49 @@ estimateModel3D <- function(data2, fm, independent, splineExpr){
     }
   }
 return(model)
+}
+
+#' Prepare Date
+#'
+#' Adds new columns 'Date' and 'Uncertainty' that are used in the model dependent on user inputs.
+#'
+#' @inheritParams estimateMapSpread
+prepareDate <- function(data, DateOne, DateTwo, DateType, dateUnc) {
+  # check date columns
+  if (!is.numeric(data[, DateOne])) {
+    data[, DateOne] <- as.numeric(data[, DateOne])
+  }
+  if (all(is.na(data[, DateOne]))) return(data)
+
+  if (DateType != "Single point" && (!is.numeric(data[, DateTwo]))) {
+    data[, DateTwo] <- as.numeric(data[, DateTwo])
+  }
+
+  if (DateType != "Single point" && (all(is.na(data[, DateTwo])))) return(data)
+
+  # get date uncertainty
+  if (DateType == "Interval"){
+    data$Date <- (data[, DateTwo] + data[, DateOne]) / 2
+    data$Uncertainty <- pmax(0, abs(data[, DateOne] - data[, DateTwo]) / 4)
+    if(dateUnc == "normal2"){
+      dateUnc <- "normal"
+      data$Uncertainty <- data$Uncertainty / 2
+    }
+  }
+
+  if (DateType == "Single point"){
+    data$Date <- data[, DateOne]
+    data$Uncertainty <- 0
+  }
+
+  if (DateType == "Mean + 1 SD uncertainty"){
+    data$Date <- data[, DateOne]
+    data$Uncertainty <- pmax(0, data[, DateTwo])
+    if(dateUnc == "uniform2"){
+      dateUnc <- "uniform"
+      data$Uncertainty <- data$Uncertainty / 2
+    }
+  }
+
+  data
 }
