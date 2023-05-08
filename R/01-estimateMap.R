@@ -466,10 +466,12 @@ estimateMapSpread <- function(data,
   }
 
   data <- data %>%
-    prepareDate(DateOne = DateOne, DateTwo = DateTwo, DateType = DateType, dateUnc = dateUnc)
-
-  if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
-  if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
+    prepareDate(DateOne = DateOne,
+                DateTwo = DateTwo,
+                DateType = DateType,
+                dateUnc = dateUnc)
+  if (all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
+  if (DateType != "Single point" && (!all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
   # select columns
   data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
@@ -752,8 +754,16 @@ estimateMap3D <- function(data,
   if (!(all(c(Longitude, Latitude, independent, DateOne) %in% names(data)))) return(NULL)
 
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
-  if (!is.numeric(data[, DateOne]) || all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
-  if (DateType != "Single point" && (!is.numeric(data[, DateTwo]) || all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
+
+  data <- data %>%
+    prepareDate(DateOne = DateOne,
+                DateTwo = DateTwo,
+                DateType = DateType,
+                dateUnc = dateUnc,
+                useMaxUnc = FALSE)
+  if (all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
+  if (DateType != "Single point" && (all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
+
   if ( Site != "" && all(is.na(data[, Site]))) return("wrong site variable")
 
   data <- data %>%
@@ -782,9 +792,8 @@ estimateMap3D <- function(data,
   }
 
   data$Site <- data[, Site]
+
   if (DateType == "Interval"){
-    data$Date <- (data[, DateTwo] + data[, DateOne]) / 2
-    data$Uncertainty <- abs(data[, DateOne] - data[, DateTwo]) / 4
     if(independentUncertainty != "" && !all(is.na(data[, independentUncertainty]))){
       data$independentUncertainty <- data[, independentUncertainty]
       data$independentUncertainty[is.na(data$independentUncertainty)] <- 0
@@ -794,15 +803,9 @@ estimateMap3D <- function(data,
       data <- na.omit(data[, c(independent, Longitude, Latitude, "Site",
                                "Date", "Uncertainty")])
     }
-    if(dateUnc == "normal2"){
-      dateUnc <- "normal"
-      data$Uncertainty <- data$Uncertainty / 2
-    }
     data$Uncertainty2 <- pmax(0, data$Uncertainty / sd(data$Date))
   }
   if (DateType == "Single point"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- 0
     if(independentUncertainty != "" && !all(is.na(data[, independentUncertainty]))){
       data$independentUncertainty <- data[, independentUncertainty]
       data <- na.omit(data[, c(independent, Longitude, Latitude, "Site",
@@ -814,8 +817,6 @@ estimateMap3D <- function(data,
     data$Uncertainty2 <- 0
   }
   if (DateType == "Mean + 1 SD uncertainty"){
-    data$Date <- data[, DateOne]
-    data$Uncertainty <- data[, DateTwo]
     if(independentUncertainty != "" && !all(is.na(data[, independentUncertainty]))){
       data$independentUncertainty <- data[, independentUncertainty]
       data <- na.omit(data[, c(independent, Longitude, Latitude, "Site",
@@ -824,13 +825,9 @@ estimateMap3D <- function(data,
       data <- na.omit(data[, c(independent, Longitude, Latitude, "Site",
                                "Date", "Uncertainty")])
     }
-    if(dateUnc == "uniform2"){
-      dateUnc <- "uniform"
-      data$Uncertainty <- data$Uncertainty / 2
-    }
-
     data$Uncertainty2 <- pmax(0, data$Uncertainty / sd(data$Date))
   }
+
   data$Longitude2 <- (data[, Longitude] - mean(data[, Longitude])) / (sd(data[, Longitude]))
   data$Latitude2 <- (data[, Latitude] - mean(data[, Latitude])) / (sd(data[, Latitude]))
   data$Date2 <- (data$Date - mean(data$Date)) / (sd(data$Date))
@@ -2774,7 +2771,8 @@ return(model)
 #' Adds new columns 'Date' and 'Uncertainty' that are used in the model dependent on user inputs.
 #'
 #' @inheritParams estimateMapSpread
-prepareDate <- function(data, DateOne, DateTwo, DateType, dateUnc) {
+#' @param useMaxUnc (logical) True if max uncertainty should be used.
+prepareDate <- function(data, DateOne, DateTwo, DateType, dateUnc, useMaxUnc = TRUE) {
   # check date columns
   if (!is.numeric(data[, DateOne])) {
     data[, DateOne] <- as.numeric(data[, DateOne])
@@ -2790,7 +2788,8 @@ prepareDate <- function(data, DateOne, DateTwo, DateType, dateUnc) {
   # get date uncertainty
   if (DateType == "Interval"){
     data$Date <- (data[, DateTwo] + data[, DateOne]) / 2
-    data$Uncertainty <- pmax(0, abs(data[, DateOne] - data[, DateTwo]) / 4)
+    data$Uncertainty <- abs(data[, DateOne] - data[, DateTwo]) / 4
+    if (useMaxUnc) data$Uncertainty <- pmax(0, data$Uncertainty)
     if(dateUnc == "normal2"){
       dateUnc <- "normal"
       data$Uncertainty <- data$Uncertainty / 2
@@ -2804,7 +2803,8 @@ prepareDate <- function(data, DateOne, DateTwo, DateType, dateUnc) {
 
   if (DateType == "Mean + 1 SD uncertainty"){
     data$Date <- data[, DateOne]
-    data$Uncertainty <- pmax(0, data[, DateTwo])
+    data$Uncertainty <- data[, DateTwo]
+    if (useMaxUnc) data$Uncertainty <- pmax(0, data$Uncertainty)
     if(dateUnc == "uniform2"){
       dateUnc <- "uniform"
       data$Uncertainty <- data$Uncertainty / 2
