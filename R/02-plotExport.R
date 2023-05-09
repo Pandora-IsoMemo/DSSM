@@ -201,6 +201,7 @@ exportGraphicSeries <- function(exportType, file,
       if (reverseGif) figFileNames <- rev(figFileNames)
       generateGif(gifFile = paste0(modelType, ".gif"), files = figFileNames, fps = fpsGif)
       zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
+      unlink(paste0(modelType, ".gif"))
     }
     unlink(figFileNames)
   })
