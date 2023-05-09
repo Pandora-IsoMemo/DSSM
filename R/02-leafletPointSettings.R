@@ -1024,6 +1024,7 @@ getHTMLFromPath <- function(paths) {
     path <- paths[x]
     path <- path %>%
       gsub(pattern = ".*www", replacement = "")
+    path <- paste0("app/iso-memo-app-beta", path)
     sprintf("<img src='%s'> %s", path, label)
   }) %>%
     paste0(collapse = "<br/>")
