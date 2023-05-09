@@ -728,7 +728,7 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
 
   if (length(unique(na.omit(sizeColumn))) < 2)
     return(list(pointSizes = pointSizes))
-  browser()
+
   minSize <- min(sizeColumn, na.rm = TRUE)
   maxSize <- max(sizeColumn, na.rm = TRUE)
 
