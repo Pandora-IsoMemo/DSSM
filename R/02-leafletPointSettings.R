@@ -10,27 +10,25 @@ leafletPointSettingsUI <- function(id) {
       condition = "input.clusterPoints == false",
       ns = ns,
       tags$hr(),
-      fluidRow(
-        column(8,
-               checkboxInput(
-                 ns("useJitter"), "Use jitter (in max. km)"
-               )),
-        column(
-          4,
-          #style = "margin-top: -1em;",
-          conditionalPanel(
-            condition = "input.useJitter == true",
-            numericInput(
-              ns("jitterMaxKm"),
-              label = NULL,
-              value = 25,
-              min = 0,
-              max = 100
-            ),
-            ns = ns
-          )
-        )
+      fluidRow(column(
+        8,
+        checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
       ),
+      column(
+        4,
+        #style = "margin-top: -1em;",
+        conditionalPanel(
+          condition = "input.useJitter == true",
+          numericInput(
+            ns("jitterMaxKm"),
+            label = NULL,
+            value = 25,
+            min = 0,
+            max = 100
+          ),
+          ns = ns
+        )
+      )),
       sliderInput(
         ns("pointOpacity"),
         "Opacity",
@@ -143,8 +141,7 @@ pointColourUI <- function(id) {
     )
   )
 
-  tagList(
-    fluidRow(
+  tagList(fluidRow(
     column(8,
            selectInput(
              ns("columnForPointColour"),
@@ -153,7 +150,9 @@ pointColourUI <- function(id) {
            )),
     column(4,
            style = "margin-top: 1.5em;",
-           checkboxInput(ns("showColourLegend"), "Legend", value = FALSE))
+           checkboxInput(
+             ns("showColourLegend"), "Legend", value = FALSE
+           ))
   ),
   fluidRow(
     column(
@@ -201,7 +200,9 @@ pointColourServer <- function(id, loadedData) {
                      choices = colnames(loadedData()),
                      selected = selectedDefault
                    )
-                   updateCheckboxInput(session = session, "showColourLegend", value = TRUE)
+                   updateCheckboxInput(session = session,
+                                       "showColourLegend",
+                                       value = TRUE)
                  })
 
                  observeEvent(input$columnForPointColour, {
@@ -255,27 +256,25 @@ pointSizeUI <- function(id) {
 
   tagList(
     fluidRow(
-    column(
-      8,
-      selectInput(
-        ns("columnForPointSize"),
-        "Point size variable",
-        choices = c("[Fixed]" = "")
-      )
+      column(8,
+             selectInput(
+               ns("columnForPointSize"),
+               "Point size variable",
+               choices = c("[Fixed]" = "")
+             )),
+      column(4,
+             style = "margin-top: 1.5em;",
+             checkboxInput(ns("showSizeLegend"), "Legend", value = FALSE))
     ),
-    column(4,
-           numericInput(
-             ns("sizeFactor"),
-             "Factor",
-             value = 1,
-             min = 0.1,
-             max = 20,
-             step = 0.1,
-             width = "100%"
-           ),
-           checkboxInput(ns("showSizeLegend"), "Legend", value = FALSE)
-           )
-  ))
+    sliderInput(
+      ns("sizeFactor"),
+      "Factor",
+      min = 0.5,
+      max = 5.5,
+      value = 1,
+      step = 0.5
+    )
+  )
 }
 
 
@@ -318,8 +317,10 @@ pointSizeServer <- function(id, loadedData) {
                      columnForPointSize = selectedDefault,
                      sizeFactor = input$sizeFactor
                    )
-                   sizeValues$pointRadius <- radiusAndLegend$pointSizes
-                   sizeValues$sizeLegendValues <- radiusAndLegend$sizeLegendValues
+                   sizeValues$pointRadius <-
+                     radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <-
+                     radiusAndLegend$sizeLegendValues
                    sizeValues$showSizeLegend <- showLegendVal
                  }) %>%
                    bindEvent(loadedData())
@@ -331,10 +332,13 @@ pointSizeServer <- function(id, loadedData) {
                      columnForPointSize = input$columnForPointSize,
                      sizeFactor = input$sizeFactor
                    )
-                   sizeValues$pointRadius <- radiusAndLegend$pointSizes
-                   sizeValues$sizeLegendValues <- radiusAndLegend$sizeLegendValues
+                   sizeValues$pointRadius <-
+                     radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <-
+                     radiusAndLegend$sizeLegendValues
                  }) %>%
-                   bindEvent(list(input$columnForPointSize, input$sizeFactor), ignoreInit = TRUE)
+                   bindEvent(list(input$columnForPointSize, input$sizeFactor),
+                             ignoreInit = TRUE)
 
                  observe({
                    sizeValues$showSizeLegend <- input$showSizeLegend
@@ -352,46 +356,44 @@ pointSizeServer <- function(id, loadedData) {
 pointSymbolUI <- function(id) {
   ns <- NS(id)
 
-  tagList(
-    fluidRow(
-      column(8,
-             selectInput(
-               ns("columnForPointSymbol"),
-               "Point symbol variable",
-               choices = c("[Fixed]" = "")
-             )
-      ),
-      column(4,
-             #style = "margin-top: 1.5em;",
-             numericInput(
-               ns("pointWidth"),
-               "Line width",
-               value = 1,
-               min = 1,
-               max = 10
-             ))
-    ),
-    fluidRow(
-      column(8,
-             #style = "margin-top: -0.5em;",
-             pickerInput(
-               ns("pointSymbol"),
-               label = NULL,
-               choices = pchChoices(),
-               selected = "",
-               options = list(
-                 `actions-box` = TRUE,
-                 size = 25,
-                 `selected-text-format` = "count > 8",
-                 `none-selected-text` = "Select symbols ..."
-               ),
-               multiple = TRUE
-             )
-      ),
-      column(4,
-             checkboxInput(ns("showSymbolLegend"), "Legend", value = FALSE))
+  tagList(fluidRow(column(
+    8,
+    selectInput(
+      ns("columnForPointSymbol"),
+      "Point symbol variable",
+      choices = c("[Fixed]" = "")
     )
-  )
+  ),
+  column(
+    4,
+    numericInput(
+      ns("pointWidth"),
+      "Line width",
+      value = 1,
+      min = 1,
+      max = 10
+    )
+  )),
+  fluidRow(column(
+    8,
+    pickerInput(
+      ns("pointSymbol"),
+      label = NULL,
+      choices = pchChoices(),
+      selected = "",
+      options = list(
+        `actions-box` = TRUE,
+        size = 25,
+        `selected-text-format` = "count > 8",
+        `none-selected-text` = "Select symbols ..."
+      ),
+      multiple = TRUE
+    )
+  ),
+  column(
+    4,
+    checkboxInput(ns("showSymbolLegend"), "Legend", value = FALSE)
+  )))
 }
 
 
@@ -401,9 +403,7 @@ pointSymbolUI <- function(id) {
 pointSymbolServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
-                 symbolValues <- reactiveValues(
-                   pointSymbol = 19
-                 )
+                 symbolValues <- reactiveValues(pointSymbol = 19)
 
                  observe({
                    if (is.null(loadedData())) {
@@ -429,21 +429,24 @@ pointSymbolServer <- function(id, loadedData) {
                      choices = choices,
                      selected = selectedDefault
                    )
-                   updatePickerInput(
-                     session = session,
-                     "pointSymbol",
-                     selected = 19
-                   )
-                   updateCheckboxInput(session = session, "showSymbolLegend", value = showLegendVal)
+                   updatePickerInput(session = session,
+                                     "pointSymbol",
+                                     selected = 19)
+                   updateCheckboxInput(session = session,
+                                       "showSymbolLegend",
+                                       value = showLegendVal)
 
                    symbolsAndLegend <- getPointSymbols(
                      df = loadedData(),
                      columnForPointSymbol = selectedDefault,
                      symbols = 19
                    )
-                   symbolValues$pointSymbol <- symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegendValues <- symbolsAndLegend$symbolLegendValues
-                   symbolValues$columnForPointSymbol <- selectedDefault
+                   symbolValues$pointSymbol <-
+                     symbolsAndLegend$pointSymbol
+                   symbolValues$symbolLegendValues <-
+                     symbolsAndLegend$symbolLegendValues
+                   symbolValues$columnForPointSymbol <-
+                     selectedDefault
                    symbolValues$showSymbolLegend <- showLegendVal
                  }) %>%
                    bindEvent(loadedData())
@@ -455,11 +458,15 @@ pointSymbolServer <- function(id, loadedData) {
                      columnForPointSymbol = input$columnForPointSymbol,
                      symbols = as.numeric(input$pointSymbol)
                    )
-                   symbolValues$pointSymbol <- symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegendValues <- symbolsAndLegend$symbolLegendValues
-                   symbolValues$columnForPointSymbol <- input$columnForPointSymbol
+                   symbolValues$pointSymbol <-
+                     symbolsAndLegend$pointSymbol
+                   symbolValues$symbolLegendValues <-
+                     symbolsAndLegend$symbolLegendValues
+                   symbolValues$columnForPointSymbol <-
+                     input$columnForPointSymbol
                  }) %>%
-                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol), ignoreInit = TRUE)
+                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol),
+                             ignoreInit = TRUE)
 
                  observe({
                    symbolValues$pointWidth <- input$pointWidth
@@ -499,7 +506,8 @@ updateDataOnLeafletMap <-
       isoData[(!is.na(isoData[["longitude"]]) &
                  !is.na(isoData[["latitude"]])), ]
 
-    if (nrow(isoData) == 0) return(map)
+    if (nrow(isoData) == 0)
+      return(map)
 
     if (leafletPointValues$clusterPoints) {
       return(drawClustersOnMap(map, isoData))
@@ -526,7 +534,8 @@ updateDataOnLeafletMap <-
       addLayersControl(
         overlayGroups = c("Data Points"),
         position = "bottomleft",
-        options = layersControlOptions(collapsed = FALSE))
+        options = layersControlOptions(collapsed = FALSE)
+      )
   }
 
 
@@ -605,22 +614,28 @@ drawSymbolsOnMap <-
       return(map)
 
     # create colour for each point
-    colourList <- lapply(colourPal(isoData[[columnForColour]]), col2rgb)
+    colourList <-
+      lapply(colourPal(isoData[[columnForColour]]), col2rgb)
     colourVec <- sapply(1:nrow(isoData), function(i) {
-      rgb(red = colourList[[i]][1],
-          green = colourList[[i]][2],
-          blue = colourList[[i]][3],
-          maxColorValue = 255,
-          alpha = pointOpacity * 255)
+      rgb(
+        red = colourList[[i]][1],
+        green = colourList[[i]][2],
+        blue = colourList[[i]][3],
+        maxColorValue = 255,
+        alpha = pointOpacity * 255
+      )
     })
 
     # create icon for each point
     iconFiles <- sapply(1:nrow(isoData), function(x) {
-      createPchPoints(pch = pointSymbol[[x]], # pointSymbol is a list, while others are vectors
-                      width = pointRadius[x] * 2,
-                      height = pointRadius[x] * 2,
-                      col = colourVec[x],
-                      lwd = pointWidth)
+      createPchPoints(
+        pch = pointSymbol[[x]],
+        # pointSymbol is a list, while others are vectors
+        width = pointRadius[x] * 2,
+        height = pointRadius[x] * 2,
+        col = colourVec[x],
+        lwd = pointWidth
+      )
     })
 
     map %>%
@@ -631,7 +646,8 @@ drawSymbolsOnMap <-
         group = "Data Points",
         icon = ~ icons(
           iconUrl = iconFiles,
-          popupAnchorX = 20, popupAnchorY = 0
+          popupAnchorX = 20,
+          popupAnchorY = 0
         )
       )
   }
@@ -655,13 +671,11 @@ cleanDataFromMap <- function(map) {
 setColorLegend <- function(map, showLegend, title, pal, values) {
   if (showLegend && !is.null(pal)) {
     map <- map %>%
-      addLegend(
-        "topleft",
-        pal = pal,
-        values = values,
-        #title = title, # hide title here, since title is not available for addControl()
-        layerId = "colorLegend"
-      )
+      addLegend("topleft",
+                pal = pal,
+                values = values,
+                #title = title, # hide title here, since title is not available for addControl()
+                layerId = "colorLegend")
   } else {
     map <- map %>% removeControl("colorLegend")
   }
@@ -682,11 +696,9 @@ setSizeLegend <- function(map, showLegend, sizeLegend) {
   htmlString <- getSizeLegend(sizeLegend)
 
   map %>%
-    addControl(
-      html = htmlString,
-      position = "topleft",
-      layerId = "sizeLegend"
-    )
+    addControl(html = htmlString,
+               position = "topleft",
+               layerId = "sizeLegend")
 }
 
 #' Get Point Size
@@ -697,7 +709,8 @@ setSizeLegend <- function(map, showLegend, sizeLegend) {
 #' @param columnForPointSize (character) name of the column that determines the point size
 #' @param sizeFactor (numeric) general factor for point size
 getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
-  if (is.null(df) || is.null(columnForPointSize) || is.null(sizeFactor))
+  if (is.null(df) ||
+      is.null(columnForPointSize) || is.null(sizeFactor))
     return(NULL)
 
   defaultPointSizeInPxl <- 5
@@ -715,72 +728,64 @@ getPointSize <- function(df, columnForPointSize, sizeFactor = 1) {
 
   if (length(unique(na.omit(sizeColumn))) < 2)
     return(list(pointSizes = pointSizes))
-
+  browser()
   minSize <- min(sizeColumn, na.rm = TRUE)
   maxSize <- max(sizeColumn, na.rm = TRUE)
 
-  pointSizes <- mapToPixel(val = sizeColumn,
-                           minVal = minSize,
-                           maxVal = maxSize,
-                           defaultPxlVal = defaultPointSizeInPxl,
-                           sizeFactor = sizeFactor)
-
-  # get sizes for legend
-  sizesDf <- data.frame(
-    values = sizeColumn,
-    sizes = pointSizes
+  pointSizes <- mapToPixel(
+    val = sizeColumn,
+    minVal = minSize,
+    maxVal = maxSize,
+    defaultPxlVal = defaultPointSizeInPxl,
+    sizeFactor = sizeFactor
   )
 
-  sizesDf$ceiledSizes <- ceiling(sizesDf$sizes)
+  # get sizes for legend
+  legendLabels <-
+    seq(minSize, maxSize, by = (maxSize - minSize) / 3) %>%
+    signif(digits = 2) %>%
+    unique()
+  legendValues <- mapToPixel(
+    val = legendLabels,
+    minVal = minSize,
+    maxVal = maxSize,
+    defaultPxlVal = defaultPointSizeInPxl,
+    sizeFactor = sizeFactor
+  )
 
-  sizesDf <- sizesDf %>%
-    group_by(.data$ceiledSizes) %>%
-    filter(.data$sizes == max(.data$sizes)) %>%
-    ungroup() %>%
-    distinct() %>%
-    arrange(.data$sizes)
-
-  sizesDf$labels <- sizesDf$values %>%
-    signif(digits = 1)
-
-  sizesDf$newSizes <- mapToPixel(val = sizesDf$labels,
-                                 minVal = minSize,
-                                 maxVal = maxSize,
-                                 defaultPxlVal = defaultPointSizeInPxl,
-                                 sizeFactor = sizeFactor)
-
-  sizesDf <- sizesDf %>%
-    filter(.data$labels >= min(.data$values)) %>%
-    select(.data$labels, .data$newSizes) %>%
-    distinct()
-
-  sizeLegendValues <- sizesDf$newSizes
-  names(sizeLegendValues) <- sizesDf$labels
+  sizeLegendValues <- legendValues
+  names(sizeLegendValues) <- legendLabels
 
   list(pointSizes = pointSizes, sizeLegendValues = sizeLegendValues)
 }
 
-mapToPixel <- function(val, minVal, maxVal, defaultPxlVal, sizeFactor) {
-  # normalize sizes to intervall [0,1]
-  pointSizes <- val %>%
-    shiftToZero(minVal = minVal)
+mapToPixel <-
+  function(val,
+           minVal,
+           maxVal,
+           defaultPxlVal,
+           sizeFactor) {
+    # normalize sizes to intervall [0,1]
+    pointSizes <- val %>%
+      shiftToZero(minVal = minVal)
 
-  pointSizes <- pointSizes / shiftToZero(maxVal, minVal = minVal)
+    pointSizes <- pointSizes / shiftToZero(maxVal, minVal = minVal)
 
-  # map to intervall: [1/defaultPxlVal, 1-(1/defaultPxlVal)] instead of (0,1)
-  # because the minimal factor should be at least 1/defaultPxlVal
-  # smaller values produce errors in the plotting function
-  pointSizes <- (1 - 2/defaultPxlVal) * pointSizes + 1/defaultPxlVal
+    # map to intervall: [1/defaultPxlVal, 1-(1/defaultPxlVal)] instead of (0,1)
+    # because the minimal factor should be at least 1/defaultPxlVal
+    # smaller values produce errors in the plotting function
+    pointSizes <-
+      (1 - 2 / defaultPxlVal) * pointSizes + 1 / defaultPxlVal
 
-  # the mean of the data (== 0.5) should have a factor of 1
-  pointSizes <- 2 * pointSizes
+    # the mean of the data (== 0.5) should have a factor of 1
+    pointSizes <- 2 * pointSizes
 
-  # give missing values zero factor
-  pointSizes[is.na(pointSizes)] <- 0
+    # give missing values zero factor
+    pointSizes[is.na(pointSizes)] <- 0
 
-  # multiply with default
-  pointSizes * sizeFactor * defaultPxlVal
-}
+    # multiply with default
+    pointSizes * sizeFactor * defaultPxlVal
+  }
 
 shiftToZero <- function(val, minVal) {
   if (minVal >= 0) {
@@ -805,11 +810,9 @@ setSymbolLegend <- function(map, showLegend, symbolLegend) {
   htmlString <- getSymbolLegend(symbolLegend)
 
   map %>%
-    addControl(
-      html = htmlString,
-      position = "topleft",
-      layerId = "symbolLegend"
-    )
+    addControl(html = htmlString,
+               position = "topleft",
+               layerId = "symbolLegend")
 }
 
 # from: https://stackoverflow.com/questions/41372139/using-diamond-triangle-and-star-shapes-in-r-leaflet
@@ -821,21 +824,37 @@ setSymbolLegend <- function(map, showLegend, symbolLegend) {
 #' @param bg initial background colour
 #' @param col color code or name
 #' @param ... Further graphical parameters that are passed to graphics::points()
-createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transparent", col = "black", ...) {
-  n = length(pch)
-  files = character(n)
-  # create a sequence of png images
-  for (i in seq_len(n)) {
-    f = tempfile(fileext = '.png')
-    png(f, width = width, height = height, bg = bg)
-    par(mar = c(0, 0, 0, 0))
-    plot.new()
-    points(.5, .5, pch = pch[i], col = col[i], cex = min(width, height) / 8, ...)
-    dev.off()
-    files[i] = f
+createPchPointsVec <-
+  function(pch = 16,
+           width = 50,
+           height = 50,
+           bg = "transparent",
+           col = "black",
+           ...) {
+    n = length(pch)
+    files = character(n)
+    # create a sequence of png images
+    for (i in seq_len(n)) {
+      f = tempfile(fileext = '.png')
+      png(f,
+          width = width,
+          height = height,
+          bg = bg)
+      par(mar = c(0, 0, 0, 0))
+      plot.new()
+      points(
+        .5,
+        .5,
+        pch = pch[i],
+        col = col[i],
+        cex = min(width, height) / 8,
+        ...
+      )
+      dev.off()
+      files[i] = f
+    }
+    files
   }
-  files
-}
 
 #' Create PCH Points
 #'
@@ -847,17 +866,40 @@ createPchPointsVec <- function(pch = 16, width = 50, height = 50, bg = "transpar
 #' @param tmpDir directory for storing the icons
 #' @param pattern pattern to be used in filenames
 #' @param ... Further graphical parameters that are passed to graphics::points()
-createPchPoints <- function(pch = 16, width = 50, height = 50, bg = "transparent",
-                            col = "black", tmpDir = tempdir(), pattern = "symbolFile", ...) {
-  file <- tempfile(pattern = pattern, fileext = '.png', tmpdir = tmpDir)
+createPchPoints <-
+  function(pch = 16,
+           width = 50,
+           height = 50,
+           bg = "transparent",
+           col = "black",
+           tmpDir = tempdir(),
+           pattern = "symbolFile",
+           ...) {
+    file <-
+      tempfile(pattern = pattern,
+               fileext = '.png',
+               tmpdir = tmpDir)
 
-  png(file, width = max(width, 1), height = max(height, 1), bg = bg, units = "px")
-  par(mar = c(0, 0, 0, 0))
-  plot.new()
-  points(.5, .5, pch = pch, col = col, cex = min(width, height) / 8, ...)
-  dev.off()
-  file
-}
+    png(
+      file,
+      width = max(width, 1),
+      height = max(height, 1),
+      bg = bg,
+      units = "px"
+    )
+    par(mar = c(0, 0, 0, 0))
+    plot.new()
+    points(
+      .5,
+      .5,
+      pch = pch,
+      col = col,
+      cex = min(width, height) / 8,
+      ...
+    )
+    dev.off()
+    file
+  }
 
 pchChoices <- function() {
   list(
@@ -896,82 +938,88 @@ pchChoices <- function() {
 #' @param df (data.frame) loaded data
 #' @param columnForPointSymbol (character) name of the column that determines the point symbol
 #' @param symbols (numeric) selected symbols
-getPointSymbols <- function(df, columnForPointSymbol, symbols = unlist(pchChoices())) {
-  if (is.null(df) || is.null(columnForPointSymbol))
-    return(NULL)
+getPointSymbols <-
+  function(df,
+           columnForPointSymbol,
+           symbols = unlist(pchChoices())) {
+    if (is.null(df) || is.null(columnForPointSymbol))
+      return(NULL)
 
-  # create default symbols
-  pointSymbol <- 19
+    # create default symbols
+    pointSymbol <- 19
 
-  if (length(symbols) > 0 && !any(symbols %in% c("",  "none"))) {
-    pointSymbol <- symbols[1] %>%
-      as.numeric()
-  }
+    if (length(symbols) > 0 && !any(symbols %in% c("",  "none"))) {
+      pointSymbol <- symbols[1] %>%
+        as.numeric()
+    }
 
-  symbolLegendValues <- c("all" = pointSymbol)
+    symbolLegendValues <- c("all" = pointSymbol)
 
-  # create a list of symbols, one symbol for each point
-  # use list to enable different types of values, we need numeric and ""
-  pointSymbols <- rep(pointSymbol, nrow(df)) %>%
-    as.list()
+    # create a list of symbols, one symbol for each point
+    # use list to enable different types of values, we need numeric and ""
+    pointSymbols <- rep(pointSymbol, nrow(df)) %>%
+      as.list()
 
-  # create symbols based on columnForPointSymbol if there are more than one unique values
-  if (!(columnForPointSymbol %in% c("",  "none"))) {
-    symbolColumn <- df[, columnForPointSymbol] #%>%
+    # create symbols based on columnForPointSymbol if there are more than one unique values
+    if (!(columnForPointSymbol %in% c("",  "none"))) {
+      symbolColumn <- df[, columnForPointSymbol] #%>%
       #as.numeric() %>%
       #suppressWarnings()
 
-    uniqueValues <- unique(na.omit(symbolColumn))
-    if (length(uniqueValues) > 1) {
-      if (length(uniqueValues) > length(symbols)) {
-        # add more symbols if not selected enough, repeat values to fill to full length if needed
-        symbols <- pchChoices() %>%
-          unlist() %>%
-          orderBySelection(pchSel = symbols) %>%
-          rep_len(length.out = length(uniqueValues))
-      } else {
-        # remove symbols if selected too many
-        symbols <- symbols[1:length(uniqueValues)]
+      uniqueValues <- unique(na.omit(symbolColumn))
+      if (length(uniqueValues) > 1) {
+        if (length(uniqueValues) > length(symbols)) {
+          # add more symbols if not selected enough, repeat values to fill to full length if needed
+          symbols <- pchChoices() %>%
+            unlist() %>%
+            orderBySelection(pchSel = symbols) %>%
+            rep_len(length.out = length(uniqueValues))
+        } else {
+          # remove symbols if selected too many
+          symbols <- symbols[1:length(uniqueValues)]
+        }
+
+        # overwrite default symbols based on factors from the symbolColumn
+        pointSymbols <- symbols[symbolColumn %>% as.factor()] %>%
+          as.numeric() %>%
+          as.list()
+
+        # hide missing values: pch == "" means no point is displayed
+        pointSymbols[sapply(pointSymbols, is.na)] <- ""
+
+        # create legend values
+        names(symbols) <- symbolColumn %>% as.factor() %>% levels()
+        symbolLegendValues <- symbols
       }
-
-      # overwrite default symbols based on factors from the symbolColumn
-      pointSymbols <- symbols[symbolColumn %>% as.factor()] %>%
-        as.numeric() %>%
-        as.list()
-
-      # hide missing values: pch == "" means no point is displayed
-      pointSymbols[sapply(pointSymbols, is.na)] <- ""
-
-      # create legend values
-      names(symbols) <- symbolColumn %>% as.factor() %>% levels()
-      symbolLegendValues <- symbols
     }
+
+    list(pointSymbols = pointSymbols, symbolLegendValues = symbolLegendValues)
   }
 
-  list(pointSymbols = pointSymbols, symbolLegendValues = symbolLegendValues)
-}
-
-orderBySelection <- function(pchSel, pchAll = unlist(pchChoices())) {
-  index <- match(pchSel, pchAll)
-  c(pchAll[index], pchAll[-index])
-}
+orderBySelection <-
+  function(pchSel, pchAll = unlist(pchChoices())) {
+    index <- match(pchSel, pchAll)
+    c(pchAll[index], pchAll[-index])
+  }
 
 
 # get Legend HTML String ----
 getSizeLegend <- function(sizeLegend) {
-  path <- system.file("app", "www", package = "MpiIsoApp")
+  path <- system.file("dist", package = "MpiIsoApp")
 
   # remove old icons: remove all files with the pattern "sizeFile"
   removeOldIcons(pattern = "sizeFile", path = path)
 
   # create icon for each point
   iconFiles <- sapply(sizeLegend, function(x) {
-    createPchPoints(pch = 19,
-                    width = 2 * x,
-                    height = 2 * x,
-                    lwd = 1,
-                    tmpDir = path,
-                    pattern = "sizeFile")
+    createPchPoints(
+      pch = 19,
+      width = 2 * x,
+      height = 2 * x,
+      lwd = 1,
+      tmpDir = path,
+      pattern = "sizeFile"
+    )
   })
 
   # create one html string over all used icons
@@ -979,19 +1027,21 @@ getSizeLegend <- function(sizeLegend) {
 }
 
 getSymbolLegend <- function(symbolLegend) {
-  path <- system.file("app", "www", package = "MpiIsoApp")
+  path <- system.file("dist", package = "MpiIsoApp")
 
   # remove old icons: remove all files with the pattern "symbolFile"
   removeOldIcons(pattern = "symbolFile", path = path)
 
   # create icon for each point
   iconFiles <- sapply(symbolLegend, function(x) {
-    createPchPoints(pch = x,
-                    width = 10,
-                    height = 10,
-                    lwd = 1,
-                    tmpDir = path,
-                    pattern = "symbolFile")
+    createPchPoints(
+      pch = x,
+      width = 10,
+      height = 10,
+      lwd = 1,
+      tmpDir = path,
+      pattern = "symbolFile"
+    )
   })
 
   # create one html string over all used icons
@@ -1023,8 +1073,7 @@ getHTMLFromPath <- function(paths) {
     label <- names(paths[x])
     path <- paths[x]
     path <- path %>%
-      gsub(pattern = ".*www", replacement = "")
-    path <- paste0("app/iso-memo-app-beta", path)
+      gsub(pattern = ".*dist", replacement = "IsoMemo")
     sprintf("<img src='%s'> %s", path, label)
   }) %>%
     paste0(collapse = "<br/>")
