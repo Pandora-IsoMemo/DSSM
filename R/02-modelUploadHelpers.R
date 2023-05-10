@@ -15,7 +15,7 @@ unpackSavedMaps <- function(uploadedModel, currentSavedMaps) {
       solveConflictsOfNames(oldList = currentSavedMaps,
                             listType = "Saved map")
   } else {
-    # old format
+    # old format, savedMaps were not included in downloads
     list()
   }
 }
