@@ -4,7 +4,7 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
-#' importDataUI importDataServer updateListNamesIfDuplicate
+#' importDataUI importDataServer updateNameEntryIfDuplicate
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln

@@ -12,7 +12,7 @@ unpackSavedMaps <- function(uploadedModel, currentSavedMaps) {
   if (all(names(uploadedModel) %in% c("currentModel", "savedMaps"))) {
     # new format, version >= 23.05.4
     uploadedModel$savedMaps %>%
-      updateListNamesIfDuplicate(oldList = currentSavedMaps,
+      updateNameEntryIfDuplicate(oldList = currentSavedMaps,
                                  listType = "Saved map")
   } else {
     # old format, savedMaps were not included in downloads
