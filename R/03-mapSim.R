@@ -313,7 +313,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #   "downUpload",
   #   dat = savedMaps,
   #   inputs = input,
-  #   model = list(currentModel = Model, savedMaps = savedMaps),
+  #   model = reactive(list(currentModel = Model(), savedMaps = savedMaps())),
   #   rPackageName = "MpiIsoApp",
   #   githubRepo = "iso-app",
   #   subFolder = "LocateR",

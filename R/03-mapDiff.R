@@ -256,7 +256,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     "downUpload",
     dat = savedMaps,
     inputs = input,
-    model = list(currentModel = MapDiff, savedMaps = savedMaps),
+    model = reactive(list(currentModel = MapDiff(), savedMaps = savedMaps())),
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
     subFolder = "OperatoR",

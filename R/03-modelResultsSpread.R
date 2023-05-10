@@ -479,7 +479,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     "downUpload",
     dat = data,
     inputs = input,
-    model = list(currentModel = Model, savedMaps = savedMaps),
+    model = reactive(list(currentModel = Model(), savedMaps = savedMaps())),
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
     subFolder = "SpreadR",

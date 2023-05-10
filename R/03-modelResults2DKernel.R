@@ -441,7 +441,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     "downUpload",
     dat = data,
     inputs = input,
-    model = list(currentModel = Model, savedMaps = savedMaps),
+    model = reactive(list(currentModel = Model(), savedMaps = savedMaps())),
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
     subFolder = "KernelR",

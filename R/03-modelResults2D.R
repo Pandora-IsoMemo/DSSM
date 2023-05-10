@@ -475,7 +475,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     "downUpload",
     dat = data,
     inputs = input,
-    model = list(currentModel = Model, savedMaps = savedMaps),
+    model = reactive(list(currentModel = Model(), savedMaps = savedMaps())),
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
     subFolder = "AverageR",
