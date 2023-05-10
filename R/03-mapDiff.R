@@ -256,7 +256,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     "downUpload",
     dat = savedMaps,
     inputs = input,
-    model = MapDiff,
+    model = list(currentModel = MapDiff, savedMaps = savedMaps),
     rPackageName = "MpiIsoApp",
     githubRepo = "iso-app",
     subFolder = "OperatoR",
@@ -289,7 +289,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   observe(priority = 10, {
     ## update model ----
-    MapDiff(uploadedData$model)
+    MapDiff(unpackModel(uploadedData$model))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedData$model, currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedData$model)
 
