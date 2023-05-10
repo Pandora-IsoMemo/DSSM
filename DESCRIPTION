@@ -14,7 +14,7 @@ Imports:
     animation,
     coda,
     colourpicker,
-    DataTools (>= 23.04.1),
+    DataTools (>= 23.04.3.1),
     dplyr,
     DT (>= 0.4),
     futile.logger,

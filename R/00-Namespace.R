@@ -4,7 +4,7 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
-#' importDataUI importDataServer
+#' getDatabaseList getMappingTable getRemoteData importDataUI importDataServer
 #' @importFrom dplyr group_by_at select summarise left_join
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
