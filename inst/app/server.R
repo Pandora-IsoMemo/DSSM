@@ -69,5 +69,11 @@ server <- function(input, output, session) {
 
   observeEvent(input$skin, {
     setSkin(input$skin)
+
+    if (input$skin == "isomemo") {
+      updatePickerInput(session,
+                        "dataExplorer-database",
+                        choices = getDatabaseList())
+    }
   })
 }

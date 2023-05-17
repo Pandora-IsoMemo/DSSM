@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.04.1.10
+
+## Bug fixes
+- fixes an error when trying to reach the API without internet connetcion (#157)
+
 ## Version 23.04.1.7
 
 ### Bug Fixes
