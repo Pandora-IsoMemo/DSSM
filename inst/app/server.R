@@ -71,9 +71,9 @@ server <- function(input, output, session) {
     setSkin(input$skin)
 
     if (input$skin == "isomemo") {
-      updatePickerInput(session,
-                        "dataExplorer-database",
-                        choices = getDatabaseList())
+      shinyWidgets::updatePickerInput(session,
+                                      "dataExplorer-database",
+                                      choices = getDatabaseList())
     }
   })
 }
