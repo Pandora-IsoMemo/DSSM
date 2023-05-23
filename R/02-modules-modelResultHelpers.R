@@ -64,7 +64,7 @@ centerEstimateUI <- function(id, title = "") {
 #' @param id namespace id
 #' @param meanCenter (reactive) mean for center
 #' @param sdCenter (reactive) error for center
-#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by cluster",
+#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
 #'  "Spread", "Speed", "Minima/Maxima"
 centerEstimateServer <-
   function(id, meanCenter, sdCenter, mapType = reactiveVal("Map")) {
@@ -74,7 +74,7 @@ centerEstimateServer <-
 
                    centerEstimateMaps <- c("Map", "Spread")
                    # check which maps have the text in the previous version:
-                   # currently not included: "Time course", "Time intervals by cluster",
+                   # currently not included: "Time course", "Time intervals by temporal group or cluster",
                    # "Speed" (a map but no meanCenter, sdCenter in the output available),
                    # "Minima/Maxima"
 
