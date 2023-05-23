@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.05.4
+
+### Updates
+- option in KernelTimeR to choose between temporal group or spatial cluster
+
 ## Version 23.05.3
 
 ### New Features
