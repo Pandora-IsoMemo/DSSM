@@ -208,7 +208,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           )
         ),
         conditionalPanel(
-          condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by cluster'",
+          condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by temporal group or cluster'",
           ns = ns,
           # possibly add input for timerange also later ----
           sliderInput(inputId = ns("trange"),
@@ -236,7 +236,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
-                       choices = c("Map", "Time course", "Time intervals by cluster"),
+                       choices = c("Map", "Time course", "Time intervals by temporal group or cluster"),
                        selected = "Map"),
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
@@ -357,9 +357,13 @@ modelResults3DKernelUI <- function(id, title = ""){
               # checkboxInput(inputId = ns("clusterAll"),
               #               label = "Show all cluster locations",
               #               value = FALSE, width = "100%"),
+              radioButtons(inputId = ns("clusterResults"),
+                           label = "Select grouping:",
+                           choices = c("Temporal Grouping" = 0, "Spatial Clustering" = 1),
+                           selected = 0),
               radioButtons(inputId = ns("clusterAll"),
                            label = "Cluster visibility",
-                           choices = c("Show only spatial centroids" = "-2", "Show only temporal centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
+                           choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
                            selected = "0", width = "100%"),
 
               selectInput(inputId = ns("clusterCol"), label = "Colour palette for points",
@@ -1037,13 +1041,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
-      if(input$mapType == "Time intervals by cluster"){
+      if(input$mapType == "Time intervals by temporal group or cluster"){
         withProgress({
           plotTimeIntervals(model,
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
                             clusterCol = input$clusterCol,
+                            clusterResults = input$clusterResults,
                             ...)
         },
           value = 0,
@@ -1108,6 +1113,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           AxisLSize = input$AxisLSize,
           cluster = input$cluster,
           clusterAll = input$clusterAll,
+          clusterResults = input$clusterResults,
           clusterCol = input$clusterCol,
           pointDat = pointDatOK,
           ...
@@ -1211,20 +1217,21 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$cluster)){
+      if(!is.null(Model()$data$spatial_cluster)){
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster",
-                                         "cluster_geo_centroid_long",
-                                         "cluster_geo_centroid_lat",
-                                         "cluster_temp_centroid_long",
-                                         "cluster_temp_centroid_lat",
+        modelData <- merge(modelData[, c("spatial_cluster",
+                                         "temporal_group",
+                                         "long_centroid_spatial_cluster",
+                                         "lat_centroid_spatial_cluster",
+                                         "long_temporal_group_reference_point",
+                                         "lat_temporal_group_reference_point",
                                          "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
-        modelData <- modelData[!is.na(modelData$cluster_geo_centroid_long),]
+        modelData <- modelData[!is.na(modelData$long_centroid_spatial_cluster),]
         return(modelData)
       } else {
         allData <- data()

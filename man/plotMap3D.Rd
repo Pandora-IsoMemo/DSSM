@@ -63,6 +63,7 @@ plotMap3D(
   AxisLSize = 1,
   cluster = FALSE,
   clusterAll = "0",
+  clusterResults = 0,
   clusterCol = "Set1",
   pointDat = NULL,
   plotRetNull = FALSE
@@ -187,6 +188,8 @@ of a series of spatial points}
 \item{cluster}{show clusters}
 
 \item{clusterAll}{show all cluster points}
+
+\item{clusterResults}{temporal groups or spatial clusters}
 
 \item{clusterCol}{Cluster colors}
 
