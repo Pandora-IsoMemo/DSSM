@@ -63,7 +63,7 @@ server <- function(input, output, session) {
 
     if (!is.null(params$skin) && params$skin %in% allowedSkins()) {
       setSkin(params$skin)
-      updateRadioButtons(session, "skin", selected = params$skin)
+      shiny::updateRadioButtons(session, "skin", selected = params$skin)
     }
   })
 
@@ -71,9 +71,9 @@ server <- function(input, output, session) {
     setSkin(input$skin)
 
     if (input$skin == "isomemo") {
-      updatePickerInput(session,
-                        "dataExplorer-database",
-                        choices = getDatabaseList())
+      shinyWidgets::updatePickerInput(session,
+                                      "dataExplorer-database",
+                                      choices = getDatabaseList())
     }
   })
 }
