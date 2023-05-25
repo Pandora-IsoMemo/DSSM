@@ -13,7 +13,7 @@ centerEstimateServer(id, meanCenter, sdCenter, mapType = reactiveVal("Map"))
 
 \item{sdCenter}{(reactive) error for center}
 
-\item{mapType}{(reactive) type of plot, either "Map", "Time course", "Time intervals by cluster",
+\item{mapType}{(reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
 "Spread", "Speed", "Minima/Maxima"}
 }
 \description{

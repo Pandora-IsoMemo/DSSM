@@ -2224,9 +2224,10 @@ estimateMapKernel <- function(data,
     clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
     data$cluster <- clust$cluster
     clust <- as.data.frame(clust$centers)
-    names(clust) <- c("cluster_geo_centroid_long", "cluster_geo_centroid_lat")
+    names(clust) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
   } else if (clusterMethod == "mclust"){
 
     numClusters <- seq(nClustRange[1],nClustRange[2])
@@ -2245,9 +2246,10 @@ estimateMapKernel <- function(data,
 
     # merge cluster centers
     cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
-    colnames(cluster_centers) <- c("cluster_geo_centroid_long", "cluster_geo_centroid_lat")
+    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
     cluster_centers$cluster <- 1:nrow(cluster_centers)
     data <- merge(data, cluster_centers, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
@@ -2595,10 +2597,11 @@ estimateMap3DKernel <- function(data,
     ## Filtered data ----
     dataC$cluster <- clust$cluster
     clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
-    names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
+    names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
     dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","cluster_geo_centroid_long","cluster_geo_centroid_lat")], by = "id")
+    data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
     data$id <- NULL
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
 
@@ -2622,9 +2625,10 @@ estimateMap3DKernel <- function(data,
                                                         as.matrix(clusterCentroids))^2)))
 
     clust <- clusterCentroids
-    names(clust) <- c("cluster_temp_centroid_long", "cluster_temp_centroid_lat")
+    names(clust) <- c("long_temporal_group_reference_point", "lat_temporal_group_reference_point")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
   } else if (clusterMethod == "mclust"){
   # MCLUST Clustering ----
     data$id <- 1:nrow(data)
@@ -2661,10 +2665,11 @@ estimateMap3DKernel <- function(data,
     ## Filtered data ----
     dataC$cluster <- cluster_solution$classification
     clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
-    names(clust_centroid) <- c("cluster","cluster_geo_centroid_long","cluster_geo_centroid_lat")
+    names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
     dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","cluster_geo_centroid_long","cluster_geo_centroid_lat")], by = "id")
+    data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
     data$id <- NULL
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
     dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
 
@@ -2691,9 +2696,10 @@ estimateMap3DKernel <- function(data,
     }
 
     clust <- clusterCentroids
-    names(clust) <- c("cluster_temp_centroid_long", "cluster_temp_centroid_lat")
+    names(clust) <- c("long_temporal_group_reference_point", "lat_temporal_group_reference_point")
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
   }
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL

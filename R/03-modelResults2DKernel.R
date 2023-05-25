@@ -918,12 +918,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$cluster)){
+      if(!is.null(Model()$data$spatial_cluster)){
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "cluster_geo_centroid_long", "cluster_geo_centroid_lat", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       } else {
