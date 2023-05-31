@@ -6,19 +6,19 @@ name: Docker
 # documentation.
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'
-  push:
-    branches: [ main, beta ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    schedule:
+        - cron: "0 0 * * 0"
+    push:
+        branches: [main, beta]
+        # Publish semver tags as releases.
+        tags: ["v*.*.*"]
+    workflow_dispatch: # manually running a workflow
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
+    # Use docker.io for Docker Hub if empty
+    REGISTRY: ghcr.io
+    # github.repository as <account>/<repo>
+    IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
