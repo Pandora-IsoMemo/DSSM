@@ -28,7 +28,7 @@ dataExplorerUI <- function(id, title = "") {
           pickerInput(
             inputId = ns("database"),
             label = "Database selection:",
-            choices = getDatabaseList(),
+            choices = c("No database. No connection or API down!" = ""),
             options = list(
               `actions-box` = FALSE,
               size = 10,
@@ -215,6 +215,7 @@ dataExplorerServer <- function(id) {
                    dataColumns(NULL)
                    isoData(NULL)
 
+                   req(input$database)
                    withProgress({
                      d <- getRemoteData(input$database)
 

@@ -4,12 +4,12 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
-#' importDataUI importDataServer
+#'  getDatabaseList getMappingTable getRemoteData importDataUI importDataServer
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
-#'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab
+#'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
 #' @importFrom graphics axis filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off png pdf pdfFonts
@@ -21,6 +21,7 @@
 #'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
+#' @importFrom magick image_animate image_join image_read image_write
 #' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d

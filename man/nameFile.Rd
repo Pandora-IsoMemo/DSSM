@@ -4,7 +4,7 @@
 \alias{nameFile}
 \title{Name File}
 \usage{
-nameFile(plotType, exportType, isTimeSeries, i = NULL)
+nameFile(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
 }
 \arguments{
 \item{plotType}{(character) plot specification}
@@ -12,6 +12,8 @@ nameFile(plotType, exportType, isTimeSeries, i = NULL)
 \item{exportType}{(character) file type of exported plot}
 
 \item{isTimeSeries}{(logical) if TRUE, set file names for a series of plots}
+
+\item{typeOfSeries}{one of "gifAndZip", "onlyZip", "onlyGif"}
 
 \item{i}{(numeric) number of i-th plot of a series of plots}
 }

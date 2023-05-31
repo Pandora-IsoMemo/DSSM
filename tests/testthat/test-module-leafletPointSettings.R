@@ -160,7 +160,8 @@ test_that("Test getPointSize", {
   expect_equal(getPointSize(df = testDf, columnForPointSize = "e")$pointSizes,
                c(2, 7.30237467018469, 8))
   expect_equal(getPointSize(df = testDf, columnForPointSize = "e")$sizeLegendValues,
-               c(`2` = 7.65699208443271))
+               c(`1.5` = 2.37994722955145, `1.7` = 4.49076517150396, `1.8` = 5.54617414248021,
+                 `2` = 7.65699208443271))
 })
 
 test_that("Test getPointSymbols", {
