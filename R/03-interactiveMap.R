@@ -246,7 +246,8 @@ interactiveMap <- function(input, output, session, isoData) {
         showLegend = leafletPointValues$showColourLegend,
         title = leafletPointValues$columnForPointColour,
         pal = leafletPointValues$pointColourPalette,
-        values = isoData()[[leafletPointValues$columnForPointColour]]
+        values = getColourCol(isoData(),
+                              colName = leafletPointValues$columnForPointColour)
       )
   })
 

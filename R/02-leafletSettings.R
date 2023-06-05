@@ -11,27 +11,27 @@ leafletSettingsUI <- function(id, title = "") {
       ns("LeafletType"),
       label = "Map type",
       choices = list(
-        `borders & names`= c(
-        "CartoDB Positron" = "CartoDB.Positron",
-        "OpenStreetMap Mapnik" = "OpenStreetMap.Mapnik",
-        "OpenStreetMap DE" = "OpenStreetMap.DE",
-        "OpenTopoMap" = "OpenTopoMap",
-        "Stamen TonerLite" = "Stamen.TonerLite",
-        "Esri" = "Esri",
-        "Esri WorldTopoMap" = "Esri.WorldTopoMap",
-        "Esri OceanBasemap" = "Esri.OceanBasemap"
+        `borders & names`= list(
+        "CartoDB.Positron",
+        "OpenStreetMap.Mapnik",
+        "OpenStreetMap.DE",
+        "OpenTopoMap",
+        "Stamen.TonerLite",
+        "Esri",
+        "Esri.WorldTopoMap",
+        "Esri.OceanBasemap"
       ),
-      `only borders`= c(
-        "CartoDB Positron No Labels" = "CartoDB.PositronNoLabels"
+      `only borders`= list(
+        "CartoDB.PositronNoLabels"
       ),
-      `plain maps`= c(
-        "Esri WorldImagery" = "Esri.WorldImagery",
-        "Esri WorldTerrain" = "Esri.WorldTerrain",
-        "Esri WorldShadedRelief" = "Esri.WorldShadedRelief",
-        "Esri WorldPhysical" = "Esri.WorldPhysical"
+      `plain maps`= list(
+        "Esri.WorldImagery",
+        "Esri.WorldTerrain",
+        "Esri.WorldShadedRelief",
+        "Esri.WorldPhysical"
       ),
-      `custom maps` = c(
-        "Stamen.Watercolor" = "Stamen.Watercolor"
+      `custom maps` = list(
+        "Stamen.Watercolor"
       )
     ),
     options = list(create = TRUE)
@@ -87,7 +87,7 @@ leafletSettingsUI <- function(id, title = "") {
              align = "right",
              actionButton(ns(
                "centerMapButton"
-             ), "Center map"))
+             ), "Center map", width = "100%"))
     ),
     conditionalPanel(
       condition = "input.fitBounds == true",

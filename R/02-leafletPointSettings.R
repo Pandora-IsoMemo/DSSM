@@ -5,7 +5,7 @@ leafletPointSettingsUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    checkboxInput(ns("clusterPoints"), "Cluster data points"),
+    checkboxInput(ns("clusterPoints"), "Cluster points"),
     conditionalPanel(
       condition = "input.clusterPoints == false",
       ns = ns,
@@ -182,31 +182,31 @@ pointColourServer <- function(id, loadedData) {
                  colourValues <- reactiveValues()
 
                  observeEvent(input$showColourLegend, {
+                   logDebug("Update showColourLegend")
                    colourValues$showColourLegend <- input$showColourLegend
                  })
 
                  observeEvent(loadedData(), {
-                   if (!is.null(loadedData())) {
-                     selectedDefault <- ifelse("source" %in% colnames(loadedData()),
-                                               "source",
-                                               colnames(loadedData())[1])
+                   logDebug("Update loadedData()")
+                   if (is.null(loadedData())) {
+                     choices <- c("[Fixed]" = "")
                    } else {
-                     selectedDefault <- character(0)
+                     choices <- c("[Fixed]" = "", colnames(loadedData()))
                    }
 
                    updateSelectInput(
                      session = session,
                      "columnForPointColour",
-                     choices = colnames(loadedData()),
-                     selected = selectedDefault
+                     choices = choices
                    )
                    updateCheckboxInput(session = session,
                                        "showColourLegend",
                                        value = TRUE)
-                 })
 
-                 observeEvent(input$columnForPointColour, {
-                   colourValues$columnForPointColour <- input$columnForPointColour
+                   colourValues$columnForPointColour <- ""
+                   colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
+                     getColourPal(paletteName = input$paletteName,
+                                  isReversePalette = input$isReversePalette)
                  })
 
                  observeEvent(
@@ -216,30 +216,19 @@ pointColourServer <- function(id, loadedData) {
                      input$columnForPointColour
                    ),
                    {
-                     if (is.null(loadedData()) ||
-                         is.null(input$columnForPointColour))
-                       colourValues$pointColourPalette <- NULL
-
-                     if (!is.null(loadedData()) &&
-                         !is.null(input$columnForPointColour)) {
-                       colourColumn <- loadedData()[[input$columnForPointColour]]
-
-                       if (is.numeric(colourColumn)) {
-                         pal <- colorNumeric(
-                           palette = input$paletteName,
-                           domain = colourColumn,
-                           reverse = input$isReversePalette
-                         )
-                       } else {
-                         pal <- colorFactor(
-                           palette = input$paletteName,
-                           domain = colourColumn,
-                           reverse = input$isReversePalette
-                         )
-                       }
-
-                       colourValues$pointColourPalette <- pal
+                     logDebug("Update colourValues")
+                     if (is.null(input$columnForPointColour)) {
+                       colourValues$columnForPointColour <- ""
+                     } else {
+                       colourValues$columnForPointColour <- input$columnForPointColour
                      }
+
+                     colourValues$pointColourPalette <- getColourCol(
+                       loadedData(),
+                       colName = input$columnForPointColour
+                     ) %>%
+                       getColourPal(paletteName = input$paletteName,
+                                    isReversePalette = input$isReversePalette)
                    }
                  )
 
@@ -289,18 +278,15 @@ pointSizeServer <- function(id, loadedData) {
                  observe({
                    if (is.null(loadedData())) {
                      choices <- c("[Fixed]" = "")
-                     selectedDefault <- ""
                      showLegendVal <- FALSE
                    } else {
                      numCols <- numericColumns(loadedData())
                      if (length(numCols) == 0) {
                        choices <- c("[Fixed] (No numeric columns ...)" = "")
-                       selectedDefault <- ""
                        showLegendVal <- FALSE
                      } else {
                        choices <- c("[Fixed]" = "", numCols)
                      }
-                     selectedDefault <- ""
                      showLegendVal <- TRUE
                    }
 
@@ -308,13 +294,13 @@ pointSizeServer <- function(id, loadedData) {
                      session = session,
                      "columnForPointSize",
                      choices = choices,
-                     selected = selectedDefault
+                     selected = ""
                    )
                    updateCheckboxInput(session = session, "showSizeLegend", value = showLegendVal)
 
                    radiusAndLegend <- getPointSize(
                      df = loadedData(),
-                     columnForPointSize = selectedDefault,
+                     columnForPointSize = "",
                      sizeFactor = input$sizeFactor
                    )
                    sizeValues$pointRadius <-
@@ -614,8 +600,9 @@ drawSymbolsOnMap <-
       return(map)
 
     # create colour for each point
+    colourCol <- getColourCol(isoData, colName = columnForColour)
     colourList <-
-      lapply(colourPal(isoData[[columnForColour]]), col2rgb)
+      lapply(colourPal(colourCol), col2rgb)
     colourVec <- sapply(1:nrow(isoData), function(i) {
       rgb(
         red = colourList[[i]][1],
@@ -669,7 +656,7 @@ cleanDataFromMap <- function(map) {
 #' @param pal colour palette
 #' @param values possible values that can be mapped, e.g. isoData$source
 setColorLegend <- function(map, showLegend, title, pal, values) {
-  if (showLegend && !is.null(pal)) {
+  if (showLegend && !is.null(pal) && !is.null(values)) {
     map <- map %>%
       addLegend("topleft",
                 pal = pal,
@@ -681,6 +668,38 @@ setColorLegend <- function(map, showLegend, title, pal, values) {
   }
 
   map
+}
+
+getColourPal <- function(colourCol, paletteName, isReversePalette) {
+  if (is.null(colourCol)) return(NULL)
+
+  if (is.numeric(colourCol)) {
+    pal <- colorNumeric(
+      palette = paletteName,
+      domain = colourCol,
+      reverse = isReversePalette
+    )
+  } else {
+    pal <- colorFactor(
+      palette = paletteName,
+      domain = colourCol,
+      reverse = isReversePalette
+    )
+  }
+
+  pal
+}
+
+getColourCol <- function(dat, colName) {
+  if (is.null(colName) || is.null(dat)) return(NULL)
+
+  colourCol <- dat[[colName]]
+  if (is.null(colourCol)) {
+    # print error ?? into some new attr()?
+    colourCol <- rep("all", nrow(dat))
+  }
+
+  colourCol
 }
 
 # Point Size ----
