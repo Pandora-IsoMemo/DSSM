@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.05.5
+## Version 23.06.0
 
 ### New Features
 - _Export of Saved maps_ is now included within the feature to down- and upload models (#2)
