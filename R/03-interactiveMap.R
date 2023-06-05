@@ -236,7 +236,7 @@ interactiveMap <- function(input, output, session, isoData) {
 
   observe({
     req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]])
-
+    logDebug("Reload points")
     withProgress({
       leafletProxy("map") %>%
         updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
@@ -256,7 +256,8 @@ interactiveMap <- function(input, output, session, isoData) {
         showLegend = leafletPointValues$showColourLegend,
         title = leafletPointValues$columnForPointColour,
         pal = leafletPointValues$pointColourPalette,
-        values = isoData()[[leafletPointValues$columnForPointColour]]
+        values = getColourCol(isoData(),
+                              colName = leafletPointValues$columnForPointColour)
       )
   })
 
