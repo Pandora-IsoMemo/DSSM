@@ -3,7 +3,7 @@
 ## Version 23.06.0
 ### Bug Fixes
 - _Interactive Map_:
-  - fix option to use a fixed point colour
+  - fix option to use a fixed point colour (#161)
 
 ## Version 23.05.4
 
