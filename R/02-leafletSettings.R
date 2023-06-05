@@ -87,7 +87,7 @@ leafletSettingsUI <- function(id, title = "") {
              align = "right",
              actionButton(ns(
                "centerMapButton"
-             ), "Center map"))
+             ), "Center map", width = "100%"))
     ),
     conditionalPanel(
       condition = "input.fitBounds == true",

@@ -234,6 +234,16 @@ interactiveMap <- function(input, output, session, isoData) {
     }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
   })
 
+  observe({
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]])
+
+    withProgress({
+      leafletProxy("map") %>%
+        updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+    }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
+  }) %>%
+    bindEvent(input[["mapPointSettings-reloadPoints"]])
+
   # show / hide legend ----
   observe({
     req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
