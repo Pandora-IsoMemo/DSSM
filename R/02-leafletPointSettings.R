@@ -5,13 +5,7 @@ leafletPointSettingsUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    fluidRow(column(6,
-                    checkboxInput(ns("clusterPoints"), "Cluster points")),
-             column(width = 6,
-                    align = "right",
-                    actionButton(ns("reloadPoints"),
-                                 "Reload points",
-                                 width = "100%"))),
+    checkboxInput(ns("clusterPoints"), "Cluster points"),
     conditionalPanel(
       condition = "input.clusterPoints == false",
       ns = ns,
