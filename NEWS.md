@@ -5,7 +5,7 @@
 ### Updates
 - add spinner to indicate that app is initializing
 - optimize loading of tabs when initializing
-- use DataTools 23.06.1 fixes issues with importing data without internet connection
+- use DataTools 23.06.1 to fix issues with importing data without internet connection (#157)
 
 ## Version 23.06.0
 
