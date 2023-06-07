@@ -1,11 +1,17 @@
 # MpiIsoApp development version
 
-## Version 23.06.0
+## Version 23.06.1
 
 ### New Features
 - _Export of Saved maps_ is now included within the feature to down- and upload models (#2)
   - additionally, the list of saved models is downloaded
   - upload checks for a list of saved maps and loads it if it is available
+
+## Version 23.06.0
+
+### Bug Fixes
+- _Interactive Map_:
+  - fix option to use a fixed point colour (#161)
 
 ## Version 23.05.4
 
