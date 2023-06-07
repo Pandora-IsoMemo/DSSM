@@ -478,7 +478,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     bindEvent(uploadedData$model)
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 

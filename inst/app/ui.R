@@ -7,23 +7,21 @@ tagList(
     position = "fixed-top",
     collapsible = TRUE,
     id = "tab",
-    #paste("IsoMemo app", packageVersion("MpiIsoApp")),
     dataExplorerUI("dataExplorer", "Data"),
     interactiveMapUI("interactivemap", "Interactive map"),
-    navbarMenu("Modeling",
-               modelResults2DUI("model2D", "AverageR"),
-               modelResults3DUI("model3D", "TimeR"),
-               modelResultsSpreadUI("spread", "SpreadR"),
-               modelResults2DKernelUI("model2DKernel", "KernelR"),
-               modelResults3DKernelUI("model3DKernel", "KernelTimeR"),
-               modelResultsDiffUI("difference", "OperatoR"),
-               modelResultsSimUI("similarity", "LocateR"),
-               modelResultsAssignUI("assign", "AssignR")
-               ),
-    # added via appendTab() inside server.R:
-    #savedMapsTabUI("svmt", "Saved maps"),
-    if (reSourcesInstalled()) ReSources::fruitsUI("fruits", "ReSources")
-    else NULL
+    if (!isOnlyDataSearchMode()) navbarMenu("Modeling",
+                                            modelResults2DUI("model2D", "AverageR"),
+                                            modelResults3DUI("model3D", "TimeR"),
+                                            modelResultsSpreadUI("spread", "SpreadR"),
+                                            modelResults2DKernelUI("model2DKernel", "KernelR"),
+                                            modelResults3DKernelUI("model3DKernel", "KernelTimeR"),
+                                            modelResultsDiffUI("difference", "OperatoR"),
+                                            modelResultsSimUI("similarity", "LocateR"),
+                                            modelResultsAssignUI("assign", "AssignR")
+    ) else NULL,
+    if (!isOnlyDataSearchMode()) savedMapsTabUI("svmt", "Saved/Create maps") else NULL,
+    if (isOnlyDataSearchMode()) modelLinkUI("modelLink", title = "Modeling") else NULL,
+    if (reSourcesInstalled()) ReSources::fruitsUI("fruits", "ReSources") else NULL
   ),
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "IsoMemo/custom.css"),

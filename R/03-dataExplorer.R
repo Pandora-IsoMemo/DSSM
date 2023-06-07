@@ -143,7 +143,7 @@ dataExplorerUI <- function(id, title = "") {
         shinyjs::hidden(
           div(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"), id = ns("previewText"))
         ),
-        DT::dataTableOutput(ns("dataTable"))
+        DT::dataTableOutput(ns("dataTable")) %>% withSpinner(color = "#20c997")
       )
     )
   )

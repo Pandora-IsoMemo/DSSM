@@ -521,7 +521,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     bindEvent(uploadedData$model)
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
