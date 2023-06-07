@@ -58,13 +58,15 @@ server <- function(input, output, session) {
     }
   })
 
+  databaseList <- reactive(DataTools::getDatabaseList())
+
   observeEvent(input$skin, {
     setSkin(input$skin)
 
     if (input$skin == "isomemo") {
       shinyWidgets::updatePickerInput(session,
                                       "dataExplorer-database",
-                                      choices = DataTools::getDatabaseList())
+                                      choices = databaseList())
     }
   })
 }

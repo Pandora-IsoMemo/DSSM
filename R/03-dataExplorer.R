@@ -6,6 +6,7 @@
 #' @export
 dataExplorerUI <- function(id, title = "") {
   ns <- NS(id)
+  mappingTbl <- getMappingTable()
 
   tabPanel(
     title,
@@ -42,9 +43,10 @@ dataExplorerUI <- function(id, title = "") {
           tags$hr(),
           tags$h4("Select categories"),
           unname(lapply(
-            categoryChoices(getMappingTable()),
+            categoryChoices(mappingTbl),
             combineCheckboxSelectize,
-            ns = ns
+            ns = ns,
+            mappingTbl = mappingTbl
           ))
         ),
         conditionalPanel(
@@ -149,8 +151,8 @@ dataExplorerUI <- function(id, title = "") {
   )
 }
 
-combineCheckboxSelectize <- function(x, ns) {
-  choices <- columnChoices(x, getMappingTable(), FALSE)
+combineCheckboxSelectize <- function(x, ns, mappingTbl) {
+  choices <- columnChoices(x, mappingTbl, FALSE)
   selected <- FALSE
   label <- x
   x <- gsub(" ", "", x)
@@ -482,14 +484,14 @@ dataExplorerServer <- function(id) {
                      fromJSON(paste0(readLines(optionsFile$datapath)))
 
                    loadOptions(session, opt, mappingTable())
-                 })
-
+                 }) %>%
+                   bindEvent(input$optionsFile)
 
                  ## Output TABLE ----
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),
-                     "Please select a database in the sidebar panel."
+                     "Please import data (Pandora skin) or select a database (IsoMemo skin) in the sidebar panel."
                    ))
                    if(!is.na(input[["maxCharLength"]])){
                      # cut long strings
