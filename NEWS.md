@@ -1,6 +1,14 @@
 # MpiIsoApp development version
 
+## Version 23.06.1
+
+### Updates
+- add spinner to indicate that app is initializing
+- optimize loading of tabs when initializing
+- use DataTools 23.06.1 fixes issues with importing data without internet connection
+
 ## Version 23.06.0
+
 ### Bug Fixes
 - _Interactive Map_:
   - fix option to use a fixed point colour (#161)

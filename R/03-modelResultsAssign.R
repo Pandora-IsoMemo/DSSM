@@ -258,7 +258,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     bindEvent(uploadedData$model)
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     data <- data()
     if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
       if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
