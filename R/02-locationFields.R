@@ -72,26 +72,33 @@ locationFieldsServer <-
                    observeEvent(list(input$coordType, dataRaw()), {
                      req(dataRaw())
 
-                     # get possible column names for lat long
-                     if (input$coordType == "decimal degrees") {
-                       latLongChoices <- partialNumericColumns(dataRaw())
-                       if (length(latLongChoices) == 0) {
-                         latLongChoices <- c("no numeric columns ..." = "")
-                       }
+                     if (length(dataRaw()) == 0 && !is.null(attr(dataRaw, "error"))) {
+                       latLongChoices <- c("")
+                       names(latLongChoices) <- attr(dataRaw, "error")
+                       defaultLongCol <- ""
+                       defaultLatCol <- ""
                      } else {
-                       latLongChoices <- colnames(dataRaw())
+                       # get possible column names for lat long
+                       if (input$coordType == "decimal degrees") {
+                         latLongChoices <- partialNumericColumns(dataRaw())
+                         if (length(latLongChoices) == 0) {
+                           latLongChoices <- c("no numeric columns ..." = "")
+                         }
+                       } else {
+                         latLongChoices <- colnames(dataRaw())
+                       }
+
+                       # get default column names
+                       defaultLongCol <- getDefaultCoordColumn(
+                         columnNames = colnames(dataRaw()),
+                         tryPattern = c("longitude", "^long$", "^lng$")
+                       )
+
+                       defaultLatCol <- getDefaultCoordColumn(
+                         columnNames = colnames(dataRaw()),
+                         tryPattern = c("latitude", "^lat$")
+                       )
                      }
-
-                     # get default column names
-                     defaultLongCol <- getDefaultCoordColumn(
-                       columnNames = colnames(dataRaw()),
-                       tryPattern = c("longitude", "^long$", "^lng$")
-                     )
-
-                     defaultLatCol <- getDefaultCoordColumn(
-                       columnNames = colnames(dataRaw()),
-                       tryPattern = c("latitude", "^lat$")
-                     )
 
                      # update inputs
                      updateSelectInput(session,
