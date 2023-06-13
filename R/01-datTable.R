@@ -64,8 +64,15 @@ getChoicesFromIsomemoApi <- function(apiOutput) {
     choices <- c("")
     names(choices) <- attr(apiOutput, "error")
     } else {
-    choices <- apiOutput
-  }
+      choices <- apiOutput
+
+      if ("IsoMemo" %in% choices) {
+        # rename label
+        namesChoices <- names(choices)
+        namesChoices[choices == "IsoMemo"] <- "IsoMemo - Humans"
+        names(choices) <- namesChoices
+      }
+    }
 
   choices
 }

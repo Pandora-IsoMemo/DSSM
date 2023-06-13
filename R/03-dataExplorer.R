@@ -20,12 +20,12 @@ dataExplorerUI <- function(id, title = "") {
           "skin",
           ## no namespace to make it easier to use it across tabs
           "Skin",
-          choices = c("Pandora" = "pandora", "IsoMemo" = "isomemo"),
+          choices = c("Pandora" = "pandora", "Ontological schemas" = "isomemo"),
           selected = "pandora"
         ),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          selectInput(ns("mappingId"), "Set Network", choices = c("IsoMemo")),
+          selectInput(ns("mappingId"), "Select schema", choices = c("IsoMemo - Humans" = "IsoMemo")),
           pickerInput(
             inputId = ns("database"),
             label = "Database selection",
@@ -226,7 +226,7 @@ dataExplorerServer <- function(id) {
                    ))
                  })
 
-                 # maybe not needed, can only be savely tested when we have more mappingIds
+                 # maybe not needed, can only be savely tested when we have more than one mappingId
                  # observe({
                  #   lapply(
                  #     categoryChoices(mappingTable()),
