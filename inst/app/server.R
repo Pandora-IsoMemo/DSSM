@@ -67,11 +67,11 @@ server <- function(input, output, session) {
     if (input$skin == "isomemo") {
       updateSelectInput(session,
                         "dataExplorer-mappingId",
-                        choices = getChoicesFromIsomemoApi(mappingIds()))
+                        choices = extractChoicesFromIsomemoApi(mappingIds()))
 
       shinyWidgets::updatePickerInput(session,
                                       "dataExplorer-database",
-                                      choices = getChoicesFromIsomemoApi(databaseList()))
+                                      choices = extractChoicesFromIsomemoApi(databaseList()))
     }
   })
 }

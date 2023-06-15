@@ -57,7 +57,12 @@ getDataColumns <- function(mapping, input){
 
 }
 
-getChoicesFromIsomemoApi <- function(apiOutput) {
+#' Extract Choices From Isomemo Api
+#'
+#' @param apiOutput output from the isomemo api
+#'
+#' @export
+extractChoicesFromIsomemoApi <- function(apiOutput) {
   if (is.null(apiOutput) || (length(apiOutput) == 0 && is.null(attr(apiOutput, "error")))) {
     choices <- c("No API output" = "")
   } else if (length(apiOutput) == 0 && !is.null(attr(apiOutput, "error"))) {
