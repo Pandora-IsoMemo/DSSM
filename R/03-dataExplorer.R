@@ -533,7 +533,7 @@ dataExplorerServer <- function(id) {
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),
-                     "Please import data (Pandora skin) or select a database (IsoMemo skin) in the sidebar panel."
+                     "Please import data (Skin: Pandora) or select a database (Skin: Ontological schemas) in the sidebar panel."
                    ))
 
                    if(!is.na(input[["maxCharLength"]]) && length(isoDataFull()) > 0){
