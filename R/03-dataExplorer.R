@@ -6,7 +6,6 @@
 #' @export
 dataExplorerUI <- function(id, title = "") {
   ns <- NS(id)
-  mappingTbl <- getMappingTable()
 
   tabPanel(
     title,
@@ -21,15 +20,17 @@ dataExplorerUI <- function(id, title = "") {
           "skin",
           ## no namespace to make it easier to use it across tabs
           "Skin",
-          choices = c("Pandora" = "pandora", "IsoMemo" = "isomemo"),
+          choices = c("Pandora" = "pandora", "Ontological schemas" = "isomemo"),
           selected = "pandora"
         ),
+        tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
+          selectInput(ns("mappingId"), "Select schema", choices = c("IsoMemo - Humans" = "IsoMemo")),
           pickerInput(
             inputId = ns("database"),
-            label = "Database selection:",
-            choices = c("No database. No connection or API down!" = ""),
+            label = "Database selection",
+            choices = character(0),
             options = list(
               `actions-box` = FALSE,
               size = 10,
@@ -42,18 +43,17 @@ dataExplorerUI <- function(id, title = "") {
           tags$br(),
           tags$hr(),
           tags$h4("Select categories"),
-          unname(lapply(
-            categoryChoices(mappingTbl),
-            combineCheckboxSelectize,
-            ns = ns,
-            mappingTbl = mappingTbl
-          ))
+          uiOutput(ns("categorySelection"))
         ),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
-          tags$h4("Radiocarbon Calibration Fields"),
+          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields")
+        ),
+        tags$hr(),
+        tags$h4("Radiocarbon Calibration Fields"),
+        conditionalPanel(
+          condition = "input.skin == 'pandora'",
           selectInput(
             ns("calibrationDatingType"),
             "Date Type",
@@ -76,10 +76,9 @@ dataExplorerUI <- function(id, title = "") {
             ns = ns
           )
         ),
-        tags$hr(),
         selectInput(
           inputId = ns("calMethod"),
-          label = "Calibration method (optional):",
+          label = "Method (optional)",
           choices = c(
             "none",
             "intcal20",
@@ -95,21 +94,24 @@ dataExplorerUI <- function(id, title = "") {
         ),
         numericInput(
           inputId = ns("calLevel"),
-          label = "Calibration range",
+          label = "Range",
           min = 0.5,
           max = 0.99,
           value = 0.95,
           step  = 0.01
         ),
         tags$hr(),
-        detectDuplicatesUI(id = ns("detectDuplicates")),
-        tags$hr(),
-        downloadButton(ns("saveOptions"), "Save data selection"),
-        fileInput(
-          ns("optionsFile"),
-          label = "",
-          buttonLabel = "Load data selection"
+        conditionalPanel(
+          condition = "input.skin == 'isomemo'",
+          downloadButton(ns("saveOptions"), "Save data selection"),
+          fileInput(
+            ns("optionsFile"),
+            label = "",
+            buttonLabel = "Load data selection"
+          ),
+          tags$hr()
         ),
+        detectDuplicatesUI(id = ns("detectDuplicates")),
         tags$hr(),
         actionButton(ns("export"), "Export Data"),
         tags$hr(),
@@ -182,6 +184,11 @@ combineCheckboxSelectize <- function(x, ns, mappingTbl) {
   )
 }
 
+updateCheckboxSelectize <- function(x, session, mappingTbl) {
+  choices <- columnChoices(x, mappingTbl, FALSE)
+  x <- gsub(" ", "", x)
+  updatePickerInput(session, paste0("selectColumns", x), choices = choices, selected = choices)
+}
 
 #' server funtion of data explorer module
 #'
@@ -195,7 +202,7 @@ dataExplorerServer <- function(id) {
                  ns <- session$ns
 
                  mappingTable <- reactive({
-                   getMappingTable()
+                   getMappingTable(mappingId = input[["mappingId"]])
                  })
 
                  isoDataRaw <- reactiveVal(NULL)
@@ -209,6 +216,34 @@ dataExplorerServer <- function(id) {
                    inputData = isoDataFull
                  )
 
+                 output$categorySelection <- renderUI({
+                   validate(need(mappingTable(), "No mapping table!"))
+
+                   errorMsg <- "An error occurred. No mapping table!"
+                   if (!is.null(attr(mappingTable(), "error"))) {
+                     errorMsg <- attr(mappingTable(), "error")
+                   }
+                   validate(need(length(mappingTable()) > 0, errorMsg))
+
+                   unname(lapply(
+                     categoryChoices(mappingTable()),
+                     combineCheckboxSelectize,
+                     ns = ns,
+                     mappingTbl = mappingTable()
+                   ))
+                 })
+
+                 # maybe not needed, can only be savely tested when we have more than one mappingId
+                 # observe({
+                 #   lapply(
+                 #     categoryChoices(mappingTable()),
+                 #     updateCheckboxSelectize,
+                 #     session = session,
+                 #     mappingTbl = mappingTable()
+                 #   )
+                 # }) %>%
+                 #   bindEvent(input$mappingId)
+
                  ## Load Data (isomemo skin) ----
                  observeEvent(input$load, {
                    # reset isoData
@@ -219,8 +254,7 @@ dataExplorerServer <- function(id) {
 
                    req(input$database)
                    withProgress({
-                     d <- getRemoteData(input$database)
-
+                     d <- getRemoteData(input$database, mappingId = input[["mappingId"]])
                      isoDataRaw(d)
                    },
                    value = 0.75,
@@ -257,17 +291,24 @@ dataExplorerServer <- function(id) {
 
                    isoDataRaw(d)
 
+                   if (!is.null(attr(isoDataRaw(), "error"))) {
+                     calibrationChoices <- c("")
+                     names(calibrationChoices) <- attr(isoDataRaw(), "error")
+                   } else {
+                     calibrationChoices <- partialNumericColumns(isoDataRaw())
+                   }
+
                    updateSelectInput(session, "calibrationDateMean",
-                                     choices = partialNumericColumns(isoDataRaw()))
+                                     choices = calibrationChoices)
                    updateSelectInput(session,
                                      "calibrationDateUncertainty",
-                                     choices = partialNumericColumns(isoDataRaw()))
+                                     choices = calibrationChoices)
                    updateSelectInput(session,
                                      "calibrationDateIntLower",
-                                     choices = partialNumericColumns(isoDataRaw()))
+                                     choices = calibrationChoices)
                    updateSelectInput(session,
                                      "calibrationDateIntUpper",
-                                     choices = partialNumericColumns(isoDataRaw()))
+                                     choices = calibrationChoices)
 
                    #updateSelectInput(session, "calibrationDatingType", choices = characterColumns(isoDataRaw()))
                  })
@@ -288,9 +329,9 @@ dataExplorerServer <- function(id) {
                                    calibrateMethod(),
                                    calLevel(),
                                    isoDataRaw()), {
-                   req(isoDataRaw())
-                   d <- isoDataRaw()
+                   req(length(isoDataRaw()) > 0)
 
+                   d <- isoDataRaw()
                    if (getSkin() == "isomemo") {
                      dateFields <- list(
                        "dateMean" = "dateMean",
@@ -466,6 +507,7 @@ dataExplorerServer <- function(id) {
                    filename = "options.json",
                    content = function(file) {
                      options <- list(
+                       schema = input$mappingId,
                        database = input$database,
                        columns = dataColumns(),
                        calibrateMethod = input$calMethod
@@ -491,9 +533,10 @@ dataExplorerServer <- function(id) {
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),
-                     "Please import data (Pandora skin) or select a database (IsoMemo skin) in the sidebar panel."
+                     "Please import data (Skin: Pandora) or select a database (Skin: Ontological schemas) in the sidebar panel."
                    ))
-                   if(!is.na(input[["maxCharLength"]])){
+
+                   if(!is.na(input[["maxCharLength"]]) && length(isoDataFull()) > 0){
                      # cut long strings
                      tabData <- cutAllLongStrings(isoDataFull(), cutAt = input[["maxCharLength"]])
                      # use uncut column names
@@ -502,7 +545,17 @@ dataExplorerServer <- function(id) {
                      tabData <- isoDataFull()
                    }
                    req(dataColumns())
-                   datTable(tabData, columns = dataColumns())
+                   tblOut <- datTable(tabData, columns = dataColumns())
+
+                   errorMsg <- "An error occurred. No data loaded!"
+                   validate(need(tblOut, errorMsg))
+
+                   if (!is.null(attr(tblOut, "error"))) {
+                     errorMsg <- attr(tblOut, "error")
+                   }
+                   validate(need(length(tblOut) > 0, errorMsg))
+
+                   tblOut
                  })
 
                  decriptionTableClick <- reactive({
@@ -597,7 +650,11 @@ getDescriptionFull <- function(id, isoDataFull) {
 }
 
 loadOptions <- function(session, opt, mapping) {
-  if (any(names(opt) != c("database", "columns", "calibrateMethod"))) {
+  if (
+    # new format
+    !all(names(opt) %in% c("schema", "database", "columns", "calibrateMethod")) ||
+    # old format
+      !all(c("database", "columns", "calibrateMethod") %in% names(opt))) {
     showModal(
       modalDialog(
         "Could not read file with saved options",
@@ -607,6 +664,10 @@ loadOptions <- function(session, opt, mapping) {
     )
     return(NULL)
   }
+
+  updateSelectInput(session,
+                    "mappingId",
+                    selected = opt$schema)
 
   updateCheckboxGroupInput(session,
                            "database",

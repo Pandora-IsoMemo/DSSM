@@ -1,5 +1,10 @@
 # MpiIsoApp development version
 
+## Version 23.06.2
+
+## New Features
+- _Tab Data_: new input to select an ontological schema, e.g. the "IsoMemo" schema (#102)
+
 ## Version 23.06.1
 
 ### Updates

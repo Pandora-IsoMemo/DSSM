@@ -3,7 +3,7 @@
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
-#' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer
+#' @importFrom DataTools cutAllLongStrings downUploadButtonUI downUploadButtonServer getMappingIds
 #'  getDatabaseList getMappingTable getRemoteData importDataUI importDataServer
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
