@@ -1,11 +1,16 @@
 # MpiIsoApp development version
 
-## Version 23.06.2
+## Version 23.06.3
 
 ### New Features
 - _Export of Saved maps_ is now included within the feature to down- and upload models (#2)
   - additionally, the list of saved models is downloaded
   - upload checks for a list of saved maps and loads it if it is available
+
+## Version 23.06.2
+
+## New Features
+- _Tab Data_: new input to select an ontological schema, e.g. the "IsoMemo" schema (#102)
 
 ## Version 23.06.1
 

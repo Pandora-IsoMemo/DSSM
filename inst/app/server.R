@@ -58,15 +58,20 @@ server <- function(input, output, session) {
     }
   })
 
-  databaseList <- reactive(DataTools::getDatabaseList())
+  mappingIds <- reactive(DataTools::getMappingIds())
+  databaseList <- reactive(DataTools::getDatabaseList(mappingId = input[["dataExplorer-mappingId"]]))
 
   observeEvent(input$skin, {
     setSkin(input$skin)
 
     if (input$skin == "isomemo") {
+      updateSelectInput(session,
+                        "dataExplorer-mappingId",
+                        choices = extractChoicesFromIsomemoApi(mappingIds()))
+
       shinyWidgets::updatePickerInput(session,
                                       "dataExplorer-database",
-                                      choices = databaseList())
+                                      choices = extractChoicesFromIsomemoApi(databaseList()))
     }
   })
 }
