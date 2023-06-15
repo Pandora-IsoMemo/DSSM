@@ -34,8 +34,7 @@ locationFieldsUI <- function(id, title = "") {
       ),
     #),
     selectInput(ns("longitude"), "Longitude", choices = NULL),
-    selectInput(ns("latitude"), "Latitude", choices = NULL),
-    tags$hr()
+    selectInput(ns("latitude"), "Latitude", choices = NULL)
   )
 }
 

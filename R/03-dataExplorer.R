@@ -23,6 +23,7 @@ dataExplorerUI <- function(id, title = "") {
           choices = c("Pandora" = "pandora", "Ontological schemas" = "isomemo"),
           selected = "pandora"
         ),
+        tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
           selectInput(ns("mappingId"), "Select schema", choices = c("IsoMemo - Humans" = "IsoMemo")),
@@ -47,8 +48,12 @@ dataExplorerUI <- function(id, title = "") {
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
-          tags$h4("Radiocarbon Calibration Fields"),
+          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields")
+        ),
+        tags$hr(),
+        tags$h4("Radiocarbon Calibration Fields"),
+        conditionalPanel(
+          condition = "input.skin == 'pandora'",
           selectInput(
             ns("calibrationDatingType"),
             "Date Type",
@@ -71,10 +76,9 @@ dataExplorerUI <- function(id, title = "") {
             ns = ns
           )
         ),
-        tags$hr(),
         selectInput(
           inputId = ns("calMethod"),
-          label = "Calibration method (optional)",
+          label = "Method (optional)",
           choices = c(
             "none",
             "intcal20",
@@ -90,21 +94,24 @@ dataExplorerUI <- function(id, title = "") {
         ),
         numericInput(
           inputId = ns("calLevel"),
-          label = "Calibration range",
+          label = "Range",
           min = 0.5,
           max = 0.99,
           value = 0.95,
           step  = 0.01
         ),
         tags$hr(),
-        detectDuplicatesUI(id = ns("detectDuplicates")),
-        tags$hr(),
-        downloadButton(ns("saveOptions"), "Save data selection"),
-        fileInput(
-          ns("optionsFile"),
-          label = "",
-          buttonLabel = "Load data selection"
+        conditionalPanel(
+          condition = "input.skin == 'isomemo'",
+          downloadButton(ns("saveOptions"), "Save data selection"),
+          fileInput(
+            ns("optionsFile"),
+            label = "",
+            buttonLabel = "Load data selection"
+          ),
+          tags$hr()
         ),
+        detectDuplicatesUI(id = ns("detectDuplicates")),
         tags$hr(),
         actionButton(ns("export"), "Export Data"),
         tags$hr(),
@@ -500,6 +507,7 @@ dataExplorerServer <- function(id) {
                    filename = "options.json",
                    content = function(file) {
                      options <- list(
+                       schema = input$mappingId,
                        database = input$database,
                        columns = dataColumns(),
                        calibrateMethod = input$calMethod
@@ -642,7 +650,11 @@ getDescriptionFull <- function(id, isoDataFull) {
 }
 
 loadOptions <- function(session, opt, mapping) {
-  if (any(names(opt) != c("database", "columns", "calibrateMethod"))) {
+  if (
+    # new format
+    !all(names(opt) %in% c("schema", "database", "columns", "calibrateMethod")) ||
+    # old format
+      !all(c("database", "columns", "calibrateMethod") %in% names(opt))) {
     showModal(
       modalDialog(
         "Could not read file with saved options",
@@ -652,6 +664,10 @@ loadOptions <- function(session, opt, mapping) {
     )
     return(NULL)
   }
+
+  updateSelectInput(session,
+                    "mappingId",
+                    selected = opt$schema)
 
   updateCheckboxGroupInput(session,
                            "database",
