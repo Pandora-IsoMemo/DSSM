@@ -34,6 +34,7 @@
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
+#' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
