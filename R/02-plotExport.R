@@ -163,6 +163,7 @@ exportGraphicSeries <- function(exportType, file,
                                 typeOfSeries, reverseGif, fpsGif) {
   withProgress(message = "Generating series ...", value = 0, {
     times <- seq(minTime, maxTime, by = abs(intTime))
+    if (reverseGif && typeOfSeries != "onlyZip") times <- rev(times)
 
     figFileNames <- sapply(times,
                            function(i) {
@@ -194,11 +195,9 @@ exportGraphicSeries <- function(exportType, file,
       zipr(zipfile = file, files = figFileNames)
     }
     if (typeOfSeries == "onlyGif") {
-      if (reverseGif) figFileNames <- rev(figFileNames)
       generateGif(gifFile = file, files = figFileNames, fps = fpsGif)
     }
     if (typeOfSeries == "gifAndZip") {
-      if (reverseGif) figFileNames <- rev(figFileNames)
       generateGif(gifFile = paste0(modelType, ".gif"), files = figFileNames, fps = fpsGif)
       zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
       unlink(paste0(modelType, ".gif"))
