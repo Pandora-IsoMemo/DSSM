@@ -74,7 +74,7 @@ modelResultsSimUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -600,7 +600,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     }
   })
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

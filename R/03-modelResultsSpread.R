@@ -179,7 +179,7 @@ modelResultsSpreadUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -883,7 +883,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

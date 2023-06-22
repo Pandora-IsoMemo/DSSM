@@ -212,7 +212,7 @@ modelResults3DUI <- function(id, title = ""){
           )),
           conditionalPanel(
             condition = conditionPlot(ns("DistMap")),
-            textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+            htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
             tags$br(),
             tags$br(),
@@ -517,7 +517,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

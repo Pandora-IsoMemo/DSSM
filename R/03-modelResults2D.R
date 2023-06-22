@@ -176,7 +176,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
           tags$br(),
           tags$br(),
@@ -892,7 +892,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     zoom = 50
   )
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

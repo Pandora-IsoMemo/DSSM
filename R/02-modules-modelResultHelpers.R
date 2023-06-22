@@ -98,7 +98,7 @@ centerEstimateServer <-
                          latitude = predictions()$Latitude,
                          longitude = predictions()$Longitude,
                          digits = 10
-                       )
+                       ) * 111
                      gridLength(gridL)
 
                      transformedRadius <- input$Radius / 111
@@ -144,7 +144,7 @@ centerEstimateServer <-
 
                      req(meanCenter(), sdCenter())
                      centerEstimateText(
-                       paste0(
+                       HTML(paste0(
                          "Mean: ",
                          round(meanCenter(), digits = input$decimalPlace),
                          ", Standard error of the mean: ",
@@ -156,13 +156,13 @@ centerEstimateServer <-
                          input$centerX,
                          "\u00B0) for a ",
                          round(input$Radius, 3),
-                         " km radius"#,
-                         # "\n",
-                         # "Resolution (grid length in degree of latitude, longitude): ",
-                         # paste(round(gridLength(), digits = input$decimalPlace), collapse = ", ")
+                         " km radius",
+                         "<br/>",
+                         "Grid length for latitude, longitude (Plot resolution): ",
+                         paste(round(gridLength(), digits = input$decimalPlace), collapse = " km, "),
+                         " km"
                        )
-                     )
-
+                     ))
                    })
 
                    list(

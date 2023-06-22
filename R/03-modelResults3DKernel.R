@@ -173,7 +173,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -509,7 +509,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

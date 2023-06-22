@@ -140,7 +140,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -834,7 +834,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     zoom = 50
   )
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
