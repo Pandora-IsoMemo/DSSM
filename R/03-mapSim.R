@@ -215,8 +215,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     simDataList = list(),
     simDataTemp = list(),
     predictionList = list(),
-    sdCenter = NA,
-    meanCenter = NA,
     set = 0,
     upperLeftLongitude = NA,
     upperLeftLatitude = NA,
@@ -594,8 +592,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     updateTextInput(session, "saveMapName", value = "")
   })
 
-
-
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
     res <- plotFun()()
@@ -603,8 +599,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       alert(res)
     } else {
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
     }
   })
@@ -690,5 +684,4 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   callModule(plotExport, "export", reactive(values$plot), "similarity",
              reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData)
-
 }

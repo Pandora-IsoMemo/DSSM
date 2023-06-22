@@ -823,16 +823,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
   values <- reactiveValues(
     plot = NULL,
     predictions = NULL,
-    meanCenter = NA,
-    sdCenter = NA,
     up = 0,
     right = 0,
     set = 0,

@@ -1061,8 +1061,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 

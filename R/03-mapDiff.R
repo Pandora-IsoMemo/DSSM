@@ -584,12 +584,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       res <- plotFun()()
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(plot = NULL, predictions = NULL, sdCenter = NA, meanCenter = NA,
+  values <- reactiveValues(plot = NULL, predictions = NULL,
                            set = 0,
                            upperLeftLongitude = NA,
                            upperLeftLatitude = NA,
