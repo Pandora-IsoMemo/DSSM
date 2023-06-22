@@ -12,7 +12,6 @@ plotTimeCourse(
   resolution = 500,
   centerX = NA,
   centerY = NA,
-  Radius = NA,
   rangey = NULL,
   seType = "2",
   pointDat = NULL,
@@ -38,8 +37,6 @@ plotTimeCourse(
 \item{centerX}{longitude value to display time course plot for}
 
 \item{centerY}{latitude value to display time course plot for}
-
-\item{Radius}{radius of fixed spatial point estimate}
 
 \item{rangey}{2-element vector of time interval to show}
 

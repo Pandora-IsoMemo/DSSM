@@ -29,11 +29,6 @@
 #' @param maskRadius numeric: Show output within range of points in km
 #' @param limitz restrict range of z (possible values "0-1", "0-100")
 #' @param rangez range of estimated values (z axis limits)
-#' @param centerX optional. longitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param centerY optional. latitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param Radius radius of fixed spatial point estimate
 #' @param dataCenter optional data.frame with two columns (longitude / latitude) for batch estimates
 #' of a series of spatial points
 #' @param RadiusBatch radius of batch spatial point estimates
@@ -91,7 +86,6 @@ plotMap <- function(model,
                     fontCol = "black",
                     mask = FALSE,
                     maskRadius = 100,
-                    centerX = NA, centerY = NA, Radius = NA,
                     pColor = "#000000",
                     dataCenter = NULL, RadiusBatch = NULL, terrestrial = 1,
                     grid = TRUE, arrow = TRUE, scale = TRUE, mapType = "Map",
@@ -167,7 +161,6 @@ plotMap <- function(model,
 
   sc <- model$sc
   if (is.null(data)) return(NULL)
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
   maskRadius <- maskRadius / 111
 
@@ -444,12 +437,6 @@ plotMap <- function(model,
   # keep $Est in XPred for later calculation of mean and sd
   XPred$EstForCenter <- XPred$Est
 
-  XPredCenter <- XPred %>%
-    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius)
-
-  centerEstimates <- XPredCenter %>%
-    extractCenterEstimates(digits = 5)
-
   if (interior == TRUE){
     # this step can remove all $Est
     XPred$Est[draw == 0] <- NA
@@ -511,7 +498,7 @@ plotMap <- function(model,
         labs(title=paste0("Comparison of local ", MinMax, "ima")) + xlab("")
 
     print(g)
-    return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
+    return(list(XPred = XPred))
     }
   }
 
@@ -963,7 +950,7 @@ plotMap <- function(model,
     }
   }
 
-  return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
+  return(list(XPred = XPred))
 }
 
 #' Plots time slice map of a spatio-temporal model from estimateMap3D() function
@@ -996,12 +983,6 @@ plotMap <- function(model,
 #' @param limitz restrict range of z (possible values "0-1", "0-100")
 #' @param rangez range of estimated values (z axis limits)
 #' @param centerMap center of map, one of "Europe" and "Pacific"
-#' @param centerX optional. longitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param centerY optional. latitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param Radius radius of fixed spatial point estimate for batch estimates
-#' of a series of spatial points
 #' @param dataCenter optional data.frame with three columns (longitude / latitude / time)
 #' @param RadiusBatch radius of batch spatial point estimates
 #' @param textLabels text labels
@@ -1061,7 +1042,7 @@ plotMap3D <- function(model,
                       fontCol = "black",
                       resolution = 100, interior = TRUE,
                       ncol = 10, colors = "RdYlGn", reverseColors = FALSE,
-                      centerX = NA, centerY = NA, Radius = NA, dataCenter = NULL,
+                      dataCenter = NULL,
                       RadiusBatch = 100, terrestrial = 1,
                       grid = TRUE, arrow = TRUE, scale = TRUE,
                       titleMain = TRUE,
@@ -1136,7 +1117,6 @@ plotMap3D <- function(model,
 
   if (is.null(data)) return(NULL)
 
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
   maskRadius <- maskRadius / 300
   dataT <- data[data$Date + 2 * data$Uncertainty + addU >= time  &
@@ -1462,15 +1442,6 @@ plotMap3D <- function(model,
   # keep $Est for later calculation of mean and sd for center
   XPred$EstForCenter <- XPred$Est
 
-  # nolint start
-  XPredCenter <- XPred %>%
-    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius,
-                       isThreeD = TRUE, data = data)
-  # nolint end
-
-  centerEstimates <- XPredCenter %>%
-    extractCenterEstimates(digits = 5)
-
   if (interior > 0){
     # this can remove all $Est
     XPred$Est[draw == 0] <- NA
@@ -1750,7 +1721,7 @@ plotMap3D <- function(model,
   if(plotRetNull){
     return(NULL)
   } else {
-    return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
+    return(list(XPred = XPred))
   }
 }
 
@@ -1771,9 +1742,6 @@ plotMap3D <- function(model,
 #' @param rangex range of longitude values (x axis limits)
 #' @param rangey range of latitude values (y axis limits)
 #' @param rangez range of estimated values (z axis limits)
-#' @param centerX center (x coordinate)
-#' @param centerY center (x coordinate)
-#' @param Radius radius
 #' @param showScale show colour scale
 #' @param centerMap center of map, one of "Europe" and "Pacific"
 #' @param showValues boolean show values in plot?
@@ -1810,7 +1778,6 @@ plotDS <- function(XPred,
                    showScale = TRUE,
                    ncol = 10, colors = "RdYlGn",
                    centerMap = "Europe",
-                   centerX = NA, centerY = NA, Radius = NA,
                    reverseColors = FALSE, terrestrial = 1, grid = TRUE,
                    arrow = TRUE, scale = TRUE,
                    simValues = NULL,
@@ -1833,7 +1800,6 @@ plotDS <- function(XPred,
                    AxisLSize = 1,
                    pointDat = NULL){
   options(scipen=999)
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
 
   minRangeFactor <- 0.75
@@ -1935,10 +1901,8 @@ plotDS <- function(XPred,
                            n = pmin(20, ceiling(ncol / 2)))
   }
 
-  XPredCenter <- XPred %>%
-    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius)
-  centerEstimates <- XPredCenter %>%
-    extractCenterEstimates(digits = 5)
+  # keep $Est for later calculation of mean and sd for center
+  XPred$EstForCenter <- XPred$Est
 
   if(centerMap != "Europe"){
     XPredPac <- XPred
@@ -2099,7 +2063,7 @@ plotDS <- function(XPred,
 
     }
   }
-  return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
+  return(list(XPred = XPred))
 }
 
 filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
@@ -2231,7 +2195,6 @@ north.arrow = function(x, y, h, c, adj) {
 #' @param resolution temporal grid resolution of displayed (higher is slower but better quality)
 #' @param centerX longitude value to display time course plot for
 #' @param centerY latitude value to display time course plot for
-#' @param Radius radius of fixed spatial point estimate
 #' @param rangey 2-element vector of time interval to show
 #' @param seType setype
 #' @param pointDat add points/lines to plot
@@ -2246,7 +2209,7 @@ north.arrow = function(x, y, h, c, adj) {
 plotTimeCourse <- function(model, IndSelect = NULL,
                            independent = "", trange = range(model$data$Date),
                            resolution = 500, centerX = NA,
-                           centerY = NA, Radius = NA, rangey = NULL,
+                           centerY = NA, rangey = NULL,
                            seType = "2",
                            pointDat = NULL,
                            pointsTime = FALSE,

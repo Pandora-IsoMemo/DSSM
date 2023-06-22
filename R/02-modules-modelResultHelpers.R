@@ -77,8 +77,7 @@ centerEstimateServer <-
                    centerEstimateMaps <- c("Map", "Spread")
                    # check which maps have the text in the previous version:
                    # currently not included: "Time course", "Time intervals by temporal group or cluster",
-                   # "Speed" (a map but no meanCenter, sdCenter in the output available),
-                   # "Minima/Maxima"
+                   # SpreadR tab: "Speed" (a map but no meanCenter, sdCenter in the output available), "Minima/Maxima"
 
                    output$isCenterEstimateMap <- reactive({
                      mapType() %in% centerEstimateMaps
@@ -102,11 +101,12 @@ centerEstimateServer <-
                        )
                      gridLength(gridL)
 
+                     transformedRadius <- input$Radius / 111
                      predictionsCenter <- predictions() %>%
                        extractXPredCenter(
                          centerX = input$centerX,
                          centerY = input$centerY,
-                         Radius = input$Radius
+                         Radius = transformedRadius
                        )
 
                      centerEstimates <-
@@ -156,7 +156,10 @@ centerEstimateServer <-
                          input$centerX,
                          "\u00B0) for a ",
                          round(input$Radius, 3),
-                         " km radius"
+                         " km radius"#,
+                         # "\n",
+                         # "Resolution (grid length in degree of latitude, longitude): ",
+                         # paste(round(gridLength(), digits = input$decimalPlace), collapse = ", ")
                        )
                      )
 
