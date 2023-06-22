@@ -929,8 +929,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
@@ -1058,6 +1057,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
         req(zSettings$estType)
 
+        # PLOT MAP ----
       if(input$mapType == "Map"){
         plotMap3D(
           model,

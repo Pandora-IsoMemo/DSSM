@@ -667,8 +667,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         predictions = reactive(values$predictions))
+
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -757,6 +757,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,

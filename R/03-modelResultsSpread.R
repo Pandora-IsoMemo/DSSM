@@ -718,9 +718,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
+
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
@@ -808,6 +808,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,

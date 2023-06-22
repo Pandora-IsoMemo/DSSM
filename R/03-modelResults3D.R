@@ -881,8 +881,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
@@ -972,6 +971,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         }
       }
 
+      # PLOT MAP ----
       if(input$mapType == "Time course"){
         plotTimeCourse(model,
                        IndSelect = input$IndSelect,

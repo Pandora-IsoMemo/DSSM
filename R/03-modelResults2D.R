@@ -722,8 +722,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         predictions = reactive(values$predictions))
 
   plotFun <- reactive({
     function(model, ...){
@@ -815,6 +814,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       req(zSettings$estType)
 
+# PLOT MAP ----
       plotMap(
         model,
         IndSelect = input$IndSelect,
@@ -879,6 +879,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     withProgress({
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
+
     values$predictions <- res$XPred
     values$meanCenter <- res$meanCenter
     values$sdCenter <- res$sdCenter

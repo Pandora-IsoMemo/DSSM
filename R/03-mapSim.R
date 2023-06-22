@@ -188,15 +188,7 @@ modelResultsSimUI <- function(id, title = ""){
           sliderInput(inputId = ns("ncol"),
                       label = "Approximate number of colour levels",
                       min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          sliderInput(inputId = ns("Radius"),
-                      label = "Radius (km)",
-                      min = 10, max = 300, value = 100, step = 10, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -465,6 +457,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     return(pointDat2D())
   })
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         predictions = reactive(values$predictions))
 
   plotFun <-  reactive({
     validate(validInput(Model()))
@@ -531,6 +525,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
 
     req(zSettings$estType)
 
+    # PLOT MAP ----
     function(...){
       plotDS(Model(),
              type = "similarity",
@@ -549,9 +544,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              centerMap = input$Centering,
              arrow = input$arrow,
              scale = input$scale,
-             centerX = input$centerX,
-             centerY = input$centerY,
-             Radius = input$Radius,
+             centerX = centerEstimate$centerX(),
+             centerY = centerEstimate$centerY(),
+             Radius = centerEstimate$radius(),
              simValues = values$simDataListM,
              showValues = input$showValues,
              titleMain = !input$titleMain,
@@ -615,19 +610,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   })
 
   output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius)) return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+    centerEstimate$text()
   })
 
   zoomFromModel <- reactiveVal(50)
