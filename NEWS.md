@@ -3,7 +3,9 @@
 ## Version 23.06.3
 
 ## New Features
-- _Modeling tabs_: The text for center point estimates now contains the underlying grid length (#169)
+- _Modeling tabs_: The text for center point estimates 
+  - now contains the underlying grid length (#169)
+  - can be hidden again by removing inputs for latitude and longitude
 
 ## Bug Fixes
 - removed recalculation of predictions when changing the latitude or longitude for center estimates
