@@ -1,5 +1,13 @@
 # MpiIsoApp development version
 
+## Version 23.06.3
+
+## New Features
+- _Modeling tabs_: The text for center point estimates now contains the underlying grid length (#169)
+
+## Bug Fixes
+- removed recalculation of predictions when changing the latitude or longitude for center estimates
+
 ## Version 23.06.2
 
 ## New Features
