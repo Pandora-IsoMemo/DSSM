@@ -393,28 +393,30 @@ plotMap <- function(model,
     }
   }
 
-
   if (!is.null(dataCenter)){
-    XPredCenter <- lapply(1:nrow(dataCenter),
-                          function(x){ XPred[sqrt((XPred$Longitude - dataCenter[x, 1]) ^ 2 +
-                                                    (XPred$Latitude - dataCenter[x, 2]) ^ 2) <
-                                               RadiusBatch, ]})
+    XPredCenter <- lapply(1:nrow(dataCenter), function(x){
+      XPred %>%
+        extractXPredCenter(centerX = dataCenter[x, 1],
+                           centerY = dataCenter[x, 2],
+                           Radius = RadiusBatch)
+    })
 
-    meanCenter <- sapply(1:nrow(dataCenter),
-                         function(x) signif(mean(XPredCenter[[x]]$Est), 5))
-    sdCenter <- sapply(1:nrow(dataCenter),
-                       function(x) signif(sqrt(sum(sd(XPredCenter[[x]]$Est) ^ 2,
-                                                   mean(XPredCenter[[x]]$Sd) ^ 2,
-                                                   na.rm = TRUE)), 5))
+    centerEstimates <- lapply(1:nrow(dataCenter), function(x){
+      XPredCenter[[x]] %>%
+        extractCenterEstimates(batch = TRUE)
+    })
+    meanCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$mean)
+    sdCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$sd)
+
     IntLower <- sapply(1:nrow(dataCenter),
                        function(x) signif(mean(XPredCenter[[x]]$IntLower), 5))
     IntUpper <- sapply(1:nrow(dataCenter),
                        function(x) signif(mean(XPredCenter[[x]]$IntUpper), 5))
 
-    dataCenter <- cbind(dataCenter, mean = meanCenter, sd = sdCenter,
-                        IntLower = IntLower, IntUpper = IntUpper)
-
-    if(!is.null(XPredCenter[[1]]$SDPop)){
+    if(is.null(XPredCenter[[1]]$SDPop)) {
+      dataCenter <- cbind(dataCenter, mean = meanCenter, sd = sdCenter,
+                          IntLower = IntLower, IntUpper = IntUpper)
+    } else {
       #population SD
       SDPop <- sapply(1:nrow(dataCenter),
                               function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
@@ -439,14 +441,17 @@ plotMap <- function(model,
     return(dataCenter)
   }
 
-  XPredCenter <- XPred[sqrt((XPred$Longitude - centerX) ^ 2 +
-                              (XPred$Latitude - centerY) ^ 2) < Radius, ]
+  # keep $Est in XPred for later calculation of mean and sd
+  XPred$EstForCenter <- XPred$Est
 
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
+  XPredCenter <- XPred %>%
+    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius)
 
-  sdCenter <- signif(sd(XPredCenter$Est) + mean(XPredCenter$Sd), 5)
+  centerEstimates <- XPredCenter %>%
+    extractCenterEstimates(digits = 5)
 
   if (interior == TRUE){
+    # this step can remove all $Est
     XPred$Est[draw == 0] <- NA
   }
   if (mask == TRUE){
@@ -506,7 +511,7 @@ plotMap <- function(model,
         labs(title=paste0("Comparison of local ", MinMax, "ima")) + xlab("")
 
     print(g)
-    return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+    return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
     }
   }
 
@@ -958,7 +963,7 @@ plotMap <- function(model,
     }
   }
 
-  return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+  return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
 }
 
 #' Plots time slice map of a spatio-temporal model from estimateMap3D() function
@@ -1404,66 +1409,70 @@ plotMap3D <- function(model,
       XPred$Est <- pmax(0, XPred$Est)
     }
   }
+
   if (!is.null(dataCenter)){
-    XPredCenter <- lapply(1:nrow(dataCenter),
-                          function(x) XPred[sqrt(((XPred$Longitude2 * sd(data$Longitude) +
-                                                     mean(data$Longitude)) -
-                                                    dataCenter[x, 1]) ^ 2 +
-                                                   ((XPred$Latitude2 * sd(data$Latitude) +
-                                                       mean(data$Latitude)) -
-                                                      dataCenter[x, 2]) ^ 2) < RadiusBatch &
-                                              XPred$time == dataCenter[x, 3], ])
+    XPredCenter <- lapply(1:nrow(dataCenter), function(x){
+      XPred %>%
+        extractXPredCenter(centerX = dataCenter[x, 1],
+                           centerY = dataCenter[x, 2],
+                           Radius = RadiusBatch,
+                           batch = TRUE,
+                           isThreeD = TRUE,
+                           data = data,
+                           time = dataCenter[x, 3])
+    })
 
-    meanCenter <- sapply(1:nrow(dataCenter),
-                         function(x) signif(mean(XPredCenter[[x]]$Est), 5))
-
-    sdCenter <- sapply(1:nrow(dataCenter),
-                       function(x) signif(sum(c(sd(XPredCenter[[x]]$Est),
-                                                mean(XPredCenter[[x]]$Sd)), na.rm = TRUE), 5))
+    centerEstimates <- lapply(1:nrow(dataCenter), function(x){
+      XPredCenter[[x]] %>%
+        extractCenterEstimates(batch = FALSE) # why is sd calculated here differently than in plotMap batch??
+    })
+    meanCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$mean)
+    sdCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$sd)
 
     IntLower <- sapply(1:nrow(dataCenter),
                        function(x) signif(min(XPredCenter[[x]]$IntLower), 5))
     IntUpper <- sapply(1:nrow(dataCenter),
                        function(x) signif(max(XPredCenter[[x]]$IntUpper), 5))
 
-    dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
-                        IntLower = IntLower, IntUpper = IntUpper)
-
-    if(!is.null(XPredCenter[[1]]$SDPop)){
-      SDPop <- sapply(1:nrow(dataCenter),
-                   function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
-
-      sdCenterTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(sqrt(sum(c(sd(XPredCenter[[x]]$Est)^2,
-                                                       mean(XPredCenter[[x]]$Sd^2),
-                                                       mean(XPredCenter[[x]]$SdTotal)^2), na.rm = TRUE)), 5))
-      IntLowerTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(min(XPredCenter[[x]]$IntLowerTotal), 5))
-      IntUpperTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(max(XPredCenter[[x]]$IntUpperTotal), 5))
-
+    if(is.null(XPredCenter[[1]]$SDPop)) {
       dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
-                          SDPop = SDPop,
-                          sdTotal = sdCenterTotal,
-                          IntLower = IntLower, IntUpper = IntUpper,
-                          IntLowerTotal = IntLowerTotal, IntUpperTotal = IntUpperTotal)
-    }
+                          IntLower = IntLower, IntUpper = IntUpper)
+      } else {
+        SDPop <- sapply(1:nrow(dataCenter),
+                        function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
+
+        sdCenterTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(sqrt(sum(c(sd(XPredCenter[[x]]$Est)^2,
+                                                              mean(XPredCenter[[x]]$Sd^2),
+                                                              mean(XPredCenter[[x]]$SdTotal)^2), na.rm = TRUE)), 5))
+        IntLowerTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(min(XPredCenter[[x]]$IntLowerTotal), 5))
+        IntUpperTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(max(XPredCenter[[x]]$IntUpperTotal), 5))
+
+        dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
+                            SDPop = SDPop,
+                            sdTotal = sdCenterTotal,
+                            IntLower = IntLower, IntUpper = IntUpper,
+                            IntLowerTotal = IntLowerTotal, IntUpperTotal = IntUpperTotal)
+      }
     return(dataCenter)
   }
 
+  # keep $Est for later calculation of mean and sd for center
+  XPred$EstForCenter <- XPred$Est
 
   # nolint start
-  XPredCenter <- XPred[sqrt((((XPred$Longitude2 * sd(data$Longitude)) +
-                                mean(data$Longitude)) - centerX) ^ 2 +
-                              (((XPred$Latitude2 * sd(data$Latitude)) +
-                                  mean(data$Latitude)) - centerY) ^ 2) < Radius, ]
+  XPredCenter <- XPred %>%
+    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius,
+                       isThreeD = TRUE, data = data)
   # nolint end
 
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
-
-  sdCenter <- signif(sd(XPredCenter$Est) + mean(XPredCenter$Sd), 5)
+  centerEstimates <- XPredCenter %>%
+    extractCenterEstimates(digits = 5)
 
   if (interior > 0){
+    # this can remove all $Est
     XPred$Est[draw == 0] <- NA
   }
   if (mask == TRUE){
@@ -1473,7 +1482,6 @@ plotMap3D <- function(model,
   if(GAM == TRUE){
     XPred$Est[is.na(XPred$Est) | XPred$Est < 0] <- 0
   }
-
 
   #if (!all(is.na(XPred$Est))){
   levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
@@ -1542,7 +1550,6 @@ plotMap3D <- function(model,
     xlab = "Longitude"
     ylab = "Latitude"
   }
-
 
   filled.contour2(longitudes, latitudes, z = matrix(XPredPlot$Est, ncol = resolution),
                   xlim = rangex, ylim = rangey, levels = levels,
@@ -1743,7 +1750,7 @@ plotMap3D <- function(model,
   if(plotRetNull){
     return(NULL)
   } else {
-    return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+    return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
   }
 }
 
@@ -1928,11 +1935,10 @@ plotDS <- function(XPred,
                            n = pmin(20, ceiling(ncol / 2)))
   }
 
-  XPredCenter <- XPred[sqrt((XPred$Longitude - centerX) ^ 2 +
-                              (XPred$Latitude - centerY) ^ 2) < Radius, ]
-
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
-  sdCenter <- signif(sqrt(sd(XPredCenter$Est)^2 + mean(XPredCenter$Sd)^2), 5)
+  XPredCenter <- XPred %>%
+    extractXPredCenter(centerX = centerX, centerY = centerY, Radius = Radius)
+  centerEstimates <- XPredCenter %>%
+    extractCenterEstimates(digits = 5)
 
   if(centerMap != "Europe"){
     XPredPac <- XPred
@@ -2093,7 +2099,7 @@ plotDS <- function(XPred,
 
     }
   }
-  return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+  return(list(XPred = XPred, sdCenter = centerEstimates$sd, meanCenter = centerEstimates$mean))
 }
 
 filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
