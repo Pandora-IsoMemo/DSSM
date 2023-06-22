@@ -214,6 +214,7 @@ plotMap <- function(model,
     }
   }
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
@@ -387,6 +388,7 @@ plotMap <- function(model,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPredCenter <- lapply(1:nrow(dataCenter), function(x){
       XPred %>%
         extractXPredCenter(centerX = dataCenter[x, 1],
@@ -1218,6 +1220,7 @@ plotMap3D <- function(model,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
@@ -1391,6 +1394,7 @@ plotMap3D <- function(model,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPredCenter <- lapply(1:nrow(dataCenter), function(x){
       XPred %>%
         extractXPredCenter(centerX = dataCenter[x, 1],
@@ -1814,6 +1818,7 @@ plotDS <- function(XPred,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred2 <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
