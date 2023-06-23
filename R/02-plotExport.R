@@ -114,7 +114,9 @@ plotExport <- function(input,
                             width = input$width,
                             height = input$height,
                             plotObj = plotObj(),
-                            predictions = predictions())
+                            predictions = predictions()) %>%
+          suppressWarnings() %>%
+          tryCatchWithWarningsAndErrors(errorTitle = "Export of graphic faild")
       } else {
         exportGraphicSeries(exportType = exportType(),
                             file = file,
@@ -129,7 +131,9 @@ plotExport <- function(input,
                             intTime = input$intTime,
                             typeOfSeries = input$typeOfSeries,
                             reverseGif = input$reverseGif,
-                            fpsGif = input$fpsGif)
+                            fpsGif = input$fpsGif) %>%
+          suppressWarnings() %>%
+          tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics faild")
       }
     }
   )
@@ -195,11 +199,11 @@ exportGraphicSeries <- function(exportType, file,
     }
     if (typeOfSeries == "onlyGif") {
       if (reverseGif) figFileNames <- rev(figFileNames)
-      generateGif(gifFile = file, files = figFileNames, fps = fpsGif)
+      generateGif(gifFile = file, files = figFileNames, exportType = exportType, fps = fpsGif)
     }
     if (typeOfSeries == "gifAndZip") {
       if (reverseGif) figFileNames <- rev(figFileNames)
-      generateGif(gifFile = paste0(modelType, ".gif"), files = figFileNames, fps = fpsGif)
+      generateGif(gifFile = paste0(modelType, ".gif"), files = figFileNames, exportType = exportType, fps = fpsGif)
       zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
       unlink(paste0(modelType, ".gif"))
     }
@@ -248,8 +252,13 @@ writeGeoTiff <- function(XPred, file){
 #' @param gifFile The gif file to create
 #' @param files a list of files, url's, or raster objects or bitmap arrays
 #' @param fps frames per second
-generateGif <- function(gifFile = "animated.gif", files, fps = 1) {
-  image_list <- lapply(files, image_read)
+#' @inheritParams nameFile
+generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
+  image_list <- switch (exportType,
+                        pdf = lapply(files, image_read_pdf),
+                        svg = lapply(files, image_read_svg),
+                        lapply(files, image_read)
+  )
 
   image_list %>%
     image_join() %>%
