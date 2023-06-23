@@ -4,12 +4,14 @@
 \alias{generateGif}
 \title{Generate GIF}
 \usage{
-generateGif(gifFile = "animated.gif", files, fps = 1)
+generateGif(gifFile = "animated.gif", files, exportType, fps = 1)
 }
 \arguments{
 \item{gifFile}{The gif file to create}
 
 \item{files}{a list of files, url's, or raster objects or bitmap arrays}
+
+\item{exportType}{(character) file type of exported plot}
 
 \item{fps}{frames per second}
 }
