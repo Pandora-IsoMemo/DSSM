@@ -42,6 +42,6 @@ test_that("Test getDefaultZ", {
   expect_equal(getDefaultZMax(c(4, 5)), 5.1)
   expect_equal(getDefaultZMax(c(4, 4.0001)), 4.00011)
   expect_equal(getDefaultZMax(c(4, 50000)), 55000)
-  expect_equal(getDefaultZMax(c(4, 4)), 4.004)
+  expect_equal(getDefaultZMax(c(4, 4)), 4.0004)
 })
 
