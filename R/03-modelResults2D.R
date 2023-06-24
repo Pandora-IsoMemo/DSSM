@@ -554,6 +554,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     if(input$fixCol == FALSE){
       if(Model()$IndependentType == "numeric"){
         val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
+        if (val == 0) val <- 0.5
       } else {
         val <- 0.5
       }

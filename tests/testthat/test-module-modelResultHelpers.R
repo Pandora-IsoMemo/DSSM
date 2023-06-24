@@ -32,3 +32,16 @@ test_that("Test getZvalues", {
                list(minInput = list(value = -0.09, min = -0.09, max = 1.1),
                     maxInput = list(value = 1.1, min = -0.09, max = 1.1)))
 })
+
+test_that("Test getDefaultZ", {
+  expect_equal(getDefaultZMin(c(4, 5)), 3.9)
+  expect_equal(getDefaultZMin(c(4, 50000)), -5000)
+  expect_equal(getDefaultZMin(c(4, 4.0001)), 3.99999)
+  expect_equal(getDefaultZMin(c(4, 4)), 3.9996)
+
+  expect_equal(getDefaultZMax(c(4, 5)), 5.1)
+  expect_equal(getDefaultZMax(c(4, 4.0001)), 4.00011)
+  expect_equal(getDefaultZMax(c(4, 50000)), 55000)
+  expect_equal(getDefaultZMax(c(4, 4)), 4.0004)
+})
+
