@@ -1043,18 +1043,30 @@ getDefaultZError <- function(estType, range) {
 #'
 #' @param mean mean from model output
 getDefaultZMin <- function(mean) {
-  signif(mean[1] - 0.1 * diff(mean), which(round(abs(
-    diff(mean) / mean[1] * 10 ^ (0:10)
-  ), 0) > 1)[1])
+  shift <- 0.1 * diff(mean)
+  if (shift == 0) shift <- 0.0001 * mean[1]
+
+  defaultMin <- mean[1] - shift
+
+  digits <- which(round(abs(diff(mean) / mean[1] * 10 ^ (0:10)), 0) > 1)[1]
+  if (is.na(digits)) return(defaultMin)
+
+  signif(defaultMin, digits)
 }
 
 #' Get Default Z Max
 #'
 #' @param mean mean from model output
 getDefaultZMax <- function(mean) {
-  signif(mean[2] + 0.1 * diff(mean), which(round(abs(
-    diff(mean) / mean[2] * 10 ^ (0:10)
-  ), 0) > 1)[1])
+  shift <- 0.1 * diff(mean)
+  if (shift == 0) shift <- 0.0001 * mean[2]
+
+  defaultMax <- mean[2] + shift
+
+  digits <- which(round(abs(diff(mean) / mean[2] * 10 ^ (0:10)), 0) > 1)[1]
+  if (is.na(digits)) return(defaultMax)
+
+  signif(defaultMax, digits)
 }
 
 
