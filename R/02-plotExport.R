@@ -255,8 +255,8 @@ writeGeoTiff <- function(XPred, file){
 #' @inheritParams nameFile
 generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
   image_list <- switch (exportType,
-                        pdf = lapply(files, image_read_pdf),
-                        svg = lapply(files, image_read_svg),
+                        pdf = lapply(files, image_read_pdf), # requires package pdftools
+                        svg = lapply(files, image_read_svg), # requires package rsvg
                         lapply(files, image_read)
   )
 
