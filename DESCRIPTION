@@ -1,6 +1,6 @@
 Package: MpiIsoApp
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 23.06.2.3
+Version: 23.06.2.4
 Author: INWT Statistics GmbH
 Maintainer: INWT <marcus.gross@inwt-statistics.de>
 Description: Shiny App contains: a data explorer tab, an interactive map and a static map, which should present model results.
@@ -32,6 +32,7 @@ Imports:
     mclust,
     mgcv (>= 1.8.23),
     openxlsx (>= 4.0.17),
+    pdftools,
     pgdraw,
     raster (>= 2.6.7),
     rcarbon (>= 1.4.0),
