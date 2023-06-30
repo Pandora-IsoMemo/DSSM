@@ -158,7 +158,7 @@ centerEstimateServer <-
                          round(input$Radius, 3),
                          " km radius",
                          "<br/>",
-                         "Grid length for latitude, longitude (Plot resolution): ",
+                         "Grid length (plot resolution) for latitude, longitude: ",
                          paste(round(gridLength(), digits = input$decimalPlace), collapse = " km, "),
                          " km"
                        )
