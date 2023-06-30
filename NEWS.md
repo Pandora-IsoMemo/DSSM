@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.06.3
+## Version 23.06.4
 
 ## New Features
 - _Modeling tabs_: The text for center point estimates 
@@ -9,6 +9,13 @@
 
 ## Bug Fixes
 - removed recalculation of predictions when changing the latitude or longitude for center estimates
+
+## Version 23.06.3
+
+### Bug Fixes
+- _Export of time series_: 
+  - fixes export of pdf files together with a .gif (#107)
+  - now .gif files are always based on jpeg files, for .gif no conversion from pdf is required anymore
 
 ## Version 23.06.2
 

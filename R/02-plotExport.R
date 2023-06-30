@@ -22,7 +22,7 @@ plotExport <- function(input,
                       selectInput(
                         session$ns("exportType"), "Filetype",
                         choices = c(
-                          "png", "pdf", "svg", "tiff",
+                          "jpeg", "png", "pdf", "svg", "tiff",
                           if(!is.null(predictions())) "geo-tiff" else NULL
                         )
                       )),
@@ -68,7 +68,7 @@ plotExport <- function(input,
                    conditionalPanel(
                      condition = "input.typeOfSeries != 'onlyZip'",
                      ns = session$ns,
-                     numericInput(session$ns("fpsGif"), "Frames per second", value = 5, min = 1, max = 10)
+                     numericInput(session$ns("fpsGif"), "Frames per second", value = 2, min = 1, max = 10)
                    )),
             column(width = 4,
                    style = "margin-top: 1.5em;",
@@ -148,17 +148,34 @@ plotExport <- function(input,
 #' @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
 #' @param i (numeric) number of i-th plot of a series of plots
 nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL) {
+  paste0(getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i),
+         getFileExt(exportType = exportType, isTimeSeries = isTimeSeries,
+                    typeOfSeries = typeOfSeries, isCollection = is.null(i)))
+}
+
+
+#' Get File Name
+#'
+#' @inheritParams nameFile
+getFileName <- function(plotType, isTimeSeries, i = NULL) {
+  if (isTimeSeries && !is.null(i)) return(paste0(plotType, "_", i))
+
+  plotType
+}
+
+
+#' Get File Ext
+#'
+#' Get file extension
+#'
+#' @param isCollection (logical) TRUE if this is the container file, FALSE if this is an element file
+#' @inheritParams nameFile
+getFileExt <- function(exportType, isTimeSeries, typeOfSeries, isCollection = FALSE) {
   if (exportType == 'geo-tiff') exportType <- "tif"
 
-  if (!isTimeSeries) return(paste0(plotType, ".", exportType))
+  if (!isTimeSeries || !isCollection) return(paste0(".", exportType))
 
-  if (!is.null(i)) return(paste0(plotType, "_", i, ".", exportType))
-
-  if (typeOfSeries == "onlyGif") {
-    paste0(plotType, ".gif")
-  } else {
-    paste0(plotType, ".zip")
-  }
+  if (typeOfSeries == "onlyGif") return(".gif") else return(".zip")
 }
 
 exportGraphicSeries <- function(exportType, file,
@@ -169,10 +186,18 @@ exportGraphicSeries <- function(exportType, file,
     times <- seq(minTime, maxTime, by = abs(intTime))
     if (reverseGif && typeOfSeries != "onlyZip") times <- rev(times)
 
+    # create all file names to be put into a zip
     figFileNames <- sapply(times,
                            function(i) {
                              nameFile(plotType = modelType, exportType = exportType,
                                       isTimeSeries = TRUE, i = i)
+                           })
+
+    # create all file names to be put into a gif, they have always .jpeg format
+    gifFileNames <- sapply(times,
+                           function(i) {
+                             paste0(getFileName(plotType = modelType, isTimeSeries = TRUE, i = i),
+                                    ".jpeg")
                            })
 
     for (i in times) {
@@ -183,30 +208,44 @@ exportGraphicSeries <- function(exportType, file,
         # filter for i ???
         writeGeoTiff(predictions, figFilename)
       } else {
+        # save desired file type
         switch(
           exportType,
           png = png(figFilename, width = width, height = height),
+          jpeg = jpeg(figFilename, width = width, height = height),
           pdf = pdf(figFilename, width = width / 72, height = height / 72),
           tiff = tiff(figFilename, width = width, height = height),
           svg = svg(figFilename, width = width / 72, height = height / 72)
         )
         plotFun(model = Model, time = i)
         dev.off()
+
+        # save jpeg for .gif if desired file type is not .jpeg (else we already stored that file)
+        if (typeOfSeries != "onlyZip" && exportType != "jpeg") {
+          jpeg(gifFileNames[[which(times == i)]], width = width, height = height)
+          plotFun(model = Model, time = i)
+          dev.off()
+        }
       }
     }
 
     if (typeOfSeries == "onlyZip") {
+      # zip file to be downloaded:
       zipr(zipfile = file, files = figFileNames)
     }
     if (typeOfSeries == "onlyGif") {
-      generateGif(gifFile = file, files = figFileNames, exportType = exportType, fps = fpsGif)
+      # gif file to be downloaded:
+      generateGif(gifFile = file, files = gifFileNames, exportType = exportType, fps = fpsGif)
     }
     if (typeOfSeries == "gifAndZip") {
-      generateGif(gifFile = paste0(modelType, ".gif"), files = figFileNames, exportType = exportType, fps = fpsGif)
+      generateGif(gifFile = paste0(modelType, ".gif"), files = gifFileNames, exportType = exportType, fps = fpsGif)
+      # zip file to be downloaded containing the gif file:
       zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
       unlink(paste0(modelType, ".gif"))
     }
+    # clean up all single files
     unlink(figFileNames)
+    unlink(gifFileNames)
   })
 }
 
@@ -219,6 +258,7 @@ exportGraphicSingle <- function(exportType, file, width, height, plotObj, predic
   switch(
     exportType,
     png = png(file, width = width, height = height),
+    jpeg = jpeg(file, width = width, height = height),
     pdf = pdf(file, width = width / 72, height = height / 72),
     tiff = tiff(file, width = width, height = height),
     svg = svg(file, width = width / 72, height = height / 72)
@@ -232,6 +272,7 @@ writeGeoTiff <- function(XPred, file){
   longLength <- length(unique((XPred$Longitude)))
   latLength <- length(unique((XPred$Latitude)))
 
+  # is filter for time i possible?
   vals <- matrix(XPred$Est, nrow = longLength, byrow = TRUE)
   vals <- vals[nrow(vals) : 1, ]
   r <- raster(nrows = longLength,
@@ -253,11 +294,7 @@ writeGeoTiff <- function(XPred, file){
 #' @param fps frames per second
 #' @inheritParams nameFile
 generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
-  image_list <- switch (exportType,
-                        pdf = lapply(files, image_read_pdf),
-                        svg = lapply(files, image_read_svg),
-                        lapply(files, image_read)
-  )
+  image_list <- lapply(files, image_read)
 
   image_list %>%
     image_join() %>%

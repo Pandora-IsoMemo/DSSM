@@ -40,7 +40,6 @@ Imports:
     rgdal,
     rgeos,
     rlang,
-    rsvg,
     shiny (>= 1.0.5),
     shinycssloaders,
     shinyjs (>= 1.0),
