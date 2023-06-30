@@ -13,7 +13,7 @@
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
 #' @importFrom graphics axis filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
-#' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off png pdf pdfFonts
+#' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
 #'  recordPlot replayPlot rgb svg tiff
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi

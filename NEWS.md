@@ -1,11 +1,18 @@
 # MpiIsoApp development version
 
-## Version 23.06.3
+## Version 23.06.4
 
 ### New Features
 - _Export of Saved maps_ is now included within the feature to down- and upload models (#2)
   - additionally, the list of saved models is downloaded
   - upload checks for a list of saved maps and loads it if it is available
+
+## Version 23.06.3
+
+### Bug Fixes
+- _Export of time series_: 
+  - fixes export of pdf files together with a .gif (#107)
+  - now .gif files are always based on jpeg files, for .gif no conversion from pdf is required anymore
 
 ## Version 23.06.2
 
