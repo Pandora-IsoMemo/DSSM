@@ -1,5 +1,12 @@
 # MpiIsoApp development version
 
+## Version 23.06.3
+
+### Bug Fixes
+- _Export of time series_: 
+  - fixes export of pdf files together with a .gif (#107)
+  - now .gif files are always based on jpeg files, for .gif no conversion from pdf is required anymore
+
 ## Version 23.06.2
 
 ## New Features
