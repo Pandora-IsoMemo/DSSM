@@ -7,7 +7,7 @@
   - now contains the underlying grid length (#169)
   - can be hidden again by removing inputs for latitude and longitude
 
-## Bug Fixes
+## Updates
 - removed recalculation of predictions when changing the latitude or longitude for center estimates
 
 ## Version 23.06.3
