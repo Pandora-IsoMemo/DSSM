@@ -37,9 +37,6 @@ plotMap3D(
   ncol = 10,
   colors = "RdYlGn",
   reverseColors = FALSE,
-  centerX = NA,
-  centerY = NA,
-  Radius = NA,
   dataCenter = NULL,
   RadiusBatch = 100,
   terrestrial = 1,
@@ -133,15 +130,6 @@ plotMap3D(
 \item{colors}{color scheme of estimates from RColorBrewer. defaults to "RdYlGn"}
 
 \item{reverseColors}{inverse colour scheme}
-
-\item{centerX}{optional. longitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{centerY}{optional. latitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{Radius}{radius of fixed spatial point estimate for batch estimates
-of a series of spatial points}
 
 \item{dataCenter}{optional data.frame with three columns (longitude / latitude / time)}
 

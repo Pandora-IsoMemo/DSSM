@@ -179,7 +179,7 @@ modelResultsSpreadUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -718,9 +718,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
+
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
@@ -808,6 +808,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,
@@ -834,9 +835,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = centerEstimate$centerX(),
-        centerY = centerEstimate$centerY(),
-        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -876,18 +874,16 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(plot = NULL, predictions = NULL, sdCenter = NA, meanCenter = NA,
+  values <- reactiveValues(plot = NULL, predictions = NULL,
                            set = 0,
                            upperLeftLongitude = NA,
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

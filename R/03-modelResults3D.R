@@ -212,8 +212,8 @@ modelResults3DUI <- function(id, title = ""){
           )),
           conditionalPanel(
             condition = conditionPlot(ns("DistMap")),
+            htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
-            textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
             tags$br(),
             tags$br(),
             fluidRow(column(width = 3,
@@ -517,7 +517,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
@@ -881,8 +881,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
@@ -972,6 +971,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         }
       }
 
+      # PLOT MAP ----
       if(input$mapType == "Time course"){
         plotTimeCourse(model,
                        IndSelect = input$IndSelect,
@@ -980,7 +980,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        resolution = input$resolution,
                        centerX = centerEstimate$centerX(),
                        centerY = centerEstimate$centerY(),
-                       Radius = centerEstimate$radius(),
                        rangey = zSettings$range,
                        limitz = zSettings$limit,
                        seType = input$intervalType,
@@ -1023,9 +1022,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           resolution = input$resolution,
           interior = as.numeric(input$interior),
           ncol = values$ncol,
-          centerX = centerEstimate$centerX(),
-          centerY = centerEstimate$centerY(),
-          Radius = centerEstimate$radius(),
           terrestrial = input$terrestrial,
           colors = input$Colours,
           reverseColors = input$reverseCols,
@@ -1061,8 +1057,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 

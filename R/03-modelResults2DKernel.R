@@ -140,7 +140,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -667,8 +667,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         predictions = reactive(values$predictions))
+
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -757,6 +757,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,
@@ -782,9 +783,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = centerEstimate$centerX(),
-        centerY = centerEstimate$centerY(),
-        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -822,16 +820,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
   values <- reactiveValues(
     plot = NULL,
     predictions = NULL,
-    meanCenter = NA,
-    sdCenter = NA,
     up = 0,
     right = 0,
     set = 0,
@@ -840,7 +834,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     zoom = 50
   )
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

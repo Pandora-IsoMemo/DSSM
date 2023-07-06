@@ -34,9 +34,6 @@ plotMap(
   fontCol = "black",
   mask = FALSE,
   maskRadius = 100,
-  centerX = NA,
-  centerY = NA,
-  Radius = NA,
   pColor = "#000000",
   dataCenter = NULL,
   RadiusBatch = NULL,
@@ -128,14 +125,6 @@ from estimateMap() or estimateMapSpread() functions}
 \item{mask}{boolean: Show output within range of points}
 
 \item{maskRadius}{numeric: Show output within range of points in km}
-
-\item{centerX}{optional. longitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{centerY}{optional. latitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{Radius}{radius of fixed spatial point estimate}
 
 \item{pColor}{color of location marks drawn}
 

@@ -173,7 +173,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -509,7 +509,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
@@ -929,8 +929,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
@@ -1029,7 +1028,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        resolution = input$resolution,
                        centerX = centerEstimate$centerX(),
                        centerY = centerEstimate$centerY(),
-                       Radius = centerEstimate$radius(),
                        rangey = c(input$rangezMin, input$rangezMax),
                        pointDat = pointDat,
                        seType = input$intervalType,
@@ -1058,6 +1056,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
         req(zSettings$estType)
 
+        # PLOT MAP ----
       if(input$mapType == "Map"){
         plotMap3D(
           model,
@@ -1086,9 +1085,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           fontSize = input$fontSize,
           fontType = input$fontType,
           fontCol = input$fontCol,
-          centerX = centerEstimate$centerX(),
-          centerY = centerEstimate$centerY(),
-          Radius = centerEstimate$radius(),
           terrestrial = input$terrestrial,
           colors = input$Colours,
           reverseColors = input$reverseCols,
@@ -1129,8 +1125,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
