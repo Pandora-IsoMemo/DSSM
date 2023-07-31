@@ -66,6 +66,7 @@ modelResultsAssignUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
+        checkboxInput(inputId = ns("imputeMissings"), label = "Impute missings (Multiple imputation)", value = TRUE),
         sliderInput(
           inputId = ns("Iter"),
           label = "Number of MCMC iterations",
@@ -265,21 +266,64 @@ modelResultsAssign <- function(input, output, session, isoData) {
         dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
       } else {
         dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
-        if (!is.null(input$numVarsUnc) && input$numVarsUnc != "" && length(input$numVarsUnc) == length(input$numVars)) {
-          dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
-        } else {
-          alert("Number of numeric uncertainty variables must equal numeric variables")
-          return(NULL)
+        if (!is.null(input$numVarsUnc) && input$numVarsUnc != ""){
+          if (length(input$numVarsUnc) == length(input$numVars)){
+            dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
+          } else {
+            alert("Number of numeric uncertainty variables must equal numeric variables")
+            return(NULL)
+          }
         }
-        if (!is.null(input$catVarsUnc) && input$catVarsUnc != "" && length(input$catVarsUnc) == length(input$catVars)) {
-          dataAssignR <- cbind(dataAssignR, data[, c(input$catVarsUnc), drop = F])
-        } else {
-          alert("Number of categorical uncertainty variables must equal categorical variables")
-          return(NULL)
+        if (!is.null(input$catVarsUnc) && input$catVarsUnc != ""){
+          if (length(input$catVarsUnc) == length(input$catVars)){
+            dataAssignR <- cbind(dataAssignR, data[, c(input$catVarsUnc), drop = F])
+          } else {
+            alert("Number of categorical uncertainty variables must equal categorical variables")
+            return(NULL)
+          }
         }
       }
+      if(input$imputeMissings & any(is.na(dataAssignR))){
+        if(!is.null(input$catVars) && input$catVars != ""){
+          for(i in input$catVars){
+            if(class(dataAssignR[, i]) == "character"){
+              dataAssignR[, i] <- factor(dataAssignR[, i])
+            }
+          }
+        }
+        imputed_Data <- mice(dataAssignR, m=10, maxit = 50, seed = 500, printFlag = FALSE)
+        completed <- complete(imputed_Data, "all")
+        new_data <- dataAssignR
 
-      dataAssignR <- na.omit(dataAssignR)
+        if(!is.null(input$numVars) && length(input$numVars) > 0){
+          for (i in 1:length(input$numVars)){
+            new_data[, input$numVars[i]] = rowMeans(sapply(1:length(completed), function(x) completed[[x]][,input$numVars[i]]))
+          }
+        }
+        if(!is.null(input$numVarsUnc) && length(input$numVarsUnc) > 0){
+          new_data[, input$numVarsUnc][is.na(new_data[, input$numVarsUnc])] <- 0
+          for (i in 1:length(input$numVarsUnc)){
+            new_data[, input$numVarsUnc[i]] = new_data[, input$numVarsUnc[i]] + apply(sapply(1:length(completed), function(x) completed[[x]][,input$numVars[i]]),1,sd)
+          }
+        }
+
+        if(!is.null(input$catVars) && input$catVars != ""){
+          for (j in 1:length(input$catVars)){
+            new_data[, input$catVars[j]] <- apply(sapply(1:length(completed), function(x) completed[[x]][,input$catVars[j]]), 1, getMode)
+          }
+        }
+        if(!is.null(input$catVarsUnc) && input$catVarsUnc != ""){
+          new_data[, input$catVarsUnc][is.na(new_data[, input$catVarsUnc])] <- 0
+          for (j in 1:length(input$catVarsUnc)){
+            new_data[, input$catVarsUnc[j]] <- new_data[, input$catVarsUnc[i]] + rowMeans(sapply(1:length(completed), function(x) completed[[x]][,input$catVarsUnc[i]]))
+          }
+        }
+
+        dataAssignR <- new_data
+      } else {
+        dataAssignR <- na.omit(dataAssignR)
+      }
+
       dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
       if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
         alert("Please specify dependent and at least one numeric or categorical variable")
@@ -568,4 +612,13 @@ modelResultsAssign <- function(input, output, session, isoData) {
     updateSelectInput(session, "catVarsUnc", choices = c("", allVars))
   }) %>%
     bindEvent(data())
+}
+
+getMode <- function(x){
+  names(sort(-table(x)))[1]
+}
+
+handleMissingData <- function(data, formula, yUncertainty, imputeMissings = FALSE, categorical = "") {
+  imputed_Data <- mice(relevantData, m=10, maxit = 50, seed = 500, printFlag = FALSE)
+  completed <- complete(imputed_Data, "all")
 }

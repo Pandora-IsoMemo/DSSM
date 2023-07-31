@@ -27,6 +27,7 @@
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
+#' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
 #' @importFrom raster raster getValues terrain writeRaster
