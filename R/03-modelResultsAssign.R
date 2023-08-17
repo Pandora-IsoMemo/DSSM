@@ -260,68 +260,27 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
   # RUN MODEL ----
   observeEvent(input$start, {
+    Model(NULL)
+
     data <- data()
-    if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
-      if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
-        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
-      } else {
-        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
-        if (!is.null(input$numVarsUnc) && input$numVarsUnc != ""){
-          if (length(input$numVarsUnc) == length(input$numVars)){
-            dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
-          } else {
-            alert("Number of numeric uncertainty variables must equal numeric variables")
-            return(NULL)
-          }
-        }
-        if (!is.null(input$catVarsUnc) && input$catVarsUnc != ""){
-          if (length(input$catVarsUnc) == length(input$catVars)){
-            dataAssignR <- cbind(dataAssignR, data[, c(input$catVarsUnc), drop = F])
-          } else {
-            alert("Number of categorical uncertainty variables must equal categorical variables")
-            return(NULL)
-          }
-        }
-      }
+    if (!is.null(data) && (notEmpty(input$catVars) || notEmpty(input$numVars))) {
+      dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
+
+      dataAssignR <- dataAssignR %>%
+        addUncertainty(type = "numeric", data = data, vars = input$numVars, varsUnc = input$numVarsUnc)
+      if (is.null(dataAssignR)) return(NULL)
+
+      dataAssignR <- dataAssignR %>%
+        addUncertainty(type = "categorical", data = data, vars = input$catVars, varsUnc = input$catVarsUnc)
+      if (is.null(dataAssignR)) return(NULL)
+
       if(input$imputeMissings & any(is.na(dataAssignR))){
-        if(!is.null(input$catVars) && input$catVars != ""){
-          for(i in input$catVars){
-            if(class(dataAssignR[, i]) == "character"){
-              dataAssignR[, i] <- factor(dataAssignR[, i])
-            }
-          }
-        }
-        imputed_Data <- mice(dataAssignR, m=10, maxit = 50, seed = 500, printFlag = FALSE)
-        completed <- complete(imputed_Data, "all")
-        new_data <- dataAssignR
-
-        if(!is.null(input$numVars) && length(input$numVars) > 0){
-          for (i in 1:length(input$numVars)){
-            new_data[, input$numVars[i]] = rowMeans(sapply(1:length(completed), function(x) completed[[x]][,input$numVars[i]]))
-          }
-        }
-        if(!is.null(input$numVarsUnc) && length(input$numVarsUnc) > 0){
-          new_data[, input$numVarsUnc][is.na(new_data[, input$numVarsUnc])] <- 0
-          for (i in 1:length(input$numVarsUnc)){
-            new_data[, input$numVarsUnc[i]] = new_data[, input$numVarsUnc[i]] + apply(sapply(1:length(completed), function(x) completed[[x]][,input$numVars[i]]),1,sd)
-          }
-        }
-
-        if(!is.null(input$catVars) && input$catVars != ""){
-          for (j in 1:length(input$catVars)){
-            new_data[, input$catVars[j]] <- apply(sapply(1:length(completed), function(x) completed[[x]][,input$catVars[j]]), 1, getMode)
-          }
-        }
-        if(!is.null(input$catVarsUnc) && input$catVarsUnc != ""){
-          new_data[, input$catVarsUnc][is.na(new_data[, input$catVarsUnc])] <- 0
-          for (j in 1:length(input$catVarsUnc)){
-            new_data[, input$catVarsUnc[j]] <- new_data[, input$catVarsUnc[i]] + rowMeans(sapply(1:length(completed), function(x) completed[[x]][,input$catVarsUnc[i]]))
-          }
-        }
-
-        dataAssignR <- new_data
+        dataAssignR <- dataAssignR %>%
+          imputeMissingValues(numVars = input$numVars, catVars = input$catVars,
+                              numVarsUnc = input$numVarsUnc, catVarsUnc = input$catVarsUnc)
       } else {
-        dataAssignR <- na.omit(dataAssignR)
+        dataAssignR <- dataAssignR %>%
+          na.omit()
       }
 
       dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
@@ -614,11 +573,64 @@ modelResultsAssign <- function(input, output, session, isoData) {
     bindEvent(data())
 }
 
-getMode <- function(x){
-  names(sort(-table(x)))[1]
+## Helper functions ----
+
+addUncertainty <- function(dataAssignR, type, data, vars, varsUnc) {
+  if (notEmpty(varsUnc)){
+    if (length(varsUnc) == length(vars)){
+      dataAssignR <- cbind(dataAssignR, data[, c(varsUnc), drop = F])
+    } else {
+      alert(sprintf("Number of %s uncertainty variables must equal %s variables"), type)
+      dataAssignR <- NULL
+    }
+  }
+
+  dataAssignR
 }
 
-handleMissingData <- function(data, formula, yUncertainty, imputeMissings = FALSE, categorical = "") {
-  imputed_Data <- mice(relevantData, m=10, maxit = 50, seed = 500, printFlag = FALSE)
+imputeMissingValues <- function(dataAssignR, numVars, catVars, numVarsUnc, catVarsUnc) {
+  if(notEmpty(catVars)){
+    for(i in catVars){
+      if(class(dataAssignR[, i]) == "character"){
+        dataAssignR[, i] <- factor(dataAssignR[, i])
+      }
+    }
+  }
+  imputed_Data <- mice(dataAssignR, m=10, maxit = 50, seed = 500, printFlag = FALSE)
   completed <- complete(imputed_Data, "all")
+  new_data <- dataAssignR
+
+  if(notEmpty(numVars)){
+    for (i in 1:length(numVars)){
+      new_data[, numVars[i]] = rowMeans(sapply(1:length(completed), function(x) completed[[x]][,numVars[i]]))
+    }
+  }
+  if(notEmpty(numVarsUnc)){
+    new_data[, numVarsUnc][is.na(new_data[, numVarsUnc])] <- 0
+    for (i in 1:length(numVarsUnc)){
+      new_data[, numVarsUnc[i]] = new_data[, numVarsUnc[i]] + apply(sapply(1:length(completed), function(x) completed[[x]][,numVars[i]]),1,sd)
+    }
+  }
+
+  if(notEmpty(catVars)){
+    for (j in 1:length(catVars)){
+      new_data[, catVars[j]] <- apply(sapply(1:length(completed), function(x) completed[[x]][,catVars[j]]), 1, getMode)
+    }
+  }
+  if(notEmpty(catVarsUnc)){
+    new_data[, catVarsUnc][is.na(new_data[, catVarsUnc])] <- 0
+    for (j in 1:length(catVarsUnc)){
+      new_data[, catVarsUnc[j]] <- new_data[, catVarsUnc[i]] + rowMeans(sapply(1:length(completed), function(x) completed[[x]][,catVarsUnc[i]]))
+    }
+  }
+
+  new_data
+}
+
+notEmpty <- function(inputColumns) {
+  !is.null(inputColumns) && length(inputColumns) > 0 && all(inputColumns != "")
+}
+
+getMode <- function(x){
+  names(sort(-table(x)))[1]
 }
