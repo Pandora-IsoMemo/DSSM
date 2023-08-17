@@ -580,7 +580,7 @@ addUncertainty <- function(dataAssignR, type, data, vars, varsUnc) {
     if (length(varsUnc) == length(vars)){
       dataAssignR <- cbind(dataAssignR, data[, c(varsUnc), drop = F])
     } else {
-      alert(sprintf("Number of %s uncertainty variables must equal %s variables"), type)
+      alert(sprintf("Number of %s uncertainty variables must equal %s variables", type))
       dataAssignR <- NULL
     }
   }
