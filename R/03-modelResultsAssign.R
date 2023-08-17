@@ -302,18 +302,18 @@ modelResultsAssign <- function(input, output, session, isoData) {
         XCAT <- dataAssignR[, input$catVars, drop = FALSE]
         XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
         if(NCOL(XCAT) > 0){
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
-        if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
-          XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
-          xUncCAT <- XCAT
-          xUncCAT <- lapply(1:length(XCAT), function(z) {
-            xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
-          })
-          #XCAT <- do.call("cbind", XCAT)
-          xUncCAT <- do.call("cbind", xUncCAT)
-        } else {
-          xUncCAT <- NULL
-        }
+          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
+          if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
+            XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
+            xUncCAT <- XCAT
+            xUncCAT <- lapply(1:length(XCAT), function(z) {
+              xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
+            })
+            #XCAT <- do.call("cbind", XCAT)
+            xUncCAT <- do.call("cbind", xUncCAT)
+          } else {
+            xUncCAT <- NULL
+          }
         } else {
           XCAT <- NULL
           xUncCAT <- NULL
