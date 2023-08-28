@@ -473,7 +473,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
           return()
         } else {
           dat <- fileImport()
-          if(all(colnames(dat) %in% columnsC) && !all(is.null(colnames(dat)))){
+          if(all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))){
             XPred <- data.frame(
               Est = dat[, input$MeanO],
               Sd = dat[, input$SdO],
@@ -547,7 +547,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       }
     if (input$userMapType == "3") {
       if(input$customCircles == "multiple"){
-        columnsR <- c(input$MeanO, input$SdO, input$LongitudeL, input$LatitudeL, input$LongitudeU, input$LatitudeU)
+        columnsR <- c(input$MeanR, input$SdR, input$LongitudeL, input$LatitudeL, input$LongitudeU, input$LatitudeU)
 
         if (any(is.null(columnsR)) ||
             any(columnsR == "")){
@@ -555,8 +555,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
           return()
         } else {
           dat <- fileImport()
-          if(all(colnames(dat) %in% columnsR) && !all(is.null(colnames(dat)))){
-          XPred <- data.frame(
+          if(all(columnsR %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+            XPred <- data.frame(
             Est = dat[, input$MeanR],
             Sd = dat[, input$SdR],
             upperLeftLong = dat[, input$LongitudeU],
