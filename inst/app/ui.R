@@ -19,7 +19,7 @@ tagList(
                                             modelResultsSimUI("similarity", "LocateR"),
                                             modelResultsAssignUI("assign", "AssignR")
     ) else NULL,
-    if (!isOnlyDataSearchMode()) savedMapsTabUI("svmt", "Saved/Create maps") else NULL,
+    if (!isOnlyDataSearchMode()) savedMapsTabUI("svmt", "Saved maps") else NULL,
     if (isOnlyDataSearchMode()) modelLinkUI("modelLink", title = "Modeling") else NULL,
     if (reSourcesInstalled()) ReSources::fruitsUI("fruits", "ReSources") else NULL
   ),

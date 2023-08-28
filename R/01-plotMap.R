@@ -1881,7 +1881,6 @@ plotDS <- function(XPred,
       XPred$Est <- pmax(0, XPred$Est)
     }
   }
-
   #if (!all(is.na(XPred$Est))){
   if(type == "similarity"){
     z <- matrix(XPred$Est, ncol = length(unique(XPred$Latitude)))

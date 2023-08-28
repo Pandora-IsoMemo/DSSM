@@ -1,4 +1,4 @@
-validateImport <- function(data, showModal = FALSE){
+validateImport <- function(data, showModal = FALSE, minRows = 3){
   warnings <- character(0)
 
   if (!inherits(data, "data.frame"))
@@ -7,7 +7,7 @@ validateImport <- function(data, showModal = FALSE){
       "Data has wrong type"
     )
 
-  if (NROW(data) < 3)
+  if (NROW(data) < minRows)
     warnings <- append(
       warnings,
       "Data has less than 3 rows or missing/wrong formatted coordinate variables, check your data and/or coordinate format settings and
