@@ -1,4 +1,7 @@
 # MpiIsoApp development version
+## Version 23.07.1
+## New Features
+- _Missing Values Imputation AssignR_: Multiple imputation for AssignR using the "mice" package
 
 ## Version 23.06.4
 
