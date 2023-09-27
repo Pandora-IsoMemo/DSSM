@@ -1,5 +1,18 @@
 # MpiIsoApp development version
+
+## Version 23.09.1
+
+## New Features
+- [please add some description]
+
+## Version 23.09.0
+
+## New Features
+- _Import of models_:
+  - option to import models from Pandora platform
+
 ## Version 23.07.1
+
 ## New Features
 - _Missing Values Imputation AssignR_: Multiple imputation for AssignR using the "mice" package
 

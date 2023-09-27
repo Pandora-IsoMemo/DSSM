@@ -4,10 +4,12 @@
 \alias{dataExplorerServer}
 \title{server funtion of data explorer module}
 \usage{
-dataExplorerServer(id)
+dataExplorerServer(id, config)
 }
 \arguments{
 \item{id}{namespace id}
+
+\item{config}{(list) list of configuration parameters}
 }
 \value{
 reactive dataframe with loaded or imported isoData

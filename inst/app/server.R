@@ -4,34 +4,39 @@ library(MpiIsoApp)
 # Error in mclustBIC: could not find function "mclustBIC"
 # Therefore we need to import and load the whole package mclust
 library(mclust)
+library(yaml)
 
 options(shiny.maxRequestSize = 200*1024^2)
 options(scipen=999)
+
+# load config variables
+configFile <- system.file("config.yaml", package = "MpiIsoApp")
+appConfig <- yaml::read_yaml(configFile)
 
 server <- function(input, output, session) {
 #  savedMaps <- reactiveVal(readRDS("~/savedMaps.rds"))
   savedMaps <- reactiveVal(list())
   fruitsData <- reactiveVal(list(event = NULL, data = NULL))
 
-  isoData <- dataExplorerServer("dataExplorer")
+  isoData <- dataExplorerServer("dataExplorer", config = appConfig)
   callModule(interactiveMap, "interactivemap", isoData = isoData)
 
   if (!isOnlyDataSearchMode()) {
     callModule(modelResults2D, "model2D", isoData = isoData, savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(modelResults3D, "model3D", isoData = isoData, savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(modelResultsSpread, "spread", isoData = isoData, savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(modelResults2DKernel, "model2DKernel", isoData = isoData, savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(modelResults3DKernel, "model3DKernel", isoData = isoData, savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(mapDiff, "difference", savedMaps = savedMaps,
-               fruitsData = fruitsData)
+               fruitsData = fruitsData, config = appConfig)
     callModule(mapSim, "similarity", savedMaps = savedMaps,
-               fruitsData = fruitsData)
-    callModule(modelResultsAssign, "assign", isoData = isoData)
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResultsAssign, "assign", isoData = isoData, config = appConfig)
 
     callModule(savedMapsTab, "svmt", savedMaps = savedMaps)
   }
