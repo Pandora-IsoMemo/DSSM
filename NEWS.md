@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.07.1
+## Version 23.09.0
 
 ## New Features
 - _Import of models_:
