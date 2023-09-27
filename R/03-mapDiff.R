@@ -329,7 +329,6 @@ modelResultsDiffUI <- function(id, title = ""){
 #'
 #' @export
 mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
-
   data <- reactiveVal()
 
   observeEvent(savedMaps(), {
