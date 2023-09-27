@@ -17,8 +17,13 @@ modelResultsSpreadUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -475,45 +480,62 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   Model <- reactiveVal()
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "SpreadR",
-    helpHTML = getHelp(id = "spread"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "SpreadR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = appConfig$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = appConfig$fileExtension,
+                      helpHTML = getHelp(id = "spread"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = appConfig$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = appConfig$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = appConfig$fileExtension)
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
-    ## update data ----
-    data(uploadedData$data)
+    data(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedData$model)
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
   observeEvent(input$start, {
