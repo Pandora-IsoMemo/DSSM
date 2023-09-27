@@ -480,9 +480,10 @@ modelResults3DKernelUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "kernel3d")
 
@@ -549,9 +550,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = appConfig$rPackageName,
+                      rPackageName = config$rPackageName,
                       subFolder = subFolder,
-                      fileExtension = appConfig$fileExtension,
+                      fileExtension = config$fileExtension,
                       helpHTML = getHelp(id = "model3DKernel"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -559,12 +560,12 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = appConfig$defaultSourceModel,
+                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = appConfig$rPackageName,
+                                     rPackageName = config$rPackageName,
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = appConfig$fileExtension)
+                                     fileExtension = config$fileExtension)
 
 
 

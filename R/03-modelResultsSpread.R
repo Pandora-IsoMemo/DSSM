@@ -420,9 +420,10 @@ modelResultsSpreadUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     observeEvent(savedMaps(), {
       choices <- getMapChoices(savedMaps(), "spread")
@@ -487,9 +488,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = appConfig$rPackageName,
+                      rPackageName = config$rPackageName,
                       subFolder = subFolder,
-                      fileExtension = appConfig$fileExtension,
+                      fileExtension = config$fileExtension,
                       helpHTML = getHelp(id = "spread"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -497,12 +498,12 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = appConfig$defaultSourceModel,
+                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = appConfig$rPackageName,
+                                     rPackageName = config$rPackageName,
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = appConfig$fileExtension)
+                                     fileExtension = config$fileExtension)
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))

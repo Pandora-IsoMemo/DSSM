@@ -490,9 +490,10 @@ modelResults3DUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "temporalAvg")
 
@@ -564,9 +565,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = appConfig$rPackageName,
+                      rPackageName = config$rPackageName,
                       subFolder = "TimeR",
-                      fileExtension = appConfig$fileExtension,
+                      fileExtension = config$fileExtension,
                       helpHTML = getHelp(id = "model3D"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -574,12 +575,12 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = appConfig$defaultSourceModel,
+                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = appConfig$rPackageName,
+                                     rPackageName = config$rPackageName,
                                      subFolder = "TimeR",
                                      ignoreWarnings = TRUE,
-                                     fileExtension = appConfig$fileExtension)
+                                     fileExtension = config$fileExtension)
 
 
 

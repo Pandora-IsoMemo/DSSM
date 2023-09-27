@@ -184,9 +184,10 @@ modelResultsAssignUI <- function(id, title = "") {
 #' @param output output
 #' @param session session
 #' @param isoData data
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsAssign <- function(input, output, session, isoData) {
+modelResultsAssign <- function(input, output, session, isoData, config) {
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
@@ -229,9 +230,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = appConfig$rPackageName,
+                      rPackageName = config$rPackageName,
                       subFolder = subFolder,
-                      fileExtension = appConfig$fileExtension,
+                      fileExtension = config$fileExtension,
                       helpHTML = getHelp(id = "assign"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -239,12 +240,12 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = appConfig$defaultSourceModel,
+                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = appConfig$rPackageName,
+                                     rPackageName = config$rPackageName,
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = appConfig$fileExtension)
+                                     fileExtension = config$fileExtension)
 
 
 

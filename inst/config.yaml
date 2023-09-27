@@ -1,0 +1,4 @@
+defaultSourceData: "ckan"           # for import of data
+defaultSourceModel: "file"           # for import of models
+fileExtension: "dssm"      # for download of models
+rPackageName: "MpiIsoApp"       # for download and import of models

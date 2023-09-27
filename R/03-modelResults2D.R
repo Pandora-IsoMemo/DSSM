@@ -405,9 +405,10 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "localAvg")
 
@@ -482,9 +483,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = appConfig$rPackageName,
+                      rPackageName = config$rPackageName,
                       subFolder = subFolder,
-                      fileExtension = appConfig$fileExtension,
+                      fileExtension = config$fileExtension,
                       helpHTML = getHelp(id = "model2D"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -492,12 +493,12 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = appConfig$defaultSourceModel,
+                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = appConfig$rPackageName,
+                                     rPackageName = config$rPackageName,
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = appConfig$fileExtension)
+                                     fileExtension = config$fileExtension)
 
 
 

@@ -213,9 +213,10 @@ modelResultsSimUI <- function(id, title = ""){
 #' @param session session
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-mapSim <- function(input, output, session, savedMaps, fruitsData){
+mapSim <- function(input, output, session, savedMaps, fruitsData, config){
   values <- reactiveValues(
     simDataList = list(),
     simDataTemp = list(),
@@ -311,9 +312,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                     dat = savedMaps,
   #                     inputs = input,
   #                     model = Model,
-  #                     rPackageName = appConfig$rPackageName,
+  #                     rPackageName = config$rPackageName,
   #                     subFolder = subFolder,
-  #                     fileExtension = appConfig$fileExtension,
+  #                     fileExtension = config$fileExtension,
   #                     helpHTML = getHelp(id = "similarity"),
   #                     modelNotes = uploadedNotes,
   #                     triggerUpdate = reactive(TRUE),
@@ -321,12 +322,12 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #
   # uploadedValues <- importDataServer("modelUpload",
   #                                    title = "Import Model",
-  #                                    defaultSource = appConfig$defaultSourceModel,
+  #                                    defaultSource = config$defaultSourceModel,
   #                                    importType = "model",
-  #                                    rPackageName = appConfig$rPackageName,
+  #                                    rPackageName = config$rPackageName,
   #                                    subFolder = subFolder,
   #                                    ignoreWarnings = TRUE,
-  #                                    fileExtension = appConfig$fileExtension)
+  #                                    fileExtension = config$fileExtension)
   #
   # observe(priority = 100, {
   #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
