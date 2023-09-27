@@ -17,8 +17,13 @@ modelResultsDiffUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Map", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Map"),
+        checkboxInput(ns("useDownload"), label = "Download map"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -200,9 +205,10 @@ modelResultsDiffUI <- function(id, title = ""){
 #' @param session session
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-mapDiff <- function(input, output, session, savedMaps, fruitsData){
+mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "difference")
@@ -244,46 +250,62 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   MapDiff <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = savedMaps,
-    inputs = input,
-    model = MapDiff,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "OperatoR",
-    helpHTML = getHelp(id = "difference"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1,
-    title = "Download and Upload of Maps",
-    labelRemote = "Load online map",
-    labelLocal = "Load local map")
+
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "OperatoR"
+  downloadModelServer("modelDownload",
+                      dat = savedMaps,
+                      inputs = input,
+                      model = MapDiff,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "difference"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
 
   observe(priority = 100, {
-    ## update data ----
-    savedMaps(uploadedData$data)
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
+    # reset model
+    MapDiff(NULL)
+    savedMaps(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    MapDiff(uploadedData$model)
+    MapDiff(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
   observeEvent(input$createDiffMap, {

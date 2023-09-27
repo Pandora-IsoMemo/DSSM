@@ -4,7 +4,7 @@
 \alias{modelResultsAssign}
 \title{server function of model Results module}
 \usage{
-modelResultsAssign(input, output, session, isoData)
+modelResultsAssign(input, output, session, isoData, config)
 }
 \arguments{
 \item{input}{input}
@@ -14,6 +14,8 @@ modelResultsAssign(input, output, session, isoData)
 \item{session}{session}
 
 \item{isoData}{data}
+
+\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module

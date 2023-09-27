@@ -193,10 +193,11 @@ updateCheckboxSelectize <- function(x, session, mappingTbl) {
 #' server funtion of data explorer module
 #'
 #' @param id namespace id
+#' @param config (list) list of configuration parameters
 #' @return reactive dataframe with loaded or imported isoData
 #'
 #' @export
-dataExplorerServer <- function(id) {
+dataExplorerServer <- function(id, config) {
   moduleServer(id,
                function(input, output, session) {
                  ns <- session$ns
@@ -275,7 +276,9 @@ dataExplorerServer <- function(id) {
                   )
 
                  ## Load Data from file (pandora skin) ----
-                 importedData <- importDataServer("localData")
+                 importedData <- importDataServer("localData",
+                                                  defaultSource = config$defaultSourceData,
+                                                  rPackageName = config$rPackageName)
 
                  observeEvent(importedData(), {
                    req(length(importedData()) > 0)
