@@ -4,7 +4,15 @@
 \alias{modelResults2DKernel}
 \title{server function of model Results module}
 \usage{
-modelResults2DKernel(input, output, session, isoData, savedMaps, fruitsData)
+modelResults2DKernel(
+  input,
+  output,
+  session,
+  isoData,
+  savedMaps,
+  fruitsData,
+  config
+)
 }
 \arguments{
 \item{input}{input}
@@ -18,6 +26,8 @@ modelResults2DKernel(input, output, session, isoData, savedMaps, fruitsData)
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
+
+\item{config}{(list) list of configuration parameters#'}
 }
 \description{
 server function of model Results module

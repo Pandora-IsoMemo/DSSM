@@ -4,7 +4,7 @@
 \alias{modelResults3D}
 \title{server function of model Results module}
 \usage{
-modelResults3D(input, output, session, isoData, savedMaps, fruitsData)
+modelResults3D(input, output, session, isoData, savedMaps, fruitsData, config)
 }
 \arguments{
 \item{input}{input}
@@ -18,6 +18,8 @@ modelResults3D(input, output, session, isoData, savedMaps, fruitsData)
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
+
+\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module

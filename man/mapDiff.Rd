@@ -4,7 +4,7 @@
 \alias{mapDiff}
 \title{server function of model Results module}
 \usage{
-mapDiff(input, output, session, savedMaps, fruitsData)
+mapDiff(input, output, session, savedMaps, fruitsData, config)
 }
 \arguments{
 \item{input}{input}
@@ -16,6 +16,8 @@ mapDiff(input, output, session, savedMaps, fruitsData)
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
+
+\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module
