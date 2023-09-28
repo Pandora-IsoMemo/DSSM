@@ -369,20 +369,26 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
     if (length(values$simDataListM) == 0) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 1]))) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 2]))){
-      withProgress(
-        Model(createSimilarityMap(values$predictionList,
-                                  values$simDataListM, includeUncertainty = FALSE,
-                                  normalize = input$normalize,
-                                  normalType = input$normalType)),
+      withProgress({
+        model <- createSimilarityMap(values$predictionList,
+                                        values$simDataListM, includeUncertainty = FALSE,
+                                        normalize = input$normalize,
+                                        normalType = input$normalType) %>%
+          tryCatchWithWarningsAndErrors()
+        Model(model)
+        },
         value = 0,
         message = 'Creating similarity map ...'
       )
     } else {
-      withProgress(
-        Model(createSimilarityMap(values$predictionList,
-                                  values$simDataListM,
-                                  normalize = input$normalize,
-                                  normalType = input$normalType)),
+      withProgress({
+        model <- createSimilarityMap(values$predictionList,
+                                        values$simDataListM,
+                                        normalize = input$normalize,
+                                        normalType = input$normalType) %>%
+          tryCatchWithWarningsAndErrors()
+        Model(model)
+        },
         value = 0,
         message = 'Creating similarity map ...'
       )

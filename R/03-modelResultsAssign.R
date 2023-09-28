@@ -287,6 +287,8 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
     Model(NULL)
 
     data <- data()
+
+    {
     if (!is.null(data) && (notEmpty(input$catVars) || notEmpty(input$numVars))) {
       dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
 
@@ -358,7 +360,7 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
         XCAT <- dataAssignR[, input$catVars, drop = FALSE]
         XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
         if(NCOL(XCAT) > 0){
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
+          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
         } else {
           XCAT <- NULL
         }
@@ -389,6 +391,8 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
 
       predictions <- normalizePredictions(predictions)
       names(predictions) <- cats
+      } %>%
+       tryCatchWithWarningsAndErrors()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
     }

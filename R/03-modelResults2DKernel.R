@@ -523,7 +523,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     data <- data()
 
-    model <- withProgress(
+    model <- withProgress({
       estimateMapKernel(data = data, independent = input$IndependentX,
                   Longitude = input$Longitude, Latitude = input$Latitude,
                   CoordType = coordType(),
@@ -534,7 +534,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   kMeansAlgo = input$kMeansAlgo,
                   restriction = restriction,
                   nSim = input$nSim,
-                  kdeType = input$kdeType),
+                  kdeType = input$kdeType) %>%
+        tryCatchWithWarningsAndErrors()
+      },
       value = 0,
       message = "Generating local kernel density model"
     )

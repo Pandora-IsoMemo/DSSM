@@ -637,7 +637,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    model <- estimateMap3DWrapper(data(), params)
+    model <- estimateMap3DWrapper(data(), params) %>%
+      tryCatchWithWarningsAndErrors()
 
     Model(model)
   })
