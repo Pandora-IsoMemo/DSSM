@@ -310,10 +310,13 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
   # RUN MODEL ----
   observeEvent(input$createDiffMap, {
     if (!is.null(input$targetMap1) & !is.null(input$targetMap2)) {
-      withProgress(
-        MapDiff(createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
-                                    savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
-                                    operation = input$operation)),
+      withProgress({
+        model <- createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
+                                          savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
+                                          operation = input$operation) %>%
+          tryCatchWithWarningsAndErrors()
+        MapDiff(model)
+        },
         value = 0,
         message = "Generating map"
       )

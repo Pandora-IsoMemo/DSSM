@@ -287,108 +287,111 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
     Model(NULL)
 
     data <- data()
-    if (!is.null(data) && (notEmpty(input$catVars) || notEmpty(input$numVars))) {
-      dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
+    {
+      if (!is.null(data) && (notEmpty(input$catVars) || notEmpty(input$numVars))) {
+        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
 
-      dataAssignR <- dataAssignR %>%
-        addUncertainty(type = "numeric", data = data, vars = input$numVars, varsUnc = input$numVarsUnc)
-      if (is.null(dataAssignR)) return(NULL)
-
-      dataAssignR <- dataAssignR %>%
-        addUncertainty(type = "categorical", data = data, vars = input$catVars, varsUnc = input$catVarsUnc)
-      if (is.null(dataAssignR)) return(NULL)
-
-      if(input$imputeMissings & any(is.na(dataAssignR))){
         dataAssignR <- dataAssignR %>%
-          imputeMissingValues(numVars = input$numVars, catVars = input$catVars,
-                              numVarsUnc = input$numVarsUnc, catVarsUnc = input$catVarsUnc)
-      } else {
-        dataAssignR <- dataAssignR %>%
-          na.omit()
-      }
+          addUncertainty(type = "numeric", data = data, vars = input$numVars, varsUnc = input$numVarsUnc)
+        if (is.null(dataAssignR)) return(NULL)
 
-      dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
-      if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
-        alert("Please specify dependent and at least one numeric or categorical variable")
-        return(NULL)
-      }
-      y <- trimws(dataAssignR[, input$IndependentX])
-      cats <- sort(unique(y))
-      value <- 0
-      models <- lapply(cats, function(x) {
-        modelCat <- x
-        XNUM <- dataAssignR[, input$numVars, drop = F]
-        if (!is.null(input$numVarsUnc) && input$numVarsUnc != "") {
-          xUncNUM <- dataAssignR[, input$numVarsUnc, drop = F]
+        dataAssignR <- dataAssignR %>%
+          addUncertainty(type = "categorical", data = data, vars = input$catVars, varsUnc = input$catVarsUnc)
+        if (is.null(dataAssignR)) return(NULL)
+
+        if(input$imputeMissings & any(is.na(dataAssignR))){
+          dataAssignR <- dataAssignR %>%
+            imputeMissingValues(numVars = input$numVars, catVars = input$catVars,
+                                numVarsUnc = input$numVarsUnc, catVarsUnc = input$catVarsUnc)
         } else {
-          xUncNUM <- NULL
+          dataAssignR <- dataAssignR %>%
+            na.omit()
         }
-        XCAT <- dataAssignR[, input$catVars, drop = FALSE]
-        XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
-        if(NCOL(XCAT) > 0){
-          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
-          if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
-            XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
-            xUncCAT <- XCAT
-            xUncCAT <- lapply(1:length(XCAT), function(z) {
-              xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
-            })
-            #XCAT <- do.call("cbind", XCAT)
-            xUncCAT <- do.call("cbind", xUncCAT)
+
+        dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
+        if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
+          alert("Please specify dependent and at least one numeric or categorical variable")
+          return(NULL)
+        }
+        y <- trimws(dataAssignR[, input$IndependentX])
+        cats <- sort(unique(y))
+        value <- 0
+        models <- lapply(cats, function(x) {
+          modelCat <- x
+          XNUM <- dataAssignR[, input$numVars, drop = F]
+          if (!is.null(input$numVarsUnc) && input$numVarsUnc != "") {
+            xUncNUM <- dataAssignR[, input$numVarsUnc, drop = F]
           } else {
+            xUncNUM <- NULL
+          }
+          XCAT <- dataAssignR[, input$catVars, drop = FALSE]
+          XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
+          if(NCOL(XCAT) > 0){
+            XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
+            if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
+              XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
+              xUncCAT <- XCAT
+              xUncCAT <- lapply(1:length(XCAT), function(z) {
+                xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
+              })
+              #XCAT <- do.call("cbind", XCAT)
+              xUncCAT <- do.call("cbind", xUncCAT)
+            } else {
+              xUncCAT <- NULL
+            }
+          } else {
+            XCAT <- NULL
             xUncCAT <- NULL
           }
-        } else {
-          XCAT <- NULL
-          xUncCAT <- NULL
-        }
 
-        yCat <- as.numeric(dataAssignR[, input$IndependentX] == modelCat)
-        model <- modelAssignRMC(
-          XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
-          nChains = input$nChains, thinning = input$thinning, cat = modelCat
-        )
-        value <- match(modelCat, cats) / (length(cats))
-        model
-      })
-      names(models) <- cats
-      X <- lapply(cats, function(x) {
-        XNUM <- dataAssignR[, input$numVars, drop = F]
+          yCat <- as.numeric(dataAssignR[, input$IndependentX] == modelCat)
+          model <- modelAssignRMC(
+            XNUM = XNUM, XCAT = XCAT, y = yCat, xUncCAT = xUncCAT, xUncNUM = xUncNUM, iter = input$Iter, burnin = input$burnin,
+            nChains = input$nChains, thinning = input$thinning, cat = modelCat
+          )
+          value <- match(modelCat, cats) / (length(cats))
+          model
+        })
+        names(models) <- cats
+        X <- lapply(cats, function(x) {
+          XNUM <- dataAssignR[, input$numVars, drop = F]
 
-        XCAT <- dataAssignR[, input$catVars, drop = FALSE]
-        XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
-        if(NCOL(XCAT) > 0){
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
-        } else {
-          XCAT <- NULL
-        }
-        if(NCOL(XNUM) > 0){
-          if(!is.null(XCAT)){
-            X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
-                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+          XCAT <- dataAssignR[, input$catVars, drop = FALSE]
+          XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
+          if(NCOL(XCAT) > 0){
+            XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
           } else {
-            X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
-                                   matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)))
+            XCAT <- NULL
           }
-        } else {
-          if(!is.null(XCAT)){
-            X <- as.matrix(cbind(rep(1, length(y)), XCAT))
-
+          if(NCOL(XNUM) > 0){
+            if(!is.null(XCAT)){
+              X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                     matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE), XCAT))
+            } else {
+              X <- as.matrix(cbind(rep(1, length(y)), (XNUM - matrix(models[[x]]$mRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)) /
+                                     matrix(models[[x]]$sRe, nrow = nrow(XNUM), ncol = ncol(XNUM), byrow = TRUE)))
+            }
           } else {
-            X <- as.matrix(cbind(rep(1, length(y))))
+            if(!is.null(XCAT)){
+              X <- as.matrix(cbind(rep(1, length(y)), XCAT))
 
+            } else {
+              X <- as.matrix(cbind(rep(1, length(y))))
+
+            }
           }
-        }
-        X
-      })
-      names(X) <- cats
-      predictions <- lapply(cats, function(x) {
-        preds <- (resp(sapply(1:nrow(models[[x]]$beta), function(y) X[[x]] %*% models[[x]]$beta[y, ])))
-        preds
-      })
+          X
+        })
+        names(X) <- cats
+        predictions <- lapply(cats, function(x) {
+          preds <- (resp(sapply(1:nrow(models[[x]]$beta), function(y) X[[x]] %*% models[[x]]$beta[y, ])))
+          preds
+        })
 
-      predictions <- normalizePredictions(predictions)
-      names(predictions) <- cats
+        predictions <- normalizePredictions(predictions)
+        names(predictions) <- cats
+      } %>%
+        tryCatchWithWarningsAndErrors()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
     }
