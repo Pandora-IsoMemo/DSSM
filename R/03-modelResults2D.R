@@ -553,7 +553,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     params$coordType <- coordType()
 
-    model <- estimateMapWrapper(data(), params)
+    model <- estimateMapWrapper(data(), params) %>%
+      tryCatchWithWarningsAndErrors()
 
     Model(model)
   })

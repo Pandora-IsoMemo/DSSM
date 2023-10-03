@@ -628,7 +628,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     data <- data()
 
-      model <- withProgress(
+      model <- withProgress({
         estimateMap3DKernel(data = data, independent = input$IndependentX,
                       Longitude = input$Longitude, Latitude = input$Latitude,
                       CoordType = coordType(), DateOne = input$DateOne,
@@ -643,7 +643,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       modelUnc = input$modelUnc,
                       restriction = restriction,
                       nSim = input$nSim,
-                      kdeType = input$kdeType),
+                      kdeType = input$kdeType) %>%
+          tryCatchWithWarningsAndErrors()
+        },
         value = 0,
         message = "Generating spatio-temporal kernel density"
       )

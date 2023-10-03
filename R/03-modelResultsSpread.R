@@ -557,7 +557,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    model <- estimateMapSpreadWrapper(data(), params)
+    model <- estimateMapSpreadWrapper(data(), params) %>%
+      tryCatchWithWarningsAndErrors()
 
     Model(model)
   })
