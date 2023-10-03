@@ -1,9 +1,11 @@
 # MpiIsoApp development version
 
-## Version 23.09.1
+## Version 23.10.0.1
 
 ## New Features
-- [please add some description]  
+- Create new map option moved to OperatoR tab
+- Batch option to provide multiple points to create new map (csv or excel file for upload)
+- Option for specific average radius for each row in batch input for operatoR
 
 ## Version 23.09.1
 

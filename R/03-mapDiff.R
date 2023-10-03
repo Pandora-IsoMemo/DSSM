@@ -224,7 +224,7 @@ modelResultsDiffUI <- function(id, title = ""){
             div(
               style = 'display:inline-block',
               class = "save-plot-container",
-              textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
+              textInput(ns("saveMapNameMain"), NULL, placeholder = "Name for Map"),
               actionButton(ns("saveMap"), "Save map")
             ),
           ),
@@ -346,7 +346,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
   })
 
   observeEvent(input$saveMap, {
-    mapName <- trimws(input$saveMapName)
+    mapName <- trimws(input$saveMapNameMain)
     if (mapName == ""){
       alert("Please provide a map name")
       return()
@@ -365,7 +365,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
     savedMaps(maps)
 
     alert(paste0("Map '", mapName, "' was saved"))
-    updateTextInput(session, "saveMapName", value = "")
+    updateTextInput(session, "saveMapNameMain", value = "")
   })
 
   MapDiff <- reactiveVal(NULL)
