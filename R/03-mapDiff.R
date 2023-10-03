@@ -87,7 +87,7 @@ modelResultsDiffUI <- function(id, title = ""){
           ns = ns
           ),
           conditionalPanel(
-            condition = "input.customCircles == 'single'",
+            condition = "input.customCircles == 'single' || input.userMapType == '1'",
             numericInput(ns("meanMap"), "Mean of map", value = 0),
             numericInput(ns("sdMap"), "Sd of map", value = 0, min = 0),
             ns = ns),
@@ -532,7 +532,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
               Longitude = coord[[x]][, 1],
               Latitude = coord[[x]][, 2]
             ))) %>% group_by(Longitude, Latitude) %>%
-              summarise(Est = mean(Est), Sd = mean(Sd)) %>% ungroup() %>% as.data.frame()
+              summarise(Est = mean(.data$Est), Sd = mean(.data$Sd)) %>% ungroup() %>% as.data.frame()
           } else {
             alert("No relevant data")
             return()
@@ -613,7 +613,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
               )
             )))
           if(nrow(XPred) > nrow(na.omit(XPred))){
-            alter("data contains missing values")
+            alert("data contains missing values")
             return()
           }
 
@@ -638,7 +638,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
               Longitude = coord[[x]][, 1],
               Latitude = coord[[x]][, 2]
             ))) %>% group_by(Longitude, Latitude) %>%
-              summarise(Est = mean(Est), Sd = mean(Sd)) %>% ungroup() %>% as.data.frame()
+              summarise(Est = mean(.data$Est), Sd = mean(.data$Sd)) %>% ungroup() %>% as.data.frame()
           } else {
             alert("No relevant data")
             return()
