@@ -20,13 +20,13 @@ dataExplorerUI <- function(id, title = "") {
           "skin",
           ## no namespace to make it easier to use it across tabs
           "Skin",
-          choices = c("Pandora" = "pandora", "Ontological schemas" = "isomemo"),
+          choices = c("Pandora" = "pandora", "Data networks" = "isomemo"),
           selected = "pandora"
         ),
         tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          selectInput(ns("mappingId"), "Select schema", choices = c("IsoMemo - Humans" = "IsoMemo")),
+          selectInput(ns("mappingId"), "Select data network", choices = c("IsoMemo - Humans" = "IsoMemo")),
           pickerInput(
             inputId = ns("database"),
             label = "Database selection",
@@ -510,7 +510,7 @@ dataExplorerServer <- function(id, config) {
                    filename = "options.json",
                    content = function(file) {
                      options <- list(
-                       schema = input$mappingId,
+                       network = input$mappingId,
                        database = input$database,
                        columns = dataColumns(),
                        calibrateMethod = input$calMethod
@@ -536,7 +536,7 @@ dataExplorerServer <- function(id, config) {
                  output$dataTable <- renderDataTable({
                    validate(need(
                      !is.null(isoDataFull()),
-                     "Please import data (Skin: Pandora) or select a database (Skin: Ontological schemas) in the sidebar panel."
+                     "Please import data (Skin: Pandora) or select a database (Skin: Data networks) in the sidebar panel."
                    ))
 
                    if(!is.na(input[["maxCharLength"]]) && length(isoDataFull()) > 0){
@@ -655,7 +655,7 @@ getDescriptionFull <- function(id, isoDataFull) {
 loadOptions <- function(session, opt, mapping) {
   if (
     # new format
-    !all(names(opt) %in% c("schema", "database", "columns", "calibrateMethod")) ||
+    !all(names(opt) %in% c("network", "database", "columns", "calibrateMethod")) ||
     # old format
       !all(c("database", "columns", "calibrateMethod") %in% names(opt))) {
     showModal(
@@ -670,7 +670,7 @@ loadOptions <- function(session, opt, mapping) {
 
   updateSelectInput(session,
                     "mappingId",
-                    selected = opt$schema)
+                    selected = opt$network)
 
   updateCheckboxGroupInput(session,
                            "database",
