@@ -18,8 +18,13 @@ modelResultsSimUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
-        # downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        # textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        # importDataUI(ns("modelUpload"), label = "Import Model"),
+        # checkboxInput(ns("useDownload"), label = "Download model"),
+        # conditionalPanel(
+        #   ns = ns,
+        #   condition = "input.useDownload == true",
+        #   downloadModelUI(ns("modelDownload"), label = "Download")
+        # ),
         # tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -74,7 +79,7 @@ modelResultsSimUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -188,15 +193,7 @@ modelResultsSimUI <- function(id, title = ""){
           sliderInput(inputId = ns("ncol"),
                       label = "Approximate number of colour levels",
                       min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          sliderInput(inputId = ns("Radius"),
-                      label = "Radius (km)",
-                      min = 10, max = 300, value = 100, step = 10, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -216,15 +213,14 @@ modelResultsSimUI <- function(id, title = ""){
 #' @param session session
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-mapSim <- function(input, output, session, savedMaps, fruitsData){
+mapSim <- function(input, output, session, savedMaps, fruitsData, config){
   values <- reactiveValues(
     simDataList = list(),
     simDataTemp = list(),
     predictionList = list(),
-    sdCenter = NA,
-    meanCenter = NA,
     set = 0,
     upperLeftLongitude = NA,
     upperLeftLatitude = NA,
@@ -309,65 +305,90 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
 
   # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
   # # MODEL DOWN- / UPLOAD ----
-  # uploadedData <- downUploadButtonServer(
-  #   "downUpload",
-  #   dat = savedMaps,
-  #   inputs = input,
-  #   model = Model,
-  #   rPackageName = "MpiIsoApp",
-  #   githubRepo = "iso-app",
-  #   subFolder = "LocateR",
-  #   helpHTML = getHelp(id = "similarity"),
-  #   modelNotes = reactive(input$modelNotes),
-  #   compressionLevel = 1)
+
+  # uploadedNotes <- reactiveVal(NULL)
+  # subFolder <- "LocateR"
+  # downloadModelServer("modelDownload",
+  #                     dat = savedMaps,
+  #                     inputs = input,
+  #                     model = Model,
+  #                     rPackageName = config$rPackageName,
+  #                     subFolder = subFolder,
+  #                     fileExtension = config$fileExtension,
+  #                     helpHTML = getHelp(id = "similarity"),
+  #                     modelNotes = uploadedNotes,
+  #                     triggerUpdate = reactive(TRUE),
+  #                     compressionLevel = 1)
+  #
+  # uploadedValues <- importDataServer("modelUpload",
+  #                                    title = "Import Model",
+  #                                    defaultSource = config$defaultSourceModel,
+  #                                    importType = "model",
+  #                                    rPackageName = config$rPackageName,
+  #                                    subFolder = subFolder,
+  #                                    ignoreWarnings = TRUE,
+  #                                    fileExtension = config$fileExtension)
   #
   # observe(priority = 100, {
-  #   ## update data ----
-  #   savedMaps(uploadedData$data)
+  #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+  #
+  #   # reset model
+  #   Model(NULL)
+  #   savedMaps(uploadedValues()[[1]][["data"]])
+  #
+  #   # update notes in tab "Estimates" model download ----
+  #   uploadedNotes(uploadedValues()[[1]][["notes"]])
   # }) %>%
-  #   bindEvent(uploadedData$data)
+  #   bindEvent(uploadedValues())
   #
   # observe(priority = 50, {
-  #   ## reset input of model notes
-  #   updateTextAreaInput(session, "modelNotes", value = "")
+  #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+  #   uploadedInputs <- uploadedValues()[[1]][["inputs"]]
   #
   #   ## update inputs ----
-  #   inputIDs <- names(uploadedData$inputs)
+  #   inputIDs <- names(uploadedInputs)
   #   inputIDs <- inputIDs[inputIDs %in% names(input)]
   #
   #   for (i in 1:length(inputIDs)) {
-  #     session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+  #     session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
   #   }
   # }) %>%
-  #   bindEvent(uploadedData$inputs)
+  #   bindEvent(uploadedValues())
   #
   # observe(priority = 10, {
+  #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
   #   ## update model ----
-  #   Model(uploadedData$model)
+  #   Model(uploadedValues()[[1]][["model"]])
   # }) %>%
-  #   bindEvent(uploadedData$model)
-  #
-  # # RUN MODEL ----
+  #   bindEvent(uploadedValues())
+
+  # RUN MODEL ----
   observeEvent(input$start, {
     values$simDataListM <- values$simDataList
 
     if (length(values$simDataListM) == 0) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 1]))) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 2]))){
-      withProgress(
-        Model(createSimilarityMap(values$predictionList,
-                                  values$simDataListM, includeUncertainty = FALSE,
-                                  normalize = input$normalize,
-                                  normalType = input$normalType)),
+      withProgress({
+        model <- createSimilarityMap(values$predictionList,
+                                        values$simDataListM, includeUncertainty = FALSE,
+                                        normalize = input$normalize,
+                                        normalType = input$normalType) %>%
+          tryCatchWithWarningsAndErrors()
+        Model(model)
+        },
         value = 0,
         message = 'Creating similarity map ...'
       )
     } else {
-      withProgress(
-        Model(createSimilarityMap(values$predictionList,
-                                  values$simDataListM,
-                                  normalize = input$normalize,
-                                  normalType = input$normalType)),
+      withProgress({
+        model <- createSimilarityMap(values$predictionList,
+                                        values$simDataListM,
+                                        normalize = input$normalize,
+                                        normalType = input$normalType) %>%
+          tryCatchWithWarningsAndErrors()
+        Model(model)
+        },
         value = 0,
         message = 'Creating similarity map ...'
       )
@@ -465,6 +486,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     return(pointDat2D())
   })
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         predictions = reactive(values$predictions))
 
   plotFun <-  reactive({
     validate(validInput(Model()))
@@ -531,6 +554,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
 
     req(zSettings$estType)
 
+    # PLOT MAP ----
     function(...){
       plotDS(Model(),
              type = "similarity",
@@ -549,9 +573,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              centerMap = input$Centering,
              arrow = input$arrow,
              scale = input$scale,
-             centerX = input$centerX,
-             centerY = input$centerY,
-             Radius = input$Radius,
              simValues = values$simDataListM,
              showValues = input$showValues,
              titleMain = !input$titleMain,
@@ -599,8 +620,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     updateTextInput(session, "saveMapName", value = "")
   })
 
-
-
   output$DistMap <- renderPlot({
     validate(validInput(Model()))
     res <- plotFun()()
@@ -608,26 +627,12 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       alert(res)
     } else {
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
     }
   })
 
-  output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius)) return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+  output$centerEstimate <- renderUI({
+    centerEstimate$text()
   })
 
   zoomFromModel <- reactiveVal(50)
@@ -707,5 +712,4 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   callModule(plotExport, "export", reactive(values$plot), "similarity",
              reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData)
-
 }

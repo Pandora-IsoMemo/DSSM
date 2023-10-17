@@ -18,8 +18,13 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -88,8 +93,8 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
-                        label = "Number of clusters (range)",
-                        value = c(2,10), min = 2, max = 20, step = 1)
+                        label = "Possible range for clusters",
+                        value = c(2,10), min = 2, max = 50, step = 1)
           ),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
@@ -140,7 +145,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -271,7 +276,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                           selected = "RdYlGn"),
               ns = ns),
             selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                        choices = 0:25, selected = 4),
+                        choices = pchChoices(), selected = 4),
             ns = ns),
           checkboxInput(inputId = ns("cluster"),
                         label = "Show Clustering",
@@ -379,9 +384,9 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#'
+#' @param config (list) list of configuration parameters#'
 #' @export
-modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "kernel2d")
 
@@ -437,48 +442,67 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "KernelR",
-    helpHTML = getHelp(id = "model2DKernel"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "KernelR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "model2DKernel"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
+
+
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
-    ## update data ----
-    data(uploadedData$data)
+    data(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedData$model)
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
@@ -499,7 +523,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     data <- data()
 
-    model <- withProgress(
+    model <- withProgress({
       estimateMapKernel(data = data, independent = input$IndependentX,
                   Longitude = input$Longitude, Latitude = input$Latitude,
                   CoordType = coordType(),
@@ -510,7 +534,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   kMeansAlgo = input$kMeansAlgo,
                   restriction = restriction,
                   nSim = input$nSim,
-                  kdeType = input$kdeType),
+                  kdeType = input$kdeType) %>%
+        tryCatchWithWarningsAndErrors()
+      },
       value = 0,
       message = "Generating local kernel density model"
     )
@@ -667,8 +693,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         predictions = reactive(values$predictions))
+
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -757,6 +783,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,
@@ -782,9 +809,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = centerEstimate$centerX(),
-        centerY = centerEstimate$centerY(),
-        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -822,16 +846,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
   values <- reactiveValues(
     plot = NULL,
     predictions = NULL,
-    meanCenter = NA,
-    sdCenter = NA,
     up = 0,
     right = 0,
     set = 0,
@@ -840,7 +860,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     zoom = 50
   )
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
@@ -915,12 +935,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$cluster)){
+      if(!is.null(Model()$data$spatial_cluster)){
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster", "clustMeanLongitude", "clustMeanLatitude", "rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       } else {

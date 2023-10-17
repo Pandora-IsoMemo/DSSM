@@ -17,8 +17,13 @@ modelResultsSpreadUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -179,7 +184,7 @@ modelResultsSpreadUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -328,7 +333,7 @@ modelResultsSpreadUI <- function(id, title = ""){
                           selected = "RdYlGn"),
               ns = ns),
             selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                        choices = 0:25, selected = 4),
+                        choices = pchChoices(), selected = 4),
             ns = ns),
           checkboxInput(inputId = ns("interior"),
                         label = "Apply convex hull",
@@ -415,9 +420,10 @@ modelResultsSpreadUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     observeEvent(savedMaps(), {
       choices <- getMapChoices(savedMaps(), "spread")
@@ -475,48 +481,65 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   Model <- reactiveVal()
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "SpreadR",
-    helpHTML = getHelp(id = "spread"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "SpreadR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "spread"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
-    ## update data ----
-    data(uploadedData$data)
+    data(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedData$model)
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
@@ -534,7 +557,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    model <- estimateMapSpreadWrapper(data(), params)
+    model <- estimateMapSpreadWrapper(data(), params) %>%
+      tryCatchWithWarningsAndErrors()
 
     Model(model)
   })
@@ -718,9 +742,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
+
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
@@ -808,6 +832,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
       req(zSettings$estType)
 
+      # PLOT MAP ----
       plotMap(
         model,
         points = input$points,
@@ -834,9 +859,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        centerX = centerEstimate$centerX(),
-        centerY = centerEstimate$centerY(),
-        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -876,18 +898,16 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(plot = NULL, predictions = NULL, sdCenter = NA, meanCenter = NA,
+  values <- reactiveValues(plot = NULL, predictions = NULL,
                            set = 0,
                            upperLeftLongitude = NA,
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 

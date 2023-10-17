@@ -29,11 +29,6 @@
 #' @param maskRadius numeric: Show output within range of points in km
 #' @param limitz restrict range of z (possible values "0-1", "0-100")
 #' @param rangez range of estimated values (z axis limits)
-#' @param centerX optional. longitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param centerY optional. latitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param Radius radius of fixed spatial point estimate
 #' @param dataCenter optional data.frame with two columns (longitude / latitude) for batch estimates
 #' of a series of spatial points
 #' @param RadiusBatch radius of batch spatial point estimates
@@ -91,7 +86,6 @@ plotMap <- function(model,
                     fontCol = "black",
                     mask = FALSE,
                     maskRadius = 100,
-                    centerX = NA, centerY = NA, Radius = NA,
                     pColor = "#000000",
                     dataCenter = NULL, RadiusBatch = NULL, terrestrial = 1,
                     grid = TRUE, arrow = TRUE, scale = TRUE, mapType = "Map",
@@ -167,7 +161,6 @@ plotMap <- function(model,
 
   sc <- model$sc
   if (is.null(data)) return(NULL)
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
   maskRadius <- maskRadius / 111
 
@@ -221,6 +214,7 @@ plotMap <- function(model,
     }
   }
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
@@ -393,28 +387,31 @@ plotMap <- function(model,
     }
   }
 
-
   if (!is.null(dataCenter)){
-    XPredCenter <- lapply(1:nrow(dataCenter),
-                          function(x){ XPred[sqrt((XPred$Longitude - dataCenter[x, 1]) ^ 2 +
-                                                    (XPred$Latitude - dataCenter[x, 2]) ^ 2) <
-                                               RadiusBatch, ]})
+    # this is batch mode
+    XPredCenter <- lapply(1:nrow(dataCenter), function(x){
+      XPred %>%
+        extractXPredCenter(centerX = dataCenter[x, 1],
+                           centerY = dataCenter[x, 2],
+                           Radius = RadiusBatch)
+    })
 
-    meanCenter <- sapply(1:nrow(dataCenter),
-                         function(x) signif(mean(XPredCenter[[x]]$Est), 5))
-    sdCenter <- sapply(1:nrow(dataCenter),
-                       function(x) signif(sqrt(sum(sd(XPredCenter[[x]]$Est) ^ 2,
-                                                   mean(XPredCenter[[x]]$Sd) ^ 2,
-                                                   na.rm = TRUE)), 5))
+    centerEstimates <- lapply(1:nrow(dataCenter), function(x){
+      XPredCenter[[x]] %>%
+        extractCenterEstimates(batch = TRUE)
+    })
+    meanCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$mean)
+    sdCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$sd)
+
     IntLower <- sapply(1:nrow(dataCenter),
                        function(x) signif(mean(XPredCenter[[x]]$IntLower), 5))
     IntUpper <- sapply(1:nrow(dataCenter),
                        function(x) signif(mean(XPredCenter[[x]]$IntUpper), 5))
 
-    dataCenter <- cbind(dataCenter, mean = meanCenter, sd = sdCenter,
-                        IntLower = IntLower, IntUpper = IntUpper)
-
-    if(!is.null(XPredCenter[[1]]$SDPop)){
+    if(is.null(XPredCenter[[1]]$SDPop)) {
+      dataCenter <- cbind(dataCenter, mean = meanCenter, sd = sdCenter,
+                          IntLower = IntLower, IntUpper = IntUpper)
+    } else {
       #population SD
       SDPop <- sapply(1:nrow(dataCenter),
                               function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
@@ -439,14 +436,11 @@ plotMap <- function(model,
     return(dataCenter)
   }
 
-  XPredCenter <- XPred[sqrt((XPred$Longitude - centerX) ^ 2 +
-                              (XPred$Latitude - centerY) ^ 2) < Radius, ]
-
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
-
-  sdCenter <- signif(sd(XPredCenter$Est) + mean(XPredCenter$Sd), 5)
+  # keep $Est in XPred for later calculation of mean and sd
+  XPred$EstForCenter <- XPred$Est
 
   if (interior == TRUE){
+    # this step can remove all $Est
     XPred$Est[draw == 0] <- NA
   }
   if (mask == TRUE){
@@ -506,7 +500,7 @@ plotMap <- function(model,
         labs(title=paste0("Comparison of local ", MinMax, "ima")) + xlab("")
 
     print(g)
-    return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+    return(list(XPred = XPred))
     }
   }
 
@@ -648,12 +642,12 @@ plotMap <- function(model,
                           pointColLabels <- pointColLabels / max(pointColLabels, na.rm = TRUE)
                           pColor <- (colorRampPalette(brewer.pal(9, colorsP))(101))[round(pointColLabels, 2) * 100]
                         }
-                        if(cluster & !is.null(data$cluster)){
-                          pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          if("clustMeanLongitude" %in% names(data)){
-                            data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                        if(cluster & !is.null(data$spatial_cluster)){
+                          pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$spatial_cluster, na.rm=TRUE))[data$spatial_cluster]
+                          if((!"long_temporal_group_reference_point" %in% names(data))){
+                            data_names <- c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
                           } else {
-                            data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                            data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point")
                           }
                           centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
@@ -673,9 +667,9 @@ plotMap <- function(model,
                                  col = pColor, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                         }
-                        if(cluster & !is.null(data$cluster)){
+                        if(cluster & !is.null(data$spatial_cluster)){
                           points(centroids[, 2:3], lwd = 2,
-                                 pch = pointShape, cex = pointSize * 2.5, col = colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster)))
+                                 pch = pointShape, cex = pointSize * 2.5, col = colorRampPalette(brewer.pal(8, clusterCol))(max(data$spatial_cluster, na.rm=TRUE)))
                           text(centroids[, 2:3], labels = paste0("Cluster_", centroids[,1]), pos = 4,
                                cex = fontSize * 1.5, col = fontCol, family = fontType)
                         }
@@ -857,12 +851,12 @@ plotMap <- function(model,
                         pointColLabels <- pointColLabels / max(pointColLabels, na.rm = TRUE)
                         pColor <- (colorRampPalette(brewer.pal(9, colorsP))(101))[round(pointColLabels, 2) * 100]
                       }
-                      if(cluster & !is.null(data$cluster)){
-                        pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                        if("clustMeanLongitude" %in% names(data)){
-                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                      if(cluster & !is.null(data$spatial_cluster)){
+                        pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$spatial_cluster, na.rm=TRUE))[data$spatial_cluster]
+                        if((!"long_temporal_group_reference_point" %in% names(data))){
+                          data_names <- c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
                         } else {
-                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point")
                         }
                         centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
@@ -883,9 +877,9 @@ plotMap <- function(model,
                                col = pColor, lwd = 2,
                                pch = pointShape, cex = pointSize);
                       }
-                      if(cluster & !is.null(data$cluster)){
+                      if(cluster & !is.null(data$spatial_cluster)){
                         points(centroids[, 2:3], lwd = 2,
-                               pch = pointShape, cex = pointSize * 2.5, col = colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster)))
+                               pch = pointShape, cex = pointSize * 2.5, col = colorRampPalette(brewer.pal(8, clusterCol))(max(data$spatial_cluster, na.rm=TRUE)))
                         text(centroids[, 2:3], labels = paste0("Cluster_", centroids[,1]), pos = 4,
                              cex = fontSize * 1.5, col = fontCol, family = fontType)
                       }
@@ -958,7 +952,7 @@ plotMap <- function(model,
     }
   }
 
-  return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+  return(list(XPred = XPred))
 }
 
 #' Plots time slice map of a spatio-temporal model from estimateMap3D() function
@@ -991,12 +985,6 @@ plotMap <- function(model,
 #' @param limitz restrict range of z (possible values "0-1", "0-100")
 #' @param rangez range of estimated values (z axis limits)
 #' @param centerMap center of map, one of "Europe" and "Pacific"
-#' @param centerX optional. longitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param centerY optional. latitude value for fixed spatial
-#' point estimate returns estimate instead of map.
-#' @param Radius radius of fixed spatial point estimate for batch estimates
-#' of a series of spatial points
 #' @param dataCenter optional data.frame with three columns (longitude / latitude / time)
 #' @param RadiusBatch radius of batch spatial point estimates
 #' @param textLabels text labels
@@ -1024,6 +1012,7 @@ plotMap <- function(model,
 #' @param AxisLSize axis label font size
 #' @param cluster show clusters
 #' @param clusterAll show all cluster points
+#' @param clusterResults temporal groups or spatial clusters
 #' @param clusterCol Cluster colors
 #' @param pointDat data frame of points to add to plot
 #' @param plotRetNull return predictions
@@ -1055,7 +1044,7 @@ plotMap3D <- function(model,
                       fontCol = "black",
                       resolution = 100, interior = TRUE,
                       ncol = 10, colors = "RdYlGn", reverseColors = FALSE,
-                      centerX = NA, centerY = NA, Radius = NA, dataCenter = NULL,
+                      dataCenter = NULL,
                       RadiusBatch = 100, terrestrial = 1,
                       grid = TRUE, arrow = TRUE, scale = TRUE,
                       titleMain = TRUE,
@@ -1075,6 +1064,7 @@ plotMap3D <- function(model,
                       AxisLSize = 1,
                       cluster = FALSE,
                       clusterAll = "0",
+                      clusterResults = 0,
                       clusterCol = "Set1",
                       pointDat = NULL,
                       plotRetNull = FALSE){
@@ -1129,7 +1119,6 @@ plotMap3D <- function(model,
 
   if (is.null(data)) return(NULL)
 
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
   maskRadius <- maskRadius / 300
   dataT <- data[data$Date + 2 * data$Uncertainty + addU >= time  &
@@ -1231,6 +1220,7 @@ plotMap3D <- function(model,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
@@ -1402,66 +1392,62 @@ plotMap3D <- function(model,
       XPred$Est <- pmax(0, XPred$Est)
     }
   }
+
   if (!is.null(dataCenter)){
-    XPredCenter <- lapply(1:nrow(dataCenter),
-                          function(x) XPred[sqrt(((XPred$Longitude2 * sd(data$Longitude) +
-                                                     mean(data$Longitude)) -
-                                                    dataCenter[x, 1]) ^ 2 +
-                                                   ((XPred$Latitude2 * sd(data$Latitude) +
-                                                       mean(data$Latitude)) -
-                                                      dataCenter[x, 2]) ^ 2) < RadiusBatch &
-                                              XPred$time == dataCenter[x, 3], ])
+    # this is batch mode
+    XPredCenter <- lapply(1:nrow(dataCenter), function(x){
+      XPred %>%
+        extractXPredCenter(centerX = dataCenter[x, 1],
+                           centerY = dataCenter[x, 2],
+                           Radius = RadiusBatch,
+                           batch = TRUE,
+                           isThreeD = TRUE,
+                           data = data,
+                           time = dataCenter[x, 3])
+    })
 
-    meanCenter <- sapply(1:nrow(dataCenter),
-                         function(x) signif(mean(XPredCenter[[x]]$Est), 5))
-
-    sdCenter <- sapply(1:nrow(dataCenter),
-                       function(x) signif(sum(c(sd(XPredCenter[[x]]$Est),
-                                                mean(XPredCenter[[x]]$Sd)), na.rm = TRUE), 5))
+    centerEstimates <- lapply(1:nrow(dataCenter), function(x){
+      XPredCenter[[x]] %>%
+        extractCenterEstimates(batch = FALSE) # why is sd calculated here differently than in plotMap batch??
+    })
+    meanCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$mean)
+    sdCenter <- sapply(1:nrow(dataCenter), function(x) centerEstimates[[x]]$sd)
 
     IntLower <- sapply(1:nrow(dataCenter),
                        function(x) signif(min(XPredCenter[[x]]$IntLower), 5))
     IntUpper <- sapply(1:nrow(dataCenter),
                        function(x) signif(max(XPredCenter[[x]]$IntUpper), 5))
 
-    dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
-                        IntLower = IntLower, IntUpper = IntUpper)
-
-    if(!is.null(XPredCenter[[1]]$SDPop)){
-      SDPop <- sapply(1:nrow(dataCenter),
-                   function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
-
-      sdCenterTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(sqrt(sum(c(sd(XPredCenter[[x]]$Est)^2,
-                                                       mean(XPredCenter[[x]]$Sd^2),
-                                                       mean(XPredCenter[[x]]$SdTotal)^2), na.rm = TRUE)), 5))
-      IntLowerTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(min(XPredCenter[[x]]$IntLowerTotal), 5))
-      IntUpperTotal <- sapply(1:nrow(dataCenter),
-                              function(x) signif(max(XPredCenter[[x]]$IntUpperTotal), 5))
-
+    if(is.null(XPredCenter[[1]]$SDPop)) {
       dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
-                          SDPop = SDPop,
-                          sdTotal = sdCenterTotal,
-                          IntLower = IntLower, IntUpper = IntUpper,
-                          IntLowerTotal = IntLowerTotal, IntUpperTotal = IntUpperTotal)
-    }
+                          IntLower = IntLower, IntUpper = IntUpper)
+      } else {
+        SDPop <- sapply(1:nrow(dataCenter),
+                        function(x) signif(sqrt(mean(XPredCenter[[x]]$SDPop, na.rm = TRUE)^2), 5))
+
+        sdCenterTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(sqrt(sum(c(sd(XPredCenter[[x]]$Est)^2,
+                                                              mean(XPredCenter[[x]]$Sd^2),
+                                                              mean(XPredCenter[[x]]$SdTotal)^2), na.rm = TRUE)), 5))
+        IntLowerTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(min(XPredCenter[[x]]$IntLowerTotal), 5))
+        IntUpperTotal <- sapply(1:nrow(dataCenter),
+                                function(x) signif(max(XPredCenter[[x]]$IntUpperTotal), 5))
+
+        dataCenter <- cbind(dataCenter, time = time, mean = meanCenter, sd = sdCenter,
+                            SDPop = SDPop,
+                            sdTotal = sdCenterTotal,
+                            IntLower = IntLower, IntUpper = IntUpper,
+                            IntLowerTotal = IntLowerTotal, IntUpperTotal = IntUpperTotal)
+      }
     return(dataCenter)
   }
 
-
-  # nolint start
-  XPredCenter <- XPred[sqrt((((XPred$Longitude2 * sd(data$Longitude)) +
-                                mean(data$Longitude)) - centerX) ^ 2 +
-                              (((XPred$Latitude2 * sd(data$Latitude)) +
-                                  mean(data$Latitude)) - centerY) ^ 2) < Radius, ]
-  # nolint end
-
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
-
-  sdCenter <- signif(sd(XPredCenter$Est) + mean(XPredCenter$Sd), 5)
+  # keep $Est for later calculation of mean and sd for center
+  XPred$EstForCenter <- XPred$Est
 
   if (interior > 0){
+    # this can remove all $Est
     XPred$Est[draw == 0] <- NA
   }
   if (mask == TRUE){
@@ -1471,7 +1457,6 @@ plotMap3D <- function(model,
   if(GAM == TRUE){
     XPred$Est[is.na(XPred$Est) | XPred$Est < 0] <- 0
   }
-
 
   #if (!all(is.na(XPred$Est))){
   levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
@@ -1541,7 +1526,6 @@ plotMap3D <- function(model,
     ylab = "Latitude"
   }
 
-
   filled.contour2(longitudes, latitudes, z = matrix(XPredPlot$Est, ncol = resolution),
                   xlim = rangex, ylim = rangey, levels = levels,
                   col = colors,
@@ -1604,20 +1588,28 @@ plotMap3D <- function(model,
                         pointColLabels <- pointColLabels / max(pointColLabels, na.rm = TRUE)
                         pColor <- (colorRampPalette(brewer.pal(9, colorsP))(101))[round(pointColLabels, 2) * 100]
                       }
-                      if(cluster & !is.null(data$cluster)){
-                        if(clusterAll %in% c("1", "0")){
-                          if(clusterAll == "0"){
-                            pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster))[data$cluster]
-                          } else {
-                            pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster))[dataT$cluster]
-                          }
-                        }
-                        if("clustMeanLongitude" %in% names(data)){
-                          data_names <- c("cluster", "clustMeanLongitude", "clustMeanLatitude")
+                      if(cluster & !is.null(data$spatial_cluster)){
+                        if(clusterResults == 0){
+                          data$cluster <- data$temporal_group
+                          dataT$cluster <- dataT$temporal_group
                         } else {
-                          data_names <- c("cluster", "long_temporal_centroid", "lat_temporal_centroid")
+                          data$cluster <- data$spatial_cluster
+                          dataT$cluster <- dataT$spatial_cluster
                         }
-                        centroids <- unique(data[, data_names])
+
+                            pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster, na.rm=TRUE))[data$cluster]
+                            data$col <- pColor
+                            pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(dataT$cluster, na.rm=TRUE))[dataT$cluster]
+                            dataT$col <- pColor
+                        if(clusterResults == 1){
+                          data_names <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster","spatial_cluster","col")
+                          centroids <- unique(data[, data_names])
+                          centroids <- na.omit(centroids)
+                          centroids <- centroids[,c(3,1,2,4)]
+                        } else {
+                          data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point","col")
+                          centroids <- unique(data[, data_names])
+                        }
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
                           centroids2 <- centroids
@@ -1635,39 +1627,34 @@ plotMap3D <- function(model,
                             dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
                           }
                           points(dataPac$Latitude ~ dataPac$Longitude,
-                                 col = pColor, lwd = 2,
+                                 col = dataPac$col, lwd = 2,
                                  pch = pointShape, cex = pointSize);
-                        } else {
-                          if(clusterAll != "-1"){
-                          points(dataTPac$Latitude ~ dataTPac$Longitude,
-                                 col = pColor, lwd = 2,
-                                 pch = pointShape, cex = pointSize);
-                          }
                         }
-
                       } else {
                         if(cluster & clusterAll %in% c("0", "1")){
                           if(clusterAll == "0"){
                           points(data$Latitude ~ data$Longitude,
-                                 col = pColor, lwd = 2,
+                                 col = data$col, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                           } else {
                             points(dataT$Latitude ~ dataT$Longitude,
-                                   col = pColor, lwd = 2,
+                                   col = dataT$col, lwd = 2,
                                    pch = pointShape, cex = pointSize);
-                          }
-                        } else {
-                          if(clusterAll != "-1"){
-                        points(dataT$Latitude ~ dataT$Longitude,
-                               col = pColor, lwd = 2,
-                               pch = pointShape, cex = pointSize);
                           }
                         }
                       }
-                      if(cluster & !is.null(data$cluster)){
+                      if(cluster & !is.null(data$spatial_cluster)){
+                        if(clusterResults == 0){
+                          centroids$cluster <- centroids$temporal_group
+                          map_label <- "Group"
+                        } else {
+                          centroids$cluster <- centroids$spatial_cluster
+                          map_label <- "Cluster"
+                        }
+
                         points(centroids[, 2:3], lwd = 2,
-                               pch = pointShape, cex = pointSize * 2.5, col = colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster)))
-                        text(centroids[, 2:3], labels = paste0("Cluster_", centroids[,1]), pos = 4,
+                               pch = pointShape, cex = pointSize * 2.5, col = centroids$col)
+                        text(centroids[, 2:3], labels = paste0(map_label,"_", centroids$cluster), pos = 4,
                              cex = fontSize * 1.5, col = fontCol, family = fontType)
                       }
 
@@ -1738,7 +1725,7 @@ plotMap3D <- function(model,
   if(plotRetNull){
     return(NULL)
   } else {
-    return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+    return(list(XPred = XPred))
   }
 }
 
@@ -1759,9 +1746,6 @@ plotMap3D <- function(model,
 #' @param rangex range of longitude values (x axis limits)
 #' @param rangey range of latitude values (y axis limits)
 #' @param rangez range of estimated values (z axis limits)
-#' @param centerX center (x coordinate)
-#' @param centerY center (x coordinate)
-#' @param Radius radius
 #' @param showScale show colour scale
 #' @param centerMap center of map, one of "Europe" and "Pacific"
 #' @param showValues boolean show values in plot?
@@ -1798,7 +1782,6 @@ plotDS <- function(XPred,
                    showScale = TRUE,
                    ncol = 10, colors = "RdYlGn",
                    centerMap = "Europe",
-                   centerX = NA, centerY = NA, Radius = NA,
                    reverseColors = FALSE, terrestrial = 1, grid = TRUE,
                    arrow = TRUE, scale = TRUE,
                    simValues = NULL,
@@ -1821,7 +1804,6 @@ plotDS <- function(XPred,
                    AxisLSize = 1,
                    pointDat = NULL){
   options(scipen=999)
-  Radius <-  Radius / 111
   RadiusBatch <-  RadiusBatch / 111
 
   minRangeFactor <- 0.75
@@ -1836,6 +1818,7 @@ plotDS <- function(XPred,
   }
 
   if (!is.null(dataCenter)){
+    # this is batch mode
     XPred2 <- do.call("rbind", lapply(1:nrow(dataCenter), function(x) {
       longitudes <- seq(dataCenter[x, 1] - RadiusBatch,
                         dataCenter[x, 1] + RadiusBatch, length.out = 4)
@@ -1898,7 +1881,6 @@ plotDS <- function(XPred,
       XPred$Est <- pmax(0, XPred$Est)
     }
   }
-
   #if (!all(is.na(XPred$Est))){
   if(type == "similarity"){
     z <- matrix(XPred$Est, ncol = length(unique(XPred$Latitude)))
@@ -1923,11 +1905,8 @@ plotDS <- function(XPred,
                            n = pmin(20, ceiling(ncol / 2)))
   }
 
-  XPredCenter <- XPred[sqrt((XPred$Longitude - centerX) ^ 2 +
-                              (XPred$Latitude - centerY) ^ 2) < Radius, ]
-
-  meanCenter <- signif(mean(XPredCenter$Est), 5)
-  sdCenter <- signif(sqrt(sd(XPredCenter$Est)^2 + mean(XPredCenter$Sd)^2), 5)
+  # keep $Est for later calculation of mean and sd for center
+  XPred$EstForCenter <- XPred$Est
 
   if(centerMap != "Europe"){
     XPredPac <- XPred
@@ -2088,7 +2067,7 @@ plotDS <- function(XPred,
 
     }
   }
-  return(list(XPred = XPred, sdCenter = sdCenter, meanCenter = meanCenter))
+  return(list(XPred = XPred))
 }
 
 filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
@@ -2220,7 +2199,6 @@ north.arrow = function(x, y, h, c, adj) {
 #' @param resolution temporal grid resolution of displayed (higher is slower but better quality)
 #' @param centerX longitude value to display time course plot for
 #' @param centerY latitude value to display time course plot for
-#' @param Radius radius of fixed spatial point estimate
 #' @param rangey 2-element vector of time interval to show
 #' @param seType setype
 #' @param pointDat add points/lines to plot
@@ -2235,7 +2213,7 @@ north.arrow = function(x, y, h, c, adj) {
 plotTimeCourse <- function(model, IndSelect = NULL,
                            independent = "", trange = range(model$data$Date),
                            resolution = 500, centerX = NA,
-                           centerY = NA, Radius = NA, rangey = NULL,
+                           centerY = NA, rangey = NULL,
                            seType = "2",
                            pointDat = NULL,
                            pointsTime = FALSE,
@@ -2499,11 +2477,20 @@ plotTimeIntervals <- function(Model,
                               trange = c(0, 1000),
                               AxisSize = 1,
                               AxisLSize = 1,
-                              clusterCol = "Set1"
+                              clusterCol = "Set1",
+                              clusterResults = 0
 ){
   dat <- Model$data
-  if(!is.null(dat$cluster)){
-    dat$cluster_color <- colorRampPalette(brewer.pal(8, clusterCol))(max(dat$cluster))[dat$cluster]
+  if(!is.null(dat$spatial_cluster)){
+    if(clusterResults == 0){
+      dat$cluster <- dat$temporal_group
+      ylabel <- "temporal_group"
+    } else {
+      dat$cluster <- dat$spatial_cluster
+      ylabel <- "spatial_cluster"
+    }
+    dat$cluster_color <- colorRampPalette(brewer.pal(8, clusterCol))(max(dat$cluster, na.rm=TRUE))[dat$cluster]
+    dat <- dat[!is.na(dat$cluster),]
     dat$cluster <- factor(dat$cluster)
     g <- ggplot(dat, aes_(~Date, ~cluster)) + theme_light() + coord_cartesian(xlim = trange) +
       theme(panel.grid.major.x = element_blank(),
@@ -2514,7 +2501,8 @@ plotTimeIntervals <- function(Model,
       geom_errorbar(
         aes_(xmin = ~ Date-2*Uncertainty, xmax = ~ Date + 2*Uncertainty),
         color=dat$cluster_color,
-        position = position_dodge(0.3), width = 0.1, alpha = 0.3)
+        position = position_dodge(0.3), width = 0.1, alpha = 0.3) +
+      ylab(ylabel)
     print(g)
   } else {
     plot(1, cex = 0.1)

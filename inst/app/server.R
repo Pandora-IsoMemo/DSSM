@@ -4,49 +4,45 @@ library(MpiIsoApp)
 # Error in mclustBIC: could not find function "mclustBIC"
 # Therefore we need to import and load the whole package mclust
 library(mclust)
+library(yaml)
 
 options(shiny.maxRequestSize = 200*1024^2)
 options(scipen=999)
+
+# load config variables
+configFile <- system.file("config.yaml", package = "MpiIsoApp")
+appConfig <- yaml::read_yaml(configFile)
 
 server <- function(input, output, session) {
 #  savedMaps <- reactiveVal(readRDS("~/savedMaps.rds"))
   savedMaps <- reactiveVal(list())
   fruitsData <- reactiveVal(list(event = NULL, data = NULL))
 
-  isoData <- dataExplorerServer("dataExplorer")
+  isoData <- dataExplorerServer("dataExplorer", config = appConfig)
   callModule(interactiveMap, "interactivemap", isoData = isoData)
-  callModule(modelResults2D, "model2D", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(modelResults3D, "model3D", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(modelResultsSpread, "spread", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(modelResults2DKernel, "model2DKernel", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(modelResults3DKernel, "model3DKernel", isoData = isoData, savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(mapDiff, "difference", savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(mapSim, "similarity", savedMaps = savedMaps,
-             fruitsData = fruitsData)
-  callModule(modelResultsAssign, "assign", isoData = isoData)
 
-  callModule(savedMapsTab, "svmt", savedMaps = savedMaps)
+  if (!isOnlyDataSearchMode()) {
+    callModule(modelResults2D, "model2D", isoData = isoData, savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResults3D, "model3D", isoData = isoData, savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResultsSpread, "spread", isoData = isoData, savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResults2DKernel, "model2DKernel", isoData = isoData, savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResults3DKernel, "model3DKernel", isoData = isoData, savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(mapDiff, "difference", savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(mapSim, "similarity", savedMaps = savedMaps,
+               fruitsData = fruitsData, config = appConfig)
+    callModule(modelResultsAssign, "assign", isoData = isoData, config = appConfig)
+
+    callModule(savedMapsTab, "svmt", savedMaps = savedMaps)
+  }
 
   if (reSourcesInstalled()) {
     callModule(ReSources::fruitsTab, "fruits", isoMemoData = fruitsData)
-    hideTab("tab", "fruits")
-  }
-
-  if (isOnlyDataSearchMode()) {
-    hideTab("tab", "Modeling", session = session)
-    appendTab(inputId = "tab",
-              modelLinkUI("modelLink", title = "Modeling")
-    )
-  } else {
-    appendTab(inputId = "tab",
-              savedMapsTabUI("svmt", "Saved/Create maps")
-    )
   }
 
   observeEvent(input$getHelp, {
@@ -63,17 +59,24 @@ server <- function(input, output, session) {
 
     if (!is.null(params$skin) && params$skin %in% allowedSkins()) {
       setSkin(params$skin)
-      updateRadioButtons(session, "skin", selected = params$skin)
+      shiny::updateRadioButtons(session, "skin", selected = params$skin)
     }
   })
+
+  mappingIds <- reactive(DataTools::getMappingIds())
+  databaseList <- reactive(DataTools::getDatabaseList(mappingId = input[["dataExplorer-mappingId"]]))
 
   observeEvent(input$skin, {
     setSkin(input$skin)
 
     if (input$skin == "isomemo") {
+      updateSelectInput(session,
+                        "dataExplorer-mappingId",
+                        choices = extractChoicesFromIsomemoApi(mappingIds()))
+
       shinyWidgets::updatePickerInput(session,
                                       "dataExplorer-database",
-                                      choices = DataTools::getDatabaseList())
+                                      choices = extractChoicesFromIsomemoApi(databaseList()))
     }
   })
 }

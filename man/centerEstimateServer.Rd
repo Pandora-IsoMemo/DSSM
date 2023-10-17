@@ -4,16 +4,14 @@
 \alias{centerEstimateServer}
 \title{Center Estimate Server}
 \usage{
-centerEstimateServer(id, meanCenter, sdCenter, mapType = reactiveVal("Map"))
+centerEstimateServer(id, predictions, mapType = reactiveVal("Map"))
 }
 \arguments{
 \item{id}{namespace id}
 
-\item{meanCenter}{(reactive) mean for center}
+\item{predictions}{(reactive) all predictions}
 
-\item{sdCenter}{(reactive) error for center}
-
-\item{mapType}{(reactive) type of plot, either "Map", "Time course", "Time intervals by cluster",
+\item{mapType}{(reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
 "Spread", "Speed", "Minima/Maxima"}
 }
 \description{

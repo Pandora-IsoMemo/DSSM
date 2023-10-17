@@ -4,7 +4,7 @@
 leafletExportButton <- function(id) {
   ns <- NS(id)
 
-  tagList(actionButton(ns("exportLeaflet"), "Export Map"),
+  tagList(actionButton(ns("exportLeaflet"), "Export map"),
           div(
             id = ns("phantomjsHelp"),
             helpText(

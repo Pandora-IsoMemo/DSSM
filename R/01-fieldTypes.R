@@ -15,6 +15,11 @@ numericColumns <- function(df) {
     i <- unlist(lapply(df, isNumeric))
     names(df)[i]
 }
+
+isNumeric <- function(x) {
+  is.numeric(x) || is.integer(x)
+}
+
 partialNumericColumns <- function(df) {
     i <- unlist(lapply(df, function(x) !all(is.na(suppressWarnings(as.numeric(x))))))
     names(df)[i]
@@ -25,6 +30,7 @@ characterColumns <- function(df) {
     names(df)[i]
 }
 
-isNumeric <- function(x) {
-    is.numeric(x) || is.integer(x)
+factorColumns <- function(df) {
+  i <- unlist(lapply(df, function(x) is.factor(x) || is.character(x) ))
+  names(df)[i]
 }

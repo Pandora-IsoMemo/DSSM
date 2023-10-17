@@ -5,9 +5,10 @@
 #' @export
 
 datTable <- function(dat, columns = names(dat)){
+  if (is.null(dat) || length(dat) == 0)
+    return(dat)
+
   if (nrow(dat) == 0)
-    return(NULL)
-  if (is.null(dat))
     return(NULL)
 
   dat <- dat[names(dat) %in% columns]
@@ -56,4 +57,28 @@ getDataColumns <- function(mapping, input){
 
 }
 
+#' Extract Choices From Isomemo Api
+#'
+#' @param apiOutput output from the isomemo api
+#'
+#' @export
+extractChoicesFromIsomemoApi <- function(apiOutput) {
+  if (is.null(apiOutput) || (length(apiOutput) == 0 && is.null(attr(apiOutput, "error")))) {
+    choices <- c("No API output" = "")
+  } else if (length(apiOutput) == 0 && !is.null(attr(apiOutput, "error"))) {
+    choices <- c("")
+    names(choices) <- attr(apiOutput, "error")
+    } else {
+      choices <- apiOutput
+
+      if ("IsoMemo" %in% choices) {
+        # rename label
+        namesChoices <- names(choices)
+        namesChoices[choices == "IsoMemo"] <- "IsoMemo - Humans"
+        names(choices) <- namesChoices
+      }
+    }
+
+  choices
+}
 

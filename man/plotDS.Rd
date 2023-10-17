@@ -18,9 +18,6 @@ plotDS(
   ncol = 10,
   colors = "RdYlGn",
   centerMap = "Europe",
-  centerX = NA,
-  centerY = NA,
-  Radius = NA,
   reverseColors = FALSE,
   terrestrial = 1,
   grid = TRUE,
@@ -74,12 +71,6 @@ plotDS(
 \item{colors}{color scheme of estimates from RColorBrewer. defaults to "RdYlGn"}
 
 \item{centerMap}{center of map, one of "Europe" and "Pacific"}
-
-\item{centerX}{center (x coordinate)}
-
-\item{centerY}{center (x coordinate)}
-
-\item{Radius}{radius}
 
 \item{reverseColors}{inverse colour scheme}
 

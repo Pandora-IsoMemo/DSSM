@@ -17,12 +17,18 @@ modelResultsDiffUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Map", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Map"),
+        checkboxInput(ns("useDownload"), label = "Download map"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
-                    choices = c("Create map" = "create",
+                    choices = c("Create new map from existing" = "create",
+                                "Create new map from scratch" = "createN",
                                 "Load OperatoR map" = "model"),
                     selected = "db"),
         conditionalPanel(
@@ -55,9 +61,128 @@ modelResultsDiffUI <- function(id, title = ""){
           condition = conditionPlot(ns("DistMap")),
           checkboxInput(inputId = ns("fixCol"),
                         label = "Fix colours and ranges ",
-                        value = FALSE, width = "100%")
+                        value = FALSE, width = "100%"),
+          ns = ns
         ),
         ns = ns
+        ),
+        conditionalPanel(
+          condition = "input.dataSource == 'createN'",
+          textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
+          radioButtons(
+            ns("userMapType"),
+            "Map Type",
+            choices = c(
+              "all" = "1",
+              "region - circle" = "2",
+              "region - rectangle" = "3"
+            ),
+            selected = 1,
+            inline = FALSE,
+            width = "100%"
+          ),
+          conditionalPanel(
+            condition = "input.userMapType == '2' ||  input.userMapType == '3'",
+          radioButtons(ns("customCircles"), "type", c("single", "multiple")),
+          ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.customCircles == 'single' || input.userMapType == '1'",
+            numericInput(ns("meanMap"), "Mean of map", value = 0),
+            numericInput(ns("sdMap"), "Sd of map", value = 0, min = 0),
+            ns = ns),
+          conditionalPanel(
+            condition = "input.userMapType == '2'",
+            conditionalPanel(
+              condition = "input.customCircles == 'single'",
+            numericInput(
+              inputId = ns("userRadius"),
+              label = "Radius in km",
+              min = 1,
+              max = 10000,
+              value = c(3000),
+              width = "100%",
+              step = 100
+            ),
+            numericInputLatAndLongUI(
+              ns("centerCoords"),
+              label = "Center",
+              valueLat = 50,
+              valueLong = 10
+            ),
+            ns = ns
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.userMapType == '3'",
+            conditionalPanel(
+              condition = "input.customCircles == 'single'",
+            numericInputLatAndLongUI(
+              ns("upperLeftCoords"),
+              label = "Upper Left",
+              valueLat = 25,
+              valueLong = 35
+            ),
+            numericInputLatAndLongUI(
+              ns("lowerRightCoords"),
+              label = "Lower Right",
+              valueLat = 75,
+              valueLong = -15
+            ),
+            ns = ns
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+          condition = "(input.userMapType == '2' ||  input.userMapType == '3') && (input.customCircles == 'multiple')",
+          importDataUI(ns("importData"), "Import Data"),
+          ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.customCircles == 'multiple' && input.userMapType == '2'",
+          selectInput(inputId = ns("LongitudeO"),
+                      label = "Longitude variable:",
+                      choices = c("Longitude")),
+          selectInput(inputId = ns("LatitudeO"),
+                      label = "Latitude variable:",
+                      choices = c("Latitude")),
+          selectInput(inputId = ns("MeanO"),
+                      label = "Mean variable:",
+                      choices = c("Mean")),
+          selectInput(inputId = ns("SdO"),
+                      label = "SD variable:",
+                      choices = c("SD")),
+          selectInput(inputId = ns("RadiusO"),
+                      label = "Radius variable:",
+                      choices = c("Radius")),
+          ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.customCircles == 'multiple' && input.userMapType == '3'",
+            selectInput(inputId = ns("LongitudeU"),
+                        label = "Upper Left Longitude variable:",
+                        choices = c("Longitude")),
+            selectInput(inputId = ns("LatitudeU"),
+                        label = "Upper Left Latitude variable:",
+                        choices = c("Latitude")),
+            selectInput(inputId = ns("LongitudeL"),
+                        label = "Lower Left Longitude variable:",
+                        choices = c("Longitude")),
+            selectInput(inputId = ns("LatitudeL"),
+                        label = "Lower Left Latitude variable:",
+                        choices = c("Latitude")),
+            selectInput(inputId = ns("MeanR"),
+                        label = "Mean variable:",
+                        choices = c("Mean")),
+            selectInput(inputId = ns("SdR"),
+                        label = "SD variable:",
+                        choices = c("SD")),
+            ns = ns
+          ),
+
+          actionButton( ns("createNewMap"), "Run"),
+          ns = ns
         )
       ),
       # main panel ----
@@ -68,7 +193,7 @@ modelResultsDiffUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -99,7 +224,7 @@ modelResultsDiffUI <- function(id, title = ""){
             div(
               style = 'display:inline-block',
               class = "save-plot-container",
-              textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
+              textInput(ns("saveMapNameMain"), NULL, placeholder = "Name for Map"),
               actionButton(ns("saveMap"), "Save map")
             ),
           ),
@@ -179,15 +304,7 @@ modelResultsDiffUI <- function(id, title = ""){
           sliderInput(inputId = ns("ncol"),
                       label = "Approximate number of colour levels",
                       min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          numericInput(inputId = ns("centerY"),
-                       label = "Center point latitude",
-                       min = -180, max = 180, value = c(), step = 0.5, width = "100%"),
-          numericInput(inputId = ns("centerX"),
-                       label = "Center point longitude",
-                       min = -90, max = 90, value = c(), step = 0.5, width = "100%"),
-          sliderInput(inputId = ns("Radius"),
-                      label = "Radius (km)",
-                      min = 10, max = 300, value = 100, step = 10, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -208,9 +325,11 @@ modelResultsDiffUI <- function(id, title = ""){
 #' @param session session
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-mapDiff <- function(input, output, session, savedMaps, fruitsData){
+mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
+  data <- reactiveVal()
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "difference")
@@ -227,7 +346,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   })
 
   observeEvent(input$saveMap, {
-    mapName <- trimws(input$saveMapName)
+    mapName <- trimws(input$saveMapNameMain)
     if (mapName == ""){
       alert("Please provide a map name")
       return()
@@ -246,65 +365,369 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     savedMaps(maps)
 
     alert(paste0("Map '", mapName, "' was saved"))
-    updateTextInput(session, "saveMapName", value = "")
+    updateTextInput(session, "saveMapNameMain", value = "")
   })
 
   MapDiff <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = savedMaps,
-    inputs = input,
-    model = MapDiff,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "OperatoR",
-    helpHTML = getHelp(id = "difference"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1,
-    title = "Download and Upload of Maps",
-    labelRemote = "Load online map",
-    labelLocal = "Load local map")
+
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "OperatoR"
+  downloadModelServer("modelDownload",
+                      dat = savedMaps,
+                      inputs = input,
+                      model = MapDiff,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "difference"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
 
   observe(priority = 100, {
-    ## update data ----
-    savedMaps(uploadedData$data)
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
+    # reset model
+    MapDiff(NULL)
+    savedMaps(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    MapDiff(uploadedData$model)
+    MapDiff(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
+
+  observe({
+    updateSelectInput(session, "LongitudeO", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LatitudeO", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LongitudeL", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LatitudeL", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LongitudeU", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LatitudeU", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "MeanO", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "SdO", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "MeanR", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "SdR", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "RadiusO", choices = c("", names(fileImport())),
+                      selected = NULL)
+  }) %>% bindEvent(fileImport())
 
   # RUN MODEL ----
   observeEvent(input$createDiffMap, {
     if (!is.null(input$targetMap1) & !is.null(input$targetMap2)) {
-      withProgress(
-        MapDiff(createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
-                                    savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
-                                    operation = input$operation)),
+      withProgress({
+        model <- createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
+                                          savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
+                                          operation = input$operation) %>%
+          tryCatchWithWarningsAndErrors()
+        MapDiff(model)
+        },
         value = 0,
         message = "Generating map"
       )
     }
   })
+
+  circleCenter <- numericInputLatAndLongServer("centerCoords")
+  rectangleUpperLeft <-
+    numericInputLatAndLongServer("upperLeftCoords",
+                                 valueLat = reactive(25),
+                                 valueLong = reactive(35))
+  rectangleLowerRight <-
+    numericInputLatAndLongServer("lowerRightCoords",
+                                 valueLat = reactive(75),
+                                 valueLong = reactive(-15))
+
+  observeEvent(input$createNewMap, {
+    mapName <- trimws(input$saveMapName)
+    if (mapName == "") {
+      alert("Please provide a map name")
+      return()
+    }
+    if (input$userMapType == "1") {
+      XPred <- as.numeric(c(input$meanMap, input$sdMap))
+    }
+    if (input$userMapType == "2") {
+      if(input$customCircles == "multiple"){
+        columnsC <- c(input$MeanO, input$SdO, input$LongitudeO, input$LatitudeO, input$RadiusO)
+        if (any(is.null(columnsC)) ||
+            any(columnsC == "")){
+          alert("Import is not valid.")
+          return()
+        } else {
+          dat <- fileImport()
+          if(all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+            XPred <- data.frame(
+              Est = dat[, input$MeanO],
+              Sd = dat[, input$SdO],
+              longitude = dat[, input$LongitudeO],
+              latitude = dat[, input$LatitudeO],
+              radius = dat[,input$RadiusO]
+            )
+          } else {
+            alert("Not all variables defined")
+            return()
+          }
+
+          if(nrow(XPred) > nrow(na.omit(XPred))){
+            alert("data contains missing values")
+            return()
+          }
+          withProgress(
+            coord <- getFullCoordGrid(gridLength = max(XPred$radius) / 10000),
+            value = 80,
+            message = "Generating grid ..."
+          )
+          coord <- lapply(1:nrow(XPred), function(x) coord %>%
+            filterCoordCircle(
+              lat = XPred$latitude[x],
+              long = XPred$longitude[x],
+              radius = XPred$radius[x] / 111
+            ))
+          if (!is.null(coord) && !is.null(XPred) && nrow(XPred) != 0) {
+            XPred <- do.call("rbind", lapply(1:length(coord), function(x) data.frame(
+              Est = XPred$Est[x],
+              Sd = XPred$Sd[x],
+              Longitude = coord[[x]][, 1],
+              Latitude = coord[[x]][, 2]
+            ))) %>% group_by(Longitude, Latitude) %>%
+              summarise(Est = mean(.data$Est), Sd = mean(.data$Sd)) %>% ungroup() %>% as.data.frame()
+          } else {
+            alert("No relevant data")
+            return()
+          }
+
+        }
+      } else {
+        withProgress(
+          coord <- getFullCoordGrid(gridLength = input$userRadius / 10000),
+          value = 80,
+          message = "Generating grid ..."
+        )
+
+        coord <- coord %>%
+          filterCoordCircle(
+            lat = circleCenter$latitude(),
+            long = circleCenter$longitude(),
+            radius = input$userRadius / 111
+          )
+        if (!is.null(coord) || !is.null(XPred) || nrow(XPred) == 0) {
+            XPred <- data.frame(
+              Est = input$meanMap,
+              Sd = input$sdMap,
+              Longitude = coord[, 1],
+              Latitude = coord[, 2]
+            )
+          } else {
+            XPred <- NULL
+          }
+      }
+      if(!is.null(XPred)){
+        expanded <- expand.grid(unique(XPred$Longitude), unique(XPred$Latitude))
+        colnames(expanded) <- c("Longitude", "Latitude")
+        XPred <- left_join(expanded, XPred, by = c("Longitude", "Latitude")) %>% arrange(Latitude, Longitude)
+      }
+      }
+    if (input$userMapType == "3") {
+      if(input$customCircles == "multiple"){
+        columnsR <- c(input$MeanR, input$SdR, input$LongitudeL, input$LatitudeL, input$LongitudeU, input$LatitudeU)
+
+        if (any(is.null(columnsR)) ||
+            any(columnsR == "")){
+          alert("Import is not valid.")
+          return()
+        } else {
+          dat <- fileImport()
+          if(all(columnsR %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+            XPred <- data.frame(
+            Est = dat[, input$MeanR],
+            Sd = dat[, input$SdR],
+            upperLeftLong = dat[, input$LongitudeU],
+            upperLeftLat= dat[, input$LatitudeU],
+            lowerRightLong = dat[,input$LongitudeL],
+            lowerRightLat = dat[,input$LatitudeL]
+          )} else {
+            alert("Not all variables defined")
+            return()
+          }
+
+          center <- lapply(1:nrow(XPred), function(x) getCoordCenter(
+            upperLeftLat = XPred[x,"upperLeftLat"],
+            upperLeftLong = XPred[x,"upperLeftLong"],
+            lowerRightLat = XPred[x,"lowerRightLat"],
+            lowerRightLong = XPred[x,"lowerRightLong"]
+          ))
+
+          latLength <-
+            lapply(1:nrow(XPred), function(x) abs(diff(
+              c(XPred[x,"lowerRightLat"],
+                XPred[x,"upperLeftLat"]
+              )
+            )))
+          longLength <-
+            lapply(1:nrow(XPred),function(x) abs(diff(
+              c(
+                XPred[x,"lowerRightLong"],
+                XPred[x,"upperLeftLong"]
+              )
+            )))
+          if(nrow(XPred) > nrow(na.omit(XPred))){
+            alert("data contains missing values")
+            return()
+          }
+
+          withProgress(
+            coord <- getFullCoordGrid(gridLength = mean(c(
+                max(unlist(latLength)), max(unlist(longLength))
+              ) / 2) * 111 / 10000),
+            value = 80,
+            message = "Generating grid ..."
+          )
+          coord <- lapply(1:nrow(XPred), function(x) coord %>%
+             filterCoordRectangle(
+              long = center[[x]][1],
+              lat = center[[x]][2],
+              latLength = latLength[[x]],
+              longLength = longLength[[x]]
+            ))
+          if (!is.null(coord) && !is.null(XPred) && nrow(XPred) != 0) {
+            XPred <- do.call("rbind", lapply(1:length(coord), function(x) data.frame(
+              Est = XPred$Est[x],
+              Sd = XPred$Sd[x],
+              Longitude = coord[[x]][, 1],
+              Latitude = coord[[x]][, 2]
+            ))) %>% group_by(Longitude, Latitude) %>%
+              summarise(Est = mean(.data$Est), Sd = mean(.data$Sd)) %>% ungroup() %>% as.data.frame()
+          } else {
+            alert("No relevant data")
+            return()
+          }
+        }
+      }
+      else {
+        center <- getCoordCenter(
+          upperLeftLat = rectangleUpperLeft$latitude(),
+          upperLeftLong = rectangleUpperLeft$longitude(),
+          lowerRightLat = rectangleLowerRight$latitude(),
+          lowerRightLong = rectangleLowerRight$longitude()
+        )
+
+        latLength <-
+          abs(diff(
+            c(
+              rectangleLowerRight$latitude(),
+              rectangleUpperLeft$latitude()
+            )
+          ))
+        longLength <-
+          abs(diff(
+            c(
+              rectangleLowerRight$longitude(),
+              rectangleUpperLeft$longitude()
+            )
+          ))
+
+        withProgress(
+          coord <-
+            getFullCoordGrid(gridLength = mean(c(
+              latLength, longLength
+            ) / 2) * 111 / 10000),
+          value = 80,
+          message = "Generating grid ..."
+        )
+
+        coord <- coord %>%
+          filterCoordRectangle(
+            long = center[1],
+            lat = center[2],
+            latLength = latLength,
+            longLength = longLength
+          )
+
+        if (!is.null(coord) || !is.null(XPred) || nrow(XPred) == 0) {
+          XPred <- data.frame(
+            Est = input$meanMap,
+            Sd = input$sdMap,
+            Longitude = coord[, 1],
+            Latitude = coord[, 2]
+          )
+        } else {
+          XPred <- NULL
+        }
+      }
+      if(!is.null(XPred)){
+        expanded <- expand.grid(unique(XPred$Longitude), unique(XPred$Latitude))
+        colnames(expanded) <- c("Longitude", "Latitude")
+        XPred <- left_join(expanded, XPred, by = c("Longitude", "Latitude")) %>% arrange(Latitude, Longitude)
+      }
+
+    }
+    req(XPred)
+
+    map <- createSavedMap(
+      model = NULL,
+      predictions = XPred,
+      plot =  recordPlot({
+        plot.new()
+        text(
+          x = 0.5,
+          y = 0.5,
+          paste0("Custom map"),
+          cex = 5
+        )
+      }),
+      type = "user",
+      name = mapName
+    )
+    maps <- savedMaps()
+    maps[[length(maps) + 1]] <- map
+    savedMaps(maps)
+
+    alert(paste0("Map '", mapName, "' was saved"))
+    updateTextInput(session, "saveMapName", value = "")
+  })
+  ####
 
   observeEvent(input$load, {
     MapDiff(savedMaps()[[as.numeric(input$savedModel)]]$model)
@@ -474,6 +897,9 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                             zValuesFun = getZValuesMapDiff,
                             zValuesFactor = 1)
 
+  centerEstimate <- centerEstimateServer("centerEstimateParams",
+                                         predictions = reactive(values$predictions))
+
   plotFun <-  reactive({
     validate(validInput(MapDiff()))
     pointDatOK = pointDatOK()
@@ -539,6 +965,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
     req(zSettings$estType)
 
+    # PLOT MAP ----
     function(...){
       plotDS(MapDiff(),
              type = "difference",
@@ -557,9 +984,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              grid = input$grid,
              arrow = input$arrow,
              scale = input$scale,
-             centerX = input$centerX,
-             centerY = input$centerY,
-             Radius = input$Radius,
              titleMain = !input$titleMain,
              titleScale = !input$titleScale,
              showScale = input$showScale,
@@ -588,33 +1012,18 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       res <- plotFun()()
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(plot = NULL, predictions = NULL, sdCenter = NA, meanCenter = NA,
+  values <- reactiveValues(plot = NULL, predictions = NULL,
                            set = 0,
                            upperLeftLongitude = NA,
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  output$centerEstimate <- renderText({
-    if (is.na(input$centerY) | is.na(input$centerX) | is.na(input$Radius)) return("")
-
-    if (is.na(values$meanCenter) | is.na(values$sdCenter)) {
-      return("Cannot compute mean and sd at your provided coordinates.
-             Please raise the plot resolution or radius such that estimates within the radius are available.")
-    }
-
-    paste0("Mean: ", values$meanCenter,
-           ", Standard error of the mean: ", values$sdCenter,
-           "  at coordinates ",  "(",
-           input$centerY, "\u00B0, " , input$centerX,
-           "\u00B0) for a ", round(input$Radius, 3),
-           " km radius")
+  output$centerEstimate <- renderUI({
+    centerEstimate$text()
   })
-
 
   output$pointInput2D <- renderUI(inputGroup2D())
   output$n2D <- reactive(nrow(pointDat2D()))
@@ -623,5 +1032,26 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   callModule(plotExport, "export", reactive(values$plot), "similarity",
              reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData)
+
+
+  ## Import Data ----
+  importedDat <- importDataServer("importData")
+
+  fileImport <- reactiveVal(NULL)
+  observe({
+    # reset model
+    if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
+
+    req(length(importedDat()) > 0, !is.null(importedDat()[[1]]))
+    data <- importedDat()[[1]]
+    valid <- validateImport(data, showModal = TRUE, minRows = 2)
+
+    if (!valid){
+      showNotification("Import is not valid.")
+      fileImport(NULL)
+    } else {
+      fileImport(data)
+    }
+  }) %>% bindEvent(importedDat())
 
 }

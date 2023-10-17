@@ -4,7 +4,15 @@
 \alias{modelResultsSpread}
 \title{server function of model Results module}
 \usage{
-modelResultsSpread(input, output, session, isoData, savedMaps, fruitsData)
+modelResultsSpread(
+  input,
+  output,
+  session,
+  isoData,
+  savedMaps,
+  fruitsData,
+  config
+)
 }
 \arguments{
 \item{input}{input}
@@ -18,6 +26,8 @@ modelResultsSpread(input, output, session, isoData, savedMaps, fruitsData)
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
+
+\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module

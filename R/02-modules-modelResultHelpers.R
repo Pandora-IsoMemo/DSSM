@@ -62,26 +62,58 @@ centerEstimateUI <- function(id, title = "") {
 #' Backend for center estimate module
 #'
 #' @param id namespace id
-#' @param meanCenter (reactive) mean for center
-#' @param sdCenter (reactive) error for center
-#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by cluster",
+#' @param predictions (reactive) all predictions
+#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
 #'  "Spread", "Speed", "Minima/Maxima"
 centerEstimateServer <-
-  function(id, meanCenter, sdCenter, mapType = reactiveVal("Map")) {
+  function(id, predictions, mapType = reactiveVal("Map")) {
     moduleServer(id,
                  function(input, output, session) {
+                   gridLength <- reactiveVal(NULL)
+                   meanCenter <- reactiveVal(NULL)
+                   sdCenter <- reactiveVal(NULL)
                    centerEstimateText <- reactiveVal("")
 
                    centerEstimateMaps <- c("Map", "Spread")
                    # check which maps have the text in the previous version:
-                   # currently not included: "Time course", "Time intervals by cluster",
-                   # "Speed" (a map but no meanCenter, sdCenter in the output available),
-                   # "Minima/Maxima"
+                   # currently not included: "Time course", "Time intervals by temporal group or cluster",
+                   # SpreadR tab: "Speed" (a map but no meanCenter, sdCenter in the output available), "Minima/Maxima"
 
                    output$isCenterEstimateMap <- reactive({
                      mapType() %in% centerEstimateMaps
                    })
                    outputOptions(output, "isCenterEstimateMap", suspendWhenHidden = FALSE)
+
+                   observe({
+                     if (is.null(predictions())) {
+                       # reset
+                       gridLength(NULL)
+                       meanCenter(NULL)
+                       sdCenter(NULL)
+                       return()
+                     }
+
+                     gridL <-
+                       extractGridLength(
+                         latitude = predictions()$Latitude,
+                         longitude = predictions()$Longitude,
+                         digits = 10
+                       ) * 111
+                     gridLength(gridL)
+
+                     transformedRadius <- input$Radius / 111
+                     predictionsCenter <- predictions() %>%
+                       extractXPredCenter(
+                         centerX = input$centerX,
+                         centerY = input$centerY,
+                         Radius = transformedRadius
+                       )
+
+                     centerEstimates <-
+                       extractCenterEstimates(predictionsCenter, digits = 10)
+                     meanCenter(centerEstimates$mean)
+                     sdCenter(centerEstimates$sd)
+                   })
 
                    observeEvent(list(meanCenter(), sdCenter(), input$decimalPlace), {
                      # meanCenter(), sdCenter() depend on input$centerX, input$centerY
@@ -89,7 +121,10 @@ centerEstimateServer <-
                      if (is.na(input$centerY) |
                          is.na(input$centerX) |
                          is.na(input$Radius) |
-                         !(mapType() %in% centerEstimateMaps)) {
+                         !(mapType() %in% centerEstimateMaps) |
+                         is.null(meanCenter()) |
+                         is.null(sdCenter()) |
+                         is.null(gridLength())) {
                        centerEstimateText("")
                      }
 
@@ -109,7 +144,7 @@ centerEstimateServer <-
 
                      req(meanCenter(), sdCenter())
                      centerEstimateText(
-                       paste0(
+                       HTML(paste0(
                          "Mean: ",
                          round(meanCenter(), digits = input$decimalPlace),
                          ", Standard error of the mean: ",
@@ -121,10 +156,13 @@ centerEstimateServer <-
                          input$centerX,
                          "\u00B0) for a ",
                          round(input$Radius, 3),
-                         " km radius"
+                         " km radius",
+                         "<br/>",
+                         "Grid length (plot resolution) for latitude, longitude: ",
+                         paste(round(gridLength(), digits = input$decimalPlace), collapse = " km, "),
+                         " km"
                        )
-                     )
-
+                     ))
                    })
 
                    list(
@@ -134,6 +172,100 @@ centerEstimateServer <-
                      text = centerEstimateText
                    )
                  })
+  }
+
+#' Extract Grid Length
+#'
+#' @param latitude (numeric) latitude
+#' @param longitude (numeric) longitude
+#' @param digits (numeric) significant digits
+extractGridLength <- function(latitude, longitude, digits = 5) {
+  getGridLength <- function(x) {
+    x[order(x)] %>%
+      diff() %>%
+      max() %>%
+      signif(digits = digits)
+  }
+
+  c("latitude" = getGridLength(latitude),
+    "longitude" = getGridLength(longitude))
+}
+
+#' Extract XPred Center
+#'
+#' @param XPred (data.frame) data.frame containing all estimates
+#' @param centerX (numeric) center for longitude
+#' @param centerY (numeric) center for latitude
+#' @param Radius (numeric) radius of the area around the center
+#' @param batch (logical) set TRUE if used for batch estimates
+#' @param isThreeD (logical) set TRUE if used in plotMap3D
+#' @param data (data.frame) data.frame with input data for the model
+#' @param time (numeric) center of time
+extractXPredCenter <-
+  function(XPred,
+           centerX,
+           centerY,
+           Radius,
+           batch = FALSE,
+           isThreeD = FALSE,
+           data = NULL,
+           time = NULL) {
+    if (!isThreeD || is.null(data)) {
+      # this is used in plotMap
+      XPredCenter <- XPred[sqrt((XPred$Longitude - centerX) ^ 2 +
+                                  (XPred$Latitude - centerY) ^ 2) < Radius,]
+    } else if (!batch) {
+      # this is used in plotMap3D without batch mode
+      XPredCenter <-
+        XPred[sqrt((((XPred$Longitude2 * sd(data$Longitude)) + mean(data$Longitude)
+        ) - centerX) ^ 2 +
+          (((XPred$Latitude2 * sd(data$Latitude)) +
+              mean(data$Latitude)
+          ) - centerY) ^ 2) < Radius,]
+    } else {
+      # this is used in plotMap3D with batch mode
+      if (is.null(time))
+        stop("Missing time variable in 3D estimation of batch mode.")
+      XPredCenter <-
+        XPred[sqrt(((
+          XPred$Longitude2 * sd(data$Longitude) + mean(data$Longitude)
+        ) - centerX) ^ 2 +
+          ((
+            XPred$Latitude2 * sd(data$Latitude) +
+              mean(data$Latitude)
+          ) - centerY) ^ 2) < Radius &
+          XPred$time == time,]
+    }
+
+    XPredCenter
+  }
+
+#' Extract Center Estimates
+#'
+#' @param XPredCenter (data.frame) data.frame containing estimates around a center
+#' @param digits (numeric) significant digits
+#' @param batch (logical) set TRUE if used for batch estimates
+extractCenterEstimates <-
+  function(XPredCenter,
+           digits = 5,
+           batch = FALSE) {
+    meanCenter <- signif(mean(XPredCenter$EstForCenter), digits = digits)
+
+    if (!batch) {
+      # this is used in plotMap without batch mode
+      sdCenter <-
+        signif(sd(XPredCenter$EstForCenter) + mean(XPredCenter$Sd), digits = digits)
+    } else {
+      # this is used in plotMap with batch mode
+      sdCenter <-
+        signif(sqrt(sum(
+          sd(XPredCenter$EstForCenter) ^ 2, mean(XPredCenter$Sd) ^ 2, na.rm = TRUE
+        )),
+        digits = digits)
+    }
+
+    list(mean = meanCenter,
+         sd = sdCenter)
   }
 
 
@@ -484,10 +616,12 @@ zScaleServer <- function(id,
                  )
 
                  output$titleScaleInput <- renderText({
-                   switch(mapType(),
-                          "Time course" = "Range of y axis:",
-                          "Minima/Maxima" = "Range of y axis:",
-                          "Range of colour scale:")
+                   switch(
+                     mapType(),
+                     "Time course" = "Range of y axis:",
+                     "Minima/Maxima" = "Range of y axis:",
+                     "Range of colour scale:"
+                   )
                  })
 
                  observeEvent(estimationTypeChoices(), {
@@ -517,7 +651,8 @@ zScaleServer <- function(id,
                    req(zModelValues())
                    values$estType <- input$estType
                    values$range <-
-                     c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
+                     c(zModelValues()$minInput$value,
+                       zModelValues()$maxInput$value)
 
                    updateNumericInput(
                      session,
@@ -550,7 +685,7 @@ zScaleServer <- function(id,
 
                  # react slower on user input
                  zRange <- reactive({
-                   if(input$estType == "Significance (p-value)"){
+                   if (input$estType == "Significance (p-value)") {
                      pmax(0, pmin(1, c(input$min, input$max)))
                    } else {
                      c(input$min, input$max)
@@ -560,15 +695,20 @@ zScaleServer <- function(id,
                  zRange_d <- zRange %>% debounce(1000)
 
                  observeEvent(zRange_d(), {
-                   req(zModelValues(), (values$range[1] != zRange_d()[1] |
-                                          values$range[2] != zRange_d()[2]))
+                   req(zModelValues(),
+                       (
+                         values$range[1] != zRange_d()[1] |
+                           values$range[2] != zRange_d()[2]
+                       ))
                    values$range <- zRange_d()
                  })
 
                  observeEvent(input$limit, {
                    req(restrictOption() == "show", zModelValues())
 
-                   rangez <- c(zModelValues()$minInput$value, zModelValues()$maxInput$value)
+                   rangez <-
+                     c(zModelValues()$minInput$value,
+                       zModelValues()$maxInput$value)
 
                    if (identical(input$limit, "0-1")) {
                      rangez <- pmax(0, pmin(1, rangez))
@@ -587,10 +727,20 @@ zScaleServer <- function(id,
                    values$range <- c(min(rangez), max(rangez))
                    values$limit <- input$limit
 
-                   updateNumericInput(session, "min", value = min(rangez),
-                                      min = min(rangez), max = max(rangez))
-                   updateNumericInput(session, "max", value = max(rangez),
-                                      min = min(rangez), max = max(rangez))
+                   updateNumericInput(
+                     session,
+                     "min",
+                     value = min(rangez),
+                     min = min(rangez),
+                     max = max(rangez)
+                   )
+                   updateNumericInput(
+                     session,
+                     "max",
+                     value = max(rangez),
+                     min = min(rangez),
+                     max = max(rangez)
+                   )
                  })
 
                  observeEvent(input$Quantile, {
@@ -610,7 +760,11 @@ zScaleServer <- function(id,
 #'
 #' @inheritParams getZvalues
 getZValuesMapSim <-
-  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
+  function(estimationType,
+           model,
+           mapType,
+           factor = 1,
+           IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -624,18 +778,30 @@ getZValuesMapSim <-
       minValue <- 0
       maxValue <- signif(max(zRange, na.rm = TRUE) * factor, 2)
 
-      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
-      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      zValues$minInput <-
+        list(value = minValue,
+             min = minValue,
+             max = maxValue)
+      zValues$maxInput <-
+        list(value = maxValue,
+             min = minValue,
+             max = maxValue)
       return(zValues)
     }
 
-    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+    if (estimationType %in% c("1 SE", "2 SE", "SE")) {
       sdVal <- ifelse(grepl("2", estimationType), 2, 1)
       zRange <- model$Sd
       maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
 
-      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
-      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      zValues$minInput <-
+        list(value = 0,
+             min = 0,
+             max = maxValue)
+      zValues$maxInput <-
+        list(value = maxValue,
+             min = 0,
+             max = maxValue)
       return(zValues)
     }
   }
@@ -645,7 +811,11 @@ getZValuesMapSim <-
 #'
 #' @inheritParams getZvalues
 getZValuesMapDiff <-
-  function(estimationType, model, mapType, factor = 1, IndSelect = NULL) {
+  function(estimationType,
+           model,
+           mapType,
+           factor = 1,
+           IndSelect = NULL) {
     if (is.null(model))
       return(NULL)
 
@@ -654,31 +824,50 @@ getZValuesMapDiff <-
       maxInput = list(value = 10, min = 0, max = 10)
     )
 
-    if (estimationType %in% c("Mean", "Quantile", "Significance (p-value)", "Significance (z-value)")) {
+    if (estimationType %in% c("Mean",
+                              "Quantile",
+                              "Significance (p-value)",
+                              "Significance (z-value)")) {
       zRange <- model$Est
       minValue <- min(zRange, na.rm = TRUE)
       maxValue <- max(zRange, na.rm = TRUE) * factor
 
       minValue <- signif(minValue,
-                         which(round(abs(diff(zRange) / minValue * 10^(0:10)), 0) > 1)[1])
+                         which(round(abs(
+                           diff(zRange) / minValue * 10 ^ (0:10)
+                         ), 0) > 1)[1])
       maxValue <- signif(maxValue,
-                         which(round(abs(diff(zRange) / maxValue * 10^(0:10)), 0) > 1)[1])
+                         which(round(abs(
+                           diff(zRange) / maxValue * 10 ^ (0:10)
+                         ), 0) > 1)[1])
 
       minValue[is.na(minValue)] <- 0
       maxValue[is.na(maxValue)] <- 0
 
-      zValues$minInput <- list(value = minValue, min = minValue, max = maxValue)
-      zValues$maxInput <- list(value = maxValue, min = minValue, max = maxValue)
+      zValues$minInput <-
+        list(value = minValue,
+             min = minValue,
+             max = maxValue)
+      zValues$maxInput <-
+        list(value = maxValue,
+             min = minValue,
+             max = maxValue)
       return(zValues)
     }
 
-    if(estimationType %in% c("1 SE", "2 SE", "SE")){
+    if (estimationType %in% c("1 SE", "2 SE", "SE")) {
       sdVal <- ifelse(grepl("2", estimationType), 2, 1)
       zRange <- model$Sd
       maxValue <- signif(max(zRange, na.rm = TRUE) * sdVal, 2)
 
-      zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
-      zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+      zValues$minInput <-
+        list(value = 0,
+             min = 0,
+             max = maxValue)
+      zValues$maxInput <-
+        list(value = maxValue,
+             min = 0,
+             max = maxValue)
       return(zValues)
     }
   }
@@ -688,7 +877,11 @@ getZValuesMapDiff <-
 #'
 #' @inheritParams getZvalues
 getZValuesKernel <-
-  function(estimationType, model, mapType, factor = 1.25, IndSelect = NULL) {
+  function(estimationType,
+           model,
+           mapType,
+           factor = 1.25,
+           IndSelect = NULL) {
     model <- model$model
     if (is.null(model))
       return(NULL)
@@ -711,8 +904,10 @@ getZValuesKernel <-
 
     maxValue <- signif(max(zRange, na.rm = TRUE), 2)
 
-    zValues$minInput <- list(value = 0,        min = 0, max = maxValue)
-    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue)
+    zValues$minInput <-
+      list(value = 0,        min = 0, max = maxValue)
+    zValues$maxInput <-
+      list(value = maxValue, min = 0, max = maxValue)
     return(zValues)
   }
 
@@ -724,61 +919,103 @@ getZValuesKernel <-
 #' @param mapType (character) type of map, either "Map" or "Time course"
 #' @param factor (numeric) factor applied to estimates
 #' @param IndSelect (character) select category in case of categorical model
-getZvalues <- function(estimationType, model, mapType, factor = 3, IndSelect = NULL) {
-  zValues <- getZValuesInitial(IndependentType = model$IndependentType, IndSelect = IndSelect)
-  if(!is.null(model$IndependentType) &&
-     model$IndependentType != "numeric" &&
-     (is.null(IndSelect) || IndSelect == "")){
+getZvalues <-
+  function(estimationType,
+           model,
+           mapType,
+           factor = 3,
+           IndSelect = NULL) {
+    zValues <-
+      getZValuesInitial(IndependentType = model$IndependentType,
+                        IndSelect = IndSelect)
+    if (!is.null(model$IndependentType) &&
+        model$IndependentType != "numeric" &&
+        (is.null(IndSelect) || IndSelect == "")) {
+      return(zValues)
+    }
+
+    model <- getModel(model = model, IndSelect = IndSelect)
+    if (is.null(model))
+      return(NULL)
+
+    if (mapType == "Speed") {
+      maxValue <- signif(50000 / diff(model$range$mean), 1)
+
+      zValues$minInput <-
+        list(value = 1,
+             min = 0,
+             max = maxValue)
+      zValues$maxInput <-
+        list(value = maxValue,
+             min = 0,
+             max = maxValue * 100)
+      return(zValues)
+    }
+
+    if (mapType == "Time course" ||
+        estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
+      defaultMin <- getDefaultZMin(model$range$mean)
+      defaultMax <- getDefaultZMax(model$range$mean)
+      zValues$minInput <-
+        list(value = defaultMin,
+             min = defaultMin,
+             max = defaultMax)
+      zValues$maxInput <-
+        list(value = defaultMax,
+             min = defaultMin,
+             max = defaultMax)
+      return(zValues)
+    }
+
+    val <- 10   # default value
+    if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") &&
+        mapType != "Time course") {
+      val <- getDefaultZError(estimationType, model$range$seTotal)
+    }
+
+    if (estimationType %in% c("1 SE", "2 SE")  &&
+        mapType != "Time course") {
+      val <- getDefaultZError(estimationType, model$range$se)
+    }
+
+    zValues$minInput <- list(value = 0,
+                             min = 0,
+                             max = val * factor)
+    zValues$maxInput <- list(value = val,
+                             min = 0,
+                             max = val * factor)
     return(zValues)
   }
-
-  model <- getModel(model = model, IndSelect = IndSelect)
-  if (is.null(model))
-    return(NULL)
-
-  if(mapType == "Speed"){
-    maxValue <- signif(50000 / diff(model$range$mean), 1)
-
-    zValues$minInput <- list(value = 1,        min = 0, max = maxValue)
-    zValues$maxInput <- list(value = maxValue, min = 0, max = maxValue * 100)
-    return(zValues)
-  }
-
-  if (mapType == "Time course" || estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
-    defaultMin <- getDefaultZMin(model$range$mean)
-    defaultMax <- getDefaultZMax(model$range$mean)
-    zValues$minInput <- list(value = defaultMin, min = defaultMin, max = defaultMax)
-    zValues$maxInput <- list(value = defaultMax, min = defaultMin, max = defaultMax)
-    return(zValues)
-  }
-
-  val <- 10   # default value
-  if (estimationType %in% c("1 SETOTAL", "2 SETOTAL", "1 SD Population", "2 SD Population") &&
-      mapType != "Time course") {
-    val <- getDefaultZError(estimationType, model$range$seTotal)
-  }
-
-  if (estimationType %in% c("1 SE", "2 SE")  &&
-      mapType != "Time course") {
-    val <- getDefaultZError(estimationType, model$range$se)
-  }
-
-  zValues$minInput <- list(value = 0,   min = 0, max = val * factor)
-  zValues$maxInput <- list(value = val, min = 0, max = val * factor)
-  return(zValues)
-}
 
 
 getZValuesInitial <- function(IndependentType, IndSelect) {
-  if(is.null(IndependentType) || IndependentType == "numeric" || (!is.null(IndSelect) && IndSelect != "")) {
+  if (is.null(IndependentType) ||
+      IndependentType == "numeric" ||
+      (!is.null(IndSelect) && IndSelect != "")) {
     list(
-      minInput = list(value = 0, min = 0, max = 10),
-      maxInput = list(value = 10, min = 0, max = 10)
+      minInput = list(
+        value = 0,
+        min = 0,
+        max = 10
+      ),
+      maxInput = list(
+        value = 10,
+        min = 0,
+        max = 10
+      )
     )
   } else {
     list(
-      minInput = list(value = 0,   min = 0, max = 1),
-      maxInput = list(value = 1, min = 0, max = 1)
+      minInput = list(
+        value = 0,
+        min = 0,
+        max = 1
+      ),
+      maxInput = list(
+        value = 1,
+        min = 0,
+        max = 1
+      )
     )
   }
 }

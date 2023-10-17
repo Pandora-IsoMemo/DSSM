@@ -97,14 +97,12 @@ interactiveMapUI <- function(id, title = "") {
       absolutePanel(
         id = "controls",
         class = "panel panel-default",
-        fixed = TRUE,
         draggable = TRUE,
         top = 110,
         right = "auto",
         left = 50,
         bottom = "auto",
-        width = 330,
-        height = "auto",
+        style = "position:fixed; width:330px; overflow-y:auto; height:85%",
         leafletSettingsUI(ns("mapSettings"), "Map Settings"),
         leafletPointSettingsUI(ns("mapPointSettings")),
         leafletExportButton(ns("exportLeaflet"))
@@ -157,10 +155,12 @@ interactiveMap <- function(input, output, session, isoData) {
       if (is.null(isoData())) {
         leafletMap()
       } else {
-        # add data with default point values
+        withProgress({
+        # add data to new map with given (e.g. default) point values
         leafletMap() %>%
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
+        }, min = 0, max = 1, value = 0.8, message = "Updating map ...")
       }
     })
   })
@@ -223,10 +223,58 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # Update data
+  # Update data ----
   observe({
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0)
+
+    withProgress({
+      leafletProxy("map") %>%
+        updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+    }, min = 0, max = 1, value = 0.8, message = "Plotting points ...")
+  })
+
+  # show / hide legend ----
+  observe({
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
+        !is.null(leafletPointValues$showColourLegend),
+        !is.null(leafletPointValues$pointColourPalette))
+
     leafletProxy("map") %>%
-      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+      setColorLegend(
+        showLegend = leafletPointValues$showColourLegend,
+        title = leafletPointValues$columnForPointColour,
+        pal = leafletPointValues$pointColourPalette,
+        values = getColourCol(isoData(),
+                              colName = leafletPointValues$columnForPointColour)
+      )
+  })
+
+  observe({
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
+        !is.null(leafletPointValues$showSizeLegend),
+        !is.null(leafletPointValues$sizeLegendValues))
+
+    leafletProxy("map") %>%
+      setSizeLegend(
+        sizeLegend = leafletPointValues$sizeLegendValues,
+        showLegend = leafletPointValues$showSizeLegend
+      )
+  })
+
+  observe({
+    req(isoData(), isoData()[["latitude"]], isoData()[["longitude"]],
+        input$map_width > 0, input$map_height > 0,
+        !is.null(leafletPointValues$showSymbolLegend),
+        !is.null(leafletPointValues$symbolLegendValues))
+
+    leafletProxy("map") %>%
+      setSymbolLegend(
+        symbolLegend = leafletPointValues$symbolLegendValues,
+        showLegend = leafletPointValues$showSymbolLegend
+      )
   })
 
   # When map is clicked, show a popup with info

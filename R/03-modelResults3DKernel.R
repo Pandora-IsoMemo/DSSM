@@ -16,8 +16,13 @@ modelResults3DKernelUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -100,8 +105,8 @@ modelResults3DKernelUI <- function(id, title = ""){
             condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
-                        label = "Number of clusters (range)",
-                        value = c(2,10), min = 2, max = 20, step = 1)
+                        label = "Possible range for clusters",
+                        value = c(2,10), min = 2, max = 50, step = 1)
           ),
           conditionalPanel(
             condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
@@ -173,7 +178,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -208,7 +213,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           )
         ),
         conditionalPanel(
-          condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by cluster'",
+          condition = "input.mapType == 'Time course' || input.mapType == 'Time intervals by temporal group or cluster'",
           ns = ns,
           # possibly add input for timerange also later ----
           sliderInput(inputId = ns("trange"),
@@ -236,7 +241,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
-                       choices = c("Map", "Time course", "Time intervals by cluster"),
+                       choices = c("Map", "Time course", "Time intervals by temporal group or cluster"),
                        selected = "Map"),
           conditionalPanel(
             condition = "input.mapType == 'Time course'",
@@ -347,7 +352,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                             selected = "RdYlGn"),
                 ns = ns),
               selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                          choices = 0:25, selected = 4),
+                          choices = pchChoices(), selected = 4),
               ns = ns),
             checkboxInput(inputId = ns("cluster"),
                           label = "Show Clustering",
@@ -357,6 +362,10 @@ modelResults3DKernelUI <- function(id, title = ""){
               # checkboxInput(inputId = ns("clusterAll"),
               #               label = "Show all cluster locations",
               #               value = FALSE, width = "100%"),
+              radioButtons(inputId = ns("clusterResults"),
+                           label = "Select grouping:",
+                           choices = c("Temporal Grouping" = 0, "Spatial Clustering" = 1),
+                           selected = 0),
               radioButtons(inputId = ns("clusterAll"),
                            label = "Cluster visibility",
                            choices = c("Show only centroids" = "-1", "Show points for all times" = "0", "Show only points for time slice" = "1"),
@@ -471,9 +480,10 @@ modelResults3DKernelUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "kernel3d")
 
@@ -505,7 +515,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
@@ -534,48 +544,66 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "KernelTimeR",
-    helpHTML = getHelp(id = "model3DKernel"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "KernelTimeR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "model3DKernel"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
+
+
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
-    ## update data ----
-    data(uploadedData$data)
+    data(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedData$model)
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
@@ -600,7 +628,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     data <- data()
 
-      model <- withProgress(
+      model <- withProgress({
         estimateMap3DKernel(data = data, independent = input$IndependentX,
                       Longitude = input$Longitude, Latitude = input$Latitude,
                       CoordType = coordType(), DateOne = input$DateOne,
@@ -615,7 +643,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       modelUnc = input$modelUnc,
                       restriction = restriction,
                       nSim = input$nSim,
-                      kdeType = input$kdeType),
+                      kdeType = input$kdeType) %>%
+          tryCatchWithWarningsAndErrors()
+        },
         value = 0,
         message = "Generating spatio-temporal kernel density"
       )
@@ -925,8 +955,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter),
+                                         predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
@@ -1025,7 +1054,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        resolution = input$resolution,
                        centerX = centerEstimate$centerX(),
                        centerY = centerEstimate$centerY(),
-                       Radius = centerEstimate$radius(),
                        rangey = c(input$rangezMin, input$rangezMax),
                        pointDat = pointDat,
                        seType = input$intervalType,
@@ -1037,13 +1065,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                        formatTimeCourse = formatTimeCourse(),
                        ...)
       } else {
-      if(input$mapType == "Time intervals by cluster"){
+      if(input$mapType == "Time intervals by temporal group or cluster"){
         withProgress({
           plotTimeIntervals(model,
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
                             clusterCol = input$clusterCol,
+                            clusterResults = input$clusterResults,
                             ...)
         },
           value = 0,
@@ -1053,6 +1082,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
 
         req(zSettings$estType)
 
+        # PLOT MAP ----
       if(input$mapType == "Map"){
         plotMap3D(
           model,
@@ -1081,9 +1111,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           fontSize = input$fontSize,
           fontType = input$fontType,
           fontCol = input$fontCol,
-          centerX = centerEstimate$centerX(),
-          centerY = centerEstimate$centerY(),
-          Radius = centerEstimate$radius(),
           terrestrial = input$terrestrial,
           colors = input$Colours,
           reverseColors = input$reverseCols,
@@ -1108,6 +1135,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           AxisLSize = input$AxisLSize,
           cluster = input$cluster,
           clusterAll = input$clusterAll,
+          clusterResults = input$clusterResults,
           clusterCol = input$clusterCol,
           pointDat = pointDatOK,
           ...
@@ -1123,8 +1151,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
@@ -1211,22 +1237,21 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$cluster)){
+      if(!is.null(Model()$data$spatial_cluster)){
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("cluster",
-                                         "long_cluster_all_centroid",
-                                         "lat_cluster_all_centroid",
-                                         "long_cluster_filtered_centroid",
-                                         "lat_cluster_filtered_centroid",
-                                         "long_temporal_centroid",
-                                         "lat_temporal_centroid",
+        modelData <- merge(modelData[, c("spatial_cluster",
+                                         "temporal_group",
+                                         "long_centroid_spatial_cluster",
+                                         "lat_centroid_spatial_cluster",
+                                         "long_temporal_group_reference_point",
+                                         "lat_temporal_group_reference_point",
                                          "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
-        modelData <- modelData[!is.na(modelData$lat_cluster_filtered_centroid),]
+        modelData <- modelData[!is.na(modelData$long_centroid_spatial_cluster),]
         return(modelData)
       } else {
         allData <- data()

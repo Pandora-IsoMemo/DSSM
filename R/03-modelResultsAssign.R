@@ -15,8 +15,13 @@ modelResultsAssignUI <- function(id, title = "") {
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
           "Data source",
@@ -66,6 +71,7 @@ modelResultsAssignUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
+        checkboxInput(inputId = ns("imputeMissings"), label = "Impute missings (Multiple imputation)", value = TRUE),
         sliderInput(
           inputId = ns("Iter"),
           label = "Number of MCMC iterations",
@@ -178,9 +184,10 @@ modelResultsAssignUI <- function(id, title = "") {
 #' @param output output
 #' @param session session
 #' @param isoData data
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsAssign <- function(input, output, session, isoData) {
+modelResultsAssign <- function(input, output, session, isoData, config) {
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
@@ -217,69 +224,91 @@ modelResultsAssign <- function(input, output, session, isoData) {
   })
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "AssignR",
-    helpHTML = getHelp(id = "assign"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "AssignR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "assign"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
+
+
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
-    ## update data ----
-    data(uploadedData$data)
+    data(uploadedValues()[[1]][["data"]])
+
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedData$model)
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
+    Model(NULL)
+
     data <- data()
-    if (!is.null(data) & (!is.null(input$catVars) || !is.null(input$numVars)) && (input$catVars != "" || input$numVars != "")) {
-      if (is.null(input$catVarsUnc) & is.null(input$numVarsUnc) || (input$numVarsUnc == "" && input$catVarsUnc == "")) {
-        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
+
+    {
+    if (!is.null(data) && (notEmpty(input$catVars) || notEmpty(input$numVars))) {
+      dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
+
+      dataAssignR <- dataAssignR %>%
+        addUncertainty(type = "numeric", data = data, vars = input$numVars, varsUnc = input$numVarsUnc)
+      if (is.null(dataAssignR)) return(NULL)
+
+      dataAssignR <- dataAssignR %>%
+        addUncertainty(type = "categorical", data = data, vars = input$catVars, varsUnc = input$catVarsUnc)
+      if (is.null(dataAssignR)) return(NULL)
+
+      if(input$imputeMissings & any(is.na(dataAssignR))){
+        dataAssignR <- dataAssignR %>%
+          imputeMissingValues(numVars = input$numVars, catVars = input$catVars,
+                              numVarsUnc = input$numVarsUnc, catVarsUnc = input$catVarsUnc)
       } else {
-        dataAssignR <- data[, c(input$IndependentX, input$numVars, input$catVars), drop = F]
-        if (!is.null(input$numVarsUnc) && input$numVarsUnc != "" && length(input$numVarsUnc) == length(input$numVars)) {
-          dataAssignR <- cbind(dataAssignR, data[, c(input$numVarsUnc), drop = F])
-        } else {
-          alert("Number of numeric uncertainty variables must equal numeric variables")
-          return(NULL)
-        }
-        if (!is.null(input$catVarsUnc) && input$catVarsUnc != "" && length(input$catVarsUnc) == length(input$catVars)) {
-          dataAssignR <- cbind(dataAssignR, data[, c(input$catVarsUnc), drop = F])
-        } else {
-          alert("Number of categorical uncertainty variables must equal categorical variables")
-          return(NULL)
-        }
+        dataAssignR <- dataAssignR %>%
+          na.omit()
       }
 
-      dataAssignR <- na.omit(dataAssignR)
       dataAssignR[, input$catVars] <- trimws(dataAssignR[, input$catVars])
       if (is.null(input$IndependentX) || (is.null(input$numVars) && is.null(input$catVars))) {
         alert("Please specify dependent and at least one numeric or categorical variable")
@@ -299,18 +328,18 @@ modelResultsAssign <- function(input, output, session, isoData) {
         XCAT <- dataAssignR[, input$catVars, drop = FALSE]
         XCAT <- XCAT[, sapply(XCAT, function(y) length(unique(y))) > 1, drop = FALSE]
         if(NCOL(XCAT) > 0){
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
-        if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
-          XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
-          xUncCAT <- XCAT
-          xUncCAT <- lapply(1:length(XCAT), function(z) {
-            xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
-          })
-          #XCAT <- do.call("cbind", XCAT)
-          xUncCAT <- do.call("cbind", xUncCAT)
-        } else {
-          xUncCAT <- NULL
-        }
+          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
+          if (!is.null(input$catVarsUnc) && input$catVarsUnc != "") {
+            XCAT <- lapply(1:length(input$catVars), function(z) model.matrix(as.formula(paste0("~ ", z, " - 1")), data = dataAssignR))
+            xUncCAT <- XCAT
+            xUncCAT <- lapply(1:length(XCAT), function(z) {
+              xUncCAT[[z]][1:nrow(xUncCAT[[z]]), ] <- dataAssignR[, input$numVarsUnc[z], drop = F]
+            })
+            #XCAT <- do.call("cbind", XCAT)
+            xUncCAT <- do.call("cbind", xUncCAT)
+          } else {
+            xUncCAT <- NULL
+          }
         } else {
           XCAT <- NULL
           xUncCAT <- NULL
@@ -331,7 +360,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
         XCAT <- dataAssignR[, input$catVars, drop = FALSE]
         XCAT <- XCAT[, sapply(XCAT, function(x) length(unique(x))) > 1, drop = FALSE]
         if(NCOL(XCAT) > 0){
-        XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
+          XCAT <- model.matrix(as.formula(paste0("~ ", paste(input$catVars, collapse = "+"), " - 1")), data = dataAssignR)
         } else {
           XCAT <- NULL
         }
@@ -362,6 +391,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
       predictions <- normalizePredictions(predictions)
       names(predictions) <- cats
+      } %>%
+       tryCatchWithWarningsAndErrors()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
     }
@@ -568,4 +599,66 @@ modelResultsAssign <- function(input, output, session, isoData) {
     updateSelectInput(session, "catVarsUnc", choices = c("", allVars))
   }) %>%
     bindEvent(data())
+}
+
+## Helper functions ----
+
+addUncertainty <- function(dataAssignR, type, data, vars, varsUnc) {
+  if (notEmpty(varsUnc)){
+    if (length(varsUnc) == length(vars)){
+      dataAssignR <- cbind(dataAssignR, data[, c(varsUnc), drop = F])
+    } else {
+      alert(sprintf("Number of %s uncertainty variables must equal %s variables", type))
+      dataAssignR <- NULL
+    }
+  }
+
+  dataAssignR
+}
+
+imputeMissingValues <- function(dataAssignR, numVars, catVars, numVarsUnc, catVarsUnc) {
+  if(notEmpty(catVars)){
+    for(i in catVars){
+      if(class(dataAssignR[, i]) == "character"){
+        dataAssignR[, i] <- factor(dataAssignR[, i])
+      }
+    }
+  }
+  imputed_Data <- mice(dataAssignR, m=10, maxit = 50, seed = 500, printFlag = FALSE)
+  completed <- complete(imputed_Data, "all")
+  new_data <- dataAssignR
+
+  if(notEmpty(numVars)){
+    for (i in 1:length(numVars)){
+      new_data[, numVars[i]] = rowMeans(sapply(1:length(completed), function(x) completed[[x]][,numVars[i]]))
+    }
+  }
+  if(notEmpty(numVarsUnc)){
+    new_data[, numVarsUnc][is.na(new_data[, numVarsUnc])] <- 0
+    for (i in 1:length(numVarsUnc)){
+      new_data[, numVarsUnc[i]] = new_data[, numVarsUnc[i]] + apply(sapply(1:length(completed), function(x) completed[[x]][,numVars[i]]),1,sd)
+    }
+  }
+
+  if(notEmpty(catVars)){
+    for (j in 1:length(catVars)){
+      new_data[, catVars[j]] <- apply(sapply(1:length(completed), function(x) completed[[x]][,catVars[j]]), 1, getMode)
+    }
+  }
+  if(notEmpty(catVarsUnc)){
+    new_data[, catVarsUnc][is.na(new_data[, catVarsUnc])] <- 0
+    for (j in 1:length(catVarsUnc)){
+      new_data[, catVarsUnc[j]] <- new_data[, catVarsUnc[i]] + rowMeans(sapply(1:length(completed), function(x) completed[[x]][,catVarsUnc[i]]))
+    }
+  }
+
+  new_data
+}
+
+notEmpty <- function(inputColumns) {
+  !is.null(inputColumns) && length(inputColumns) > 0 && all(inputColumns != "")
+}
+
+getMode <- function(x){
+  names(sort(-table(x)))[1]
 }

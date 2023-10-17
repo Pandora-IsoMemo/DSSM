@@ -37,9 +37,6 @@ plotMap3D(
   ncol = 10,
   colors = "RdYlGn",
   reverseColors = FALSE,
-  centerX = NA,
-  centerY = NA,
-  Radius = NA,
   dataCenter = NULL,
   RadiusBatch = 100,
   terrestrial = 1,
@@ -63,6 +60,7 @@ plotMap3D(
   AxisLSize = 1,
   cluster = FALSE,
   clusterAll = "0",
+  clusterResults = 0,
   clusterCol = "Set1",
   pointDat = NULL,
   plotRetNull = FALSE
@@ -133,15 +131,6 @@ plotMap3D(
 
 \item{reverseColors}{inverse colour scheme}
 
-\item{centerX}{optional. longitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{centerY}{optional. latitude value for fixed spatial
-point estimate returns estimate instead of map.}
-
-\item{Radius}{radius of fixed spatial point estimate for batch estimates
-of a series of spatial points}
-
 \item{dataCenter}{optional data.frame with three columns (longitude / latitude / time)}
 
 \item{RadiusBatch}{radius of batch spatial point estimates}
@@ -187,6 +176,8 @@ of a series of spatial points}
 \item{cluster}{show clusters}
 
 \item{clusterAll}{show all cluster points}
+
+\item{clusterResults}{temporal groups or spatial clusters}
 
 \item{clusterCol}{Cluster colors}
 

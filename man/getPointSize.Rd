@@ -14,5 +14,5 @@ getPointSize(df, columnForPointSize, sizeFactor = 1)
 \item{sizeFactor}{(numeric) general factor for point size}
 }
 \description{
-Get Point Size
+Get point size in pixel
 }

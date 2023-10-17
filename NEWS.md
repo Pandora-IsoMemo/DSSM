@@ -1,5 +1,109 @@
 # MpiIsoApp development version
 
+## Version 23.10.0.1
+
+## New Features
+- Create new map option moved to OperatoR tab
+- Batch option to provide multiple points to create new map (csv or excel file for upload)
+- Option for specific average radius for each row in batch input for operatoR
+
+## Version 23.09.1
+
+## New Features
+- _Import of models_:
+  - option to import models from Pandora platform
+
+## Version 23.07.1
+
+## New Features
+- _Missing Values Imputation AssignR_: Multiple imputation for AssignR using the "mice" package
+
+## Version 23.06.4
+
+## New Features
+- _Modeling tabs_: The text for center point estimates 
+  - now contains the underlying grid length (#169)
+  - can be hidden again by removing inputs for latitude and longitude
+
+## Updates
+- removed recalculation of predictions when changing the latitude or longitude for center estimates
+
+## Version 23.06.3
+
+### Bug Fixes
+- _Export of time series_: 
+  - fixes export of pdf files together with a .gif (#107)
+  - now .gif files are always based on jpeg files, for .gif no conversion from pdf is required anymore
+
+## Version 23.06.2
+
+## New Features
+- _Tab Data_: new input to select an ontological schema, e.g. the "IsoMemo" schema (#102)
+
+## Version 23.06.1
+
+### Updates
+- add spinner to indicate that app is initializing
+- optimize loading of tabs when initializing
+- use DataTools 23.06.1 to fix issues with importing data without internet connection (#157)
+
+## Version 23.06.0
+
+### Bug Fixes
+- _Interactive Map_:
+  - fix option to use a fixed point colour (#161)
+
+## Version 23.05.4
+
+### Updates
+- option in KernelTimeR to choose between temporal group or spatial cluster
+
+## Version 23.05.3
+
+### New Features
+- _Export of time series_: optionally add a gif file or only export a gif (#107)
+
+## Version 23.05.2
+
+### New Features
+- _Interactive Map_: 
+  - map types are grouped by having borders or names (#133)
+  - option to add more maps from different providers: https://leaflet-extras.github.io/leaflet-providers/preview/
+
+## Version 23.05.1
+
+### Updates
+- _Interactive Map_: add option "[Fixed]" for point size, colour and symbol (#13)
+
+## Version 23.04.3.3
+
+### Bug Fixes
+- apply bug fix from main on beta (#142)
+
+## Version 23.04.3.2
+
+### Bug Fixes
+- apply bug fix from main on beta (#122)
+
+## Version 23.04.3
+
+### Updates
+  - removing the calculation of clusters for unfiltered data
+  - renaming columns in the excel export
+  - renaming "Number of clusters (optional)" to "Possible range for clusters"
+  - increasing the maximum number of clusters from 20 to 50 for mclust
+  - add option to show spatial centroids
+
+## Version 23.04.2
+
+### New Features
+- _Interactive map_: 
+  - option to set the symbol dependent on values of a character column (#13)
+  - show/hide legends for size (if a variable is used) and symbols 
+
+### Updates
+- optimized behavior of updating data and show/hide legends on the interactive map
+
 ## Version 23.04.1.10
 
 ## Bug fixes

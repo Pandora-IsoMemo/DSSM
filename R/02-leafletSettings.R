@@ -7,20 +7,59 @@ leafletSettingsUI <- function(id, title = "") {
 
   tagList(
     tags$h2(title),
-    selectInput(
+    selectizeInput(
       ns("LeafletType"),
-      "Map type",
-      choices = c(
-        "CartoDB Positron" = "CartoDB.Positron",
-        "OpenStreetMap Mapnik" = "OpenStreetMap.Mapnik",
-        "OpenStreetMap DE" = "OpenStreetMap.DE",
-        "OpenTopoMap" = "OpenTopoMap",
-        "Stamen TonerLite" = "Stamen.TonerLite",
-        "Esri" = "Esri",
-        "Esri WorldTopoMap" = "Esri.WorldTopoMap",
-        "Esri WorldImagery" = "Esri.WorldImagery"
+      label = "Map type",
+      choices = list(
+        `borders & names`= list(
+        "CartoDB.Positron",
+        "OpenStreetMap.Mapnik",
+        "OpenStreetMap.DE",
+        "OpenTopoMap",
+        "Stamen.TonerLite",
+        "Esri",
+        "Esri.WorldTopoMap",
+        "Esri.OceanBasemap"
+      ),
+      `only borders`= list(
+        "CartoDB.PositronNoLabels"
+      ),
+      `plain maps`= list(
+        "Esri.WorldImagery",
+        "Esri.WorldTerrain",
+        "Esri.WorldShadedRelief",
+        "Esri.WorldPhysical"
+      ),
+      `custom maps` = list(
+        "Stamen.Watercolor"
       )
     ),
+    options = list(create = TRUE)
+    ),
+    helpText(HTML(paste0("Find more maps ",
+                         tags$i(
+                           class = "glyphicon glyphicon-info-sign",
+                           style = "color:#0072B2;",
+                           title = paste(
+                             "How to select a new map:",
+                             " ",
+                             " 1. Select a map from https://leaflet-extras.github.io/leaflet-providers/preview/",
+                             "  and copy the name.",
+                             " 2. Delete the input of the field 'Map type'.",
+                             " 3. Paste the name of the map into the field 'Map type'.",
+                             " 4. Click 'Add...', and the custom map will be selected. ",
+                             " ",
+                             "Some maps are not supported, e.g. those that are selectable via a checkbox, and",
+                             " not via a radion button. Please try maps from e.g. following providers",
+                             " 'OpenStreetMap', 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             sep = "\n"
+                           )),
+                         ": <br>",
+                         tags$a(href = "https://leaflet-extras.github.io/leaflet-providers/preview/",
+                                "https://leaflet-extras.github.io/leaflet-providers/preview/",
+                                target = "_blank"),
+                         " "
+    ))),
     fluidRow(column(6, checkboxInput(
       ns("includeNorthArrow"), "North Arrow"
     )),
@@ -52,7 +91,7 @@ leafletSettingsUI <- function(id, title = "") {
              align = "right",
              actionButton(ns(
                "centerMapButton"
-             ), "Center map"))
+             ), "Center map", width = "100%"))
     ),
     conditionalPanel(
       condition = "input.fitBounds == true",

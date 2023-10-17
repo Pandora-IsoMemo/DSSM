@@ -17,8 +17,13 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        downUploadButtonUI(ns("downUpload"), title = "Load a Model", label = "Upload / Download"),
-        textAreaInput(ns("modelNotes"), label = NULL, placeholder = "Description ..."),
+        importDataUI(ns("modelUpload"), label = "Import Model"),
+        checkboxInput(ns("useDownload"), label = "Download model"),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.useDownload == true",
+          downloadModelUI(ns("modelDownload"), label = "Download")
+        ),
         tags$hr(),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -176,8 +181,8 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         )),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
+          htmlOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           selectInput(ns("IndSelect"), label = "Independent category", choices = NULL),
-          textOutput(ns("centerEstimate"), container = function(...) div(..., style = "text-align:center;")),
           tags$br(),
           tags$br(),
           fluidRow(column(width = 3,
@@ -265,7 +270,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                       selected = "RdYlGn"),
           ns = ns),
         selectInput(inputId = ns("pointShape"), label = "Shape of location marks",
-                    choices = 0:25, selected = 4),
+                    choices = pchChoices(), selected = 4),
         ns = ns),
         checkboxInput(inputId = ns("grid"),
                       label = "Show map grid",
@@ -400,9 +405,10 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
+#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
+modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData, config){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "localAvg")
 
@@ -471,57 +477,66 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
-  uploadedData <- downUploadButtonServer(
-    "downUpload",
-    dat = data,
-    inputs = input,
-    model = Model,
-    rPackageName = "MpiIsoApp",
-    githubRepo = "iso-app",
-    subFolder = "AverageR",
-    helpHTML = getHelp(id = "model2D"),
-    modelNotes = reactive(input$modelNotes),
-    compressionLevel = 1)
+  uploadedNotes <- reactiveVal(NULL)
+  subFolder <- "AverageR"
+  downloadModelServer("modelDownload",
+                      dat = data,
+                      inputs = input,
+                      model = Model,
+                      rPackageName = config$rPackageName,
+                      subFolder = subFolder,
+                      fileExtension = config$fileExtension,
+                      helpHTML = getHelp(id = "model2D"),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+
+  uploadedValues <- importDataServer("modelUpload",
+                                     title = "Import Model",
+                                     defaultSource = config$defaultSourceModel,
+                                     importType = "model",
+                                     rPackageName = config$rPackageName,
+                                     subFolder = subFolder,
+                                     ignoreWarnings = TRUE,
+                                     fileExtension = config$fileExtension)
+
+
 
   observe(priority = 100, {
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
+
     # reset model
     Model(NULL)
+    data(uploadedValues()[[1]][["data"]])
 
-    ## update data ----
-    # updating isoData could influence the update of isoData in other modelling tabs ... !
-    # First check if desired! If ok, than:
-    # if (uploadedData$inputs$dataSource == "file") {
-    #   fileImport(uploadedData$data)
-    # } else {
-    #   isoData(uploadedData$data)
-    # }
-
-    data(uploadedData$data)
+    # update notes in tab "Estimates" model download ----
+    uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
-    bindEvent(uploadedData$data)
+    bindEvent(uploadedValues())
 
   observe(priority = 50, {
-    ## reset input of model notes
-    updateTextAreaInput(session, "modelNotes", value = "")
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
-    inputIDs <- names(uploadedData$inputs)
+    inputIDs <- names(uploadedInputs)
     inputIDs <- inputIDs[inputIDs %in% names(input)]
 
     for (i in 1:length(inputIDs)) {
-      session$sendInputMessage(inputIDs[i],  list(value = uploadedData$inputs[[inputIDs[i]]]) )
+      session$sendInputMessage(inputIDs[i],  list(value = uploadedInputs[[inputIDs[i]]]) )
     }
   }) %>%
-    bindEvent(uploadedData$inputs)
+    bindEvent(uploadedValues())
 
   observe(priority = 10, {
-  ## update model ----
-    Model(uploadedData$model)
+    req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
+    ## update model ----
+    Model(uploadedValues()[[1]][["model"]])
   }) %>%
-    bindEvent(uploadedData$model)
+    bindEvent(uploadedValues())
 
   # RUN MODEL ----
-  observeEvent(input$start, ignoreNULL = FALSE, {
+  observeEvent(input$start, {
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
@@ -538,7 +553,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     params$coordType <- coordType()
 
-    model <- estimateMapWrapper(data(), params)
+    model <- estimateMapWrapper(data(), params) %>%
+      tryCatchWithWarningsAndErrors()
 
     Model(model)
   })
@@ -723,8 +739,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   centerEstimate <- centerEstimateServer("centerEstimateParams",
-                                         meanCenter = reactive(values$meanCenter),
-                                         sdCenter = reactive(values$sdCenter))
+                                         predictions = reactive(values$predictions))
 
   plotFun <- reactive({
     function(model, ...){
@@ -816,6 +831,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       req(zSettings$estType)
 
+# PLOT MAP ----
       plotMap(
         model,
         IndSelect = input$IndSelect,
@@ -844,9 +860,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         fontCol = input$fontCol,
         pointShape = as.numeric(input$pointShape),
         centerMap = input$Centering,
-        centerX = centerEstimate$centerX(),
-        centerY = centerEstimate$centerY(),
-        Radius = centerEstimate$radius(),
         terrestrial = input$terrestrial,
         colors = input$Colours,
         reverseColors = input$reverseCols,
@@ -880,17 +893,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     withProgress({
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
+
     values$predictions <- res$XPred
-    values$meanCenter <- res$meanCenter
-    values$sdCenter <- res$sdCenter
     values$plot <- recordPlot()
   })
 
   values <- reactiveValues(
     plot = NULL,
     predictions = NULL,
-    meanCenter = NA,
-    sdCenter = NA,
     up = 0,
     right = 0,
     set = 0,
@@ -899,7 +909,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     zoom = 50
   )
 
-  output$centerEstimate <- renderText({
+  output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
 
