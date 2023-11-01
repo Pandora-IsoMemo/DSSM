@@ -63,7 +63,7 @@ server <- function(input, output, session) {
     }
   })
 
-  mappingIds <- reactive(DataTools::getMappingIds())
+  mappingIds <- reactive(IsoMemo::getMappings())
   databaseList <- reactive(DataTools::getDatabaseList(mappingId = input[["dataExplorer-mappingId"]]))
 
   observeEvent(input$skin, {
