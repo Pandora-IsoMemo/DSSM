@@ -4,7 +4,7 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
-#'  getMappingTable getRemoteData importDataUI importDataServer tryCatchWithWarningsAndErrors
+#'  getRemoteData importDataUI importDataServer tryCatchWithWarningsAndErrors
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom geometry convhulln inhulln
@@ -14,7 +14,7 @@
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
 #'  recordPlot replayPlot rgb svg tiff
-#' @importFrom IsoMemo getDatabaseList getMappings
+#' @importFrom IsoMemo getDatabaseList getMappings getFields getData
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLayersControl addLegend

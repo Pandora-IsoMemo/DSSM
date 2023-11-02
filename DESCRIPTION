@@ -22,7 +22,7 @@ Imports:
     geometry (>= 0.4.0),
     ggplot2,
     grDevices (>= 3.4.4),
-    IsoMemo (>= 23.10.0),
+    IsoMemo (>= 23.10.1),
     ks (>= 1.0.0),
     leaflet (>= 1.1.0),
     magick,
