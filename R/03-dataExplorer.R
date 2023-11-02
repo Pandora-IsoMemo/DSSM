@@ -255,7 +255,10 @@ dataExplorerServer <- function(id, config) {
 
                    req(input$database)
                    withProgress({
-                     d <- getRemoteData(input$database, mappingId = input[["mappingId"]])
+                     d <- getData(db = input$database, mapping = input[["mappingId"]])  %>%
+                       fillIsoData(mapping = getFields(mapping = input[["mappingId"]],
+                                                       colnamesAPI = TRUE)) %>%
+                       handleDescription(maxChar = 20)
                      isoDataRaw(d)
                    },
                    value = 0.75,
