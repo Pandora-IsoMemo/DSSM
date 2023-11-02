@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.10.0.1
+## Version 23.10.0
 
 ## New Features
 - Create new map option moved to OperatoR tab
