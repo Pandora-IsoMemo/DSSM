@@ -203,7 +203,7 @@ dataExplorerServer <- function(id, config) {
                  ns <- session$ns
 
                  mappingTable <- reactive({
-                   getFields(mappingId = input[["mappingId"]], colnamesAPI = TRUE)
+                   getFields(mapping = input[["mappingId"]], colnamesAPI = TRUE)
                  })
 
                  isoDataRaw <- reactiveVal(NULL)

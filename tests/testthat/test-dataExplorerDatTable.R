@@ -15,7 +15,7 @@ testthat::test_that("creates table", {
 })
 
 Sys.setenv(API_BASE_URL = "https://isomemodb.com/testapi/v1/")
-mapping <- getFields(mappingId = "IsoMemo", colnamesAPI = TRUE)
+mapping <- getFields(mapping = "IsoMemo", colnamesAPI = TRUE)
 Sys.unsetenv("API_BASE_URL")
 
 testthat::test_that("function categoryChoices", {
