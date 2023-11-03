@@ -204,14 +204,8 @@ dataExplorerServer <- function(id, config) {
 
                  mappingTable <- reactiveVal()
                  observe({
-                   if (!has_internet()) {
-                     res <- list()
-                     attr(res, "errorApi") <- "Check your internet connection ..."
-                     mappingTable(res)
-                     return()
-                   }
-
-                   newVal <- getFields(mapping = input[["mappingId"]], colnamesAPI = TRUE)
+                   newVal <- mappingTable() %>%
+                     reloadMappingTable(mappingId = input[["mappingId"]])
                    mappingTable(newVal)
                  }) %>%
                    bindEvent(input[["mappingId"]])
