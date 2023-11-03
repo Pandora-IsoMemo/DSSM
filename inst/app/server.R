@@ -70,10 +70,12 @@ server <- function(input, output, session) {
     if (!DataTools::has_internet()) {
       databaseChoices <- mappingChoises <- "No internet connection ..."
     } else {
-      databaseChoices <- IsoMemo::getDatabaseList(mapping = input[["dataExplorer-mappingId"]]) %>%
-        extractChoicesFromIsomemoApi()
-      mappingChoises <- IsoMemo::getMappings() %>%
-        extractChoicesFromIsomemoApi()
+      databaseChoices <- extractChoicesFromIsomemoApi(
+        IsoMemo::getDatabaseList(mapping = input[["dataExplorer-mappingId"]])
+      )
+      mappingChoises <- extractChoicesFromIsomemoApi(
+        IsoMemo::getMappings()
+      )
     }
 
     updateSelectInput(session, "dataExplorer-mappingId", choices = mappingChoises)

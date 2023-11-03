@@ -84,8 +84,10 @@ putNewLatLongToBegin <- function(data, Longitude, Latitude) {
 }
 
 convertLatLong <- function(isoData, CoordType, Latitude = "Latitude", Longitude = "Longitude"){
-  isoData[, Longitude] <- convertCoordinates(isoData[, Longitude], CoordType)
-  isoData[, Latitude] <- convertCoordinates(isoData[, Latitude], CoordType)
+  isoData[, Longitude] <- convertCoordinates(isoData[, Longitude], CoordType) %>%
+    suppressWarnings()
+  isoData[, Latitude] <- convertCoordinates(isoData[, Latitude], CoordType) %>%
+    suppressWarnings()
   if (all(is.na(isoData[, Longitude])) || all(is.na(isoData[, Latitude]))){
     stop("Coordinate transformation failed")
   }

@@ -33,6 +33,7 @@ datTable <- function(dat, columns = names(dat)){
 }
 
 categoryChoices <- function(mapping) {
+  if (length(mapping) == 0) return(c())
   unique(mapping[! mapping$shiny %in% columnDefault(), ]$category)
 }
 
@@ -48,7 +49,6 @@ columnDefault <- function(){
 }
 
 getDataColumns <- function(mapping, input){
-
   cats <- gsub(" ", "", paste0("selectCategory", categoryChoices(mapping)))
   cats <- cats[sapply(cats, function(x) isTRUE(input[[x]]))]
   cols <- gsub("Category", "Columns", cats)

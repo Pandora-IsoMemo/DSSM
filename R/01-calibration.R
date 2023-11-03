@@ -27,7 +27,8 @@ calibrateRadiocarbon <- function(
     radiodata <- isoData[, c(dateFields$dateMean, dateFields$dateUncertainty, "datingType")]
   }
   names(radiodata) <- c("dateMean", "dateUncertainty", "datingType")
-  radiodata[, 1:2] <- sapply(radiodata[, 1:2], as.numeric)
+  radiodata[, 1:2] <- sapply(radiodata[, 1:2], as.numeric) %>%
+    suppressWarnings()
 
   selectData <- which(!is.na(radiodata$dateMean) &
                         !is.na(radiodata$dateUncertainty) &
