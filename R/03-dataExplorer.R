@@ -238,7 +238,6 @@ dataExplorerServer <- function(id, config) {
                    ))
                  })
 
-                 # maybe not needed, can only be savely tested when we have more than one mappingId
                  observe({
                    lapply(
                      categoryChoices(mappingTable()),
