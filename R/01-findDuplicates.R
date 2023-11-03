@@ -78,7 +78,7 @@ findDuplicates <- function(data, userSimilaritySelection, addColumn, keepFirst) 
   data$row <- row.names(data)
   data <- data %>%
     left_join(duplicateRows, by = "row")
-  data[!data$row %in% as.numeric(allDuplicateRows), "duplicateRows"] <- ""
+  data[!data$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
   row.names(data) <- data$row
   data$row <- NULL
 
@@ -86,7 +86,7 @@ findDuplicates <- function(data, userSimilaritySelection, addColumn, keepFirst) 
   uniqueData$row <- row.names(uniqueData)
   uniqueData <- uniqueData %>%
     left_join(duplicateRows, by = "row")
-  uniqueData[!uniqueData$row %in% as.numeric(allDuplicateRows), "duplicateRows"] <- ""
+  uniqueData[!uniqueData$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
   row.names(uniqueData) <- uniqueData$row
   uniqueData$row <- NULL
 

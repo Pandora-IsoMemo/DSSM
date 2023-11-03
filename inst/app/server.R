@@ -63,20 +63,24 @@ server <- function(input, output, session) {
     }
   })
 
-  mappingIds <- reactive(DataTools::getMappingIds())
-  databaseList <- reactive(DataTools::getDatabaseList(mappingId = input[["dataExplorer-mappingId"]]))
-
   observeEvent(input$skin, {
     setSkin(input$skin)
 
-    if (input$skin == "isomemo") {
+    req(input$skin == "isomemo")
+    if (!DataTools::has_internet()) {
+      mappingChoises <- databaseChoices <- "No internet connection ..."
+      updateSelectInput(session, "dataExplorer-mappingId", choices = mappingChoises)
+    } else {
+      mappingChoises <- extractChoicesFromIsomemoApi(IsoMemo::getMappings())
+      databaseChoices <- extractChoicesFromIsomemoApi(
+        IsoMemo::getDatabaseList(mapping = mappingChoises[[1]])
+      )
       updateSelectInput(session,
                         "dataExplorer-mappingId",
-                        choices = extractChoicesFromIsomemoApi(mappingIds()))
-
-      shinyWidgets::updatePickerInput(session,
-                                      "dataExplorer-database",
-                                      choices = extractChoicesFromIsomemoApi(databaseList()))
+                        choices = mappingChoises,
+                        selected = mappingChoises[[1]])
     }
+
+    shinyWidgets::updatePickerInput(session, "dataExplorer-database", choices = databaseChoices)
   })
 }
