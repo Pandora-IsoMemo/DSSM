@@ -203,6 +203,12 @@ dataExplorerServer <- function(id, config) {
                  ns <- session$ns
 
                  mappingTable <- reactive({
+                   if (!has_internet()) {
+                     res <- list()
+                     attr(res, "errorApi") <- "No internet connection ..."
+                     return(res)
+                   }
+
                    getFields(mapping = input[["mappingId"]], colnamesAPI = TRUE)
                  })
 
@@ -221,8 +227,8 @@ dataExplorerServer <- function(id, config) {
                    validate(need(mappingTable(), "No mapping table!"))
 
                    errorMsg <- "An error occurred. No mapping table!"
-                   if (!is.null(attr(mappingTable(), "error"))) {
-                     errorMsg <- attr(mappingTable(), "error")
+                   if (!is.null(attr(mappingTable(), "errorApi"))) {
+                     errorMsg <- paste(errorMsg, attr(mappingTable(), "errorApi"))
                    }
                    validate(need(length(mappingTable()) > 0, errorMsg))
 
@@ -253,7 +259,7 @@ dataExplorerServer <- function(id, config) {
                    dataColumns(NULL)
                    isoData(NULL)
 
-                   req(input$database)
+                   req(input$database, has_internet())
                    withProgress({
                      d <- getData(db = input$database, mapping = input[["mappingId"]])  %>%
                        fillIsoData(mapping = getFields(mapping = input[["mappingId"]],
