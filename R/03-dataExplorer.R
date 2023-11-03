@@ -257,7 +257,7 @@ dataExplorerServer <- function(id, config) {
                    isoData(NULL)
 
                    # try reload mappingTable if empty
-                   if (length(mappingTable()) == 0) {
+                   if (length(mappingTable()) == 0 || !has_internet()) {
                      newVal <- mappingTable() %>%
                        reloadMappingTable(mappingId = input[["mappingId"]])
                      mappingTable(newVal)
@@ -654,7 +654,7 @@ reloadMappingTable <- function(oldMapping, mappingId) {
 
   if (!has_internet()) {
     res <- list()
-    attr(res, "errorApi") <- "Check your internet connection ..."
+    attr(res, "errorApi") <- "Try 'Load data' ..."
     return(res)
   }
 
