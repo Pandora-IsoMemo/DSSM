@@ -202,9 +202,13 @@ dataExplorerServer <- function(id, config) {
                function(input, output, session) {
                  ns <- session$ns
 
-                 mappingTable <- reactive({
-                   getMappingTable(mappingId = input[["mappingId"]])
-                 })
+                 mappingTable <- reactiveVal()
+                 observe({
+                   newVal <- mappingTable() %>%
+                     reloadMappingTable(mappingId = input[["mappingId"]])
+                   mappingTable(newVal)
+                 }) %>%
+                   bindEvent(input[["mappingId"]])
 
                  isoDataRaw <- reactiveVal(NULL)
                  isoDataFull <- reactiveVal(NULL)
@@ -221,8 +225,8 @@ dataExplorerServer <- function(id, config) {
                    validate(need(mappingTable(), "No mapping table!"))
 
                    errorMsg <- "An error occurred. No mapping table!"
-                   if (!is.null(attr(mappingTable(), "error"))) {
-                     errorMsg <- attr(mappingTable(), "error")
+                   if (!is.null(attr(mappingTable(), "errorApi"))) {
+                     errorMsg <- paste(errorMsg, attr(mappingTable(), "errorApi"))
                    }
                    validate(need(length(mappingTable()) > 0, errorMsg))
 
@@ -234,16 +238,15 @@ dataExplorerServer <- function(id, config) {
                    ))
                  })
 
-                 # maybe not needed, can only be savely tested when we have more than one mappingId
-                 # observe({
-                 #   lapply(
-                 #     categoryChoices(mappingTable()),
-                 #     updateCheckboxSelectize,
-                 #     session = session,
-                 #     mappingTbl = mappingTable()
-                 #   )
-                 # }) %>%
-                 #   bindEvent(input$mappingId)
+                 observe({
+                   lapply(
+                     categoryChoices(mappingTable()),
+                     updateCheckboxSelectize,
+                     session = session,
+                     mappingTbl = mappingTable()
+                   )
+                 }) %>%
+                   bindEvent(mappingTable())
 
                  ## Load Data (isomemo skin) ----
                  observeEvent(input$load, {
@@ -253,9 +256,20 @@ dataExplorerServer <- function(id, config) {
                    dataColumns(NULL)
                    isoData(NULL)
 
-                   req(input$database)
+                   # try reload mappingTable if empty
+                   if (length(mappingTable()) == 0 || !has_internet()) {
+                     newVal <- mappingTable() %>%
+                       reloadMappingTable(mappingId = input[["mappingId"]])
+                     mappingTable(newVal)
+                   }
+
+                   req(input$database, has_internet())
                    withProgress({
-                     d <- getRemoteData(input$database, mappingId = input[["mappingId"]])
+                     d <- getData(db = input$database, mapping = input[["mappingId"]])  %>%
+                       fillIsoData(mapping = getFields(mapping = input[["mappingId"]],
+                                                       colnamesAPI = TRUE)) %>%
+                       handleDescription(maxChar = 20) %>%
+                       suppressWarnings()
                      isoDataRaw(d)
                    },
                    value = 0.75,
@@ -401,7 +415,7 @@ dataExplorerServer <- function(id, config) {
                    input$calMethod
                  })
 
-                 ## Column selection (isomemo skin) ----
+                 ## Column selection (isomemo skin: "Select categories") ----
                  observe({
                    req(getSkin() == "isomemo")
                    lapply(categoryChoices(mappingTable()), function(x) {
@@ -633,6 +647,18 @@ dataExplorerServer <- function(id, config) {
                  # return isoData ----
                  return(isoData)
                })
+}
+
+reloadMappingTable <- function(oldMapping, mappingId) {
+  if (length(oldMapping) > 0) return(oldMapping)
+
+  if (!has_internet()) {
+    res <- list()
+    attr(res, "errorApi") <- "Try 'Load data' ..."
+    return(res)
+  }
+
+  getFields(mapping = mappingId, colnamesAPI = TRUE)
 }
 
 getDescriptionCells <- function(clickList, isoData, columns) {
