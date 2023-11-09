@@ -68,7 +68,7 @@ modelResultsSimUI <- function(id, title = ""){
                       "Select Map for Weighting",
                       choices = c(""),
                       selected = ""),
-          checkboxInput(ns("negZero"), "Set negative values to zero weight", value = TRUE),
+          checkboxInput(ns("negZero"), "Set negative values to zero weight", value = FALSE),
           checkboxInput(ns("invWeight"), "Inverse exponential weighting", value = FALSE),
           conditionalPanel(
             condition = "input.invWeight == true",

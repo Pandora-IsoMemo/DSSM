@@ -2631,6 +2631,10 @@ combineSimilarityMaps <- function(XPredList,
                                          (XPred$Latitude[x] - weightMap$predictions$Latitude) ^ 2
       )])
     closestWeightsOG <- closestWeights
+    if(!negZero){
+      closestWeights[closestWeightsOG<0] <- 0
+    }
+
     if(invWeight){
       closestWeights <- exp(-log(2)/weightDecay * closestWeights)
     }
