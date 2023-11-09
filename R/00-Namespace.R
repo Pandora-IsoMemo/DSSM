@@ -8,6 +8,7 @@
 #'  tryCatchWithWarningsAndErrors
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
+#' @importFrom elevatr get_elev_point
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab

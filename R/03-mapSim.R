@@ -61,6 +61,20 @@ modelResultsSimUI <- function(id, title = ""){
           radioButtons(ns("normalType"), "Type of normalisation",
                        choices = c("Max value equal to 1" = "1", "Volume equal to 1" = "2")),
           ns = ns),
+        checkboxInput(ns("weightProb"), "Weight values", value = FALSE),
+        conditionalPanel(
+          condition = "input.weightProb == true",
+          selectInput(ns("savedMap"),
+                      "Select Map for Weighting",
+                      choices = c(""),
+                      selected = ""),
+          checkboxInput(ns("negZero"), "Set negative values to zero weight", value = TRUE),
+          checkboxInput(ns("invWeight"), "Inverse exponential weighting", value = FALSE),
+          conditionalPanel(
+            condition = "input.invWeight == true",
+          numericInput(ns("weightDecay"), "Exponential weighting decay half-life", value = 1000, min = 0, max = Inf),
+          ns = ns),
+          ns = ns),
         actionButton(ns("start"), "Create probability map"),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
@@ -224,7 +238,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
     set = 0,
     upperLeftLongitude = NA,
     upperLeftLatitude = NA,
-    zoom = 50
+    zoom = 50,
+    weightMap = NULL
   )
 
   observeEvent(savedMaps(), {
@@ -232,6 +247,14 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
 
     updateSelectInput(session, "savedModel", choices = choices)
   })
+
+  observeEvent(savedMaps(), {
+    choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
+                                            "similarity", "kernel2d", "kernel3d", "user"))
+
+    updateSelectInput(session, "savedMap", choices = choices)
+  })
+
 
   mapChoices <- reactive(
     getMapChoices(savedMaps(), c("localAvg", "temporalAvg"))
@@ -294,6 +317,11 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
     values$simDataList <- list()
     values$simDataListM <- list()
   })
+
+  observeEvent(input$savedMap, {
+    values$weightMap <- savedMaps()[[as.numeric(input$savedMap)]]
+  })
+
 
   observeEvent(input$simDataImportCancel, removeModal())
   observeEvent(input$simDataImportSubmit, {
@@ -373,7 +401,12 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
         model <- createSimilarityMap(values$predictionList,
                                         values$simDataListM, includeUncertainty = FALSE,
                                         normalize = input$normalize,
-                                        normalType = input$normalType) %>%
+                                        normalType = input$normalType,
+                                        weightProb = input$weightProb,
+                                        weightMap = values$weightMap,
+                                        negZero = input$negZero,
+                                        invWeight = input$invWeight,
+                                        weightDecay = input$weightDecay) %>%
           tryCatchWithWarningsAndErrors()
         Model(model)
         },
@@ -385,7 +418,12 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
         model <- createSimilarityMap(values$predictionList,
                                         values$simDataListM,
                                         normalize = input$normalize,
-                                        normalType = input$normalType) %>%
+                                        normalType = input$normalType,
+                                        weightProb = input$weightProb,
+                                        weightMap = values$weightMap,
+                                        negZero = input$negZero,
+                                        invWeight = input$invWeight,
+                                        weightDecay = input$weightDecay) %>%
           tryCatchWithWarningsAndErrors()
         Model(model)
         },

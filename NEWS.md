@@ -1,6 +1,13 @@
 # MpiIsoApp development version
 
-## Version 23.10.0
+## Version 23.11.1
+
+## New Features
+- New option to create elevation maps in OperatoR as well as custom maps
+- Option to weight by map in LocatoR including options (e.g. weight by altitude/elevation map)
+- Create custom map from x-y-z data from file in OperatoR 
+
+## Version 23.10.1
 
 ## New Features
 - Create new map option moved to OperatoR tab

@@ -75,7 +75,9 @@ modelResultsDiffUI <- function(id, title = ""){
             choices = c(
               "all" = "1",
               "region - circle" = "2",
-              "region - rectangle" = "3"
+              "region - rectangle" = "3",
+              "elevation" = "4",
+              "custom" = "5"
             ),
             selected = 1,
             inline = FALSE,
@@ -87,7 +89,7 @@ modelResultsDiffUI <- function(id, title = ""){
           ns = ns
           ),
           conditionalPanel(
-            condition = "input.customCircles == 'single' || input.userMapType == '1'",
+            condition = "(input.customCircles == 'single' || input.userMapType == '1') && input.userMapType != '4'&& input.userMapType != '5'",
             numericInput(ns("meanMap"), "Mean of map", value = 0),
             numericInput(ns("sdMap"), "Sd of map", value = 0, min = 0),
             ns = ns),
@@ -114,6 +116,51 @@ modelResultsDiffUI <- function(id, title = ""){
             ),
             ns = ns
           ),
+
+          conditionalPanel(
+            condition = "input.userMapType == '4'",
+              numericInput(
+                inputId = ns("elevRes"),
+                label = "Resolution (px)",
+                min = 50,
+                max = 2000,
+                value = c(100),
+                width = "100%",
+                step = 50
+              ),
+              numericInputLatAndLongUI(
+                ns("upperBoundElev"),
+                label = "Upper Left",
+                valueLat = 65,
+                valueLong = -20
+              ),
+            numericInputLatAndLongUI(
+              ns("lowerBoundElev"),
+              label = "Lower Right",
+              valueLat = 25,
+              valueLong = 80
+            ),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.userMapType == '5'",
+            importDataUI(ns("importData"), "Import Data"),
+            selectInput(inputId = ns("LongitudeC"),
+                        label = "Longitude variable:",
+                        choices = c("Longitude")),
+            selectInput(inputId = ns("LatitudeC"),
+                        label = "Latitude variable:",
+                        choices = c("Latitude")),
+            selectInput(inputId = ns("MeanC"),
+                        label = "Value variable:",
+                        choices = c("Mean")),
+            selectInput(inputId = ns("SdC"),
+                        label = "SD variable (optional):",
+                        choices = c("SD")),
+            ns = ns
+          ),
+
+
           conditionalPanel(
             condition = "input.userMapType == '3'",
             conditionalPanel(
@@ -121,14 +168,14 @@ modelResultsDiffUI <- function(id, title = ""){
             numericInputLatAndLongUI(
               ns("upperLeftCoords"),
               label = "Upper Left",
-              valueLat = 25,
-              valueLong = 35
+              valueLat = 65,
+              valueLong = -20
             ),
             numericInputLatAndLongUI(
               ns("lowerRightCoords"),
               label = "Lower Right",
-              valueLat = 75,
-              valueLong = -15
+              valueLat = 25,
+              valueLong = 80
             ),
             ns = ns
             ),
@@ -332,7 +379,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
   data <- reactiveVal()
 
   observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "difference")
+    choices <- getMapChoices(savedMaps(), c("difference", "user"))
 
     updateSelectInput(session, "savedModel", choices = choices)
   })
@@ -441,6 +488,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
                       selected = NULL)
     updateSelectInput(session, "LatitudeU", choices = c("", names(fileImport())),
                       selected = NULL)
+    updateSelectInput(session, "LongitudeC", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "LatitudeC", choices = c("", names(fileImport())),
+                      selected = NULL)
     updateSelectInput(session, "MeanO", choices = c("", names(fileImport())),
                       selected = NULL)
     updateSelectInput(session, "SdO", choices = c("", names(fileImport())),
@@ -448,6 +499,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
     updateSelectInput(session, "MeanR", choices = c("", names(fileImport())),
                       selected = NULL)
     updateSelectInput(session, "SdR", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "MeanC", choices = c("", names(fileImport())),
+                      selected = NULL)
+    updateSelectInput(session, "SdC", choices = c("", names(fileImport())),
                       selected = NULL)
     updateSelectInput(session, "RadiusO", choices = c("", names(fileImport())),
                       selected = NULL)
@@ -472,12 +527,22 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
   circleCenter <- numericInputLatAndLongServer("centerCoords")
   rectangleUpperLeft <-
     numericInputLatAndLongServer("upperLeftCoords",
-                                 valueLat = reactive(25),
-                                 valueLong = reactive(35))
+                                 valueLat = reactive(65),
+                                 valueLong = reactive(-20))
   rectangleLowerRight <-
     numericInputLatAndLongServer("lowerRightCoords",
-                                 valueLat = reactive(75),
-                                 valueLong = reactive(-15))
+                                 valueLat = reactive(25),
+                                 valueLong = reactive(80))
+
+  #elevation boundary box
+  ElevUpperLeft <-
+    numericInputLatAndLongServer("upperBoundElev",
+                                 valueLat = reactive(65),
+                                 valueLong = reactive(-20))
+  ElevLowerRight <-
+    numericInputLatAndLongServer("lowerBoundElev",
+                                 valueLat = reactive(25),
+                                 valueLong = reactive(80))
 
   observeEvent(input$createNewMap, {
     mapName <- trimws(input$saveMapName)
@@ -487,6 +552,59 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
     }
     if (input$userMapType == "1") {
       XPred <- as.numeric(c(input$meanMap, input$sdMap))
+    }
+    if (input$userMapType == "4") {
+      if(ElevLowerRight$longitude() <= ElevUpperLeft$longitude()){
+        alert("Upper left longitude must be smaller than upper right longitude")
+      }
+      if(ElevLowerRight$latitude() >= ElevUpperLeft$latitude()){
+        alert("Upper left latitude must be larger than upper right longitude")
+      }
+
+      Longitude <- seq(ElevLowerRight$longitude(), ElevUpperLeft$longitude(), length.out = input$elevRes)
+      Latitude <- seq(ElevUpperLeft$latitude(), ElevLowerRight$latitude(), length.out = input$elevRes)
+      pred_data <- data.frame(expand.grid(Longitude, Latitude))
+      colnames(pred_data) <- c("x", "y")
+
+      withProgress(
+      elev <- get_elev_point(pred_data,prj = "+proj=latlong +datum=WGS84 +to +proj=latlong +datum=WGS84",
+                             src = "aws")$elevation,
+      value = 50,
+      message = "Getting elevation data"
+      )
+      XPred <- data.frame(Est = elev, Sd = 0, Longitude = pred_data$x, Latitude = pred_data$y)
+    }
+
+    if (input$userMapType == "5") {
+    columnsC <- c(input$MeanC, input$LongitudeC, input$LatitudeC)
+    if (any(is.null(columnsC)) ||
+        any(columnsC == "")){
+      alert("Import is not valid.")
+      return()
+    } else {
+      dat <- fileImport()
+      if(all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+        if(input$SdC %in% colnames(dat)){
+          XPred <- data.frame(
+            Est = dat[, input$MeanC],
+            Sd = dat[, input$SdC],
+            Longitude = dat[, input$LongitudeC],
+            Latitude = dat[, input$LatitudeC]
+          )
+        } else {
+          XPred <- data.frame(
+            Est = dat[, input$MeanC],
+            Sd = 0,
+            longitude = dat[, input$LongitudeC],
+            latitude = dat[, input$LatitudeC]
+          )
+        }
+    }
+    }
+    if(!all(table(XPred$Longitude, XPred$Latitude) == 1)){
+      alert("For each longitude entry all unique latitude entries must be supplied and vice versa")
+      return()
+    }
     }
     if (input$userMapType == "2") {
       if(input$customCircles == "multiple"){
@@ -703,10 +821,11 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
       }
 
     }
+    XPred <- XPred[order(XPred$Latitude, XPred$Longitude),]
     req(XPred)
 
     map <- createSavedMap(
-      model = NULL,
+      model = XPred,
       predictions = XPred,
       plot =  recordPlot({
         plot.new()

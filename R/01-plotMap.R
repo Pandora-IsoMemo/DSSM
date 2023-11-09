@@ -1805,7 +1805,6 @@ plotDS <- function(XPred,
                    pointDat = NULL){
   options(scipen=999)
   RadiusBatch <-  RadiusBatch / 111
-
   minRangeFactor <- 0.75
   if((diff(rangex) / diff(rangey)) < minRangeFactor){
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
@@ -2523,15 +2522,27 @@ roundUpNice <- function(x, nice=c(1,2,5,10)) {
   x
 }
 
-createSimilarityMap <- function(XPredList, pointList, includeUncertainty = TRUE,
+createSimilarityMap <- function(XPredList, pointList,
+                                includeUncertainty = TRUE,
                                 normalize = FALSE,
-                                normalType = "1"){
+                                normalType = "1",
+                                weightProb = FALSE,
+                                weightMap = NULL,
+                                negZero = TRUE,
+                                invWeight = FALSE,
+                                weightDecay = 1){
+
   XPredList <- lapply(1:length(XPredList), function(x){
     similarityMap(XPredList[[x]], pointList[[x]], includeUncertainty)
   })
   combineSimilarityMaps(XPredList,
                         normalize = normalize,
-                        normalType = normalType)
+                        normalType = normalType,
+                        weightProb = weightProb,
+                        weightMap = weightMap,
+                        negZero = negZero,
+                        invWeight = invWeight,
+                        weightDecay = weightDecay)
 }
 
 similarityMap <- function(XPred, point, includeUncertainty = TRUE) {
@@ -2578,22 +2589,27 @@ similarityMap <- function(XPred, point, includeUncertainty = TRUE) {
 
 combineSimilarityMaps <- function(XPredList,
                                   normalize = FALSE,
-                                  normalType = "1") {
+                                  normalType = "1",
+                                  weightProb = FALSE,
+                                  weightMap = NULL,
+                                  negZero = TRUE,
+                                  invWeight = FALSE,
+                                  weightDecay = 1) {
   XPred <- XPredList[[1]]
   XPred$density <- log(XPred$density)
 
   if (length(XPredList) > 1) {
     for (j in 2:length(XPredList)) {
-      closest <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closest <- sapply(1:nrow(XPred), function(x)
         XPredList[[j]]$density[which.min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
                                            (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         )])
-      closestSD <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closestSD <- sapply(1:nrow(XPred), function(x)
         XPredList[[j]]$densitySd[which.min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
                                              (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         )])
 
-      closestDist <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closestDist <- sapply(1:nrow(XPred), function(x)
         min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
               (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         ))
@@ -2610,6 +2626,23 @@ combineSimilarityMaps <- function(XPredList,
 
   XPred$density <- exp(XPred$density)
   XPred$Est <- XPred$density
+  if(!is.null(weightMap) & weightProb == TRUE){
+    closestWeights <- sapply(1:nrow(XPred), function(x)
+              weightMap$predictions$Est[which.min((XPred$Longitude[x] - weightMap$predictions$Longitude) ^ 2 +
+                                         (XPred$Latitude[x] - weightMap$predictions$Latitude) ^ 2
+      )])
+    closestWeightsOG <- closestWeights
+    if(invWeight){
+      closestWeights <- exp(-log(2)/weightDecay * closestWeights)
+    }
+    if(negZero){
+      closestWeights[closestWeightsOG<0] <- 0
+    }
+
+    XPred$density <- XPred$density * closestWeights
+    XPred$densitySd <- XPred$densitySd * sqrt(closestWeights)
+  }
+
   if(normalize == TRUE){
     if(normalType == "1"){
       constant <- max(XPred$Est, na.rm = TRUE)
