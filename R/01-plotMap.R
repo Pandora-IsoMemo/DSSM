@@ -2625,7 +2625,6 @@ combineSimilarityMaps <- function(XPredList,
   }
 
   XPred$density <- exp(XPred$density)
-  XPred$Est <- XPred$density
   if(!is.null(weightMap) & weightProb == TRUE){
     closestWeights <- sapply(1:nrow(XPred), function(x)
               weightMap$predictions$Est[which.min((XPred$Longitude[x] - weightMap$predictions$Longitude) ^ 2 +
@@ -2642,6 +2641,7 @@ combineSimilarityMaps <- function(XPredList,
     XPred$density <- XPred$density * closestWeights
     XPred$densitySd <- XPred$densitySd * sqrt(closestWeights)
   }
+  XPred$Est <- XPred$density
 
   if(normalize == TRUE){
     if(normalType == "1"){
