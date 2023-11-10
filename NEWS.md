@@ -6,6 +6,7 @@
 - New option to create elevation maps in OperatoR as well as custom maps
 - Option to weight by map in LocatoR including options (e.g. weight by altitude/elevation map)
 - Create custom map from x-y-z data from file in OperatoR 
+- Option to create probability maps in LocateR independently
 
 ## Version 23.10.1
 
