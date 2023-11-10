@@ -75,7 +75,21 @@ modelResultsSimUI <- function(id, title = ""){
           numericInput(ns("weightDecay"), "Exponential weighting decay half-life", value = 1000, min = 0, max = Inf),
           ns = ns),
           ns = ns),
+        tags$hr(),
         actionButton(ns("start"), "Create probability map"),
+         pickerInput(
+          inputId = ns("selectPoints"),
+          label = "Select data points:",
+          choices = NULL,
+          options = list(
+            `actions-box` = TRUE,
+             size = 10,
+            `none-selected-text` = "No points selected",
+            `selected-text-format` = "count > 8"
+          ),
+          multiple = TRUE
+        ),
+        tags$hr(),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           checkboxInput(inputId = ns("fixCol"),
@@ -264,6 +278,11 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
     updatePickerInput(session, "SimMapSelect", choices = mapChoices())
   })
 
+  observe({
+    req(length(values$simDataList)>0)
+    updatePickerInput(session, "selectPoints", choices = rownames(values$simDataList[[1]]), selected = rownames(values$simDataList[[1]]))
+  })
+
   observeEvent(input$SimMapSelect, ignoreNULL = FALSE, {
     if (is.null(input$SimMapSelect) || length(input$SimMapSelect) == 0)
       shinyjs::disable("simDataImport")
@@ -282,6 +301,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
 
     showModal(modalDialog(
       title = "Data values",
+      "Enter data point names in first column",
       matrixInput(
         session$ns("simDataValues"),
         value = m,
@@ -292,7 +312,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
           updateHeader = "MpiIsoApp.doubleHeader.update",
           getHeader = "MpiIsoApp.doubleHeader.get"
         ),
-        rows = list(extend = TRUE),
+        rows = list(extend = TRUE, editableNames = TRUE, names = TRUE),
       ),
       footer = tagList(
         actionButton(session$ns("simDataImportCancel"), "Cancel"),
@@ -393,13 +413,16 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
   # RUN MODEL ----
   observeEvent(input$start, {
     values$simDataListM <- values$simDataList
+    values$simDataListM <- lapply(values$simDataListM, function(x){
+      x[rownames(x) %in% input$selectPoints,]
+    })
 
     if (length(values$simDataListM) == 0) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 1]))) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 2]))){
       withProgress({
         model <- createSimilarityMap(values$predictionList,
-                                        values$simDataListM, includeUncertainty = FALSE,
+                                     values$simDataListM, includeUncertainty = FALSE,
                                         normalize = input$normalize,
                                         normalType = input$normalType,
                                         weightProb = input$weightProb,
@@ -416,7 +439,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData, config){
     } else {
       withProgress({
         model <- createSimilarityMap(values$predictionList,
-                                        values$simDataListM,
+                                     values$simDataListM,
                                         normalize = input$normalize,
                                         normalType = input$normalType,
                                         weightProb = input$weightProb,
