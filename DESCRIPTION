@@ -17,7 +17,7 @@ Imports:
     DataTools (>= 23.10.2),
     dplyr,
     DT (>= 0.4),
-    elevatr (>= 0.99.0),
+    elevatr (>= 0.4.2),
     futile.logger,
     jsonlite (>= 1.5),
     geometry (>= 0.4.0),

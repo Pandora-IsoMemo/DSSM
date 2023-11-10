@@ -567,7 +567,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
       colnames(pred_data) <- c("x", "y")
 
       withProgress(
-      elev <- get_elev_point(pred_data,prj = "+proj=latlong +datum=WGS84 +to +proj=latlong +datum=WGS84",
+      elev <- get_elev_point(pred_data,prj = "+proj=longlat +datum=WGS84",
                              src = "aws")$elevation,
       value = 50,
       message = "Getting elevation data"
