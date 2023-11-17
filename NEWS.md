@@ -1,6 +1,6 @@
 # MpiIsoApp development version
 
-## Version 23.11.1
+## Version 23.11.0
 
 ## New Features
 - New option to create elevation maps in OperatoR as well as custom maps

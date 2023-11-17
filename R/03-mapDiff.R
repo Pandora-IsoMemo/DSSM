@@ -68,7 +68,7 @@ modelResultsDiffUI <- function(id, title = ""){
         ),
         conditionalPanel(
           condition = "input.dataSource == 'createN'",
-          textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
+          #textInput(ns("saveMapName"), NULL, placeholder = "Name for Map"),
           radioButtons(
             ns("userMapType"),
             "Map Type",
@@ -545,11 +545,11 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
                                  valueLong = reactive(80))
 
   observeEvent(input$createNewMap, {
-    mapName <- trimws(input$saveMapName)
-    if (mapName == "") {
-      alert("Please provide a map name")
-      return()
-    }
+    # mapName <- trimws(input$saveMapName)
+    # if (mapName == "") {
+    #   alert("Please provide a map name")
+    #   return()
+    # }
     if (input$userMapType == "1") {
       XPred <- as.numeric(c(input$meanMap, input$sdMap))
     }
@@ -823,28 +823,29 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
     }
     XPred <- XPred[order(XPred$Latitude, XPred$Longitude),]
     req(XPred)
+    MapDiff(XPred)
 
-    map <- createSavedMap(
-      model = XPred,
-      predictions = XPred,
-      plot =  recordPlot({
-        plot.new()
-        text(
-          x = 0.5,
-          y = 0.5,
-          paste0("Custom map"),
-          cex = 5
-        )
-      }),
-      type = "user",
-      name = mapName
-    )
-    maps <- savedMaps()
-    maps[[length(maps) + 1]] <- map
-    savedMaps(maps)
-
-    alert(paste0("Map '", mapName, "' was saved"))
-    updateTextInput(session, "saveMapName", value = "")
+    # map <- createSavedMap(
+    #   model = XPred,
+    #   predictions = XPred,
+    #   plot =  recordPlot({
+    #     plot.new()
+    #     text(
+    #       x = 0.5,
+    #       y = 0.5,
+    #       paste0("Custom map"),
+    #       cex = 5
+    #     )
+    #   }),
+    #   type = "user",
+    #   name = mapName
+    # )
+    # maps <- savedMaps()
+    # maps[[length(maps) + 1]] <- map
+    # savedMaps(maps)
+    #
+    # alert(paste0("Map '", mapName, "' was saved"))
+    # updateTextInput(session, "saveMapName", value = "")
   })
   ####
 
