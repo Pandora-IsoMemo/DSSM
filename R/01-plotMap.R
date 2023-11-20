@@ -2100,7 +2100,7 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
     stop("increasing 'x' and 'y' values expected")
   mar.orig <- (par.orig <- par(c("mar", "las", "mfrow")))$mar
   on.exit(par(par.orig))
-  w <- (3 + mar.orig[2L]) * par("csi") * 2.54
+  w <- (3 + mar.orig[2L]) * par("csi") * 2.8
   if(showScale){
     layout(matrix(c(2, 1), ncol = 2L), widths = c(1, lcm(w)))
   }
