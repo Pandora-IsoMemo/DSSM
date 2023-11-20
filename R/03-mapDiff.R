@@ -569,8 +569,9 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
       withProgress(
       elev <- get_elev_point(pred_data,prj = "+proj=longlat +datum=WGS84",
                              src = "aws")$elevation,
-      value = 50,
-      message = "Getting elevation data"
+      value = 0.5,
+      message = "Getting elevation data",
+      detail = "This may take a while..."
       )
       XPred <- data.frame(Est = elev, Sd = 0, Longitude = pred_data$x, Latitude = pred_data$y)
     }
