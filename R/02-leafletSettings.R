@@ -247,6 +247,8 @@ defaultBounds <- function(center = defaultCenter()) {
 }
 
 centerLongitudes <- function(longitude, center) {
+  if (is.null(center) || length(longitude) == 0) return(longitude)
+
   if (center == "pacific") {
     longitude[longitude < 0] <- longitude[longitude < 0] + 360
   }
