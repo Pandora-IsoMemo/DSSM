@@ -5,6 +5,11 @@ leafletPointSettingsUI <- function(id) {
   ns <- NS(id)
 
   tagList(
+    radioButtons(ns("leafletCenter"),
+                 "Map Centering",
+                 choices = c("Atlantic" = "atlantic", "Pacific" = "pacific"),
+                 selected = "atlantic",
+                 inline = TRUE),
     checkboxInput(ns("clusterPoints"), "Cluster points"),
     conditionalPanel(
       condition = "input.clusterPoints == false",
@@ -54,6 +59,11 @@ leafletPointSettingsServer <- function(id, loadedData) {
   moduleServer(id,
                function(input, output, session) {
                  values <- reactiveValues()
+
+                 # following parameters are used in updateDataOnLeafletMap()
+                 observe({
+                   values$leafletCenter <- input$leafletCenter
+                 })
 
                  observe({
                    values$clusterPoints <- input$clusterPoints
@@ -494,6 +504,9 @@ updateDataOnLeafletMap <-
 
     if (nrow(isoData) == 0)
       return(map)
+
+    isoData[["longitude"]] <- isoData[["longitude"]] %>%
+        centerLongitudes(center = leafletPointValues$leafletCenter)
 
     if (leafletPointValues$clusterPoints) {
       return(drawClustersOnMap(map, isoData))
