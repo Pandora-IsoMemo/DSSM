@@ -108,7 +108,7 @@ leafletSettingsUI <- function(id, title = "") {
         "Longitude: West - East",
         value = defaultBounds()$lng,
         min = -180,
-        max = 180
+        max = 360
       ),
       fluidRow(column(5, actionButton(
         ns("applyBounds"), "Apply"
@@ -231,19 +231,19 @@ drawFittedBounds <- function(map, showBounds, bounds) {
 }
 
 defaultCenter <- function(center = "atlantic") {
-  if (is.null(center)) return(list(lng = 30, lat = 48))
+  if (is.null(center)) return(list(lng = 0, lat = 30))
 
   switch(center,
-         "atlantic" = list(lng = 30, lat = 48),
-         "pacific" = list(lng = 210, lat = 0))
+         "atlantic" = list(lng = 0, lat = 30),
+         "pacific" = list(lng = 180, lat = 0))
 }
 
 
 defaultBounds <- function(center = defaultCenter()) {
-  list(lng = c(west = defaultCenter()$lng - 30,
-               east = defaultCenter()$lng + 30),
-       lat = c(south = defaultCenter()$lat - 15,
-               north = defaultCenter()$lat + 15))
+  list(lng = c(west = center$lng - 30,
+               east = center$lng + 30),
+       lat = c(south = center$lat - 15,
+               north = center$lat + 15))
 }
 
 centerLongitudes <- function(longitude, center) {
