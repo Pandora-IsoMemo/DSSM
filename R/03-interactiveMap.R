@@ -131,8 +131,8 @@ interactiveMap <- function(input, output, session, isoData) {
   # Create the map
   leafletMap <- reactiveVal({
     leaflet() %>%
-      setView(lng = 30,
-              lat = 50,
+      setView(lng = defaultCenter()$lng,
+              lat = defaultCenter()$lat,
               zoom = 4) %>%
       addProviderTiles("CartoDB.Positron")
   })
@@ -179,22 +179,28 @@ interactiveMap <- function(input, output, session, isoData) {
       )
   })
 
-  observeEvent(leafletValues()$centerMapButton, {
-    req(leafletValues()$centerMapButton, isoData()$longitude, isoData()$latitude)
+  observe({
+    req(isoData()$longitude, isoData()$latitude)
 
     leafletProxy("map") %>%
-      setView(lng = mean(isoData()$longitude),
-              lat = mean(isoData()$latitude),
+      setView(lng = isoData()$longitude %>%
+                centerLongitudes(center = input[["mapPointSettings-leafletCenter"]]) %>%
+                range() %>%
+                mean(),
+              lat = isoData()$latitude %>%
+                range() %>%
+                mean(),
               zoom = input$map_zoom)
-  })
+  }) %>%
+    bindEvent(input[["mapSettings-centerMapButton"]])
 
 
   # adjust map type
-  observeEvent(leafletValues()$leafletType, {
-    req(leafletValues()$leafletType)
+  observe({
     leafletProxy("map") %>%
-      addProviderTiles(leafletValues()$leafletType)
-  })
+      addProviderTiles(provider = input[["mapSettings-LeafletType"]])
+  }) %>%
+    bindEvent(input[["mapSettings-LeafletType"]])
 
 
   # add icons to map
@@ -203,6 +209,7 @@ interactiveMap <- function(input, output, session, isoData) {
     leafletValues()$northArrowPosition
   ),
   {
+    # not using direct input values but prepared values for positions
     leafletProxy("map") %>%
       drawIcons(
         scale = !is.na(leafletValues()$scalePosition),
@@ -215,12 +222,24 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # draw/hide a square at bounds
   observeEvent(list(leafletValues()$showBounds, leafletValues()$bounds), {
+    # not using direct input values but prepared values for bounds
     req(leafletValues()$bounds)
 
     leafletProxy("map") %>%
       drawFittedBounds(showBounds = leafletValues()$showBounds,
                        bounds = leafletValues()$bounds)
   })
+
+
+  # adjust map center
+  observe({
+    center <- defaultCenter(center = input[["mapPointSettings-leafletCenter"]])
+    leafletProxy("map") %>%
+      setView(lng = center$lng,
+              lat = center$lat,
+              zoom = input$map_zoom)
+  }) %>%
+    bindEvent(input[["mapPointSettings-leafletCenter"]])
 
 
   # Update data ----

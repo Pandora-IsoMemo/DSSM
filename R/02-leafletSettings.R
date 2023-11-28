@@ -91,7 +91,7 @@ leafletSettingsUI <- function(id, title = "") {
              align = "right",
              actionButton(ns(
                "centerMapButton"
-             ), "Center map", width = "100%"))
+             ), "Data Center", width = "100%"))
     ),
     conditionalPanel(
       condition = "input.fitBounds == true",
@@ -230,8 +230,26 @@ drawFittedBounds <- function(map, showBounds, bounds) {
   map
 }
 
+defaultCenter <- function(center = "atlantic") {
+  if (is.null(center)) return(list(lng = 30, lat = 48))
 
-defaultBounds <- function() {
-  list(lng = c(west = 0, east = 60),
-       lat = c(south = 33, north = 63))
+  switch(center,
+         "atlantic" = list(lng = 30, lat = 48),
+         "pacific" = list(lng = 210, lat = 0))
+}
+
+
+defaultBounds <- function(center = defaultCenter()) {
+  list(lng = c(west = defaultCenter()$lng - 30,
+               east = defaultCenter()$lng + 30),
+       lat = c(south = defaultCenter()$lat - 15,
+               north = defaultCenter()$lat + 15))
+}
+
+centerLongitudes <- function(longitude, center) {
+  if (center == "pacific") {
+    longitude[longitude < 0] <- longitude[longitude < 0] + 360
+  }
+
+  longitude
 }
