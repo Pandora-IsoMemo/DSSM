@@ -1,31 +1,37 @@
 # MpiIsoApp development version
 
+## Version 23.10.2
+
+### Bug Fixes
+- prevent display of data on different "leaflets" by adding the option to choose an Atlantic or a
+  Pacific map center (#173)
+
 ## Version 23.10.0
 
-## New Features
+### New Features
 - Create new map option moved to OperatoR tab
 - Batch option to provide multiple points to create new map (csv or excel file for upload)
 - Option for specific average radius for each row in batch input for operatoR
 
 ## Version 23.09.1
 
-## New Features
+### New Features
 - _Import of models_:
   - option to import models from Pandora platform
 
 ## Version 23.07.1
 
-## New Features
+### New Features
 - _Missing Values Imputation AssignR_: Multiple imputation for AssignR using the "mice" package
 
 ## Version 23.06.4
 
-## New Features
+### New Features
 - _Modeling tabs_: The text for center point estimates 
   - now contains the underlying grid length (#169)
   - can be hidden again by removing inputs for latitude and longitude
 
-## Updates
+### Updates
 - removed recalculation of predictions when changing the latitude or longitude for center estimates
 
 ## Version 23.06.3
@@ -37,7 +43,7 @@
 
 ## Version 23.06.2
 
-## New Features
+### New Features
 - _Tab Data_: new input to select an ontological schema, e.g. the "IsoMemo" schema (#102)
 
 ## Version 23.06.1
