@@ -1,5 +1,11 @@
 # MpiIsoApp development version
 
+## Version 23.10.2
+
+### Bug Fixes
+- prevent display of data on different "leaflets" by adding the option to choose an Atlantic or a
+  Pacific map center (#173)
+
 ## Version 23.10.0
 
 ## New Features
