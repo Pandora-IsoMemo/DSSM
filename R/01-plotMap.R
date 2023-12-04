@@ -1587,16 +1587,14 @@ plotMap3D <- function(model,
                       }
                       if(cluster & !is.null(data$spatial_cluster)){
                         data <- data %>%
-                          updateClusterColumn(cluster, clusterResults)
-
+                          selectClusterGrouping(cluster, clusterResults)
                         data$col <- getPColor(data, cluster, clusterCol, pColor)
 
                         # get centroids
                         if(clusterResults == 1){
-                          data_names <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster","spatial_cluster","col")
+                          data_names <- c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster","col")
                           centroids <- unique(data[, data_names])
                           centroids <- na.omit(centroids)
-                          centroids <- centroids[,c(3,1,2,4)]
                         } else {
                           data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point","col")
                           centroids <- unique(data[, data_names])
@@ -1610,52 +1608,46 @@ plotMap3D <- function(model,
                         }
                       }
 
-                      if(centerMap != "Europe"){
-                        if(cluster & clusterAll %in% c("0", "1")){
-                          if(clusterAll == "0"){
-                            dataPac <- data
-                            dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-                            dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
-                          }
-                          points(dataPac$Latitude ~ dataPac$Longitude,
-                                 col = dataPac$col, lwd = 2,
-                                 pch = pointShape, cex = pointSize);
-                        } else {
-                          if(clusterAll != "-1"){
-                            dataTPac <- dataTPac %>%
-                              updateClusterColumn(cluster, clusterResults)
-                            points(dataTPac$Latitude ~ dataTPac$Longitude,
-                                   col = getPColor(dataTPac, cluster, clusterCol, pColor),
-                                   lwd = 2,
-                                   pch = pointShape,
-                                   cex = pointSize);
-                          }
-                        }
-                      } else {
-                        if(cluster & clusterAll %in% c("0", "1")){
-                          if(clusterAll == "0"){
-                          points(data$Latitude ~ data$Longitude,
-                                 col = data$col, lwd = 2,
-                                 pch = pointShape, cex = pointSize);
+                      if(clusterAll != "-1"){
+                        # not show centroids but show points
+                        if(centerMap != "Europe"){
+                          if(cluster & clusterAll %in% c("0", "1")){
+                            if(clusterAll == "0"){
+                              dataPac <- data
+                              dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
+                              dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+                            }
+                            dataPlot <- dataPac
                           } else {
-                            dataT <- data %>%
-                              filterT(addU = addU, time = time) %>%
-                              updateClusterColumn(cluster, clusterResults)
-                            points(dataT$Latitude ~ dataT$Longitude,
-                                   col = getPColor(dataT, cluster, clusterCol, pColor),
-                                   lwd = 2, pch = pointShape, cex = pointSize)
+                            if(clusterAll != "-1"){
+                              dataPlot <- dataTPac
+                            }
                           }
                         } else {
-                          if(clusterAll != "-1"){
-                            dataT <- data %>%
-                              filterT(addU = addU, time = time) %>%
-                              updateClusterColumn(cluster, clusterResults)
-                            points(dataT$Latitude ~ dataT$Longitude,
-                                   col = getPColor(dataT, cluster, clusterCol, pColor),
-                                   lwd = 2, pch = pointShape, cex = pointSize)
+                          if(cluster & clusterAll %in% c("0", "1")){
+                            if(clusterAll == "0"){
+                              dataPlot <- data
+                            } else {
+                              dataPlot <- data %>%
+                                filterT(addU = addU, time = time)
+                            }
+                          } else {
+                            if(clusterAll != "-1"){
+                              dataPlot <- data %>%
+                                filterT(addU = addU, time = time)
+                            }
                           }
                         }
+                        dataPlot <- dataPlot %>%
+                          selectClusterGrouping(cluster, clusterResults)
+                        points(dataPlot$Latitude ~ dataPlot$Longitude,
+                               col = getPColor(dataPlot, cluster, clusterCol, pColor),
+                               lwd = 2,
+                               pch = pointShape,
+                               cex = pointSize)
                       }
+
+                      # show centroids
                       if(cluster & !is.null(data$spatial_cluster)){
                         if(clusterResults == 0){
                           centroids$cluster <- centroids$temporal_group
@@ -1670,7 +1662,6 @@ plotMap3D <- function(model,
                         text(centroids[, 2:3], labels = paste0(map_label,"_", centroids$cluster), pos = 4,
                              cex = fontSize * 1.5, col = fontCol, family = fontType)
                       }
-
                     }
                     if(!is.null(textLabels)){
                       if(centerMap != "Europe"){
@@ -2777,7 +2768,7 @@ filterT <- function(data, addU, time) {
          data$Date - 2 * data$Uncertainty - addU <= time , ]
 }
 
-updateClusterColumn <- function(data, cluster, clusterResults) {
+selectClusterGrouping <- function(data, cluster, clusterResults) {
   if(cluster & !is.null(data$spatial_cluster)){
     if(clusterResults == 0){
       data$cluster <- data$temporal_group
