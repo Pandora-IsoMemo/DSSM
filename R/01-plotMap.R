@@ -1587,8 +1587,9 @@ plotMap3D <- function(model,
                       }
                       if(cluster & !is.null(data$spatial_cluster)){
                         data <- data %>%
-                          updateClusterColumn(cluster, clusterResults) %>%
-                          addColorColumn(pColor = pColor, cluster = cluster, clusterCol = clusterCol)
+                          updateClusterColumn(cluster, clusterResults)
+
+                        data$col <- getPColor(data, cluster, clusterCol, pColor)
 
                         # get centroids
                         if(clusterResults == 1){
@@ -1637,22 +1638,21 @@ plotMap3D <- function(model,
                                  col = data$col, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                           } else {
-                            data %>%
+                            dataTmp <- data %>%
                               filterT(addU = addU, time = time) %>%
-                              updateClusterColumn(cluster, clusterResults) %>%
-                              addColorColumn(pColor = pColor, cluster = cluster, clusterCol = clusterCol) %>%
-                              plotPoints(pointShape = pointShape,
-                                         pointSize = pointSize)
+                              updateClusterColumn(cluster, clusterResults)
+                            points(dataTmp$Latitude ~ dataTmp$Longitude,
+                                   col = getPColor(dataTmp, cluster, clusterCol, pColor),
+                                   lwd = 2, pch = pointShape, cex = pointSize)
                           }
                         } else {
                           if(clusterAll != "-1"){
-                            data %>%
+                            dataTmp <- data %>%
                               filterT(addU = addU, time = time) %>%
-                              updateClusterColumn(cluster, clusterResults) %>%
-                              addColorColumn(pColor = pColor, cluster = cluster, clusterCol = clusterCol) %>%
-                              plotPoints(col = getPColor(data, cluster, clusterCol, pColor),
-                                         pointShape = pointShape,
-                                         pointSize = pointSize)
+                              updateClusterColumn(cluster, clusterResults)
+                            points(dataTmp$Latitude ~ dataTmp$Longitude,
+                                   col = getPColor(dataTmp, cluster, clusterCol, pColor),
+                                   lwd = 2, pch = pointShape, cex = pointSize)
                           }
                         }
                       }
@@ -2795,20 +2795,4 @@ getPColor <- function(data, cluster, clusterCol, pColor) {
   }
 
   pColor
-}
-
-addColorColumn <- function(data, cluster, clusterCol, pColor) {
-  if (cluster) {
-    pColor <- colorRampPalette(brewer.pal(8, clusterCol))(max(data$cluster, na.rm=TRUE))[data$cluster]
-  }
-
-  data$col <- pColor
-  data
-}
-
-plotPoints <- function(data, pointShape, pointSize, col = NULL) {
-  if (is.null(col)) col <- data$col
-
-  points(data$Latitude ~ data$Longitude, col = col,
-         lwd = 2, pch = pointShape, cex = pointSize)
 }
