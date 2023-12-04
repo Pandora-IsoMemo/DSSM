@@ -1588,15 +1588,14 @@ plotMap3D <- function(model,
                       if(cluster & !is.null(data$spatial_cluster)){
                         data <- data %>%
                           selectClusterGrouping(cluster, clusterResults)
-                        data$col <- getPColor(data, cluster, clusterCol, pColor)
 
                         # get centroids
                         if(clusterResults == 1){
-                          data_names <- c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster","col")
+                          data_names <- c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "cluster")
                           centroids <- unique(data[, data_names])
                           centroids <- na.omit(centroids)
                         } else {
-                          data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point","col")
+                          data_names <- c("temporal_group", "long_temporal_group_reference_point", "lat_temporal_group_reference_point", "cluster")
                           centroids <- unique(data[, data_names])
                         }
                         centroids <- centroids[order(centroids[,1]), ]
@@ -1636,15 +1635,16 @@ plotMap3D <- function(model,
                       # add centroids
                       if(cluster & !is.null(data$spatial_cluster)){
                         if(clusterResults == 0){
-                          centroids$cluster <- centroids$temporal_group
                           map_label <- "Group"
                         } else {
-                          centroids$cluster <- centroids$spatial_cluster
                           map_label <- "Cluster"
                         }
 
-                        points(centroids[, 2:3], lwd = 2,
-                               pch = pointShape, cex = pointSize * 2.5, col = centroids$col)
+                        points(centroids[, 2:3],
+                               col = getPColor(centroids, cluster, clusterCol, pColor),
+                               lwd = 2,
+                               pch = pointShape,
+                               cex = pointSize * 2.5)
                         text(centroids[, 2:3], labels = paste0(map_label,"_", centroids$cluster), pos = 4,
                              cex = fontSize * 1.5, col = fontCol, family = fontType)
                       }
