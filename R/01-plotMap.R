@@ -1601,43 +1601,29 @@ plotMap3D <- function(model,
                         }
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
-                          centroids2 <- centroids
-                          centroids2[,2][centroids[,2] < -20] <- centroids2[,2][centroids[,2] < -20] + 200
-                          centroids2[,2][centroids[,2] >= -20] <- (- 160 + centroids2[,2][centroids[,2] >= -20])
-                          centroids <- centroids2
+                          centroidsPac <- centroids
+                          centroidsPac[,2][centroids[,2] < -20] <- centroidsPac[,2][centroids[,2] < -20] + 200
+                          centroidsPac[,2][centroids[,2] >= -20] <- (- 160 + centroidsPac[,2][centroids[,2] >= -20])
+                          centroids <- centroidsPac
                         }
                       }
 
-                      if(clusterAll != "-1"){
-                        # not show centroids but show points
+                      if(clusterAll != "-1" || !cluster){
+                        # not show only centroids but show points
+                        dataPlot <- data
+
                         if(centerMap != "Europe"){
-                          if(cluster & clusterAll %in% c("0", "1")){
-                            if(clusterAll == "0"){
-                              dataPac <- data
-                              dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-                              dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
-                            }
-                            dataPlot <- dataPac
-                          } else {
-                            if(clusterAll != "-1"){
-                              dataPlot <- dataTPac
-                            }
-                          }
-                        } else {
-                          if(cluster & clusterAll %in% c("0", "1")){
-                            if(clusterAll == "0"){
-                              dataPlot <- data
-                            } else {
-                              dataPlot <- data %>%
-                                filterT(addU = addU, time = time)
-                            }
-                          } else {
-                            if(clusterAll != "-1"){
-                              dataPlot <- data %>%
-                                filterT(addU = addU, time = time)
-                            }
-                          }
+                          dataPac <- data
+                          dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
+                          dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+                          dataPlot <- dataPac
                         }
+
+                        if(cluster & clusterAll == "1"){
+                          dataPlot <- dataPlot %>%
+                            filterT(addU = addU, time = time)
+                        }
+
                         dataPlot <- dataPlot %>%
                           selectClusterGrouping(cluster, clusterResults)
                         points(dataPlot$Latitude ~ dataPlot$Longitude,
@@ -1647,7 +1633,7 @@ plotMap3D <- function(model,
                                cex = pointSize)
                       }
 
-                      # show centroids
+                      # add centroids
                       if(cluster & !is.null(data$spatial_cluster)){
                         if(clusterResults == 0){
                           centroids$cluster <- centroids$temporal_group
