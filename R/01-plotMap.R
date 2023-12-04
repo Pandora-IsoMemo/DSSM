@@ -1638,20 +1638,20 @@ plotMap3D <- function(model,
                                  col = data$col, lwd = 2,
                                  pch = pointShape, cex = pointSize);
                           } else {
-                            dataTmp <- data %>%
+                            dataT <- data %>%
                               filterT(addU = addU, time = time) %>%
                               updateClusterColumn(cluster, clusterResults)
-                            points(dataTmp$Latitude ~ dataTmp$Longitude,
-                                   col = getPColor(dataTmp, cluster, clusterCol, pColor),
+                            points(dataT$Latitude ~ dataT$Longitude,
+                                   col = getPColor(dataT, cluster, clusterCol, pColor),
                                    lwd = 2, pch = pointShape, cex = pointSize)
                           }
                         } else {
                           if(clusterAll != "-1"){
-                            dataTmp <- data %>%
+                            dataT <- data %>%
                               filterT(addU = addU, time = time) %>%
                               updateClusterColumn(cluster, clusterResults)
-                            points(dataTmp$Latitude ~ dataTmp$Longitude,
-                                   col = getPColor(dataTmp, cluster, clusterCol, pColor),
+                            points(dataT$Latitude ~ dataT$Longitude,
+                                   col = getPColor(dataT, cluster, clusterCol, pColor),
                                    lwd = 2, pch = pointShape, cex = pointSize)
                           }
                         }
