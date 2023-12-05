@@ -8,6 +8,11 @@
 - Create custom map from x-y-z data from file in OperatoR 
 - Option to create probability maps in LocateR independently
 
+## Version 23.10.3
+
+### Bug Fixes
+- fix issue with missing location marks in TimeR and TimeRKernel (#193)
+
 ## Version 23.10.2
 
 ### Bug Fixes
