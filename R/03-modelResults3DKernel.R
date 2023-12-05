@@ -1083,6 +1083,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                             trange = input$trange,
                             AxisSize = input$AxisSize,
                             AxisLSize = input$AxisLSize,
+                            cluster = input$cluster,
                             clusterCol = input$clusterCol,
                             clusterResults = input$clusterResults,
                             ...)
