@@ -184,10 +184,9 @@ modelResultsAssignUI <- function(id, title = "") {
 #' @param output output
 #' @param session session
 #' @param isoData data
-#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsAssign <- function(input, output, session, isoData, config) {
+modelResultsAssign <- function(input, output, session, isoData) {
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
@@ -230,9 +229,9 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = config$rPackageName,
+                      rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
-                      fileExtension = config$fileExtension,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "assign"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -240,12 +239,14 @@ modelResultsAssign <- function(input, output, session, isoData, config) {
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
 
 

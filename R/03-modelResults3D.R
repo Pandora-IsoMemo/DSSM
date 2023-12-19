@@ -490,10 +490,9 @@ modelResults3DUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData, config){
+modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "temporalAvg")
 
@@ -560,14 +559,15 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # MODEL DOWN- / UPLOAD ----
 
+  subFolder <- "TimeR"
   uploadedNotes <- reactiveVal(NULL)
   downloadModelServer("modelDownload",
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = config$rPackageName,
-                      subFolder = "TimeR",
-                      fileExtension = config$fileExtension,
+                      rPackageName = config()[["rPackageName"]],
+                      subFolder = subFolder,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "model3D"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -575,12 +575,14 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
-                                     subFolder = "TimeR",
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
+                                     subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
 
 
