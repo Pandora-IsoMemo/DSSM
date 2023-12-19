@@ -401,6 +401,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
     # reset model
     MapDiff(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     savedMaps(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----

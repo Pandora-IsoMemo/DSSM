@@ -255,6 +255,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
 
     # reset model
     Model(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----
