@@ -5,7 +5,7 @@ library(MpiIsoApp)
 # Therefore we need to import and load the whole package mclust
 library(mclust)
 
-options(shiny.maxRequestSize = 200*1024^2)
+options(shiny.maxRequestSize = 300*1024^2)
 options(scipen=999)
 
 server <- function(input, output, session) {
