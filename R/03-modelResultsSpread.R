@@ -420,10 +420,9 @@ modelResultsSpreadUI <- function(id, title = ""){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData, config){
+modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
   observeEvent(savedMaps(), {
     observeEvent(savedMaps(), {
       choices <- getMapChoices(savedMaps(), "spread")
@@ -488,9 +487,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = config$rPackageName,
+                      rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
-                      fileExtension = config$fileExtension,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "spread"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -498,18 +497,21 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
 
     # reset model
     Model(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----

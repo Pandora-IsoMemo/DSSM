@@ -4,15 +4,7 @@
 \alias{modelResults3DKernel}
 \title{server function of model Results module}
 \usage{
-modelResults3DKernel(
-  input,
-  output,
-  session,
-  isoData,
-  savedMaps,
-  fruitsData,
-  config
-)
+modelResults3DKernel(input, output, session, isoData, savedMaps, fruitsData)
 }
 \arguments{
 \item{input}{input}
@@ -26,8 +18,6 @@ modelResults3DKernel(
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
-
-\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module

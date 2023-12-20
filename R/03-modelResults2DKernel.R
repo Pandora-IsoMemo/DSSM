@@ -384,9 +384,8 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param config (list) list of configuration parameters#'
 #' @export
-modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData, config){
+modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "kernel2d")
 
@@ -449,9 +448,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = config$rPackageName,
+                      rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
-                      fileExtension = config$fileExtension,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "model2DKernel"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -459,12 +458,14 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
 
 
@@ -473,6 +474,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
     # reset model
     Model(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----

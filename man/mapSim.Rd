@@ -4,7 +4,7 @@
 \alias{mapSim}
 \title{server function of model Results module}
 \usage{
-mapSim(input, output, session, savedMaps, fruitsData, config)
+mapSim(input, output, session, savedMaps, fruitsData)
 }
 \arguments{
 \item{input}{input}
@@ -16,8 +16,6 @@ mapSim(input, output, session, savedMaps, fruitsData, config)
 \item{savedMaps}{saved Maps}
 
 \item{fruitsData}{data for export to FRUITS}
-
-\item{config}{(list) list of configuration parameters}
 }
 \description{
 server function of model Results module
