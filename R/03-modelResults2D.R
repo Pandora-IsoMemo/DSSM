@@ -405,10 +405,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param isoData data
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param config (list) list of configuration parameters
 #'
 #' @export
-modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData, config){
+modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), "localAvg")
 
@@ -483,9 +482,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       dat = data,
                       inputs = input,
                       model = Model,
-                      rPackageName = config$rPackageName,
+                      rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
-                      fileExtension = config$fileExtension,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "model2D"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -493,12 +492,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
 
 
@@ -507,6 +508,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     # reset model
     Model(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----

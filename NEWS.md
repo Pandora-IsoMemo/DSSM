@@ -1,12 +1,23 @@
 # MpiIsoApp development version
 
-## Version 23.11.0
+## Version 23.12.1
 
 ### New Features
 - New option to create elevation maps in OperatoR as well as custom maps
 - Option to weight by map in LocatoR including options (e.g. weight by altitude/elevation map)
 - Create custom map from x-y-z data from file in OperatoR 
 - Option to create probability maps in LocateR independently
+
+## Version 23.12.0
+
+### New Features
+- _Import of models from Pandora_: 
+  - display of "About" information that is associated to a selected Pandora Repository
+
+### Bug Fixes
+- _Import of models from Pandora_: 
+  - an error message occurred when trying to load a model from pandora.
+  - fix: adding the missing download of the zip file from the url before unpacking the zip
 
 ## Version 23.10.3
 

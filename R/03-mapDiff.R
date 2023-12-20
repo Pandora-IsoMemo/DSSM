@@ -372,10 +372,9 @@ modelResultsDiffUI <- function(id, title = ""){
 #' @param session session
 #' @param savedMaps saved Maps
 #' @param fruitsData data for export to FRUITS
-#' @param config (list) list of configuration parameters
 #'
 #' @export
-mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
+mapDiff <- function(input, output, session, savedMaps, fruitsData){
   data <- reactiveVal()
 
   observeEvent(savedMaps(), {
@@ -425,9 +424,9 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
                       dat = savedMaps,
                       inputs = input,
                       model = MapDiff,
-                      rPackageName = config$rPackageName,
+                      rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
-                      fileExtension = config$fileExtension,
+                      fileExtension = config()[["fileExtension"]],
                       helpHTML = getHelp(id = "difference"),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
@@ -435,18 +434,21 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData, config){
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
-                                     defaultSource = config$defaultSourceModel,
                                      importType = "model",
-                                     rPackageName = config$rPackageName,
+                                     ckanFileTypes = config()[["ckanModelTypes"]],
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
-                                     fileExtension = config$fileExtension)
+                                     defaultSource = config()[["defaultSourceModel"]],
+                                     mainFolder = config()[["mainFolder"]],
+                                     fileExtension = config()[["fileExtension"]],
+                                     rPackageName = config()[["rPackageName"]])
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
 
     # reset model
     MapDiff(NULL)
+    fileImport(uploadedValues()[[1]][["data"]])
     savedMaps(uploadedValues()[[1]][["data"]])
 
     # update notes in tab "Estimates" model download ----
