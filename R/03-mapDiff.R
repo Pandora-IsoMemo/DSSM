@@ -827,28 +827,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     XPred <- XPred[order(XPred$Latitude, XPred$Longitude),]
     req(XPred)
     MapDiff(XPred)
-
-    # map <- createSavedMap(
-    #   model = XPred,
-    #   predictions = XPred,
-    #   plot =  recordPlot({
-    #     plot.new()
-    #     text(
-    #       x = 0.5,
-    #       y = 0.5,
-    #       paste0("Custom map"),
-    #       cex = 5
-    #     )
-    #   }),
-    #   type = "user",
-    #   name = mapName
-    # )
-    # maps <- savedMaps()
-    # maps[[length(maps) + 1]] <- map
-    # savedMaps(maps)
-    #
-    # alert(paste0("Map '", mapName, "' was saved"))
-    # updateTextInput(session, "saveMapName", value = "")
   })
   ####
 
