@@ -212,7 +212,8 @@ modelResults3DUI <- function(id, title = ""){
       # main panel ----
         mainPanel(
           width = 8,
-          previewDataUI(id = ns("preview"), title = "Input Data"),
+          previewDataUI(id = ns("preview"), title = sprintf("%s Input Data", title)),
+          tags$hr(),
           tags$h4("Map"),
           div(class = "aspect-16-9", div(
             plotOutput(outputId = ns("DistMap"), width = "100%", height = "100%")
@@ -588,7 +589,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     mainFolder = config()[["mainFolder"]],
                                      fileExtension = config()[["fileExtension"]],
                                      rPackageName = config()[["rPackageName"]])
 
