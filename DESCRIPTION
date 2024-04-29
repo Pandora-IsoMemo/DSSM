@@ -14,7 +14,7 @@ Imports:
     animation,
     coda,
     colourpicker,
-    DataTools (>= 23.12.2),
+    DataTools (>= 24.04.3),
     dplyr,
     DT (>= 0.4),
     elevatr (>= 0.4.2),
