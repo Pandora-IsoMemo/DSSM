@@ -541,6 +541,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults3DKernel: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)

@@ -5,6 +5,7 @@
 
 ## Bug Fixes
 - fix crashing of map plotting when time is out of range (#207)
+- fix wrong color data for centroids (#205)
 
 # MpiIsoApp 23.12.1
 

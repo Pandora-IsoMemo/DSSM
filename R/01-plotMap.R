@@ -1080,7 +1080,7 @@ plotMap3D <- function(model,
   independent <- model$independent
 
   if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-    if(IndSelect == "" | is.null(IndSelect)){
+    if(is.null(IndSelect) || IndSelect == ""){
       return(NULL)
     }
     model$model <- model$model[[IndSelect]]
@@ -1609,6 +1609,7 @@ plotMap3D <- function(model,
 
                         dataPlot <- dataPlot %>%
                           selectClusterGrouping(cluster, clusterResults)
+
                         points(dataPlot$Latitude ~ dataPlot$Longitude,
                                col = getPColor(dataPlot, cluster, palName = clusterCol, pColor = pColor),
                                lwd = 2,
@@ -1619,7 +1620,7 @@ plotMap3D <- function(model,
                       # add centroids
                       if(cluster & !is.null(data$spatial_cluster)){
                         points(centroids[, 2:3],
-                               col = getPColor(dataPlot, cluster, palName = clusterCol, pColor = pColor),
+                               col = getPColor(centroids, cluster, palName = clusterCol, pColor = pColor),
                                lwd = 2,
                                pch = pointShape,
                                cex = pointSize * 2.5)
