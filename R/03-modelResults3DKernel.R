@@ -1161,7 +1161,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           clusterCol = input$clusterCol,
           pointDat = pointDatOK,
           ...
-        )
+        ) %>%
+          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
       }
       }
     }

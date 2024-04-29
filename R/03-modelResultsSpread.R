@@ -464,6 +464,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResultsSpread: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -894,7 +897,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         minDist = input$minDist,
         showMinOnMap = input$showMinOnMap,
         ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 

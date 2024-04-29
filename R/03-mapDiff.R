@@ -1102,7 +1102,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              AxisLSize = input$AxisLSize,
              pointDat = pointDatOK,
              ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 

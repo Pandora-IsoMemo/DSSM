@@ -217,6 +217,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
                          file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResultsAssign: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)

@@ -425,6 +425,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults2DKernel: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -841,7 +844,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         clusterCol = input$clusterCol,
         pointDat = pointDatOK,
         ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 

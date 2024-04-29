@@ -456,6 +456,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults2D: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -890,7 +893,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         AxisLSize = input$AxisLSize,
         pointDat = pointDatOK,
         ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 
