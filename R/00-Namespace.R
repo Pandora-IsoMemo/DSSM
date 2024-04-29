@@ -5,7 +5,7 @@
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer
-#'  tryCatchWithWarningsAndErrors
+#'  previewDataUI previewDataServer tryCatchWithWarningsAndErrors
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point

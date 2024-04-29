@@ -212,6 +212,8 @@ modelResults3DUI <- function(id, title = ""){
       # main panel ----
         mainPanel(
           width = 8,
+          previewDataUI(id = ns("preview"), title = "Input Data"),
+          tags$h4("Map"),
           div(class = "aspect-16-9", div(
             plotOutput(outputId = ns("DistMap"), width = "100%", height = "100%")
           )),
@@ -500,6 +502,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   observeEvent(input$saveMap, {
+    logDebug("modelResults3D: Button 'Save map' clicked")
     mapName <- trimws(input$saveMapName)
     if (mapName == ""){
       alert("Please provide a map name")
@@ -523,6 +526,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
 
   output$centerEstimate <- renderUI({
+    logDebug("modelResults3D: Render centerEstimate")
     centerEstimate$text()
   })
 
@@ -535,12 +539,16 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults3D: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
   })
 
   coordType <- reactive({
+    logDebug("modelResults3D: Update coordType")
     # reset model
     Model(NULL)
 
@@ -588,7 +596,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
-
+    logDebug("modelResults3D: Update data after model import")
     # reset model
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
@@ -599,8 +607,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   }) %>%
     bindEvent(uploadedValues())
 
+  previewDataServer(id = "preview", dat = data)
+
   observe(priority = 50, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
+    logDebug("modelResults3D: Update inputs after model import")
     uploadedInputs <- uploadedValues()[[1]][["inputs"]]
 
     ## update inputs ----
@@ -615,6 +626,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
+    logDebug("modelResults3D: Update model after model import")
     ## update model ----
     Model(uploadedValues()[[1]][["model"]])
   }) %>%
@@ -622,6 +634,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # RUN MODEL ----
   observeEvent(input$start, {
+    logDebug("modelResults3D: Button 'Start' clicked")
     if (input$dataSource == "model") {
       if (length(savedMaps()) == 0) return(NULL)
 
@@ -655,6 +668,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
+      logDebug("modelResults3D: If not fixedCol: update zoom and standard error")
       if(Model()$IndependentType == "numeric"){
         val <- sd(Model()$data[, isolate(Independent())], na.rm = TRUE)
       } else {
@@ -1017,7 +1031,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        rangePointsTime = input$rangePointsTime,
                        intTime = input$intTime,
                        formatTimeCourse = formatTimeCourse(),
-                       ...)
+                       ...) %>%
+          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
       } else {
         req(zSettings$estType)
         plotMap3D(
@@ -1074,7 +1089,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           AxisLSize = input$AxisLSize,
           pointDat = pointDatOK,
           ...
-        )
+        ) %>%
+          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
       }
     }
   })
@@ -1186,6 +1202,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   fileImport <- reactiveVal(NULL)
   observe({
+    logDebug("modelResults3D: Update fileImport")
     # reset model
     Model(NULL)
     if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
