@@ -1142,9 +1142,8 @@ plotMap3D <- function(model,
     XPred$Longitude[XPredPac$Longitude < 20] <- XPred$Longitude[XPredPac$Longitude < 20] + 160
     XPred$Longitude[XPredPac$Longitude >= 20] <- (- 200 + XPred$Longitude[XPredPac$Longitude >= 20])
     XPred$Longitude2 = (XPred$Longitude - mean(data$Longitude)) / sd(data$Longitude)
-    dataPac <- data
-    dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-    dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+    dataPac <- data %>%
+      centerPlotData(centerMap = centerMap)
     dataTPac <- dataPac %>%
       filterT(addU = addU, time = time)
   }
@@ -1609,14 +1608,8 @@ plotMap3D <- function(model,
 
                       if(clusterAll != "-1" || !cluster){
                         # not show only centroids but show points
-                        dataPlot <- data
-
-                        if(centerMap != "Europe"){
-                          dataPac <- data
-                          dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-                          dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
-                          dataPlot <- dataPac
-                        }
+                        dataPlot <- data %>%
+                          centerPlotData(centerMap = centerMap)
 
                         if(cluster & clusterAll == "1"){
                           dataPlot <- dataPlot %>%
@@ -2783,18 +2776,6 @@ getMinima <- function(XPredPlot, nMin = 3, minDist = 250, minima = "Min"){
     }
   }
   return(na.omit(mins))
-}
-
-#' Filter Time
-#'
-#' @param data (data.frame) data to be filtered by time containing columns "Date" and "Uncertainty"
-#' @param addU (numeric) additional uncertainty to be added to time frame
-#' @param time (numeric) time for filter
-#'
-#' @return (data.frame) filtered data
-filterT <- function(data, addU, time) {
-  data[data$Date + 2 * data$Uncertainty + addU >= time  &
-         data$Date - 2 * data$Uncertainty - addU <= time , ]
 }
 
 #' Select Cluster Grouping
