@@ -2460,6 +2460,8 @@ addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
   axis(axisType,
        at = labelPositions,
        labels = sprintf(paste('%1.', decPlace, 'f', sep = ""), labelPositions))
+
+  return(NULL)
 }
 
 plotTimeIntervals <- function(Model,
