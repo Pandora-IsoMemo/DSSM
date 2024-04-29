@@ -13,7 +13,7 @@ testthat::test_that("function addFormattedAxis", {
   }))
 })
 
-testthat::test_that("function plotMap", {
+testthat::test_that("function plotMap3D", {
   testModel <- readRDS(testthat::test_path("testdata", "test-plotMap3D-data.rds"))
   testInputs <- list(model = testModel, IndSelect = "expert", time = 5000, estType = "Mean",
                      estQuantile = NULL,

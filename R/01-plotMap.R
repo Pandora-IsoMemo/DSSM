@@ -205,13 +205,11 @@ plotMap <- function(model,
     }
   }
   if(mask == TRUE){
-    if(centerMap != "Europe"){
-      maskDraw <- sapply(1:nrow(dataPac), function(x) sqrt((dataPac$Longitude[x] - XPredPac[, 1])^2 + (dataPac$Latitude[x] - XPredPac[, 2])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
-    } else {
-      maskDraw <- sapply(1:nrow(data), function(x) sqrt((data$Longitude[x] - XPred[, 1])^2 + (data$Latitude[x] - XPred[, 2])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
-    }
+    maskDraw <- extractMaskDraw(dat = centerPlotData(data, centerMap = centerMap),
+                                maskRadius = maskRadius,
+                                XPred = centerXPred(XPred = XPred,
+                                                    XPredPac = XPredPac,
+                                                    centerMap = centerMap))
   }
   if (!is.null(dataCenter)){
     # this is batch mode
@@ -1194,25 +1192,17 @@ plotMap3D <- function(model,
   }
 
   if(mask == TRUE){
-    if(centerMap != "Europe"){
-      if(exists("cData")){
-        maskData <- unique(cData[, c("Longitude", "Latitude")])
-      } else {
-        maskData <- data
-      }
-      maskDraw <- sapply(1:nrow(maskData), function(x) sqrt((maskData$Longitude[x] - XPredPac[, 3])^2 + (maskData$Latitude[x] - XPredPac[, 4])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
+    if(exists("cData")){
+      maskData <- unique(cData[, c("Longitude", "Latitude")])
     } else {
-      if(exists("cData")){
-        maskData <- unique(cData[, c("Longitude", "Latitude")])
-      } else {
-        maskData <- data
-      }
-      maskDraw <- sapply(1:nrow(maskData),
-                         function(x) sqrt((maskData$Longitude[x] - XPred[, 3])^2 +
-                                            (maskData$Latitude[x] - XPred[, 4])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
+      maskData <- data
     }
+
+    maskDraw <- extractMaskDraw(dat = maskData,
+                                maskRadius = maskRadius,
+                                XPred = centerXPred(XPred = XPred,
+                                                    XPredPac = XPredPac,
+                                                    centerMap = centerMap))
   }
 
   if (!is.null(dataCenter)){
@@ -1474,7 +1464,8 @@ plotMap3D <- function(model,
                            n = pmin(20, ceiling(ncol / 2)))
   }
   cex4 <- 1
-  if(max(abs(XPred$Est), na.rm = TRUE) > 9999 | max(abs(XPred$Est), na.rm = TRUE) < 0.05){
+  if(!all(is.na(XPred$Est)) &&
+     (max(abs(XPred$Est), na.rm = TRUE) > 9999 | max(abs(XPred$Est), na.rm = TRUE) < 0.05)){
     cex4 <- 0.7
   }
 
