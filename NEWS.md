@@ -4,7 +4,7 @@
 - preview of input data in modeling tabs
 
 ## Bug Fixes
-- 
+- fix crashing of map plotting when time is out of range (#207)
 
 # MpiIsoApp 23.12.1
 
