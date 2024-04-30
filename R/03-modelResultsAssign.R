@@ -217,6 +217,9 @@ modelResultsAssign <- function(input, output, session, isoData) {
                          file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResultsAssign: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -244,7 +247,6 @@ modelResultsAssign <- function(input, output, session, isoData) {
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     mainFolder = config()[["mainFolder"]],
                                      fileExtension = config()[["fileExtension"]],
                                      rPackageName = config()[["rPackageName"]])
 

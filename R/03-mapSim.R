@@ -61,7 +61,35 @@ modelResultsSimUI <- function(id, title = ""){
           radioButtons(ns("normalType"), "Type of normalisation",
                        choices = c("Max value equal to 1" = "1", "Volume equal to 1" = "2")),
           ns = ns),
+        checkboxInput(ns("weightProb"), "Weight values", value = FALSE),
+        conditionalPanel(
+          condition = "input.weightProb == true",
+          selectInput(ns("savedMap"),
+                      "Select Map for Weighting",
+                      choices = c(""),
+                      selected = ""),
+          checkboxInput(ns("negZero"), "Set negative values to zero weight", value = FALSE),
+          checkboxInput(ns("invWeight"), "Inverse exponential weighting", value = FALSE),
+          conditionalPanel(
+            condition = "input.invWeight == true",
+          numericInput(ns("weightDecay"), "Exponential weighting decay half-life", value = 1000, min = 0, max = Inf),
+          ns = ns),
+          ns = ns),
+        tags$hr(),
         actionButton(ns("start"), "Create probability map"),
+         pickerInput(
+          inputId = ns("selectPoints"),
+          label = "Select data points:",
+          choices = NULL,
+          options = list(
+            `actions-box` = TRUE,
+             size = 10,
+            `none-selected-text` = "No points selected",
+            `selected-text-format` = "count > 8"
+          ),
+          multiple = TRUE
+        ),
+        tags$hr(),
         conditionalPanel(
           condition = conditionPlot(ns("DistMap")),
           checkboxInput(inputId = ns("fixCol"),
@@ -223,7 +251,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     set = 0,
     upperLeftLongitude = NA,
     upperLeftLatitude = NA,
-    zoom = 50
+    zoom = 50,
+    weightMap = NULL
   )
 
   observeEvent(savedMaps(), {
@@ -232,12 +261,25 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     updateSelectInput(session, "savedModel", choices = choices)
   })
 
+  observeEvent(savedMaps(), {
+    choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
+                                            "similarity", "kernel2d", "kernel3d", "user"))
+
+    updateSelectInput(session, "savedMap", choices = choices)
+  })
+
+
   mapChoices <- reactive(
     getMapChoices(savedMaps(), c("localAvg", "temporalAvg"))
   )
 
   observe({
     updatePickerInput(session, "SimMapSelect", choices = mapChoices())
+  })
+
+  observe({
+    req(length(values$simDataList)>0)
+    updatePickerInput(session, "selectPoints", choices = rownames(values$simDataList[[1]]), selected = rownames(values$simDataList[[1]]))
   })
 
   observeEvent(input$SimMapSelect, ignoreNULL = FALSE, {
@@ -258,6 +300,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
 
     showModal(modalDialog(
       title = "Data values",
+      "Enter data point names in first column",
       matrixInput(
         session$ns("simDataValues"),
         value = m,
@@ -268,7 +311,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
           updateHeader = "MpiIsoApp.doubleHeader.update",
           getHeader = "MpiIsoApp.doubleHeader.get"
         ),
-        rows = list(extend = TRUE),
+        rows = list(extend = TRUE, editableNames = TRUE, names = TRUE),
       ),
       footer = tagList(
         actionButton(session$ns("simDataImportCancel"), "Cancel"),
@@ -293,6 +336,11 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     values$simDataList <- list()
     values$simDataListM <- list()
   })
+
+  observeEvent(input$savedMap, {
+    values$weightMap <- savedMaps()[[as.numeric(input$savedMap)]]
+  })
+
 
   observeEvent(input$simDataImportCancel, removeModal())
   observeEvent(input$simDataImportSubmit, {
@@ -364,15 +412,23 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   # RUN MODEL ----
   observeEvent(input$start, {
     values$simDataListM <- values$simDataList
+    values$simDataListM <- lapply(values$simDataListM, function(x){
+      x[rownames(x) %in% input$selectPoints,]
+    })
 
     if (length(values$simDataListM) == 0) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 1]))) return(NULL)
     if (any(is.na(do.call("rbind", values$simDataListM)[, 2]))){
       withProgress({
         model <- createSimilarityMap(values$predictionList,
-                                        values$simDataListM, includeUncertainty = FALSE,
+                                     values$simDataListM, includeUncertainty = FALSE,
                                         normalize = input$normalize,
-                                        normalType = input$normalType) %>%
+                                        normalType = input$normalType,
+                                        weightProb = input$weightProb,
+                                        weightMap = values$weightMap,
+                                        negZero = input$negZero,
+                                        invWeight = input$invWeight,
+                                        weightDecay = input$weightDecay) %>%
           tryCatchWithWarningsAndErrors()
         Model(model)
         },
@@ -382,9 +438,14 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     } else {
       withProgress({
         model <- createSimilarityMap(values$predictionList,
-                                        values$simDataListM,
+                                     values$simDataListM,
                                         normalize = input$normalize,
-                                        normalType = input$normalType) %>%
+                                        normalType = input$normalType,
+                                        weightProb = input$weightProb,
+                                        weightMap = values$weightMap,
+                                        negZero = input$negZero,
+                                        invWeight = input$invWeight,
+                                        weightDecay = input$weightDecay) %>%
           tryCatchWithWarningsAndErrors()
         Model(model)
         },
@@ -592,7 +653,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              AxisLSize = input$AxisLSize,
              pointDat = pointDatOK,
              ...
-             )
+             ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 

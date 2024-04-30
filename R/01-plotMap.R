@@ -205,13 +205,11 @@ plotMap <- function(model,
     }
   }
   if(mask == TRUE){
-    if(centerMap != "Europe"){
-      maskDraw <- sapply(1:nrow(dataPac), function(x) sqrt((dataPac$Longitude[x] - XPredPac[, 1])^2 + (dataPac$Latitude[x] - XPredPac[, 2])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
-    } else {
-      maskDraw <- sapply(1:nrow(data), function(x) sqrt((data$Longitude[x] - XPred[, 1])^2 + (data$Latitude[x] - XPred[, 2])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
-    }
+    maskDraw <- extractMaskDraw(dat = centerPlotData(data, centerMap = centerMap),
+                                maskRadius = maskRadius,
+                                XPred = centerXPred(XPred = XPred,
+                                                    XPredPac = XPredPac,
+                                                    centerMap = centerMap))
   }
   if (!is.null(dataCenter)){
     # this is batch mode
@@ -1082,7 +1080,7 @@ plotMap3D <- function(model,
   independent <- model$independent
 
   if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-    if(IndSelect == "" | is.null(IndSelect)){
+    if(is.null(IndSelect) || IndSelect == ""){
       return(NULL)
     }
     model$model <- model$model[[IndSelect]]
@@ -1142,9 +1140,8 @@ plotMap3D <- function(model,
     XPred$Longitude[XPredPac$Longitude < 20] <- XPred$Longitude[XPredPac$Longitude < 20] + 160
     XPred$Longitude[XPredPac$Longitude >= 20] <- (- 200 + XPred$Longitude[XPredPac$Longitude >= 20])
     XPred$Longitude2 = (XPred$Longitude - mean(data$Longitude)) / sd(data$Longitude)
-    dataPac <- data
-    dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-    dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+    dataPac <- data %>%
+      centerPlotData(centerMap = centerMap)
     dataTPac <- dataPac %>%
       filterT(addU = addU, time = time)
   }
@@ -1195,25 +1192,17 @@ plotMap3D <- function(model,
   }
 
   if(mask == TRUE){
-    if(centerMap != "Europe"){
-      if(exists("cData")){
-        maskData <- unique(cData[, c("Longitude", "Latitude")])
-      } else {
-        maskData <- data
-      }
-      maskDraw <- sapply(1:nrow(maskData), function(x) sqrt((maskData$Longitude[x] - XPredPac[, 3])^2 + (maskData$Latitude[x] - XPredPac[, 4])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
+    if(exists("cData")){
+      maskData <- unique(cData[, c("Longitude", "Latitude")])
     } else {
-      if(exists("cData")){
-        maskData <- unique(cData[, c("Longitude", "Latitude")])
-      } else {
-        maskData <- data
-      }
-      maskDraw <- sapply(1:nrow(maskData),
-                         function(x) sqrt((maskData$Longitude[x] - XPred[, 3])^2 +
-                                            (maskData$Latitude[x] - XPred[, 4])^2) < maskRadius)
-      maskDraw = apply(maskDraw, 1, max)
+      maskData <- data
     }
+
+    maskDraw <- extractMaskDraw(dat = maskData,
+                                maskRadius = maskRadius,
+                                XPred = centerXPred(XPred = XPred,
+                                                    XPredPac = XPredPac,
+                                                    centerMap = centerMap))
   }
 
   if (!is.null(dataCenter)){
@@ -1475,7 +1464,8 @@ plotMap3D <- function(model,
                            n = pmin(20, ceiling(ncol / 2)))
   }
   cex4 <- 1
-  if(max(abs(XPred$Est), na.rm = TRUE) > 9999 | max(abs(XPred$Est), na.rm = TRUE) < 0.05){
+  if(!all(is.na(XPred$Est)) &&
+     (max(abs(XPred$Est), na.rm = TRUE) > 9999 | max(abs(XPred$Est), na.rm = TRUE) < 0.05)){
     cex4 <- 0.7
   }
 
@@ -1609,14 +1599,8 @@ plotMap3D <- function(model,
 
                       if(clusterAll != "-1" || !cluster){
                         # not show only centroids but show points
-                        dataPlot <- data
-
-                        if(centerMap != "Europe"){
-                          dataPac <- data
-                          dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-                          dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
-                          dataPlot <- dataPac
-                        }
+                        dataPlot <- data %>%
+                          centerPlotData(centerMap = centerMap)
 
                         if(cluster & clusterAll == "1"){
                           dataPlot <- dataPlot %>%
@@ -1625,6 +1609,7 @@ plotMap3D <- function(model,
 
                         dataPlot <- dataPlot %>%
                           selectClusterGrouping(cluster, clusterResults)
+
                         points(dataPlot$Latitude ~ dataPlot$Longitude,
                                col = getPColor(dataPlot, cluster, palName = clusterCol, pColor = pColor),
                                lwd = 2,
@@ -1635,7 +1620,7 @@ plotMap3D <- function(model,
                       # add centroids
                       if(cluster & !is.null(data$spatial_cluster)){
                         points(centroids[, 2:3],
-                               col = getPColor(dataPlot, cluster, palName = clusterCol, pColor = pColor),
+                               col = getPColor(centroids, cluster, palName = clusterCol, pColor = pColor),
                                lwd = 2,
                                pch = pointShape,
                                cex = pointSize * 2.5)
@@ -1795,7 +1780,6 @@ plotDS <- function(XPred,
                    pointDat = NULL){
   options(scipen=999)
   RadiusBatch <-  RadiusBatch / 111
-
   minRangeFactor <- 0.75
   if((diff(rangex) / diff(rangey)) < minRangeFactor){
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
@@ -2461,6 +2445,8 @@ addFormattedAxis <- function(axis, min, max, nLabels = 7, decPlace = 0) {
   axis(axisType,
        at = labelPositions,
        labels = sprintf(paste('%1.', decPlace, 'f', sep = ""), labelPositions))
+
+  return(NULL)
 }
 
 plotTimeIntervals <- function(Model,
@@ -2510,15 +2496,27 @@ roundUpNice <- function(x, nice=c(1,2,5,10)) {
   x
 }
 
-createSimilarityMap <- function(XPredList, pointList, includeUncertainty = TRUE,
+createSimilarityMap <- function(XPredList, pointList,
+                                includeUncertainty = TRUE,
                                 normalize = FALSE,
-                                normalType = "1"){
+                                normalType = "1",
+                                weightProb = FALSE,
+                                weightMap = NULL,
+                                negZero = TRUE,
+                                invWeight = FALSE,
+                                weightDecay = 1){
+
   XPredList <- lapply(1:length(XPredList), function(x){
     similarityMap(XPredList[[x]], pointList[[x]], includeUncertainty)
   })
   combineSimilarityMaps(XPredList,
                         normalize = normalize,
-                        normalType = normalType)
+                        normalType = normalType,
+                        weightProb = weightProb,
+                        weightMap = weightMap,
+                        negZero = negZero,
+                        invWeight = invWeight,
+                        weightDecay = weightDecay)
 }
 
 similarityMap <- function(XPred, point, includeUncertainty = TRUE) {
@@ -2565,22 +2563,27 @@ similarityMap <- function(XPred, point, includeUncertainty = TRUE) {
 
 combineSimilarityMaps <- function(XPredList,
                                   normalize = FALSE,
-                                  normalType = "1") {
+                                  normalType = "1",
+                                  weightProb = FALSE,
+                                  weightMap = NULL,
+                                  negZero = TRUE,
+                                  invWeight = FALSE,
+                                  weightDecay = 1) {
   XPred <- XPredList[[1]]
   XPred$density <- log(XPred$density)
 
   if (length(XPredList) > 1) {
     for (j in 2:length(XPredList)) {
-      closest <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closest <- sapply(1:nrow(XPred), function(x)
         XPredList[[j]]$density[which.min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
                                            (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         )])
-      closestSD <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closestSD <- sapply(1:nrow(XPred), function(x)
         XPredList[[j]]$densitySd[which.min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
                                              (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         )])
 
-      closestDist <- sapply(1:nrow(XPredList[[j]]), function(x)
+      closestDist <- sapply(1:nrow(XPred), function(x)
         min((XPred$Longitude[x] - XPredList[[j]]$Longitude) ^ 2 +
               (XPred$Latitude[x] - XPredList[[j]]$Latitude) ^ 2
         ))
@@ -2596,7 +2599,28 @@ combineSimilarityMaps <- function(XPredList,
   }
 
   XPred$density <- exp(XPred$density)
+  if(!is.null(weightMap) & weightProb == TRUE){
+    closestWeights <- sapply(1:nrow(XPred), function(x)
+              weightMap$predictions$Est[which.min((XPred$Longitude[x] - weightMap$predictions$Longitude) ^ 2 +
+                                         (XPred$Latitude[x] - weightMap$predictions$Latitude) ^ 2
+      )])
+    closestWeightsOG <- closestWeights
+    if(!negZero){
+      closestWeights[closestWeightsOG<0] <- 0
+    }
+
+    if(invWeight){
+      closestWeights <- exp(-log(2)/weightDecay * closestWeights)
+    }
+    if(negZero){
+      closestWeights[closestWeightsOG<0] <- 0
+    }
+
+    XPred$density <- XPred$density * closestWeights
+    XPred$densitySd <- XPred$densitySd * sqrt(closestWeights)
+  }
   XPred$Est <- XPred$density
+
   if(normalize == TRUE){
     if(normalType == "1"){
       constant <- max(XPred$Est, na.rm = TRUE)
@@ -2744,18 +2768,6 @@ getMinima <- function(XPredPlot, nMin = 3, minDist = 250, minima = "Min"){
     }
   }
   return(na.omit(mins))
-}
-
-#' Filter Time
-#'
-#' @param data (data.frame) data to be filtered by time containing columns "Date" and "Uncertainty"
-#' @param addU (numeric) additional uncertainty to be added to time frame
-#' @param time (numeric) time for filter
-#'
-#' @return (data.frame) filtered data
-filterT <- function(data, addU, time) {
-  data[data$Date + 2 * data$Uncertainty + addU >= time  &
-         data$Date - 2 * data$Uncertainty - addU <= time , ]
 }
 
 #' Select Cluster Grouping
