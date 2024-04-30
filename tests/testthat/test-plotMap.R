@@ -41,6 +41,7 @@ testthat::test_that("function plotMap3D", {
   expect_true(is.null(do.call(plotMap3D, testInputs)))
   expect_true(is.null(do.call(plotMapWrapper, c(list(mapType = "3D"), testInputs))))
 
+
   testInputs <- list(model = testModel, IndSelect = "expert", time = -2200, estType = "Mean",
                      estQuantile = NULL,
                      rangez = c(0, 1), limitz = NULL, showModel = TRUE, points = FALSE,
