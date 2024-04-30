@@ -11,6 +11,5 @@ ckanModelTypes:
   - "zip"
   - "dssm"
 githubRepo: "iso-app"        # for import of models
-mainFolder: "predefinedModels"  # for import of models
 fileExtension: "dssm"      # for download of models
 rPackageName: "MpiIsoApp"       # for download and import of models

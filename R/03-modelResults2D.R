@@ -176,6 +176,9 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       # mainPanel ----
       mainPanel(
         width = 8,
+        previewDataUI(id = ns("preview"), title = sprintf("%s Input Data", title)),
+        tags$hr(),
+        tags$h4("Map"),
         div(class = "aspect-16-9", div(
           plotOutput(outputId = ns("DistMap"), width = "100%", height = "100%")
         )),
@@ -453,6 +456,9 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults2D: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -497,7 +503,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     mainFolder = config()[["mainFolder"]],
                                      fileExtension = config()[["fileExtension"]],
                                      rPackageName = config()[["rPackageName"]])
 
@@ -515,6 +520,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
     bindEvent(uploadedValues())
+
+  previewDataServer(id = "preview", dat = data)
 
   observe(priority = 50, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
@@ -886,7 +893,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         AxisLSize = input$AxisLSize,
         pointDat = pointDatOK,
         ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 

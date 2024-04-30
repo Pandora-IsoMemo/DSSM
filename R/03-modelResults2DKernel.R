@@ -140,6 +140,9 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
       # main panel ----
       mainPanel(
         width = 8,
+        previewDataUI(id = ns("preview"), title = sprintf("%s Input Data", title)),
+        tags$hr(),
+        tags$h4("Map"),
         div(class = "aspect-16-9", div(
           plotOutput(outputId = ns("DistMap"), width = "100%", height = "100%")
         )),
@@ -422,6 +425,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       file = fileImport()
     )
 
+    req(!is.null(activeData), !identical(data(), activeData))
+    logDebug("modelResults2DKernel: Update data")
+
     # reset model
     Model(NULL)
     data(activeData)
@@ -463,7 +469,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     mainFolder = config()[["mainFolder"]],
                                      fileExtension = config()[["fileExtension"]],
                                      rPackageName = config()[["rPackageName"]])
 
@@ -481,6 +486,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     uploadedNotes(uploadedValues()[[1]][["notes"]])
   }) %>%
     bindEvent(uploadedValues())
+
+  previewDataServer(id = "preview", dat = data)
 
   observe(priority = 50, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["inputs"]]))
@@ -837,7 +844,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         clusterCol = input$clusterCol,
         pointDat = pointDatOK,
         ...
-      )
+      ) %>%
+        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
     }
   })
 
