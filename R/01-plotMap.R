@@ -1,3 +1,13 @@
+plotMapWrapper <- function(mapType = c("2D", "3D", "DS"), ...) {
+  mapType <- match.arg(mapType)
+
+  switch (mapType,
+          "2D" = plotMap(...),
+          "3D" = plotMap3D(...),
+          "DS" = plotDS(...)) #%>%
+    # scaleFun()
+}
+
 #' Plots map of a spatial average or spread model from estimateMap() or estimateMapSpread() functions
 #'
 #' @param model return object of spatial or spread model

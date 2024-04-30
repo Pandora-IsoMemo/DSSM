@@ -39,6 +39,7 @@ testthat::test_that("function plotMap3D", {
 
   # we cannot test the output, but we can test if the function runs without error
   expect_true(is.null(do.call(plotMap3D, testInputs)))
+  expect_true(is.null(do.call(plotMapWrapper, c(list(mapType = "3D"), testInputs))))
 
   testInputs <- list(model = testModel, IndSelect = "expert", time = -2200, estType = "Mean",
                      estQuantile = NULL,
