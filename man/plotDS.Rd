@@ -13,6 +13,7 @@ plotDS(
   rangex = range(XPred$Longitude, na.rm = TRUE),
   rangey = range(XPred$Latitude, na.rm = TRUE),
   rangez = range(XPred$Est, na.rm = TRUE),
+  contourType = c("filled.contour", "contour"),
   showModel = TRUE,
   showScale = TRUE,
   ncol = 10,
@@ -61,6 +62,8 @@ plotDS(
 \item{rangey}{range of latitude values (y axis limits)}
 
 \item{rangez}{range of estimated values (z axis limits)}
+
+\item{contourType}{one of "filled.contour" or "contour"}
 
 \item{showModel}{show model}
 

@@ -1,3 +1,9 @@
+# MpiIsoApp 24.05.0
+
+## New Features
+- _OperatoR tab_:
+  - option to create contour maps from saved maps (#202)
+
 # MpiIsoApp 24.04.0
 
 ## New Features

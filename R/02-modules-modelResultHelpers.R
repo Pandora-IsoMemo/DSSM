@@ -620,7 +620,7 @@ zScaleServer <- function(id,
                      mapType(),
                      "Time course" = "Range of y axis:",
                      "Minima/Maxima" = "Range of y axis:",
-                     "Range of colour scale:"
+                     "Range of estimates:"
                    )
                  })
 
