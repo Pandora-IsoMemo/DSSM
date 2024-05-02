@@ -15,6 +15,7 @@ plotMap(
   rangex = range(model$data$Longitude, na.rm = TRUE),
   rangey = range(model$data$Latitude, na.rm = TRUE),
   rangez = NULL,
+  contourType = c("filled.contour", "contour"),
   limitz = NULL,
   resolution = 100,
   interior = TRUE,
@@ -87,6 +88,8 @@ from estimateMap() or estimateMapSpread() functions}
 \item{rangey}{range of latitude values (y axis limits)}
 
 \item{rangez}{range of estimated values (z axis limits)}
+
+\item{contourType}{one of "filled.contour" or "contour"}
 
 \item{limitz}{restrict range of z (possible values "0-1", "0-100")}
 

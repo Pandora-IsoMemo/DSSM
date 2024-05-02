@@ -62,6 +62,7 @@
 #' @param nMin Number of minima to compare, only for spread model
 #' @param minDist Distance between minima/maxima, only for spread model
 #' @param showMinOnMap Show minima on map yes/no, only for spread model if maptype = "Minima/Maxima"
+#' @inheritParams filled.contour2
 #'
 #' @export
 plotMap <- function(model,
@@ -71,6 +72,7 @@ plotMap <- function(model,
                     rangex = range(model$data$Longitude, na.rm = TRUE),
                     rangey = range(model$data$Latitude, na.rm = TRUE),
                     rangez = NULL,
+                    contourType = c("filled.contour", "contour"),
                     limitz = NULL, resolution = 100, interior = TRUE,
                     ncol = 10, colors = "RdYlGn", reverseColors = FALSE,
                     colorsP = NULL,
@@ -112,7 +114,7 @@ plotMap <- function(model,
                     minDist = 250,
                     showMinOnMap = FALSE){
   options(scipen=999)
-
+  contourType <- match.arg(contourType)
   minRangeFactor <- 0.75
   if((diff(rangex) / diff(rangey)) < minRangeFactor){
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
@@ -578,6 +580,7 @@ plotMap <- function(model,
       XPred$Est <- exp(as.vector(z2))
     }
     filled.contour2(longitudes, latitudes, z = z2,
+                    contourType = contourType,
                     cex.axis = 1.5, cex.main = 1.5, cex.lab = 1.5,
                     xlim = rangex, ylim = rangey,
                     zlim = range(z2, finite = TRUE),
@@ -789,6 +792,7 @@ plotMap <- function(model,
 
 
   filled.contour2(longitudes, latitudes, z = matrix(XPredPlot$Est, ncol = resolution),
+                  contourType = contourType,
                   xlim = rangex, ylim = rangey, levels = levels, zlim = rangez,
                   col = colors,
                   showScale = showScale,
@@ -989,7 +993,6 @@ plotMap <- function(model,
 #' @param pointLabels point size labels
 #' @param pointColLabels point colour labels
 #' @param fontSize font size
-#' @param showScale show colour scale
 #' @param showModel show model
 #' @param fontType font type
 #' @param fontCol font color
@@ -1014,6 +1017,7 @@ plotMap <- function(model,
 #' @param clusterCol Cluster colors
 #' @param pointDat data frame of points to add to plot
 #' @param plotRetNull return predictions
+#' @inheritParams filled.contour2
 #'
 #' @export
 plotMap3D <- function(model,
@@ -1024,6 +1028,7 @@ plotMap3D <- function(model,
                       rangex = range(model$data$Longitude, na.rm = TRUE),
                       rangey = range(model$data$Latitude, na.rm = TRUE),
                       rangez = NULL,
+                      contourType = c("filled.contour", "contour"),
                       limitz = "none",
                       centerMap = "Europe",
                       addU = 0,
@@ -1066,7 +1071,8 @@ plotMap3D <- function(model,
                       clusterCol = "Set1",
                       pointDat = NULL,
                       plotRetNull = FALSE){
-  options(scipen=999)
+  options(scipen = 999)
+  contourType <- match.arg(contourType)
   minRangeFactor <- 0.75
   if((diff(rangex) / diff(rangey)) < minRangeFactor){
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
@@ -1514,6 +1520,7 @@ plotMap3D <- function(model,
   }
 
   filled.contour2(longitudes, latitudes, z = matrix(XPredPlot$Est, ncol = resolution),
+                  contourType = contourType,
                   xlim = rangex, ylim = rangey, levels = levels,
                   col = colors,
                   showScale = showScale,
@@ -1721,7 +1728,6 @@ plotMap3D <- function(model,
 #' @param rangex range of longitude values (x axis limits)
 #' @param rangey range of latitude values (y axis limits)
 #' @param rangez range of estimated values (z axis limits)
-#' @param showScale show colour scale
 #' @param centerMap center of map, one of "Europe" and "Pacific"
 #' @param showValues boolean show values in plot?
 #' @param simValues if showValues: list of simulated values
@@ -1744,15 +1750,18 @@ plotMap3D <- function(model,
 #' @param AxisSize axis title font size
 #' @param AxisLSize axis label font size
 #' @param pointDat data frame of points to add to plot
+#' @inheritParams filled.contour2
 #'
 #' @export
 plotDS <- function(XPred,
                    estType = "mean",
                    estQuantile = 0.95,
-                   type = "similarity", independent = "",
+                   type = "similarity",
+                   independent = "",
                    rangex = range(XPred$Longitude, na.rm = TRUE),
                    rangey = range(XPred$Latitude, na.rm = TRUE),
                    rangez = range(XPred$Est, na.rm = TRUE),
+                   contourType = c("filled.contour", "contour"),
                    showModel = TRUE,
                    showScale = TRUE,
                    ncol = 10, colors = "RdYlGn",
@@ -1778,10 +1787,11 @@ plotDS <- function(XPred,
                    AxisSize = 1,
                    AxisLSize = 1,
                    pointDat = NULL){
-  options(scipen=999)
+  options(scipen = 999)
+  contourType <- match.arg(contourType)
   RadiusBatch <-  RadiusBatch / 111
   minRangeFactor <- 0.75
-  if((diff(rangex) / diff(rangey)) < minRangeFactor){
+  if ((diff(rangex) / diff(rangey)) < minRangeFactor) {
     rangex[1] <- max(-180, mean(rangex) - minRangeFactor / 2 * diff(rangey))
     rangex[2] <- min(180, mean(rangex) + minRangeFactor / 2 * diff(rangey))
   }
@@ -1937,7 +1947,9 @@ plotDS <- function(XPred,
   }
 
   filled.contour2(unique(XPredPlot$Longitude), unique(XPredPlot$Latitude),
-                  z = z, xlim = rangex, ylim = rangey, levels = levels,
+                  z = z,
+                  contourType = contourType,
+                  xlim = rangex, ylim = rangey, levels = levels,
                   col = colors,
                   showScale = showScale,
                   cex.axis = 1.5, cex.main = 1.5, cex.lab = 1.5,
@@ -2044,14 +2056,45 @@ plotDS <- function(XPred,
   return(list(XPred = XPred))
 }
 
-filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
-                             y = seq(0, 1, length.out = ncol(z)), z, xlim = range(x, finite = TRUE),
-                             ylim = range(y, finite = TRUE), zlim = range(z, finite = TRUE),
-                             levels = pretty(zlim, nlevels), nlevels = 20, showScale = TRUE,
-                             color.palette = cm.colors, col = color.palette(length(levels) - 1),
-                             plot.title, plot.axes, key.title, key.axes, asp = NA, xaxs = "i",
-                             yaxs = "i", las = 1, axes = TRUE, frame.plot = axes, ...)
+#' Filled Countour 2
+#' Wrapper for contour plot
+#'
+#' @param x x values
+#' @param y y values
+#' @param z z values
+#' @param contourType one of "filled.contour" or "contour"
+#' @param xlim x limits
+#' @param ylim y limits
+#' @param zlim z limits
+#' @param levels levels
+#' @param nlevels number of levels
+#' @param showScale show colour scale
+#' @param color.palette color palette
+#' @param col colors
+#' @param plot.title plot title
+#' @param plot.axes plot axes
+#' @param key.title key title
+#' @param key.axes key axes
+#' @param asp aspect ratio
+#' @param xaxs x axis style
+#' @param yaxs y axis style
+#' @param las label style
+#' @param axes show axes
+#' @param frame.plot frame plot
+#' @param ... additional arguments
+filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
+                            y = seq(0, 1, length.out = ncol(z)),
+                            z,
+                            contourType = c("filled.contour", "contour"),
+                            xlim = range(x, finite = TRUE),
+                            ylim = range(y, finite = TRUE), zlim = range(z, finite = TRUE),
+                            levels = pretty(zlim, nlevels), nlevels = 20, showScale = TRUE,
+                            color.palette = cm.colors, col = color.palette(length(levels) - 1),
+                            plot.title, plot.axes, key.title, key.axes, asp = NA, xaxs = "i",
+                            yaxs = "i", las = 1, axes = TRUE, frame.plot = axes, ...)
 {
+  contourType <- match.arg(contourType)
+
   if (missing(z)) {
     if (!missing(x)) {
       if (is.list(x)) {
@@ -2072,18 +2115,24 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
   }
   if (any(diff(x) <= 0) || any(diff(y) <= 0))
     stop("increasing 'x' and 'y' values expected")
+
+  # setup layout
   mar.orig <- (par.orig <- par(c("mar", "las", "mfrow")))$mar
   on.exit(par(par.orig))
-  w <- (3 + mar.orig[2L]) * par("csi") * 2.54
-  if(showScale){
-    layout(matrix(c(2, 1), ncol = 2L), widths = c(1, lcm(w)))
-  }
+
   par(las = las)
+  pin1 <- par("pin")
+
+  if (showScale && contourType == "filled.contour") {
+    # set up colour legend
+    w <- (3 + mar.orig[2L]) * par("csi") * 2.54
+    layout(matrix(c(2, 1), ncol = 2L), widths = c(1, lcm(w)))
+
   mar <- mar.orig
   mar[4L] <- mar[2L]
   mar[2L] <- 1
   par(mar = mar)
-  pin1 <- par("pin")
+
   a = (pin1[1] + par("mai")[2] + par("mai")[4])
   b = (pin1[2] + par("mai")[1] + par("mai")[3])
 
@@ -2091,22 +2140,22 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
 
   ratioXY <- (a / b)
 
-  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY){
+  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY) {
 
     par(plt = c(0.1, 0.5, 0.525 - ratio * ratioXY / 2 * 0.875,
                 0.525 + ratio * ratioXY / 2 * 0.875))
   }
-  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY){
+  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY) {
     par(plt = c(0.15, 0.5, 0.15, 0.9))
   }
-
+  # create colour legend
   plot.new()
   plot.window(xlim = c(0, 1), ylim = range(levels), xaxs = "i",
               yaxs = "i")
   rect(0, levels[-length(levels)], 1, levels[-1L], col = col)
   if (missing(key.axes)) {
     if (axes)
-      if(max(abs(z), na.rm = TRUE) < 10000) {
+      if (max(abs(z), na.rm = TRUE) < 10000) {
         axis(4)
       } else {
         axis(4, cex.axis = 0.7)
@@ -2116,6 +2165,9 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
   box()
   if (!missing(key.title))
     key.title
+  }
+
+  # create filled.contour
   mar <- mar.orig
   mar[4L] <- 1
   par(mar = mar)
@@ -2125,19 +2177,29 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
   ratio <- abs(diff(ylim)) / abs(diff(xlim))
 
   ratioXY <- (a / b)
-  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY){
+  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY) {
 
     par(plt = c(0.1, 0.975, 0.525 - ratio * ratioXY / 2 * 0.875,
                 0.525 + ratio * ratioXY / 2 * 0.875))
   }
-  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY){
+  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY) {
     add <- 1 / ratioXY / 2 * 0.75 / ratio
     par(plt = c(0.975 - 2 * add,
                 0.975, 0.15, 0.9))
   }
+
   plot.new()
-  plot.window(xlim, ylim, "", xaxs = xaxs, yaxs = yaxs, asp = asp)
-  .filled.contour(x, y, z, levels, col)
+  if (contourType == "contour") {
+    # contour plot ----
+    contour(x = x, y = y, z = z, nlevels = length(levels), col = col,
+            xlim = xlim, ylim = ylim, xaxs = xaxs, yaxs = yaxs, asp = asp)
+  } else {
+    # filled.contour plot ----
+    plot.window(xlim, ylim, "", xaxs = xaxs, yaxs = yaxs, asp = asp)
+    .filled.contour(x, y, z, levels, col)
+  }
+
+  # set plot axis and background
   if (missing(plot.axes)) {
     if (axes) {
       title(main = "", xlab = "", ylab = "")
@@ -2152,7 +2214,6 @@ filled.contour2 <- function (x = seq(0, 1, length.out = nrow(z)),
     title(...)
   else plot.title
   invisible()
-
 }
 
 
