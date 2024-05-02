@@ -2123,6 +2123,8 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
   par(las = las)
   pin1 <- par("pin")
 
+  ratioLim <- abs(diff(ylim)) / abs(diff(xlim))
+
   if (showScale && contourType == "filled.contour") {
     # set up colour legend
     w <- (3 + mar.orig[2L]) * par("csi") * 2.54
@@ -2135,24 +2137,22 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
 
   a = (pin1[1] + par("mai")[2] + par("mai")[4])
   b = (pin1[2] + par("mai")[1] + par("mai")[3])
-
-  ratio <- abs(diff(ylim)) / abs(diff(xlim))
-
   ratioXY <- (a / b)
 
-  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY) {
-
-    par(plt = c(0.1, 0.5, 0.525 - ratio * ratioXY / 2 * 0.875,
-                0.525 + ratio * ratioXY / 2 * 0.875))
+  if ((1 / ratioLim) >= ratioXY) {
+    par(plt = getPlotRegion(bottom = 0.5, ratioLim = ratioLim, ratioXY = ratioXY))
   }
-  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY) {
+  if ((1 / ratioLim) < ratioXY) {
     par(plt = c(0.15, 0.5, 0.15, 0.9))
   }
+
   # create colour legend
   plot.new()
   plot.window(xlim = c(0, 1), ylim = range(levels), xaxs = "i",
               yaxs = "i")
+
   rect(0, levels[-length(levels)], 1, levels[-1L], col = col)
+
   if (missing(key.axes)) {
     if (axes)
       if (max(abs(z), na.rm = TRUE) < 10000) {
@@ -2162,32 +2162,31 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
       }
   }
   else key.axes
+
   box()
+
   if (!missing(key.title))
     key.title
   }
 
-  # create filled.contour
+  # set up (filled.)contour
   mar <- mar.orig
   mar[4L] <- 1
   par(mar = mar)
+
   a = (pin1[1] + par("mai")[2] + par("mai")[4])
   b = (pin1[2] + par("mai")[1] + par("mai")[3])
-
-  ratio <- abs(diff(ylim)) / abs(diff(xlim))
-
   ratioXY <- (a / b)
-  if (abs(diff(xlim)) / abs(diff(ylim)) >= ratioXY) {
 
-    par(plt = c(0.1, 0.975, 0.525 - ratio * ratioXY / 2 * 0.875,
-                0.525 + ratio * ratioXY / 2 * 0.875))
+  if ((1 / ratioLim) >= ratioXY) {
+    par(plt = getPlotRegion(bottom = 0.975, ratioLim = ratioLim, ratioXY = ratioXY))
   }
-  if (abs(diff(xlim)) / abs(diff(ylim)) < ratioXY) {
-    add <- 1 / ratioXY / 2 * 0.75 / ratio
-    par(plt = c(0.975 - 2 * add,
-                0.975, 0.15, 0.9))
+  if ((1 / ratioLim) < ratioXY) {
+    add <- 1 / ratioXY / 2 * 0.75 / ratioLim
+    par(plt = c(0.975 - 2 * add, 0.975, 0.15, 0.9))
   }
 
+  # create (filled.)contour
   plot.new()
   if (contourType == "contour") {
     # contour plot ----
@@ -2208,14 +2207,20 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
     }
   }
   else plot.axes
+
   if (frame.plot)
     box()
+
   if (missing(plot.title))
     title(...)
   else plot.title
+
   invisible()
 }
 
+getPlotRegion <- function(left = 0.1, bottom = 0.975, ratioLim = 1, ratioXY = 1) {
+  c(left, bottom, 0.525 - ratioLim * ratioXY / 2 * 0.875, 0.525 + ratioLim * ratioXY / 2 * 0.875)
+}
 
 north.arrow = function(x, y, h, c, adj) {
   polygon(c(x, x, x + h/2), c(y - h, y, y - (1 + sqrt(3)/2) * h),
@@ -2703,19 +2708,21 @@ combineSimilarityMaps <- function(XPredList,
 }
 
 createDifferenceMap <- function(XPred1, XPred2, operation = "-") {
-  if(class(XPred2) == "numeric" & class(XPred1) != "numeric"){
+  if (inherits(XPred2, "numeric") && !inherits(XPred1, "numeric")) {
     XPredNew <- XPred1
     XPredNew$Est <- XPred2[1]
     XPredNew$Sd <- XPred2[2]
     XPred2 <- XPredNew
   }
-  if(class(XPred1) == "numeric" & class(XPred2) != "numeric"){
+
+  if (inherits(XPred1, "numeric") && !inherits(XPred2, "numeric")) {
     XPredNew <- XPred2
     XPredNew$Est <- XPred1[1]
     XPredNew$Sd <- XPred1[2]
     XPred1 <- XPredNew
   }
-  if((class(XPred1) == "numeric" & class(XPred2) == "numeric")){
+
+  if (inherits(XPred1, "numeric") && inherits(XPred2, "numeric")) {
     lo <- seq(-180, 180, by = 0.5)
     la <- seq(-90, 90, by = 0.5)
     coord <- expand.grid(lo, la)
