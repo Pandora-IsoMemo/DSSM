@@ -1562,6 +1562,7 @@ plotMap3D <- function(model,
                     } else {
                       sp::plot(Maps$borders, add = T, col = "darkgrey", lwd = 1);
                     }
+                    # add points and/or centroids ----
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
                         pointLabels <- as.numeric(pointLabels)
@@ -1597,12 +1598,16 @@ plotMap3D <- function(model,
                         }
                       }
 
-                      if(clusterAll != "-1" || !cluster){
-                        # not show only centroids but show points
+                      # add points (location marks) ----
+                      ## if there is no clustering, or
+                      ## if not show only centroids
+                      if (!cluster || clusterAll != "-1") {
                         dataPlot <- data %>%
                           centerPlotData(centerMap = centerMap)
 
-                        if(cluster & clusterAll == "1"){
+                        ## if there is no clustering, or
+                        ## if not "Show points for all times"
+                        if (!cluster || clusterAll == "1") {
                           dataPlot <- dataPlot %>%
                             filterT(addU = addU, time = time)
                         }
@@ -1617,8 +1622,8 @@ plotMap3D <- function(model,
                                cex = pointSize)
                       }
 
-                      # add centroids
-                      if(cluster & !is.null(data$spatial_cluster)){
+                      # add centroids ----
+                      if (cluster & !is.null(data$spatial_cluster)) {
                         points(centroids[, 2:3],
                                col = getPColor(centroids, cluster, palName = clusterCol, pColor = pColor),
                                lwd = 2,
@@ -1634,8 +1639,9 @@ plotMap3D <- function(model,
                              family = fontType)
                       }
                     }
-                    if(!is.null(textLabels)){
-                      if(centerMap != "Europe"){
+                    # add custom labels ----
+                    if (!is.null(textLabels)) {
+                      if (centerMap != "Europe") {
                         text(dataPac$Latitude ~ dataPac$Longitude,
                              labels = as.character(textLabels), pos = 4,
                              cex = fontSize, col = fontCol, family = fontType)
@@ -1645,11 +1651,13 @@ plotMap3D <- function(model,
                              cex = fontSize, col = fontCol, family = fontType)
                       }
                     }
-                    if(!is.null(pointDat) & NROW(pointDat) > 0){
+                    # add custom points ----
+                    if (!is.null(pointDat) & NROW(pointDat) > 0) {
                       points(x = pointDat$x, y = pointDat$y, cex = pointDat$pointSize, col = pointDat$pointColor, pch = 16)
                       text(pointDat$y ~ pointDat$x, labels = pointDat$label, pos = 4, cex = 1.75)
                     }
-                    if(centerMap != "Europe"){
+                    # update axis if center Pacific
+                    if (centerMap != "Europe") {
                       lab <- pretty(rangex)
                       lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
                       lab[pretty(rangex) < 20] <- lab[pretty(rangex) < 20] + 160
