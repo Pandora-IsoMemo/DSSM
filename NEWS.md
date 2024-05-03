@@ -1,3 +1,8 @@
+# MpiIsoApp 24.04.1
+
+## Bug Fixes
+- fix logic to filter location marks for time slices (#200)
+
 # MpiIsoApp 24.04.0
 
 ## New Features
