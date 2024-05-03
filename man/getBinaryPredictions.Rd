@@ -7,12 +7,12 @@
 getBinaryPredictions(XPred1, XPred2)
 }
 \arguments{
-\item{XPred1}{prediction matrix of first map}
+\item{XPred1}{(data.frame) prediction matrix of first map}
 
-\item{XPred2}{prediction matrix of second map}
+\item{XPred2}{(data.frame) prediction matrix of second map}
 }
 \value{
-prediction matrix of resulting map
+(data.frame) prediction matrix of resulting map
 }
 \description{
 Get Binary Predictions
