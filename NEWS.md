@@ -4,6 +4,11 @@
 - _OperatoR tab_:
   - option to create contour maps from saved maps (#202)
 
+# MpiIsoApp 24.04.1
+
+## Bug Fixes
+- fix logic to filter location marks for time slices (#200)
+
 # MpiIsoApp 24.04.0
 
 ## New Features
