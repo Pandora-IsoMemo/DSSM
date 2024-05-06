@@ -9,6 +9,7 @@ estimateMap(
   independent,
   Longitude,
   Latitude,
+  center = c("Europe", "Pacific"),
   IndependentType = "numeric",
   Site = "",
   independentUncertainty = "",

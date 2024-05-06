@@ -4,12 +4,12 @@
 \alias{centerData}
 \title{Center Data}
 \usage{
-centerData(data, center = c("0th", "180th"))
+centerData(data, center = c("Europe", "Pacific"))
 }
 \arguments{
 \item{data}{(data.frame) data containing columns "Latitude" and "Longitude"}
 
-\item{center}{(character) center to shift data to, either "0th" or "180th"}
+\item{center}{(character) center to shift data to, either "Europe" or "180th"}
 }
 \value{
 (data.frame) data shifted to the center

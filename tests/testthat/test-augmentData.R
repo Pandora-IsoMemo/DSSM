@@ -50,7 +50,7 @@ testthat::test_that("function centerData", {
   )
 
   expect_equal(
-    centerData(testData, center = "180th"),
+    centerData(testData, center = "Pacific"),
     structure(list(d13C = c(-15.5, -18.8, -14.3, -14.8, -19.2, -19.9),
                    longitude = c(198.2955, -151.4833, 198.2955, -161.3, 203.0014, -159.103),
                    latitude = c(-32.3584, -46.3, -32.3584, -32.4167, -52.1639, -52.257),
@@ -63,7 +63,7 @@ testthat::test_that("function centerData", {
   )
 
   expect_equal(
-    centerData(testData, center = "0th"),
+    centerData(testData, center = "Europe"),
     structure(list(d13C = c(-15.5, -18.8, -14.3, -14.8, -19.2, -19.9),
                    longitude = c(198.2955, -151.4833, 198.2955, -161.3, 203.0014, -159.103),
                    latitude = c(-32.3584, -46.3, -32.3584, -32.4167, -52.1639, -52.257),
