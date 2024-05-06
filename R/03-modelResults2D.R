@@ -83,8 +83,11 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        selected = "1"),
           conditionalPanel(
             condition = "input.SplineType == '1'",
+            selectInput(inputId = ns("dataCenter"),
+                        label = "Center of data",
+                        choices = c("0th meridian" = "0th", "180th meridian" = "180th")),
             checkboxInput(inputId = ns("correctionPac"),
-                        label = "Border correction for pacific",
+                        label = "Border correction",
                         value = FALSE),
             ns = ns
           ),
