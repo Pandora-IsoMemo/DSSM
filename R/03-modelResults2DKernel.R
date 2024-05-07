@@ -96,6 +96,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Possible range for clusters",
                         value = c(2,10), min = 2, max = 50, step = 1)
           ),
+          dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
                         value = FALSE, width = "100%"),
@@ -197,6 +198,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -444,6 +446,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
@@ -550,6 +554,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       message = "Generating local kernel density model"
     )
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$dataCenter)
   })
 
   zoomFromModel <- reactiveVal(50)
