@@ -81,20 +81,21 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        label = "Smooth type",
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.SplineType == '1'",
-            selectInput(inputId = ns("dataCenter"),
-                        label = "Center of data",
-                        choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
-            conditionalPanel(
-              ns = ns,
-              condition = "input.dataCenter == '0th'",
-              checkboxInput(inputId = ns("correctionPac"),
-                            label = "Border correction for Pacific",
-                            value = FALSE)
-            )
-          ),
+          dataCenterUI(ns),
+          # conditionalPanel(
+          #   ns = ns,
+          #   condition = "input.SplineType == '1'",
+          #   selectInput(inputId = ns("dataCenter"),
+          #               label = "Center of data",
+          #               choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
+          #   conditionalPanel(
+          #     ns = ns,
+          #     condition = "input.dataCenter == '0th'",
+          #     checkboxInput(inputId = ns("correctionPac"),
+          #                   label = "Border correction for Pacific",
+          #                   value = FALSE)
+          #   )
+          # ),
           sliderInput(inputId = ns("Smoothing"),
                       label = "Number of basis functions",
                       min = 20, max = 1000, value = 70, step = 10),
@@ -245,11 +246,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.Centering != input.dataCenter",
-            helpText(textOutput(ns("helpTextCentering")))
-          ),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                       choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -487,14 +484,15 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     )
   })
 
-  output$helpTextCentering <- renderText({
-    if (input$dataCenter != input$Centering) {
-      sprintf("The 'Center of data' was set to '%s' for modelling, but 'Map Center' is set to '%s'. Please use the same centering, or keep in mind that displayed predictions are based on '%s' centering.",
-              input$dataCenter, input$Centering,  input$Centering)
-    } else {
-      ""
-    }
-  })
+  outputHelpTextCentering(input, output, session)
+  # output$helpTextCentering <- renderText({
+  #   if (input$dataCenter != input$Centering) {
+  #     sprintf("The 'Center of data' was set to '%s' for modelling, but 'Map Center' is set to '%s'. Please use the same centering, or keep in mind that displayed predictions are based on '%s' centering.",
+  #             input$dataCenter, input$Centering,  input$Centering)
+  #   } else {
+  #     ""
+  #   }
+  # })
 
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL

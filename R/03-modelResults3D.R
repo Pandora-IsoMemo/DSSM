@@ -93,13 +93,7 @@ modelResults3DUI <- function(id, title = ""){
                       label = "Smooth type",
                       choices = c("planar" = "1", "spherical" = "2"),
                       selected = "1"),
-          conditionalPanel(
-            condition = "input.SplineType == '1'",
-            checkboxInput(inputId = ns("correctionPac"),
-                          label = "Border correction for pacific",
-                          value = FALSE),
-            ns = ns
-          ),
+          dataCenterUI(ns),
           conditionalPanel(
             condition = "input.SplineType == 2",
             sliderInput(inputId = ns("Smoothing"),
@@ -286,6 +280,7 @@ modelResults3DUI <- function(id, title = ""){
         radioButtons(inputId = ns("Centering"),
                      label = "Map Centering",
                      choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+        helpTextCenteringUI(ns),
         zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                      choices = c("Map", "Time course"),
@@ -560,6 +555,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL
   })
@@ -657,6 +654,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       tryCatchWithWarningsAndErrors()
 
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$dataCenter)
   })
 
   Independent <- reactive({

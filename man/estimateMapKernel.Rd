@@ -8,6 +8,7 @@ estimateMapKernel(
   data,
   Longitude,
   Latitude,
+  center = c("Europe", "Pacific"),
   independent = NULL,
   CoordType = "decimal degrees",
   Weighting = NULL,
@@ -26,6 +27,8 @@ estimateMapKernel(
 \item{Longitude}{character: name of longitude variable}
 
 \item{Latitude}{character: name of latitude variable}
+
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 
 \item{independent}{character: name of presence/absence variable (optional)}
 

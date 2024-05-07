@@ -41,6 +41,8 @@ estimateMap(
 
 \item{Latitude}{character: name of latitude variable}
 
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
+
 \item{IndependentType}{character: type ("numeric" or "categorical") of independent variable}
 
 \item{Site}{character: name of site variable (optional)}

@@ -85,7 +85,7 @@ shiftDataToDefaultRestriction <- function(data) {
 #' Center Data
 #'
 #' @param data (data.frame) data containing columns "Latitude" and "Longitude"
-#' @param center (character) center to shift data to, either "Europe" or "180th"
+#' @param center (character) center to shift data to, either "Europe" or "Pacific"
 #' @return (data.frame) data shifted to the center
 centerData <- function(data, center = c("Europe", "Pacific")) {
   center <- match.arg(center)

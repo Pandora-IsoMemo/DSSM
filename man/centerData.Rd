@@ -9,7 +9,7 @@ centerData(data, center = c("Europe", "Pacific"))
 \arguments{
 \item{data}{(data.frame) data containing columns "Latitude" and "Longitude"}
 
-\item{center}{(character) center to shift data to, either "Europe" or "180th"}
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 }
 \value{
 (data.frame) data shifted to the center
