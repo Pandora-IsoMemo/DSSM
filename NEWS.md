@@ -1,3 +1,9 @@
+# MpiIsoApp 24.05.1
+
+## New Features
+- define the center of coordinates before modelling in the _Modeling_ tabs. This shifts data to
+respective longitudes (#196)
+
 # MpiIsoApp 24.05.0
 
 ## New Features
