@@ -3,6 +3,8 @@
 ## New Features
 - define the center of coordinates before modelling in the _Modeling_ tabs. This shifts data to
 respective longitudes (#196)
+  - if "0th meridian" longitudes are transposed to the range (-180, 180)
+  - if "180th meridian" longitudes are transposed to the range (0, 360)
 
 # MpiIsoApp 24.05.0
 
