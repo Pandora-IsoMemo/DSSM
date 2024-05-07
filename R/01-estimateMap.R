@@ -98,21 +98,12 @@ estimateMap <- function(data,
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) )
     return("Longitude or Latitude not available.")
 
-  # shift data such that it is in the range of -180 to 180 and -90 to 90
-  data <- shiftDataToDefaultRestriction(data)
-
-  # remove data outside of restriction
-  if (restriction[4] >= restriction[3]) {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   data[, Longitude] <= restriction[4] &
-                   data[, Longitude] >= restriction[3], ]
-  } else {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   !(data[, Longitude] <= restriction[3] &
-                       data[, Longitude] >= restriction[4]), ]
-  }
+  # clean data
+  data <- data %>%
+    shiftDataToDefaultRestriction() %>%
+    removeDataOutsideRestriction(Latitude = Latitude,
+                                 Longitude = Longitude,
+                                 restriction = restriction)
 
   if ( (!is.numeric(data[, independent]) || all(is.na(data[, independent]))) & IndependentType == "numeric") return("non-numeric independent variable")
 
@@ -431,20 +422,11 @@ estimateMapSpread <- function(data,
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   # shift data such that it is in the range of -180 to 180 and -90 to 90
-  data <- shiftDataToDefaultRestriction(data)
-
-  # remove data outside of restriction
-  if(restriction[4] >= restriction[3]){
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   data[, Longitude] <= restriction[4] &
-                   data[, Longitude] >= restriction[3], ]
-  } else {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   !(data[, Longitude] <= restriction[3] &
-                       data[, Longitude] >= restriction[4]), ]
-  }
+  data <- data %>%
+    shiftDataToDefaultRestriction() %>%
+    removeDataOutsideRestriction(Latitude = Latitude,
+                                 Longitude = Longitude,
+                                 restriction = restriction)
 
   data <- data %>%
     prepareDate(DateOne = DateOne,
@@ -764,20 +746,11 @@ estimateMap3D <- function(data,
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   # shift data such that it is in the range of -180 to 180 and -90 to 90
-  data <- shiftDataToDefaultRestriction(data)
-
-  # remove data outside of restriction
-  if(restriction[4] >= restriction[3]){
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   data[, Longitude] <= restriction[4] &
-                   data[, Longitude] >= restriction[3], ]
-  } else {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   !(data[, Longitude] <= restriction[3] &
-                       data[, Longitude] >= restriction[4]), ]
-  }
+  data <- data %>%
+    shiftDataToDefaultRestriction() %>%
+    removeDataOutsideRestriction(Latitude = Latitude,
+                                 Longitude = Longitude,
+                                 restriction = restriction)
 
   if (Site == ""){
     data$Site = 1:nrow(data)
@@ -2143,20 +2116,11 @@ estimateMapKernel <- function(data,
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   # shift data such that it is in the range of -180 to 180 and -90 to 90
-  data <- shiftDataToDefaultRestriction(data)
-
-  # remove data outside of restriction
-  if(restriction[4] >= restriction[3]){
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   data[, Longitude] <= restriction[4] &
-                   data[, Longitude] >= restriction[3], ]
-  } else {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   !(data[, Longitude] <= restriction[3] &
-                       data[, Longitude] >= restriction[4]), ]
-  }
+  data <- data %>%
+    shiftDataToDefaultRestriction() %>%
+    removeDataOutsideRestriction(Latitude = Latitude,
+                                 Longitude = Longitude,
+                                 restriction = restriction)
 
   if(!is.null(independent) & !(independent == "")){
     if(!is.null(Weighting) & !(Weighting == "")){
@@ -2405,20 +2369,11 @@ estimateMap3DKernel <- function(data,
       all(is.na(data[, Longitude])) || all(is.na(data[, Latitude])) ) return("Longitude or Latitude not available.")
 
   # shift data such that it is in the range of -180 to 180 and -90 to 90
-  data <- shiftDataToDefaultRestriction(data)
-
-  # remove data outside of restriction
-  if(restriction[4] >= restriction[3]){
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   data[, Longitude] <= restriction[4] &
-                   data[, Longitude] >= restriction[3], ]
-  } else {
-    data <- data[data[, Latitude] <= restriction[2] &
-                   data[, Latitude] >= restriction[1] &
-                   !(data[, Longitude] <= restriction[3] &
-                       data[, Longitude] >= restriction[4]), ]
-  }
+  data <- data %>%
+    shiftDataToDefaultRestriction() %>%
+    removeDataOutsideRestriction(Latitude = Latitude,
+                                 Longitude = Longitude,
+                                 restriction = restriction)
 
   if (DateType == "Interval"){
     if(!is.null(independent) & !(independent == "")){

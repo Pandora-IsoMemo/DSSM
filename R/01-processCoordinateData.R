@@ -82,6 +82,30 @@ shiftDataToDefaultRestriction <- function(data) {
   return(data)
 }
 
+#' Remove Data Outside Restriction
+#'
+#' @param data (data.frame) data containing columns "Latitude" and "Longitude"
+#' @param Latitude (character) column name of Latitude column
+#' @param Longitude (character) column name of Longitude column
+#' @param restriction (numeric) restriction in the form c(minLatitude, maxLatitude, minLongitude, maxLongitude)
+#' @return (data.frame) data containing columns "Latitude" and "Longitude" with data outside of restriction removed
+removeDataOutsideRestriction <- function(data, Latitude, Longitude, restriction) {
+  # remove data outside of restriction
+  if (restriction[4] >= restriction[3]) {
+    data <- data[data[, Latitude] <= restriction[2] &
+                   data[, Latitude] >= restriction[1] &
+                   data[, Longitude] <= restriction[4] &
+                   data[, Longitude] >= restriction[3], ]
+  } else {
+    data <- data[data[, Latitude] <= restriction[2] &
+                   data[, Latitude] >= restriction[1] &
+                   !(data[, Longitude] <= restriction[3] &
+                       data[, Longitude] >= restriction[4]), ]
+  }
+
+  return(data)
+}
+
 #' Center Data
 #'
 #' @param data (data.frame) data containing columns "Latitude" and "Longitude"
