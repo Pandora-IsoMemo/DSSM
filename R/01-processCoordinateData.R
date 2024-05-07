@@ -1,8 +1,9 @@
 #' Augment Data
 #'
 #' @param data (data.frame) data containing columns "Latitude" and "Longitude"
+#' @param restriction (numeric) restriction in the form c(minLatitude, maxLatitude, minLongitude, maxLongitude)
 #' @return (data.frame) augmented data
-augmentData <- function(data) {
+augmentData <- function(data, restriction = c(-90, 90, -320, 320)) {
   if (!(
     max(data$Latitude) > 75 ||
     max(data$Longitude) > 150 ||
@@ -57,9 +58,9 @@ augmentData <- function(data) {
   )
   #data2 <- rbind(data, dataLeft, dataRight, dataBottom, dataTop)
 
-  data2 <- data2[data2$Latitude > -90 & data2$Latitude < 90 &
-                   data2$Longitude > -320 &
-                   data2$Longitude < 320, ]
+  data2 <- data2[data2$Latitude > restriction[1] & data2$Latitude < restriction[2] &
+                   data2$Longitude > restriction[3] &
+                   data2$Longitude < restriction[4], ]
 
   if (length(unique(data$Site)) == nrow(data)) {
     data2$Site = 1:nrow(data2)

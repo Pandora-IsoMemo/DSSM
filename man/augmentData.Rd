@@ -4,10 +4,12 @@
 \alias{augmentData}
 \title{Augment Data}
 \usage{
-augmentData(data)
+augmentData(data, restriction = c(-90, 90, -320, 320))
 }
 \arguments{
 \item{data}{(data.frame) data containing columns "Latitude" and "Longitude"}
+
+\item{restriction}{(numeric) restriction in the form c(minLatitude, maxLatitude, minLongitude, maxLongitude)}
 }
 \value{
 (data.frame) augmented data
