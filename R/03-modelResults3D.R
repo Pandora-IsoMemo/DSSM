@@ -654,7 +654,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       tryCatchWithWarningsAndErrors()
 
     Model(model)
-    updateSelectInput(session, "Centering", selected = input$dataCenter)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   Independent <- reactive({

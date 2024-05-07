@@ -554,7 +554,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       message = "Generating local kernel density model"
     )
     Model(model)
-    updateSelectInput(session, "Centering", selected = input$dataCenter)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   zoomFromModel <- reactiveVal(50)

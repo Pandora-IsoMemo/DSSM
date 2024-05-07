@@ -567,7 +567,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       tryCatchWithWarningsAndErrors()
 
     Model(model)
-    updateSelectInput(session, "Centering", selected = input$dataCenter)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
 

@@ -491,6 +491,7 @@ mapSectionServer <- function(id,
                              zoomValue) {
   moduleServer(id,
                function(input, output, session) {
+                 # there is a bug with default values after switching centers, zoom value is too small afterwards
                  mapSettings <- reactiveValues(
                    upperLeftLongitude = NA,
                    upperLeftLatitude = NA,
