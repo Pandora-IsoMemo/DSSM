@@ -82,20 +82,6 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
-          # conditionalPanel(
-          #   ns = ns,
-          #   condition = "input.SplineType == '1'",
-          #   selectInput(inputId = ns("dataCenter"),
-          #               label = "Center of data",
-          #               choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
-          #   conditionalPanel(
-          #     ns = ns,
-          #     condition = "input.dataCenter == '0th'",
-          #     checkboxInput(inputId = ns("correctionPac"),
-          #                   label = "Border correction for Pacific",
-          #                   value = FALSE)
-          #   )
-          # ),
           sliderInput(inputId = ns("Smoothing"),
                       label = "Number of basis functions",
                       min = 20, max = 1000, value = 70, step = 10),
@@ -426,6 +412,19 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateSelectInput(session, "savedModel", choices = choices)
   })
 
+  values <- reactiveValues(
+    plot = NULL,
+    predictions = NULL,
+    up = 0,
+    right = 0,
+    set = 0,
+    upperLeftLongitude = NA,
+    upperLeftLatitude = NA,
+    zoom = 50
+  )
+  Model <- reactiveVal(NULL)
+  fileImport <- reactiveVal(NULL)
+
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
     if (mapName == ""){
@@ -485,20 +484,10 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   outputHelpTextCentering(input, output, session)
-  # output$helpTextCentering <- renderText({
-  #   if (input$dataCenter != input$Centering) {
-  #     sprintf("The 'Center of data' was set to '%s' for modelling, but 'Map Center' is set to '%s'. Please use the same centering, or keep in mind that displayed predictions are based on '%s' centering.",
-  #             input$dataCenter, input$Centering,  input$Centering)
-  #   } else {
-  #     ""
-  #   }
-  # })
 
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL
   })
-
-  Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
@@ -928,17 +917,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(
-    plot = NULL,
-    predictions = NULL,
-    up = 0,
-    right = 0,
-    set = 0,
-    upperLeftLongitude = NA,
-    upperLeftLatitude = NA,
-    zoom = 50
-  )
-
   output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
@@ -1013,7 +991,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
-  fileImport <- reactiveVal(NULL)
   observe({
     # reset model
     Model(NULL)
