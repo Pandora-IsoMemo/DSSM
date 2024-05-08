@@ -164,22 +164,34 @@ pointColourUI <- function(id) {
              ns("showColourLegend"), "Legend", value = FALSE
            ))
   ),
-  fluidRow(
-    column(
-      8,
-      selectInput(
-        ns("paletteName"),
-        label = NULL,
-        choices = colourPalettes,
-        selected = "Dark2"
-      )
-    ),
-    column(4,
-           style = "margin-top: -0.25em;",
-           checkboxInput(
-             ns("isReversePalette"), "Reverse", value = FALSE
-           ))
-  ))
+  conditionalPanel(
+    ns = ns,
+    condition = "input.columnForPointColour != ''",
+    fluidRow(
+      column(8,
+             selectInput(
+               ns("paletteName"),
+               label = NULL,
+               choices = colourPalettes,
+               selected = "Dark2"
+             )),
+      column(4,
+             style = "margin-top: -0.25em;",
+             checkboxInput(
+               ns("isReversePalette"), "Reverse", value = FALSE
+             ))
+    )
+  ),
+  conditionalPanel(
+    ns = ns,
+    condition = "input.columnForPointColour == ''",
+    colourInput(
+      ns("fixedPointColour"),
+      "Fixed colour",
+      value = "#459778"
+    )
+  )
+  )
 }
 
 
@@ -215,7 +227,7 @@ pointColourServer <- function(id, loadedData) {
 
                    colourValues$columnForPointColour <- ""
                    colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
-                     getColourPal(paletteName = input$paletteName,
+                     getColourPal(paletteName = input$fixedPointColour,
                                   isReversePalette = input$isReversePalette)
                  })
 
@@ -223,21 +235,29 @@ pointColourServer <- function(id, loadedData) {
                    list(
                      input$paletteName,
                      input$isReversePalette,
-                     input$columnForPointColour
+                     input$columnForPointColour,
+                     input$fixedPointColour
                    ),
                    {
                      logDebug("Update colourValues")
                      if (is.null(input$columnForPointColour)) {
                        colourValues$columnForPointColour <- ""
+                       paletteName <- input$fixedPointColour
                      } else {
                        colourValues$columnForPointColour <- input$columnForPointColour
+
+                       if (input$columnForPointColour == "") {
+                         paletteName <- input$fixedPointColour
+                       } else {
+                         paletteName <- input$paletteName
+                       }
                      }
 
                      colourValues$pointColourPalette <- getColourCol(
                        loadedData(),
                        colName = input$columnForPointColour
                      ) %>%
-                       getColourPal(paletteName = input$paletteName,
+                       getColourPal(paletteName = paletteName,
                                     isReversePalette = input$isReversePalette)
                    }
                  )
@@ -267,7 +287,7 @@ pointSizeUI <- function(id) {
     ),
     sliderInput(
       ns("sizeFactor"),
-      "Factor",
+      "Size Factor",
       min = 0.5,
       max = 5.5,
       value = 1,
@@ -692,13 +712,27 @@ getColourPal <- function(colourCol, paletteName, isReversePalette) {
       domain = colourCol,
       reverse = isReversePalette
     )
-  } else {
-    pal <- colorFactor(
-      palette = paletteName,
-      domain = colourCol,
-      reverse = isReversePalette
-    )
+    return(pal)
   }
+
+  if (all(colourCol == "all")) {
+    # if fixed colour was selected (which sets colourCol <- "all" for all values), then the
+    # paletteName is set to a value from colourInput()
+    pal <- colorFactor(
+      palette = rep(paletteName, length(colourCol)),
+      domain = colourCol,
+      reverse = FALSE
+    )
+
+    return(pal)
+  }
+
+  # if colourCol contains different character values create colour from a palette
+  pal <- colorFactor(
+    palette = paletteName,
+    domain = colourCol,
+    reverse = isReversePalette
+  )
 
   pal
 }
@@ -708,7 +742,6 @@ getColourCol <- function(dat, colName) {
 
   colourCol <- dat[[colName]]
   if (is.null(colourCol)) {
-    # print error ?? into some new attr()?
     colourCol <- rep("all", nrow(dat))
   }
 
