@@ -7,7 +7,7 @@
 centerData(data, center = c("Europe", "Pacific"))
 }
 \arguments{
-\item{data}{(data.frame) data containing columns "Latitude" and "Longitude"}
+\item{data}{(data.frame) data containing column "Longitude"}
 
 \item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 }

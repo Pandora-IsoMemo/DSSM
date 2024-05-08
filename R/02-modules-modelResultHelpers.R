@@ -491,7 +491,6 @@ mapSectionServer <- function(id,
                              zoomValue) {
   moduleServer(id,
                function(input, output, session) {
-                 # there is a bug with default values after switching centers, zoom value is too small afterwards
                  mapSettings <- reactiveValues(
                    upperLeftLongitude = NA,
                    upperLeftLatitude = NA,
@@ -1081,7 +1080,9 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   if (mapCentering == "Europe") {
     rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))
   } else {
-    longRange <- rangeLongitude
+    longRange <- list(Longitude = rangeLongitude) %>%
+      centerData(center = mapCentering) %>%
+      range()
     longRange[rangeLongitude < -20] <-
       longRange[rangeLongitude < -20] + 200
     longRange[rangeLongitude >= -20] <-

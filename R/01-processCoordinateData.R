@@ -109,7 +109,7 @@ removeDataOutsideRestriction <- function(data, Latitude, Longitude, restriction)
 
 #' Center Data
 #'
-#' @param data (data.frame) data containing columns "Latitude" and "Longitude"
+#' @param data (data.frame) data containing column "Longitude"
 #' @param center (character) center to shift data to, either "Europe" or "Pacific"
 #' @return (data.frame) data shifted to the center
 centerData <- function(data, center = c("Europe", "Pacific")) {
