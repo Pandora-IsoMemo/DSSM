@@ -15,5 +15,6 @@ centerData(data, center = c("Europe", "Pacific"))
 (data.frame) data shifted to the center
 }
 \description{
-Center Data
+Transfer data to the center of the map, either Europe or Pacific by adding or substracting 360°
+ from the Longitude
 }

@@ -15,5 +15,5 @@ augmentData(data, restriction = c(-90, 90, -320, 320))
 (data.frame) augmented data
 }
 \description{
-Augment Data
+Data augmentation to add data at the borders of the map
 }

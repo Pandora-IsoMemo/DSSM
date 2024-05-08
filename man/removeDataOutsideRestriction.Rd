@@ -19,5 +19,5 @@ removeDataOutsideRestriction(data, Latitude, Longitude, restriction)
 (data.frame) data containing columns "Latitude" and "Longitude" with data outside of restriction removed
 }
 \description{
-Remove Data Outside Restriction
+Remove all data outside of the restriction
 }

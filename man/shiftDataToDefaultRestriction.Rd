@@ -13,5 +13,5 @@ shiftDataToDefaultRestriction(data)
 (data.frame) data containing columns "Latitude" and "Longitude" shifted to the default restriction
 }
 \description{
-Shift Data To Default Restriction
+Shift data such that it is in the range of -180 to 180 and -90 to 90
 }
