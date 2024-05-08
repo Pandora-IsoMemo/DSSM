@@ -224,6 +224,9 @@ plotMap <- function(model,
       cbind(XPred, id = x)
     }))
   }
+
+  XPred <- centerData(XPred, center = centerMap)
+
   if (Bayes == TRUE & GAM == FALSE){
     PredMatr <- Predict.matrix(sc, data = XPred)
 

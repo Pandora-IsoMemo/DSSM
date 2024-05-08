@@ -90,13 +90,7 @@ modelResultsSpreadUI <- function(id, title = ""){
                        label = "Smooth type",
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
-          conditionalPanel(
-            condition = "input.SplineType == '1'",
-            checkboxInput(inputId = ns("correctionPac"),
-                          label = "Border correction for pacific",
-                          value = FALSE),
-            ns = ns
-          ),
+          dataCenterUI(ns),
           conditionalPanel(
             condition = "input.DateType == 'Interval' || input.DateType == 'Mean + 1 SD uncertainty'",
           radioButtons(inputId = ns("dateUnc"),
@@ -237,6 +231,7 @@ modelResultsSpreadUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Spread", "Speed", "Minima/Maxima"),
@@ -483,6 +478,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   Model <- reactiveVal()
 
   # MODEL DOWN- / UPLOAD ----
@@ -570,6 +567,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       tryCatchWithWarningsAndErrors()
 
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
 

@@ -1,6 +1,6 @@
 Package: MpiIsoApp
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 24.05.0.1
+Version: 24.05.1
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut"))
@@ -58,7 +58,10 @@ Imports:
     yaml,
     zip
 Suggests:
-  lintr (>= 1.0.2),
-  testthat (>= 2.0.0),
-  ReSources (>= 0.7.9)
+    lintr (>= 1.0.2),
+    testthat (>= 2.0.0),
+    ReSources (>= 0.7.9),
+    knitr,
+    rmarkdown
 RoxygenNote: 7.3.1
+VignetteBuilder: knitr
