@@ -2071,71 +2071,28 @@ estimateMapKernel <- function(data,
   data$Longitude <- data[, Longitude]
   data$Latitude <- data[, Latitude]
 
-  ### data augmentation
-  if (max(data$Latitude) > 75 ||
-      max(data$Longitude) > 150 ||
-      min(data$Longitude) < -150 || min(data$Latitude) < -75) {
-    dataBottom  <- data
-    dataTop  <- data
-    dataLeft  <- data
-    dataRight  <- data
-    dataLeftBottom <- data
-    dataLeftTop <- data
-    dataRightBottom <- data
-    dataRightTop <- data
-
-    dataBottom$Latitude <- -90 - (dataBottom$Latitude + 90)
-    dataBottom$Longitude <- dataBottom$Longitude + 180
-    dataBottom$Longitude[dataBottom$Longitude >= 180] <- dataBottom$Longitude[dataBottom$Longitude >= 180] - 360
-
-    dataTop$Latitude <- 90 + (90 - dataTop$Latitude)
-    dataTop$Longitude <- dataTop$Longitude + 180
-    dataTop$Longitude[dataTop$Longitude >= 180] <- dataTop$Longitude[dataTop$Longitude >= 180] - 360
-
-    dataLeft$Longitude <- -180 - (-dataLeft$Longitude + 180)
-    dataRight$Longitude <- 180 + (180 + dataRight$Longitude)
-
-    dataLeftBottom$Longitude <- dataBottom$Longitude - 360
-    dataLeftBottom$Latitude <- dataBottom$Latitude
-
-    dataLeftTop$Longitude <- dataTop$Longitude - 360
-    dataLeftTop$Latitude <- dataTop$Latitude
-
-    dataRightBottom$Longitude <- dataBottom$Longitude + 360
-    dataRightBottom$Latitude <- dataBottom$Latitude
-
-    dataRightTop$Longitude <- dataTop$Longitude + 360
-    dataRightTop$Latitude <- dataTop$Latitude
-    data2 <- rbind(data, dataLeft, dataRight, dataBottom, dataTop,
-                   dataLeftBottom, dataLeftTop,
-                   dataRightBottom, dataRightTop)
-    #data2 <- rbind(data, dataLeft, dataRight, dataBottom, dataTop)
-    data2 <- data2[data2$Latitude > -120 & data2$Latitude < 120 &
-                     data2$Longitude > -240 & data2$Longitude < 240, ]
-  } else {
-    data2 <- data
-  }
-
-  ### data centering ----
-  data2 <- centerData(data2, center = center)
+  ### data augmentation ----
+  data2 <- data %>%
+    augmentData(restriction = c(-120, 120, -240, 240)) %>%
+    centerData(center = center)
 
   # calculate model ----
   set.seed(1234)
   if(clusterMethod == "kmeans"){
-    clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
-    data$cluster <- clust$cluster
+    clust <- kmeans(cbind(data2$Longitude, data2$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
+    data2$cluster <- clust$cluster
     clust <- as.data.frame(clust$centers)
     names(clust) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
     clust$cluster <- 1:nrow(clust)
-    data <- merge(data, clust, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+    data2 <- merge(data2, clust, sort = FALSE)
+    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
   } else if (clusterMethod == "mclust"){
 
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
     for(i in 1:length(numClusters)){
         set.seed(1234)
-      cluster_list[[i]] <- mclust::Mclust(data[,c("Longitude","Latitude")], G = numClusters[i])
+      cluster_list[[i]] <- mclust::Mclust(data2[,c("Longitude","Latitude")], G = numClusters[i])
     }
 
     # select best cluster solution based on bic
@@ -2143,14 +2100,14 @@ estimateMapKernel <- function(data,
                                              function(x) cluster_list[[x]]$bic))]]
 
     # assign cluster to data
-    data$cluster <- cluster_solution$classification
+    data2$cluster <- cluster_solution$classification
 
     # merge cluster centers
     cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
     colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
     cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data <- merge(data, cluster_centers, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+    data2 <- merge(data2, cluster_centers, sort = FALSE)
+    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
