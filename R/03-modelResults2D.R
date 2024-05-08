@@ -81,13 +81,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        label = "Smooth type",
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
-          conditionalPanel(
-            condition = "input.SplineType == '1'",
-            checkboxInput(inputId = ns("correctionPac"),
-                        label = "Border correction for pacific",
-                        value = FALSE),
-            ns = ns
-          ),
+          dataCenterUI(ns),
           sliderInput(inputId = ns("Smoothing"),
                       label = "Number of basis functions",
                       min = 20, max = 1000, value = 70, step = 10),
@@ -238,6 +232,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                       choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -417,6 +412,19 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateSelectInput(session, "savedModel", choices = choices)
   })
 
+  values <- reactiveValues(
+    plot = NULL,
+    predictions = NULL,
+    up = 0,
+    right = 0,
+    set = 0,
+    upperLeftLongitude = NA,
+    upperLeftLatitude = NA,
+    zoom = 50
+  )
+  Model <- reactiveVal(NULL)
+  fileImport <- reactiveVal(NULL)
+
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
     if (mapName == ""){
@@ -475,11 +483,11 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL
   })
-
-  Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
@@ -566,6 +574,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       tryCatchWithWarningsAndErrors()
 
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   Independent <- reactive({
@@ -908,17 +917,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(
-    plot = NULL,
-    predictions = NULL,
-    up = 0,
-    right = 0,
-    set = 0,
-    upperLeftLongitude = NA,
-    upperLeftLatitude = NA,
-    zoom = 50
-  )
-
   output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
@@ -993,7 +991,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
-  fileImport <- reactiveVal(NULL)
   observe({
     # reset model
     Model(NULL)

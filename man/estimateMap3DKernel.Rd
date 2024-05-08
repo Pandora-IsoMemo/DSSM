@@ -10,6 +10,7 @@ estimateMap3DKernel(
   Latitude,
   DateOne,
   DateTwo,
+  center = c("Europe", "Pacific"),
   independent = NULL,
   DateType = "Interval",
   CoordType = "decimal degrees",
@@ -36,6 +37,8 @@ estimateMap3DKernel(
 \item{DateOne}{character: name of date variable 1 (lower interval point / mean / single point)}
 
 \item{DateTwo}{character: name of date variable 2 (upper interval point / sd / )}
+
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 
 \item{independent}{character: name of presence/absence variable (optional)}
 

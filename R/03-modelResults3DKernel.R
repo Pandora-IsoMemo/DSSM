@@ -131,6 +131,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           ns = ns),
           sliderInput(inputId = ns("nSim"), label = "Number of simulations (for ci/se prediction)",
           min = 5, max = 100, step = 1, value = 10),
+          dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
                         value = FALSE, width = "100%"),
@@ -242,6 +243,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by temporal group or cluster"),
@@ -560,6 +562,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelTimeR"
@@ -671,6 +675,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         message = "Generating spatio-temporal kernel density"
       )
       Model(model)
+      updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   Independent <- reactive({
