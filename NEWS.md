@@ -1,3 +1,11 @@
+# MpiIsoApp 24.05.2
+
+## New Features
+- _Interactive Map_: 
+  - possibility of selecting a specific point colour when no point colour variable was 
+    selected ("Fixed" point colour) (#174)
+  - button to apply settings for the style of points
+
 # MpiIsoApp 24.05.1
 
 ## New Features

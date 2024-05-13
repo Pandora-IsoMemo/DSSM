@@ -10,7 +10,8 @@ test_that("Test module leafletPointSettings if clusterPoints", {
                print("test leaflet Point Settings if clusterPoints")
                # Act
                session$setInputs(clusterPoints = TRUE,
-                                 useJitter = FALSE)
+                                 useJitter = FALSE,
+                                 applyPointSettings = 0)
 
                # Assert
                expect_equal(colnames(loadedData()), c("a", "b", "c"))
@@ -49,7 +50,8 @@ test_that("Test module-leafletPointSettings if not clusterPoints", {
                  clusterPoints = FALSE,
                  useJitter = TRUE,
                  jitterMaxKm = 15,
-                 pointOpacity = 0.5
+                 pointOpacity = 0.5,
+                 applyPointSettings = 1
                )
 
                # Assert
@@ -81,7 +83,7 @@ test_that("Test module pointColourServer", {
                a = 1:3,
                b = 5:7,
                c = 9:11
-             ))),
+             )), apply = reactive(1)),
              {
                # Arrange
                print("test pointColourServer")
@@ -115,7 +117,7 @@ test_that("Test module pointSizeServer", {
                a = 1:3,
                b = 5:7,
                c = 9:11
-             ))),
+             )), apply = reactive(1)),
              {
                # Arrange
                print("test pointSizeServer")

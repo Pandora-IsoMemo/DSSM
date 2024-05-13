@@ -4,12 +4,14 @@
 \alias{pointColourServer}
 \title{server funtion of leaflet point settings module}
 \usage{
-pointColourServer(id, loadedData)
+pointColourServer(id, loadedData, apply)
 }
 \arguments{
 \item{id}{An ID string that corresponds with the ID used to call the module's UI function.}
 
 \item{loadedData}{(reactive) loaded data}
+
+\item{apply}{(reactive) apply button input}
 }
 \description{
 server funtion of leaflet point settings module
