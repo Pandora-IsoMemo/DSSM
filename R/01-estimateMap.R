@@ -1027,7 +1027,6 @@ modelLocalAvgMC <- function(data, K, iter, burnin, independent, smoothConst,
   return(res)
 }
 
-
 modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
                           IndependentType = "numeric",
                           penalty = 1, splineType = 2, sdVar = FALSE, nChains = 1,
@@ -1048,10 +1047,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
     bs = "ds"
   }
 
-  if(bs == "ds" & penalty == 1){
-    penalty <- c(1, 0.5)
-  }
-
+  penalty <- penalty %>% updatePenalty(bs = bs)
   s <- smoothCon(s(Latitude, Longitude, k = nknots, bs = bs, m = penalty),
                  data = data, knots = NULL)[[1]]
 
@@ -1796,10 +1792,7 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
     bs = "ds"
   }
 
-  if(bs == "ds" & penalty == 1){
-    penalty <- c(1, 0.5)
-  }
-
+  penalty <- penalty %>% updatePenalty(bs = bs)
   s <- smoothCon(s(Latitude, Longitude, k = nknots, bs = bs, m = penalty),
                  data = data, knots = NULL)[[1]]
 
@@ -1972,6 +1965,14 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
                 (XX %*% betamc[usedsamples[x], ]) * sRe + mRe))),
                 se = range(sqrt(apply(sapply(1:length(usedsamples), function(x)
                   (XX %*% betamc[usedsamples[x], ]) * sRe + mRe), 1, var))))))
+}
+
+updatePenalty <- function(penalty, bs) {
+  if (bs == "ds" & penalty == 1) {
+    penalty <- c(1, 0.5)
+  }
+
+  penalty
 }
 
 dALDFast <- function(x, mu, sigma, p){
