@@ -15,6 +15,12 @@ leafletPointSettingsUI <- function(id) {
       condition = "input.clusterPoints == false",
       ns = ns,
       tags$hr(),
+      fluidRow(
+        column(8, tags$h4("Point Settings")),
+        column(4,
+               align = "right",
+               actionButton(ns("applyPointSettings"), "Apply"))
+      ),
       fluidRow(column(
         8,
         checkboxInput(ns("useJitter"), "Use jitter (in max. km)")
@@ -70,7 +76,7 @@ leafletPointSettingsServer <- function(id, loadedData) {
                  })
 
                  pointColorVals <-
-                   pointColourServer("pointColor", loadedData)
+                   pointColourServer("pointColor", loadedData, apply = reactive(input$applyPointSettings))
                  observe({
                    for (i in names(pointColorVals)) {
                      values[[i]] <- pointColorVals[[i]]
@@ -78,7 +84,7 @@ leafletPointSettingsServer <- function(id, loadedData) {
                  })
 
                  pointSizeVals <-
-                   pointSizeServer("pointSize", loadedData)
+                   pointSizeServer("pointSize", loadedData, apply = reactive(input$applyPointSettings))
                  observe({
                    for (i in names(pointSizeVals)) {
                      values[[i]] <- pointSizeVals[[i]]
@@ -86,22 +92,24 @@ leafletPointSettingsServer <- function(id, loadedData) {
                  })
 
                  pointSymbolVals <-
-                   pointSymbolServer("pointSymbol", loadedData)
+                   pointSymbolServer("pointSymbol", loadedData, apply = reactive(input$applyPointSettings))
                  observe({
                    for (i in names(pointSymbolVals)) {
                      values[[i]] <- pointSymbolVals[[i]]
                    }
                  })
 
-                 observeEvent(input$pointOpacity, {
+                 observe({
                    values$pointOpacity <- input$pointOpacity
-                 })
+                 }) %>%
+                   bindEvent(input$applyPointSettings, ignoreNULL = FALSE)
 
                  observe({
                    values$jitterMaxKm <- ifelse(input$useJitter,
                                                 input$jitterMaxKm,
                                                 NA_real_)
-                 })
+                 }) %>%
+                   bindEvent(input$applyPointSettings, ignoreNULL = FALSE)
 
                  values
                })
@@ -164,39 +172,53 @@ pointColourUI <- function(id) {
              ns("showColourLegend"), "Legend", value = FALSE
            ))
   ),
-  fluidRow(
-    column(
-      8,
-      selectInput(
-        ns("paletteName"),
-        label = NULL,
-        choices = colourPalettes,
-        selected = "Dark2"
-      )
-    ),
-    column(4,
-           style = "margin-top: -0.25em;",
-           checkboxInput(
-             ns("isReversePalette"), "Reverse", value = FALSE
-           ))
-  ))
+  conditionalPanel(
+    ns = ns,
+    condition = "input.columnForPointColour != ''",
+    fluidRow(
+      column(8,
+             selectInput(
+               ns("paletteName"),
+               label = NULL,
+               choices = colourPalettes,
+               selected = "Dark2"
+             )),
+      column(4,
+             style = "margin-top: -0.25em;",
+             checkboxInput(
+               ns("isReversePalette"), "Reverse", value = FALSE
+             ))
+    )
+  ),
+  conditionalPanel(
+    ns = ns,
+    condition = "input.columnForPointColour == ''",
+    fluidRow(column(8, colourInput(
+               ns("fixedPointColour"),
+               "Fixed colour",
+               value = "#459778"
+    )))
+  )
+  )
 }
 
 
 #' server funtion of leaflet point settings module
 #'
+#' @param apply (reactive) apply button input
 #' @inheritParams leafletPointSettingsServer
-pointColourServer <- function(id, loadedData) {
+pointColourServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
                  colourValues <- reactiveValues()
 
-                 observeEvent(input$showColourLegend, {
+                 observe({
                    logDebug("Update showColourLegend")
                    colourValues$showColourLegend <- input$showColourLegend
-                 })
+                 }) %>%
+                   bindEvent(apply())
 
-                 observeEvent(loadedData(), {
+                 observe({
                    logDebug("Update loadedData()")
                    if (is.null(loadedData())) {
                      choices <- c("[Fixed]" = "")
@@ -215,32 +237,35 @@ pointColourServer <- function(id, loadedData) {
 
                    colourValues$columnForPointColour <- ""
                    colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
-                     getColourPal(paletteName = input$paletteName,
+                     getColourPal(paletteName = input$fixedPointColour,
                                   isReversePalette = input$isReversePalette)
-                 })
+                 }) %>%
+                   bindEvent(loadedData())
 
-                 observeEvent(
-                   list(
-                     input$paletteName,
-                     input$isReversePalette,
-                     input$columnForPointColour
-                   ),
-                   {
+                 observe({
                      logDebug("Update colourValues")
                      if (is.null(input$columnForPointColour)) {
                        colourValues$columnForPointColour <- ""
+                       paletteName <- input$fixedPointColour
                      } else {
                        colourValues$columnForPointColour <- input$columnForPointColour
+
+                       if (input$columnForPointColour == "") {
+                         paletteName <- input$fixedPointColour
+                       } else {
+                         paletteName <- input$paletteName
+                       }
                      }
 
                      colourValues$pointColourPalette <- getColourCol(
                        loadedData(),
                        colName = input$columnForPointColour
                      ) %>%
-                       getColourPal(paletteName = input$paletteName,
+                       getColourPal(paletteName = paletteName,
                                     isReversePalette = input$isReversePalette)
                    }
-                 )
+                 ) %>%
+                   bindEvent(apply())
 
                  return(colourValues)
                })
@@ -267,7 +292,7 @@ pointSizeUI <- function(id) {
     ),
     sliderInput(
       ns("sizeFactor"),
-      "Factor",
+      "Size Factor",
       min = 0.5,
       max = 5.5,
       value = 1,
@@ -279,8 +304,9 @@ pointSizeUI <- function(id) {
 
 #' server funtion of leaflet point settings module
 #'
+#' @param apply (reactive) apply button input
 #' @inheritParams leafletPointSettingsServer
-pointSizeServer <- function(id, loadedData) {
+pointSizeServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
                  sizeValues <- reactiveValues()
@@ -333,13 +359,12 @@ pointSizeServer <- function(id, loadedData) {
                    sizeValues$sizeLegendValues <-
                      radiusAndLegend$sizeLegendValues
                  }) %>%
-                   bindEvent(list(input$columnForPointSize, input$sizeFactor),
-                             ignoreInit = TRUE)
+                   bindEvent(apply(), ignoreInit = TRUE)
 
                  observe({
                    sizeValues$showSizeLegend <- input$showSizeLegend
                  }) %>%
-                   bindEvent(input$showSizeLegend)
+                   bindEvent(apply())
 
                  return(sizeValues)
                })
@@ -395,8 +420,9 @@ pointSymbolUI <- function(id) {
 
 #' server function of leaflet point symbol settings module
 #'
+#' @param apply (reactive) apply button input
 #' @inheritParams leafletPointSettingsServer
-pointSymbolServer <- function(id, loadedData) {
+pointSymbolServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
                  symbolValues <- reactiveValues(pointSymbol = 19)
@@ -461,18 +487,17 @@ pointSymbolServer <- function(id, loadedData) {
                    symbolValues$columnForPointSymbol <-
                      input$columnForPointSymbol
                  }) %>%
-                   bindEvent(list(input$columnForPointSymbol, input$pointSymbol),
-                             ignoreInit = TRUE)
+                   bindEvent(apply(), ignoreInit = TRUE)
 
                  observe({
                    symbolValues$pointWidth <- input$pointWidth
                  }) %>%
-                   bindEvent(input$pointWidth)
+                   bindEvent(apply())
 
                  observe({
                    symbolValues$showSymbolLegend <- input$showSymbolLegend
                  }) %>%
-                   bindEvent(input$showSymbolLegend)
+                   bindEvent(apply())
 
                  return(symbolValues)
                })
@@ -692,13 +717,27 @@ getColourPal <- function(colourCol, paletteName, isReversePalette) {
       domain = colourCol,
       reverse = isReversePalette
     )
-  } else {
-    pal <- colorFactor(
-      palette = paletteName,
-      domain = colourCol,
-      reverse = isReversePalette
-    )
+    return(pal)
   }
+
+  if (all(colourCol == "all")) {
+    # if fixed colour was selected (which sets colourCol <- "all" for all values), then the
+    # paletteName is set to a value from colourInput()
+    pal <- colorFactor(
+      palette = rep(paletteName, length(colourCol)),
+      domain = colourCol,
+      reverse = FALSE
+    )
+
+    return(pal)
+  }
+
+  # if colourCol contains different character values create colour from a palette
+  pal <- colorFactor(
+    palette = paletteName,
+    domain = colourCol,
+    reverse = isReversePalette
+  )
 
   pal
 }
@@ -708,7 +747,6 @@ getColourCol <- function(dat, colName) {
 
   colourCol <- dat[[colName]]
   if (is.null(colourCol)) {
-    # print error ?? into some new attr()?
     colourCol <- rep("all", nrow(dat))
   }
 

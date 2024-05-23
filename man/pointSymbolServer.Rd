@@ -4,12 +4,14 @@
 \alias{pointSymbolServer}
 \title{server function of leaflet point symbol settings module}
 \usage{
-pointSymbolServer(id, loadedData)
+pointSymbolServer(id, loadedData, apply)
 }
 \arguments{
 \item{id}{An ID string that corresponds with the ID used to call the module's UI function.}
 
 \item{loadedData}{(reactive) loaded data}
+
+\item{apply}{(reactive) apply button input}
 }
 \description{
 server function of leaflet point symbol settings module

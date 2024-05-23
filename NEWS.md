@@ -1,3 +1,21 @@
+# MpiIsoApp 24.05.4
+## Bug Fixes
+- fix issue with warning whenever using a bayesian model (#199)
+
+# MpiIsoApp 24.05.3
+
+## Bug Fixes
+- fix for the spread model which was not running if two dates were specified (#218)
+- fixes the case when we have missing longitude or latitude data in the data set (#219)
+
+# MpiIsoApp 24.05.2
+
+## New Features
+- _Interactive Map_: 
+  - possibility of selecting a specific point colour when no point colour variable was 
+    selected ("Fixed" point colour) (#174)
+  - button to apply settings for the style of points
+
 # MpiIsoApp 24.05.1
 
 ## New Features
