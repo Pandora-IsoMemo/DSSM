@@ -1,3 +1,11 @@
+# MpiIsoApp 24.05.5
+
+### New Features
+- _Saved maps_: export and import of saved maps is now included within the features to down- and
+  upload models (#2)
+  - optionally, the list of saved models can be downloaded
+  - upload checks for a list of saved maps and loads it, if it is available
+
 # MpiIsoApp 24.05.4
 ## Bug Fixes
 - fix issue with warning whenever using a bayesian model (#199)
