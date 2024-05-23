@@ -17,13 +17,7 @@ modelResults3DUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -570,7 +564,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   downloadModelServer("modelDownload",
                       dat = data,
                       inputs = input,
-                      model = Model,
+                      model = reactive(packModelForDownload(
+                        Model(),
+                        savedMaps(),
+                        includeSavedMaps = input[["includeSavedMaps"]]
+                      )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
                       fileExtension = config()[["fileExtension"]],
@@ -625,7 +623,10 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     logDebug("modelResults3D: Update model after model import")
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
