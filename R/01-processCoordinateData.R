@@ -77,10 +77,10 @@ augmentData <- function(data, restriction = c(-90, 90, -320, 320)) {
 #' @param data (data.frame) data containing columns "Latitude" and "Longitude"
 #' @return (data.frame) data containing columns "Latitude" and "Longitude" shifted to the default restriction
 shiftDataToDefaultRestriction <- function(data) {
-  data$Longitude[data$Longitude > 180] <- data$Longitude[data$Longitude > 180] - 360
-  data$Longitude[data$Longitude < -180] <- data$Longitude[data$Longitude < -180] + 360
-  data$Latitude[data$Latitude > 90] <- data$Latitude[data$Latitude > 90] - 180
-  data$Latitude[data$Latitude < -90] <- data$Latitude[data$Latitude < -90] + 180
+  data$Longitude[data$Longitude > 180 & !is.na(data$Longitude)] <- data$Longitude[data$Longitude > 180 & !is.na(data$Longitude)] - 360
+  data$Longitude[data$Longitude < -180 & !is.na(data$Longitude)] <- data$Longitude[data$Longitude < -180 & !is.na(data$Longitude)] + 360
+  data$Latitude[data$Latitude > 90 & !is.na(data$Latitude)] <- data$Latitude[data$Latitude > 90 & !is.na(data$Latitude)] - 180
+  data$Latitude[data$Latitude < -90 & !is.na(data$Latitude)] <- data$Latitude[data$Latitude < -90 & !is.na(data$Latitude)] + 180
 
   return(data)
 }

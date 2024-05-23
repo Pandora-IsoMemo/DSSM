@@ -1,3 +1,9 @@
+# MpiIsoApp 24.05.3
+
+## Bug Fixes
+- fix for the spread model which was not running if two dates were specified (#218)
+- fixes the case when we have missing longitude or latitude data in the data set (#219)
+
 # MpiIsoApp 24.05.2
 
 ## New Features

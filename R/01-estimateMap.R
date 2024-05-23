@@ -437,7 +437,7 @@ estimateMapSpread <- function(data,
                 DateType = DateType,
                 dateUnc = dateUnc)
   if (all(is.na(data[, DateOne]))) return("non-numeric date field 1 variable")
-  if (DateType != "Single point" && (!all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
+  if (DateType != "Single point" && (all(is.na(data[, DateTwo])))) return("non-numeric date field 2 variable")
 
   # select columns
   data <- na.omit(data[, c("Date", "Uncertainty", Longitude, Latitude)])
