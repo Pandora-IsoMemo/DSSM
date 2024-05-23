@@ -19,7 +19,6 @@ modelResultsSpreadUI <- function(id, title = ""){
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
-        tags$br(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",

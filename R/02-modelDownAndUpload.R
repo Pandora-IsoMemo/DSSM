@@ -12,6 +12,7 @@ downloadDSSMModelUI <- function(ns) {
       downloadModelUI(ns("modelDownload"), label = "Download"),
       tags$hr()
     ),
+    tags$br()
   )
 }
 

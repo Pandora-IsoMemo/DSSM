@@ -19,7 +19,6 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
-        tags$br(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
