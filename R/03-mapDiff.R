@@ -18,13 +18,8 @@ modelResultsDiffUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Map"),
-        checkboxInput(ns("useDownload"), label = "Download map"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
+        tags$br(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create new map from existing" = "create",
@@ -434,7 +429,11 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   downloadModelServer("modelDownload",
                       dat = savedMaps,
                       inputs = input,
-                      model = MapDiff,
+                      model = reactive(packModelForDownload(
+                        MapDiff(),
+                        savedMaps(),
+                        includeSavedMaps = input[["includeSavedMaps"]]
+                      )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
                       fileExtension = config()[["fileExtension"]],
@@ -483,7 +482,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    MapDiff(uploadedValues()[[1]][["model"]])
+    MapDiff(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 

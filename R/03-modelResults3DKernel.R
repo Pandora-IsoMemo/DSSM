@@ -17,13 +17,8 @@ modelResults3DKernelUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
+        tags$br(),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -570,7 +565,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   downloadModelServer("modelDownload",
                       dat = data,
                       inputs = input,
-                      model = Model,
+                      model = reactive(packModelForDownload(
+                        Model(),
+                        savedMaps(),
+                        includeSavedMaps = input[["includeSavedMaps"]]
+                      )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
                       fileExtension = config()[["fileExtension"]],
@@ -588,8 +587,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
                                      rPackageName = config()[["rPackageName"]])
-
-
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -623,7 +620,10 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
