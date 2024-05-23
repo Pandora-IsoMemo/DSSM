@@ -1,3 +1,7 @@
+# MpiIsoApp 24.05.4
+## Bug Fixes
+- fix issue with warning whenever using a bayesian model (#199)
+
 # MpiIsoApp 24.05.3
 
 ## Bug Fixes
