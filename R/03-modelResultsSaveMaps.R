@@ -41,17 +41,6 @@ savedMapsExportServer <- function(id, savedMaps) {
       }) %>%
         bindEvent(savedMaps())
 
-      mapsSelected <- reactiveVal(NULL)
-      observe({
-        logDebug("modelResultsSavedMaps: observe mapsToExport")
-        if (is.null(input[["mapsToExport"]]) || input[["mapsToExport"]] == "") {
-          mapsSelected(NULL)
-        } else {
-          mapsSelected(extractSelectedMaps(savedMaps(), input[["mapsToExport"]]))
-        }
-      }) %>%
-        bindEvent(input[["mapsToExport"]], ignoreNULL = FALSE)
-
       observeEvent(input$export, {
         showModal(modalDialog(
           title = "Export Graphic",
