@@ -190,7 +190,7 @@ exportGraphicSeries <- function(exportType, file,
     figFileNames <- sapply(times,
                            function(i) {
                              nameFile(plotType = modelType, exportType = exportType,
-                                      isTimeSeries = TRUE, i = i)
+                                      isTimeSeries = TRUE, typeOfSeries = typeOfSeries, i = i)
                            })
 
     # create all file names to be put into a gif, they have always .jpeg format

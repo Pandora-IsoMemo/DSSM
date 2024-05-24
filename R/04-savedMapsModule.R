@@ -10,9 +10,10 @@ savedMapsTabUI <- function(id, title = "") {
            id = id,
            value = id,
            tags$h3("Saved Maps"),
-                       tags$br(),
-                       uiOutput(ns("mapTable"))
-           )
+           tags$br(),
+           uiOutput(ns("mapTable")),
+           savedMapsExportButton(ns("exportSavedMapsPlots"))
+  )
 }
 
 
@@ -48,6 +49,8 @@ savedMapsTab <- function(input, output, session, savedMaps) {
         ), deleteFile = FALSE)
     })
   })
+
+  savedMapsExportServer("exportSavedMapsPlots", savedMaps = savedMaps)
 }
 
 
