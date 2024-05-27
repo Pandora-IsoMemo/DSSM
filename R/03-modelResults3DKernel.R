@@ -509,6 +509,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel3d",
       name = mapName
     )

@@ -398,6 +398,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel2d",
       name = mapName
     )

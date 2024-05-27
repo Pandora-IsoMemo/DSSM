@@ -43,7 +43,7 @@ savedMapsTab <- function(input, output, session, savedMaps) {
       rr <- savedMaps()[[i]]
       output[[paste0("thumbnail_", i)]] <-
         renderImage(list(
-          src = rr$file,
+          src = getThumbnail(rr),
           height = 100,
           width = 160
         ), deleteFile = FALSE)
@@ -54,6 +54,24 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 }
 
 # Helper functions for saved maps tabs ----
+
+getThumbnail <- function(savedMap) {
+  if (!file.exists(savedMap$file)) {
+    dir_path <- dirname(savedMap$file)
+
+    # Create the directory if it does not exist
+    if (!dir.exists(dir_path)) {
+      dir.create(dir_path, recursive = TRUE)
+    }
+
+    # create the plot
+    png(savedMap$file, width = 800, height = 500)
+    savedMap$plotFUN(savedMap$model)
+    dev.off()
+  }
+
+  return(savedMap$file)
+}
 
 #' Get Full Coord Grid
 #'
@@ -170,11 +188,12 @@ savedMapsExportServer <- function(id, savedMaps) {
 
       mapChoices <- reactiveVal(c("Please save maps first" = ""))
       observe({
-        logDebug("modelResultsSavedMaps: disable export button")
         if (length(savedMaps()) == 0) {
+          logDebug("modelResultsSavedMaps: disable export button")
           shinyjs::disable("export")
           mapChoices(c("Please save maps first" = ""))
         } else {
+          logDebug("modelResultsSavedMaps: enable export button")
           shinyjs::enable("export")
           mapChoices(getMapChoices(savedMaps()))
         }
@@ -182,6 +201,7 @@ savedMapsExportServer <- function(id, savedMaps) {
         bindEvent(savedMaps())
 
       observeEvent(input$export, {
+        logDebug("modelResultsSavedMaps: export button clicked")
         showModal(modalDialog(
           title = "Export Graphic",
           footer = modalButton("OK"),
@@ -232,20 +252,17 @@ savedMapsExportServer <- function(id, savedMaps) {
         ))
       })
 
-      output$plot <- renderPlot({
+      output$plot <- renderImage({
         validate(need(length(savedMaps()) > 0, "Please save maps first ..."))
         validate(need(input[["displayMap"]], "Please select a map to display ..."))
 
         mapToDisplay <- savedMaps()[[as.numeric(input[["displayMap"]])]]
-        replayPlot(mapToDisplay[[1]]$plot)
-      })
-
-      exportType <- reactiveVal("png")
-
-      observe({
-        exportType(input$exportType)
-      }) %>%
-        bindEvent(input$exportType)
+        list(
+          src = getThumbnail(mapToDisplay),
+          height = 3*100,
+          width = 3*160
+        )
+      }, deleteFile = FALSE)
 
       output$exportExecute <- downloadHandler(
         filename = function(){
@@ -254,7 +271,7 @@ savedMapsExportServer <- function(id, savedMaps) {
         },
         content = function(file){
           exportSavedMapsPlots(file = file,
-                               savedMaps = savedMaps()[[as.numeric(input[["mapsToExport"]])]],
+                               savedMaps = savedMaps()[as.numeric(input[["mapsToExport"]])],
                                width = input$width,
                                height = input$height,
                                exportType = input$exportType) %>%
@@ -294,16 +311,11 @@ exportSavedMapsPlots <- function(file, savedMaps, width, height, exportType) {
         writeGeoTiff(savedMaps[[i]]$predictions, figFilename)
       } else {
         # save desired file type
-        switch(
-          exportType,
-          png = png(figFilename, width = width, height = height),
-          jpeg = jpeg(figFilename, width = width, height = height),
-          pdf = pdf(figFilename, width = width / 72, height = height / 72),
-          tiff = tiff(figFilename, width = width, height = height),
-          svg = svg(figFilename, width = width / 72, height = height / 72)
-        )
-        replayPlot(savedMaps[[i]]$plot)
-        dev.off()
+        writeGraphics(exportType = exportType,
+                      plot = savedMaps[[i]]$plotFUN(savedMaps[[i]]$model), #replayPlot(savedMaps[[i]]$plot),
+                      filename = figFilename,
+                      width = width,
+                      height = height)
       }
     }
 

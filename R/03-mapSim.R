@@ -665,6 +665,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "similarity",
       name = mapName
     )

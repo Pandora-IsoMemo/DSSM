@@ -405,6 +405,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       model = MapDiff(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "difference",
       name = mapName
     )

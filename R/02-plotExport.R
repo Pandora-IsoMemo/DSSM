@@ -209,16 +209,11 @@ exportGraphicSeries <- function(exportType, file,
         writeGeoTiff(predictions, figFilename)
       } else {
         # save desired file type
-        switch(
-          exportType,
-          png = png(figFilename, width = width, height = height),
-          jpeg = jpeg(figFilename, width = width, height = height),
-          pdf = pdf(figFilename, width = width / 72, height = height / 72),
-          tiff = tiff(figFilename, width = width, height = height),
-          svg = svg(figFilename, width = width / 72, height = height / 72)
-        )
-        plotFun(model = Model, time = i)
-        dev.off()
+        writeGraphics(exportType = exportType,
+                      plot = plotFun(model = Model, time = i),
+                      filename = figFilename,
+                      width = width,
+                      height = height)
 
         # save jpeg for .gif if desired file type is not .jpeg (else we already stored that file)
         if (typeOfSeries != "onlyZip" && exportType != "jpeg") {
@@ -255,16 +250,11 @@ exportGraphicSingle <- function(exportType, file, width, height, plotObj, predic
     return()
   }
 
-  switch(
-    exportType,
-    png = png(file, width = width, height = height),
-    jpeg = jpeg(file, width = width, height = height),
-    pdf = pdf(file, width = width / 72, height = height / 72),
-    tiff = tiff(file, width = width, height = height),
-    svg = svg(file, width = width / 72, height = height / 72)
-  )
-  replayPlot(plotObj)
-  dev.off()
+  writeGraphics(exportType = exportType,
+                plot = replayPlot(plotObj),
+                filename = file,
+                width = width,
+                height = height)
 }
 
 writeGeoTiff <- function(XPred, file){
@@ -285,6 +275,23 @@ writeGeoTiff <- function(XPred, file){
   writeRaster(r, filename = "out.tif", format="GTiff",
               options = c('TFW=YES'), overwrite = TRUE)
   file.rename("out.tif", file)
+}
+
+#' Write Graphics
+#'
+#' @param exportType (character) file type of exported plot
+#' @inheritParams grDevices::png
+writeGraphics <- function(exportType, plot, filename, width, height) {
+  switch(
+    exportType,
+    png = png(filename, width = width, height = height),
+    jpeg = jpeg(filename, width = width, height = height),
+    pdf = pdf(filename, width = width / 72, height = height / 72),
+    tiff = tiff(filename, width = width, height = height),
+    svg = svg(filename, width = width / 72, height = height / 72)
+  )
+  plot
+  dev.off()
 }
 
 #' Generate GIF

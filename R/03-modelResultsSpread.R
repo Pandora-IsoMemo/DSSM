@@ -428,6 +428,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "spread",
       name = mapName
     )

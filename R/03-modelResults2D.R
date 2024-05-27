@@ -426,6 +426,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "localAvg",
       name = mapName
     )

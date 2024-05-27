@@ -499,6 +499,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "temporalAvg",
       name = mapName
     )
