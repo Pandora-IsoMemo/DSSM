@@ -494,11 +494,7 @@ modelResults3DKernelUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "kernel3d")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("kernel3d"))
 
   Model <- reactiveVal()
 
@@ -567,7 +563,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       model = reactive(packModelForDownload(
                         Model(),
                         savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
+                        savedMapsIDs = input[["downloadSavedMaps"]]
                       )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,

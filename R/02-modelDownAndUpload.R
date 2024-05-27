@@ -8,7 +8,19 @@ downloadDSSMModelUI <- function(ns) {
       ns = ns,
       condition = "input.useDownload == true",
       tags$hr(),
-      checkboxInput(ns("includeSavedMaps"), label = "Include all saved maps", value = FALSE),
+      pickerInput(
+        inputId = ns("downloadSavedMaps"),
+        label = "Include Saved Maps",
+        choices = c("Please save maps first" = ""),
+        selected = c("Please save maps first" = ""),
+        options = list(
+          `actions-box` = TRUE,
+          size = 10,
+          `none-selected-text` = "No maps selected",
+          `selected-text-format` = "count > 8"
+        ),
+        multiple = TRUE
+      ),
       downloadModelUI(ns("modelDownload"), label = "Download"),
       tags$hr()
     ),
@@ -16,13 +28,11 @@ downloadDSSMModelUI <- function(ns) {
   )
 }
 
-packModelForDownload <- function(Model, savedMaps, includeSavedMaps = FALSE) {
-  if (includeSavedMaps) {
-    list(currentModel = Model,
-         savedMaps = savedMaps)
-  } else {
-    list(currentModel = Model)
-  }
+packModelForDownload <- function(Model, savedMaps, savedMapsIDs = "") {
+  if (savedMapsIDs == "") return(list(currentModel = Model))
+
+  return(list(currentModel = Model,
+              savedMaps = savedMaps[[as.numeric(savedMapsIDs)]]))
 }
 
 unpackModel <- function(uploadedModel) {

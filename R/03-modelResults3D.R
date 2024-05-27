@@ -485,11 +485,7 @@ modelResults3DUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "temporalAvg")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("temporalAvg"))
 
   observeEvent(input$saveMap, {
     logDebug("modelResults3D: Button 'Save map' clicked")
@@ -567,7 +563,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                       model = reactive(packModelForDownload(
                         Model(),
                         savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
+                        savedMapsIDs = input[["downloadSavedMaps"]]
                       )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,

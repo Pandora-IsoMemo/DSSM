@@ -415,13 +415,7 @@ modelResultsSpreadUI <- function(id, title = ""){
 #'
 #' @export
 modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    observeEvent(savedMaps(), {
-      choices <- getMapChoices(savedMaps(), "spread")
-
-      updateSelectInput(session, "savedModel", choices = choices)
-    })
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = "spread")
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -486,7 +480,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                       model = reactive(packModelForDownload(
                         Model(),
                         savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
+                        savedMapsIDs = input[["downloadSavedMaps"]]
                       )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,

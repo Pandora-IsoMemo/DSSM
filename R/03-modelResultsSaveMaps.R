@@ -7,6 +7,15 @@ createSavedMap <- function(model, predictions, plot, type, name) {
   list(model = model, predictions = predictions, plot = plot, file = tmp , type = type, name = name)
 }
 
+observeSavedMaps <- function(input, output, session, savedMaps, type) {
+  observeEvent(savedMaps(), {
+    choices <- getMapChoices(savedMaps(), type)
+
+    updateSelectInput(session, "savedModel", choices = choices)
+    updatePickerInput(session, "downloadSavedMaps", choices = choices)
+  })
+}
+
 savedMapsExportButton <- function(id){
   ns <- NS(id)
   actionButton(ns("export"), "Export Plots of Saved Maps")
@@ -25,7 +34,6 @@ savedMapsExportServer <- function(id, savedMaps) {
         }
       })
 
-      savedMapsNames <- reactiveVal(NULL)
       mapChoices <- reactiveVal(c("Please save maps first" = ""))
       observe({
         logDebug("modelResultsSavedMaps: disable export button")
@@ -34,9 +42,7 @@ savedMapsExportServer <- function(id, savedMaps) {
           mapChoices(c("Please save maps first" = ""))
         } else {
           shinyjs::enable("export")
-          names <- sapply(savedMaps(), function(x) x$name)
-          savedMapsNames(names)
-          mapChoices(c("Please select saved maps" = "", names))
+          mapChoices(getMapChoices(savedMaps()))
         }
       }) %>%
         bindEvent(savedMaps())
@@ -45,19 +51,21 @@ savedMapsExportServer <- function(id, savedMaps) {
         showModal(modalDialog(
           title = "Export Graphic",
           footer = modalButton("OK"),
+          selectInput(session$ns("displayMap"), "Show Map", choices = mapChoices()),
           plotOutput(session$ns("plot"), height = "300px"),
           tags$br(),
-          fluidRow(column(width = 4,
-                          selectInput(session$ns("mapsToExport"), "Saved Maps to Export",
-                                      choices = mapChoices(),
-                                      selected = "",
-                                      multiple = TRUE)
-                          ),
-                   column(width = 4,
-                          selectInput(session$ns("displayMap"), "Show Map",
-                                      choices = mapChoices(),
-                                      selected = "")
-                   )
+          pickerInput(
+            inputId = session$ns("mapsToExport"),
+            label = "Export Maps",
+            choices = mapChoices(),
+            selected = mapChoices(),
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `none-selected-text` = "No maps selected",
+              `selected-text-format` = "count > 8"
+            ),
+            multiple = TRUE
           ),
           fluidRow(column(width = 4,
                           selectInput(
@@ -94,7 +102,7 @@ savedMapsExportServer <- function(id, savedMaps) {
         validate(need(length(savedMaps()) > 0, "Please save maps first ..."))
         validate(need(input[["displayMap"]], "Please select a map to display ..."))
 
-        mapToDisplay <- extractSelectedMaps(savedMaps(), input[["displayMap"]])
+        mapToDisplay <- savedMaps()[[as.numeric(input[["displayMap"]])]]
         replayPlot(mapToDisplay[[1]]$plot)
       })
 
@@ -112,7 +120,7 @@ savedMapsExportServer <- function(id, savedMaps) {
         },
         content = function(file){
           exportSavedMapsPlots(file = file,
-                               savedMaps = extractSelectedMaps(savedMaps(), input[["mapsToExport"]]),
+                               savedMaps = savedMaps()[[as.numeric(input[["mapsToExport"]])]],
                                width = input$width,
                                height = input$height,
                                exportType = input$exportType) %>%
@@ -134,10 +142,6 @@ setZipFileName <- function(fileName, defaultFileName) {
   newName <- sprintf("%s.zip", newName)
 
   return(newName)
-}
-
-extractSelectedMaps <- function(savedMaps, selectedMaps) {
-  savedMaps[sapply(savedMaps, function(x) x$name %in% selectedMaps)]
 }
 
 exportSavedMapsPlots <- function(file, savedMaps, width, height, exportType) {

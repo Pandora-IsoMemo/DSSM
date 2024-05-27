@@ -31,7 +31,7 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Select Map",
                     choices = c(""),
                     selected = ""),
-        actionButton( ns("load"), "load"),
+        actionButton(ns("load"), "load"),
         ns = ns
         ),
         conditionalPanel(
@@ -384,11 +384,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), c("difference", "user"))
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("difference", "user"))
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
@@ -431,7 +427,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                       model = reactive(packModelForDownload(
                         MapDiff(),
                         savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
+                        savedMapsIDs = input[["downloadSavedMaps"]]
                       )),
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
