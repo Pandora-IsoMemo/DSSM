@@ -30,7 +30,10 @@ downloadDSSMModelUI <- function(ns) {
 
 packModelForDownload <- function(Model, savedMaps, savedMapsIDs = "") {
   if (length(savedMapsIDs) == 0 ||
-      (length(savedMapsIDs) == 1 && savedMapsIDs == "")) return(list(currentModel = Model))
+      (length(savedMapsIDs) == 1 && savedMapsIDs == "")) {
+    return(list(currentModel = Model,
+                savedMaps = list()))
+  }
 
   return(list(currentModel = Model,
               savedMaps = savedMaps[as.numeric(savedMapsIDs)]))
