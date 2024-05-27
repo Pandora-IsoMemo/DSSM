@@ -31,32 +31,38 @@ downloadDSSMModelUI <- function(ns) {
 packModelForDownload <- function(Model, savedMaps, savedMapsIDs = "") {
   if (length(savedMapsIDs) == 0 ||
       (length(savedMapsIDs) == 1 && savedMapsIDs == "")) {
-    return(list(currentModel = Model,
-                savedMaps = list()))
+    res <- list(currentModel = Model,
+                savedMaps = list())
+  } else {
+    res <- list(currentModel = Model,
+                savedMaps = savedMaps[as.numeric(savedMapsIDs)])
   }
 
-  return(list(currentModel = Model,
-              savedMaps = savedMaps[as.numeric(savedMapsIDs)]))
+  return(res)
 }
 
 unpackModel <- function(uploadedModel) {
   if (all(names(uploadedModel) %in% c("currentModel", "savedMaps"))) {
     # new format, version >= 24.05.4
-    uploadedModel$currentModel
+    res <- uploadedModel$currentModel
   } else {
     # old format
-    uploadedModel
+    res <- uploadedModel
   }
+
+  return(res)
 }
 
 unpackSavedMaps <- function(uploadedModel, currentSavedMaps) {
   if (all(names(uploadedModel) %in% c("currentModel", "savedMaps"))) {
     # new format, version >= 23.05.4
-    uploadedModel$savedMaps %>%
+    res <- uploadedModel$savedMaps %>%
       updateNameEntryIfDuplicate(oldList = currentSavedMaps,
                                  listType = "Saved map")
   } else {
     # old format, savedMaps were not included in downloads
-    list()
+    res <- list()
   }
+
+  return(res)
 }
