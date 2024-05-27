@@ -445,21 +445,14 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        savedMapsIDs = input[["downloadSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2DKernel"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2DKernel",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

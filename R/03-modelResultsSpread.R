@@ -475,21 +475,14 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "SpreadR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        savedMapsIDs = input[["downloadSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "spread"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "spread",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

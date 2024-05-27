@@ -8,19 +8,20 @@ downloadDSSMModelUI <- function(ns) {
       ns = ns,
       condition = "input.useDownload == true",
       tags$hr(),
-      pickerInput(
-        inputId = ns("downloadSavedMaps"),
-        label = "Include Saved Maps",
-        choices = c("Please save maps first" = ""),
-        selected = c("Please save maps first" = ""),
-        options = list(
-          `actions-box` = TRUE,
-          size = 10,
-          `none-selected-text` = "No maps selected",
-          `selected-text-format` = "count > 8"
-        ),
-        multiple = TRUE
-      ),
+      # # hide option to download savedMaps, objects are too big and the app becomes too slow after uploading them
+      # pickerInput(
+      #   inputId = ns("downloadSavedMaps"),
+      #   label = "Include Saved Maps",
+      #   choices = c("Please save maps first" = ""),
+      #   selected = c("Please save maps first" = ""),
+      #   options = list(
+      #     `actions-box` = TRUE,
+      #     size = 10,
+      #     `none-selected-text` = "No maps selected",
+      #     `selected-text-format` = "count > 8"
+      #   ),
+      #   multiple = TRUE
+      # ),
       downloadModelUI(ns("modelDownload"), label = "Download"),
       tags$hr()
     ),
@@ -28,21 +29,45 @@ downloadDSSMModelUI <- function(ns) {
   )
 }
 
-packModelForDownload <- function(Model, savedMaps, savedMapsIDs = "") {
-  if (length(savedMapsIDs) == 0 ||
-      (length(savedMapsIDs) == 1 && savedMapsIDs == "")) {
-    res <- list(currentModel = Model,
-                savedMaps = list())
-  } else {
-    res <- list(currentModel = Model,
-                savedMaps = savedMaps[as.numeric(savedMapsIDs)])
-  }
+downloadDSSMModel <- function(input, output, session, dat, model, #savedMaps,
+                              subFolder, tabId, uploadedNotes) {
+  downloadModelServer("modelDownload",
+                      dat = dat,
+                      inputs = input,
+                      model = reactive(packModelForDownload(
+                        model#, savedMaps, savedMapsIDs = input[["downloadSavedMaps"]]
+                      )),
+                      rPackageName = config()[["rPackageName"]],
+                      subFolder = subFolder,
+                      fileExtension = config()[["fileExtension"]],
+                      helpHTML = getHelp(id = tabId),
+                      modelNotes = uploadedNotes,
+                      triggerUpdate = reactive(TRUE),
+                      compressionLevel = 1)
+}
+
+packModelForDownload <- function(Model#, savedMaps, savedMapsIDs = ""
+                                 ) {
+  # # hide option to download savedMaps, objects are too big and the app becomes too slow after uploading them
+  # if (length(savedMapsIDs) == 0 ||
+  #     (length(savedMapsIDs) == 1 && savedMapsIDs == "")) {
+  #   # return empty savedMaps
+  #   res <- list(currentModel = Model,
+  #               savedMaps = list())
+  # } else {
+  #   # return savedMaps
+  #   res <- list(currentModel = Model,
+  #               savedMaps = savedMaps[as.numeric(savedMapsIDs)])
+  # }
+
+  # only download model
+  res <- list(currentModel = Model)
 
   return(res)
 }
 
 unpackModel <- function(uploadedModel) {
-  if (all(names(uploadedModel) %in% c("currentModel", "savedMaps"))) {
+  if (any(names(uploadedModel) == "currentModel")) {
     # new format, version >= 24.05.4
     res <- uploadedModel$currentModel
   } else {
@@ -54,15 +79,18 @@ unpackModel <- function(uploadedModel) {
 }
 
 unpackSavedMaps <- function(uploadedModel, currentSavedMaps) {
-  if (all(names(uploadedModel) %in% c("currentModel", "savedMaps"))) {
-    # new format, version >= 23.05.4
-    res <- uploadedModel$savedMaps %>%
-      updateNameEntryIfDuplicate(oldList = currentSavedMaps,
-                                 listType = "Saved map")
-  } else {
-    # old format, savedMaps were not included in downloads
-    res <- list()
-  }
+  # # disabling option to upload savedMaps, objects are too big and the app becomes too slow after uploading them
+  # if (any(names(uploadedModel) == "savedMaps")) {
+  #   # new format, version >= 23.05.4
+  #   res <- uploadedModel$savedMaps %>%
+  #     updateNameEntryIfDuplicate(oldList = currentSavedMaps,
+  #                                listType = "Saved map")
+  # } else {
+  #   # old format, savedMaps were not included in downloads
+  #   res <- list()
+  # }
+
+  res <- list()
 
   return(res)
 }

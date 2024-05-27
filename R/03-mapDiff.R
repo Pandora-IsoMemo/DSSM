@@ -422,21 +422,14 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "OperatoR"
-  downloadModelServer("modelDownload",
-                      dat = savedMaps,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        MapDiff(),
-                        savedMaps(),
-                        savedMapsIDs = input[["downloadSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "difference"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                   dat = savedMaps,
+                   model = MapDiff(),
+                   #savedMaps = savedMaps(),
+                   subFolder = subFolder,
+                   tabId = "difference",
+                   uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

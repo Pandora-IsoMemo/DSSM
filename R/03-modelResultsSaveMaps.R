@@ -17,6 +17,8 @@ observeSavedMaps <- function(input, output, session, savedMaps, type) {
     choices <- getMapChoices(savedMaps(), type)
 
     updateSelectInput(session, "savedModel", choices = choices)
-    updatePickerInput(session, "downloadSavedMaps", choices = choices)
+
+    # downloadSavedMaps pickerInput is hidden, so this is currently not needed
+    #updatePickerInput(session, "downloadSavedMaps", choices = choices)
   })
 }

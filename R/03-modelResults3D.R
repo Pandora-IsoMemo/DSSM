@@ -556,23 +556,16 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # MODEL DOWN- / UPLOAD ----
 
-  subFolder <- "TimeR"
   uploadedNotes <- reactiveVal(NULL)
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        savedMapsIDs = input[["downloadSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model3D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+  subFolder <- "TimeR"
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model3D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
