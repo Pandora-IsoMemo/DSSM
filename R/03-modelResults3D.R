@@ -485,11 +485,7 @@ modelResults3DUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "temporalAvg")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("temporalAvg"))
 
   observeEvent(input$saveMap, {
     logDebug("modelResults3D: Button 'Save map' clicked")
@@ -503,6 +499,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "temporalAvg",
       name = mapName
     )
@@ -559,23 +556,16 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # MODEL DOWN- / UPLOAD ----
 
-  subFolder <- "TimeR"
   uploadedNotes <- reactiveVal(NULL)
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model3D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+  subFolder <- "TimeR"
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model3D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

@@ -400,11 +400,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #'
 #' @export
 modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "localAvg")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = "localAvg")
 
   values <- reactiveValues(
     plot = NULL,
@@ -430,6 +426,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "localAvg",
       name = mapName
     )
@@ -486,21 +483,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "AverageR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

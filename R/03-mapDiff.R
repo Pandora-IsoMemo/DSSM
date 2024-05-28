@@ -31,7 +31,7 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Select Map",
                     choices = c(""),
                     selected = ""),
-        actionButton( ns("load"), "load"),
+        actionButton(ns("load"), "load"),
         ns = ns
         ),
         conditionalPanel(
@@ -384,11 +384,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), c("difference", "user"))
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("difference", "user"))
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
@@ -409,6 +405,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       model = MapDiff(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "difference",
       name = mapName
     )
@@ -425,21 +422,14 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "OperatoR"
-  downloadModelServer("modelDownload",
-                      dat = savedMaps,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        MapDiff(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "difference"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                   dat = savedMaps,
+                   model = MapDiff(),
+                   #savedMaps = savedMaps(),
+                   subFolder = subFolder,
+                   tabId = "difference",
+                   uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

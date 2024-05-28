@@ -1,6 +1,14 @@
+# MpiIsoApp 24.05.6
+
+## New Features
+- _Saved maps_:
+  - option to download a zip file with all plots in a chosen format (#2)
+  - removing option to download saved maps with the current model object, since files become too large
+    and upload takes too long
+
 # MpiIsoApp 24.05.5
 
-### New Features
+## New Features
 - _Saved maps_: export and import of saved maps is now included within the features to down- and
   upload models (#2)
   - optionally, the list of saved models can be downloaded
