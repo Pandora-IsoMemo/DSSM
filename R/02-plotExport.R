@@ -280,6 +280,7 @@ writeGeoTiff <- function(XPred, file){
 #' Write Graphics
 #'
 #' @param exportType (character) file type of exported plot
+#' @param plot (object) plot object
 #' @inheritParams grDevices::png
 writeGraphics <- function(exportType, plot, filename, width, height) {
   switch(

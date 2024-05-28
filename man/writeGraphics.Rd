@@ -9,6 +9,8 @@ writeGraphics(exportType, plot, filename, width, height)
 \arguments{
 \item{exportType}{(character) file type of exported plot}
 
+\item{plot}{(object) plot object}
+
 \item{filename}{the output file path.
     The page number is substituted if a C integer format is included in
     the character string, as in the default.  (Depending on the platform,
