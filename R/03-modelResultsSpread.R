@@ -415,13 +415,7 @@ modelResultsSpreadUI <- function(id, title = ""){
 #'
 #' @export
 modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    observeEvent(savedMaps(), {
-      choices <- getMapChoices(savedMaps(), "spread")
-
-      updateSelectInput(session, "savedModel", choices = choices)
-    })
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = "spread")
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -434,6 +428,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "spread",
       name = mapName
     )
@@ -480,21 +475,14 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "SpreadR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "spread"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "spread",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

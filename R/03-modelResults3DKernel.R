@@ -494,11 +494,7 @@ modelResults3DKernelUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "kernel3d")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("kernel3d"))
 
   Model <- reactiveVal()
 
@@ -513,6 +509,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel3d",
       name = mapName
     )
@@ -561,21 +558,14 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelTimeR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model3DKernel"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model3DKernel",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",

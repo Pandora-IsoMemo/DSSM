@@ -385,11 +385,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param fruitsData data for export to FRUITS
 #' @export
 modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "kernel2d")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("kernel2d"))
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -402,6 +398,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel2d",
       name = mapName
     )
@@ -448,21 +445,14 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = reactive(packModelForDownload(
-                        Model(),
-                        savedMaps(),
-                        includeSavedMaps = input[["includeSavedMaps"]]
-                      )),
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2DKernel"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2DKernel",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
