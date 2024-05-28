@@ -168,11 +168,22 @@ getCoordCenter <- function(upperLeftLat,
 
 # savedMapsExport ----
 
+#' Saved Maps Export Button
+#'
+#' UI of the module
+#'
+#' @param id id of module
 savedMapsExportButton <- function(id){
   ns <- NS(id)
   actionButton(ns("export"), "Export Plots of Saved Maps")
 }
 
+#' Saved Maps Export Server
+#'
+#' Server function of the module
+#'
+#' @param id id of module
+#' @inheritParams savedMapsTab
 savedMapsExportServer <- function(id, savedMaps) {
   moduleServer(
     id,
