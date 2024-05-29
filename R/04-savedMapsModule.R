@@ -44,6 +44,7 @@ savedMapsTab <- function(input, output, session, savedMaps) {
       output[[paste0("thumbnail_", i)]] <-
         renderImage(list(
           src = getThumbnail(rr),
+          alt = "Thumbnail missing ...",
           height = 100,
           width = 160
         ), deleteFile = FALSE)
@@ -56,6 +57,9 @@ savedMapsTab <- function(input, output, session, savedMaps) {
 # Helper functions for saved maps tabs ----
 
 getThumbnail <- function(savedMap) {
+  if (is.null(savedMap$plotFUN)) return(savedMap$file)
+
+  # if thumbnail does not exist, create it
   if (!file.exists(savedMap$file)) {
     dir_path <- dirname(savedMap$file)
 
