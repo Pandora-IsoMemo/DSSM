@@ -1,3 +1,9 @@
+# MpiIsoApp 24.05.7
+
+## Bug Fixes
+- _LocateR_: fix pch value when creating a probability map which caused a warning (#224)
+- _Saved maps_: fix issue when thumbnail was missing in former uploaded saved maps
+
 # MpiIsoApp 24.05.6
 
 ## New Features
