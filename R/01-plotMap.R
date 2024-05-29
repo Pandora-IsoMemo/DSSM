@@ -2023,7 +2023,7 @@ plotDS <- function(XPred,
                     if (showValues == TRUE) {
                       op <- par(family = "mono")
                       titel = paste(capture.output(do.call("rbind", simValues)), collapse = '\n')
-                      legend("bottomright", legend = c(""), pch = 0, title = titel,
+                      legend("bottomright", legend = c(""), pch = NA, title = titel,
                              text.width = strwidth(titel)[1]/2, bty = "n", cex = 2, text.font = 2)
                       par(op)
                     }
