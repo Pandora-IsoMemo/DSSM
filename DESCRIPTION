@@ -59,3 +59,4 @@ Suggests:
   testthat (>= 2.0.0),
   ReSources (>= 0.7.9)
 RoxygenNote: 7.3.1
+URL: https://pandora-isomemo.github.io/DSSM/
