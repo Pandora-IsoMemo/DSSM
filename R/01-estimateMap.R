@@ -42,7 +42,7 @@ utils::globalVariables(c("Longitude", "Latitude", "Longitude2", "Latitude2", "Da
 #' @examples
 #' \dontrun{
 #' #load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", Site = "site")
@@ -50,7 +50,7 @@ utils::globalVariables(c("Longitude", "Latitude", "Longitude2", "Latitude2", "Da
 #' plotMap(model = map)
 #'
 #' # Alternative: use app
-#' shiny::runApp(paste0(system.file(package = "MpiIsoApp"),"/app"))
+#' shiny::runApp(paste0(system.file(package = "DSSM"),"/app"))
 #'
 #' }
 #' @export
@@ -404,7 +404,7 @@ estimateMapWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMapSpread(data = data, Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", iter = 200)
@@ -709,7 +709,7 @@ estimateMapSpreadWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")
@@ -2100,7 +2100,7 @@ invLogit <- function(x){
 #' @examples
 #' \dontrun{
 #' #load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", Site = "site")
@@ -2108,7 +2108,7 @@ invLogit <- function(x){
 #' plotMap(model = map)
 #'
 #' # Alternative: use app
-#' shiny::runApp(paste0(system.file(package = "MpiIsoApp"),"/app"))
+#' shiny::runApp(paste0(system.file(package = "DSSM"),"/app"))
 #'
 #' }
 #' @export
@@ -2338,7 +2338,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")

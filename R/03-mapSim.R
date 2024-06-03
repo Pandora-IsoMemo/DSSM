@@ -307,9 +307,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
         class = "numeric",
         cols = list(
           names = TRUE,
-          createHeader = "MpiIsoApp.doubleHeader.create",
-          updateHeader = "MpiIsoApp.doubleHeader.update",
-          getHeader = "MpiIsoApp.doubleHeader.get"
+          createHeader = "DSSM.doubleHeader.create",
+          updateHeader = "DSSM.doubleHeader.update",
+          getHeader = "DSSM.doubleHeader.get"
         ),
         rows = list(extend = TRUE, editableNames = TRUE, names = TRUE),
       ),
