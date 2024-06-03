@@ -1,3 +1,11 @@
+# DSSM 24.06.0
+
+## New Features
+
+* Renaming of the Package
+* R-CMD check workflow
+* pkgdown Documentation
+
 # MpiIsoApp 24.04.1
 
 ## Bug Fixes
