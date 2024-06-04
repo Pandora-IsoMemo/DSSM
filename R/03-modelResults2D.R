@@ -500,7 +500,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
 

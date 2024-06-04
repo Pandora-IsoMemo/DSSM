@@ -1,3 +1,18 @@
+# DSSM 24.06.0
+
+## New Features
+- replace `rgeos::gCentroids()` with `sf::st_centroid()` because of retired packages `rgeos` and
+  `rgdal` (#228)
+- Renaming of the Package
+- R-CMD check workflow
+- pkgdown Documentation
+
+# MpiIsoApp 24.05.7
+
+## Bug Fixes
+- _LocateR_: fix pch value when creating a probability map which caused a warning (#224)
+- _Saved maps_: fix issue when thumbnail was missing in former uploaded saved maps
+
 # MpiIsoApp 24.05.6
 
 ## New Features

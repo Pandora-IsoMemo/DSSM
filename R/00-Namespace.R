@@ -4,8 +4,9 @@
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
-#'  fillIsoData handleDescription has_internet importDataUI importDataServer prefixSysTime
-#'  previewDataUI previewDataServer tryCatchWithWarningsAndErrors updateNameEntryIfDuplicate
+#'  fillIsoData handleDescription has_internet importDataUI importDataServer importOptions
+#'  prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
+#'  updateNameEntryIfDuplicate
 #' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
@@ -35,8 +36,8 @@
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
-#' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
+#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
