@@ -1,4 +1,4 @@
-library(MpiIsoApp)
+library(DSSM)
 
 # annoyingly calling mclust::Mclust yields an error
 # Error in mclustBIC: could not find function "mclustBIC"
