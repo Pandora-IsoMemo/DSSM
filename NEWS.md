@@ -1,3 +1,9 @@
+# MpiIsoApp 24.04.2
+
+## Updates
+- replace `rgeos::gCentroids()` with `sf::st_centroid()` because of retired packages `rgeos` and
+  `rgdal` (#228)
+
 # MpiIsoApp 24.04.1
 
 ## Bug Fixes
