@@ -1,4 +1,9 @@
 # DSSM - Pandora & IsoMemo spatiotemporal modeling
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/Pandora-IsoMemo/DSSM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Pandora-IsoMemo/DSSM/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initiatives.
 
 ### Access to online versions:
