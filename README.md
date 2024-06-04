@@ -1,16 +1,17 @@
-# Pandora & IsoMemo spatiotemporal modeling
+# DSSM - Pandora & IsoMemo spatiotemporal modeling
 Shiny App for spatiotemporal modeling developed with the Pandora & IsoMemo initiatives.
 
 ### Access to online versions:
 - MAIN versions: 
   - Search: https://pandorasearch.earth/ or https://isomemosearch.com/
-  - Search & Modeling: https://isomemoapp.com/app/iso-memo-app
+  - Search & Modeling: https://isomemoapp.com/app/dssm
 - BETA versions:
-  - Search: https://isomemoapp.com/app/iso-memo-data-app-beta
-  - Search & Modeling: https://isomemoapp.com/app/iso-memo-app-beta
+  - Search: https://isomemoapp.com/app/dssm-data-app-beta
+  - Search & Modeling: https://isomemoapp.com/app/dssm-beta
 
-### Help and installation instructions:
-- https://github.com/Pandora-IsoMemo/iso-app/wiki
+### Documenation and installation instructions:
+- https://pandora-isomemo.github.io/DSSM/
+- https://github.com/Pandora-IsoMemo/DSSM/wiki
 
 ### Release notes:
 - see `NEWS.md`

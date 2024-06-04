@@ -13,3 +13,7 @@
 ^deploy\.sh$
 ^\..*$
 ^\.Rproj\.user$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

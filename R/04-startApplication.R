@@ -7,7 +7,7 @@
 startApplication <- function(port = 4242,
                              launch.browser = getOption("shiny.launch.browser", interactive())) {
   runApp(
-    system.file("app", package = "MpiIsoApp"),
+    system.file("app", package = "DSSM"),
     port = port,
     host = "0.0.0.0",
     launch.browser = launch.browser

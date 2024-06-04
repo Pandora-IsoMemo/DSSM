@@ -46,3 +46,4 @@ src/*
 
 # profiling script
 RScripts/profileApp.R
+docs
