@@ -93,7 +93,7 @@ Estimates spatial spread model (first or latest occurence of event)
 \examples{
 \dontrun{
 # load data
-data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 # estimate model-map
 map <- estimateMapSpread(data = data, Longitude = "longitude",
 Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", iter = 200)

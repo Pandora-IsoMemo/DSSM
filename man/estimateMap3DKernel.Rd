@@ -72,7 +72,7 @@ Estimates spatio-temporal kernel density model
 \examples{
 \dontrun{
 # load data
-data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 # estimate model-map
 map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")
