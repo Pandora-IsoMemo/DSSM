@@ -492,7 +492,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
