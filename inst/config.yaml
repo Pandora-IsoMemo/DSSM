@@ -10,6 +10,6 @@ ckanFileTypes:
 ckanModelTypes:
   - "zip"
   - "dssm"
-githubRepo: "iso-app"        # for import of models
+githubRepo: "DSSM"        # for import of models
 fileExtension: "dssm"      # for download of models
-rPackageName: "MpiIsoApp"       # for download and import of models
+rPackageName: "DSSM"       # for download and import of models

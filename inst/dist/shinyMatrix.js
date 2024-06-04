@@ -1,4 +1,4 @@
-var MpiIsoApp = {
+var DSSM = {
     doubleHeader: {
         create: function createColHeader(tableEl, value){
             var colHeader1 = $("<tr>");

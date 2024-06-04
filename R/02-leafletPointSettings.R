@@ -1037,7 +1037,7 @@ orderBySelection <-
 
 # get Legend HTML String ----
 getSizeLegend <- function(sizeLegend) {
-  path <- system.file("dist", package = "MpiIsoApp")
+  path <- system.file("dist", package = "DSSM")
 
   # remove old icons: remove all files with the pattern "sizeFile"
   removeOldIcons(pattern = "sizeFile", path = path)
@@ -1059,7 +1059,7 @@ getSizeLegend <- function(sizeLegend) {
 }
 
 getSymbolLegend <- function(symbolLegend) {
-  path <- system.file("dist", package = "MpiIsoApp")
+  path <- system.file("dist", package = "DSSM")
 
   # remove old icons: remove all files with the pattern "symbolFile"
   removeOldIcons(pattern = "symbolFile", path = path)
