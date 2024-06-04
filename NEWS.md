@@ -1,10 +1,11 @@
 # DSSM 24.06.0
 
 ## New Features
-
-* Renaming of the Package
-* R-CMD check workflow
-* pkgdown Documentation
+- replace `rgeos::gCentroids()` with `sf::st_centroid()` because of retired packages `rgeos` and
+  `rgdal` (#228)
+- Renaming of the Package
+- R-CMD check workflow
+- pkgdown Documentation
 
 # MpiIsoApp 24.04.1
 

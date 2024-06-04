@@ -35,8 +35,8 @@
 #' @importFrom raster raster getValues terrain writeRaster
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
-#' @importFrom rgeos gCentroid
 #' @importFrom rlang .data
+#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
