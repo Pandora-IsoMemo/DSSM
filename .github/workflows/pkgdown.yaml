@@ -43,8 +43,32 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
+      # Save the generated site to be shared with the next job
+      - name: Upload site artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: site
+          path: docs
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: pkgdown
+    if: github.event_name != 'pull_request'
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download site artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: site
+          path: docs
+
       - name: Deploy to GitHub pages 🚀
-        if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
           clean: false
