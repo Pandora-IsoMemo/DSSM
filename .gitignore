@@ -46,4 +46,7 @@ src/*
 
 # profiling script
 RScripts/profileApp.R
+inst/doc
+/doc/
+/Meta/
 docs

@@ -12,6 +12,7 @@ estimateMap3D(
   Latitude,
   DateOne,
   DateTwo,
+  center = c("Europe", "Pacific"),
   IndependentType = "numeric",
   Site = "",
   DateType = "Interval",
@@ -49,6 +50,8 @@ estimateMap3D(
 \item{DateOne}{character: name of date variable 1 (lower interval point / mean / single point)}
 
 \item{DateTwo}{character: name of date variable 2 (upper interval point / sd / )}
+
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 
 \item{IndependentType}{character: type ("numeric" or "categorical") of independent variable}
 
@@ -105,7 +108,7 @@ during Gibbs-sampling (https://arxiv.org/abs/1205.0310).
 \examples{
 \dontrun{
 # load data
-data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 # estimate model-map
 map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")

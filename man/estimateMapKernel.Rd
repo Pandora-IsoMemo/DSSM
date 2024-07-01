@@ -8,6 +8,7 @@ estimateMapKernel(
   data,
   Longitude,
   Latitude,
+  center = c("Europe", "Pacific"),
   independent = NULL,
   CoordType = "decimal degrees",
   Weighting = NULL,
@@ -26,6 +27,8 @@ estimateMapKernel(
 \item{Longitude}{character: name of longitude variable}
 
 \item{Latitude}{character: name of latitude variable}
+
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 
 \item{independent}{character: name of presence/absence variable (optional)}
 
@@ -54,7 +57,7 @@ Estimates spatial kernel density model
 \examples{
 \dontrun{
 #load data
-data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 # estimate model-map
 map <- estimateMap(data = data, independent = "d13C", Longitude = "longitude",
 Latitude = "latitude", Site = "site")
@@ -62,7 +65,7 @@ Latitude = "latitude", Site = "site")
 plotMap(model = map)
 
 # Alternative: use app
-shiny::runApp(paste0(system.file(package = "MpiIsoApp"),"/app"))
+shiny::runApp(paste0(system.file(package = "DSSM"),"/app"))
 
 }
 }

@@ -228,17 +228,14 @@ modelResultsAssign <- function(input, output, session, isoData) {
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "AssignR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "assign"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "assign",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -248,8 +245,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
-
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
   observe(priority = 100, {

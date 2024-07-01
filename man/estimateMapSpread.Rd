@@ -10,6 +10,7 @@ estimateMapSpread(
   Latitude,
   DateOne,
   DateTwo,
+  center = c("Europe", "Pacific"),
   burnin = 500,
   iter = 2000,
   nChains = 1,
@@ -43,6 +44,8 @@ estimateMapSpread(
 \item{DateOne}{character: name of date variable 1 (lower interval point / mean / single point)}
 
 \item{DateTwo}{character: name of date variable 2 (upper interval point / sd / )}
+
+\item{center}{(character) center to shift data to, either "Europe" or "Pacific"}
 
 \item{burnin}{integer: number of burn-in iterations for Bayesian model (default = 500)}
 
@@ -93,7 +96,7 @@ Estimates spatial spread model (first or latest occurence of event)
 \examples{
 \dontrun{
 # load data
-data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 # estimate model-map
 map <- estimateMapSpread(data = data, Longitude = "longitude",
 Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", iter = 200)

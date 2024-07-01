@@ -18,13 +18,7 @@ modelResultsDiffUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Map"),
-        checkboxInput(ns("useDownload"), label = "Download map"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create new map from existing" = "create",
@@ -37,7 +31,7 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Select Map",
                     choices = c(""),
                     selected = ""),
-        actionButton( ns("load"), "load"),
+        actionButton(ns("load"), "load"),
         ns = ns
         ),
         conditionalPanel(
@@ -289,6 +283,10 @@ modelResultsDiffUI <- function(id, title = ""){
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
           zScaleUI(ns("zScale")),
+          selectInput(ns("contourType"),
+                      label = "Contour type",
+                      choices = c("Filled counter" = "filled.contour",
+                                  "Simple counter" = "contour")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
                        selected = 1),
@@ -376,12 +374,17 @@ modelResultsDiffUI <- function(id, title = ""){
 #' @export
 mapDiff <- function(input, output, session, savedMaps, fruitsData){
   data <- reactiveVal()
+  fileImport <- reactiveVal(NULL)
+  MapDiff <- reactiveVal(NULL)
 
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), c("difference", "user"))
+  values <- reactiveValues(plot = NULL,
+                           predictions = NULL,
+                           set = 0,
+                           upperLeftLongitude = NA,
+                           upperLeftLatitude = NA,
+                           zoom = 50)
 
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("difference", "user"))
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
@@ -393,7 +396,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapNameMain)
-    if (mapName == ""){
+    if (mapName == "") {
       alert("Please provide a map name")
       return()
     }
@@ -402,6 +405,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       model = MapDiff(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "difference",
       name = mapName
     )
@@ -414,23 +418,18 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     updateTextInput(session, "saveMapNameMain", value = "")
   })
 
-  MapDiff <- reactiveVal(NULL)
-
   # MODEL DOWN- / UPLOAD ----
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "OperatoR"
-  downloadModelServer("modelDownload",
-                      dat = savedMaps,
-                      inputs = input,
-                      model = MapDiff,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "difference"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                   dat = savedMaps,
+                   model = MapDiff(),
+                   #savedMaps = savedMaps(),
+                   subFolder = subFolder,
+                   tabId = "difference",
+                   uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -440,7 +439,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -472,7 +471,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    MapDiff(uploadedValues()[[1]][["model"]])
+    MapDiff(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
@@ -555,10 +557,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       XPred <- as.numeric(c(input$meanMap, input$sdMap))
     }
     if (input$userMapType == "4") {
-      if(ElevLowerRight$longitude() <= ElevUpperLeft$longitude()){
+      if (ElevLowerRight$longitude() <= ElevUpperLeft$longitude()) {
         alert("Upper left longitude must be smaller than upper right longitude")
       }
-      if(ElevLowerRight$latitude() >= ElevUpperLeft$latitude()){
+      if (ElevLowerRight$latitude() >= ElevUpperLeft$latitude()) {
         alert("Upper left latitude must be larger than upper right longitude")
       }
 
@@ -567,9 +569,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       pred_data <- data.frame(expand.grid(Longitude, Latitude))
       colnames(pred_data) <- c("x", "y")
 
-      withProgress(
-      elev <- get_elev_point(pred_data,prj = "+proj=longlat +datum=WGS84",
-                             src = "aws")$elevation,
+      withProgress({
+        elev <- get_elev_point(pred_data,prj = "+proj=longlat +datum=WGS84",
+                               src = "aws")$elevation
+      },
       value = 0.5,
       message = "Getting elevation data",
       detail = "This may take a while..."
@@ -580,13 +583,13 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     if (input$userMapType == "5") {
     columnsC <- c(input$MeanC, input$LongitudeC, input$LatitudeC)
     if (any(is.null(columnsC)) ||
-        any(columnsC == "")){
+        any(columnsC == "")) {
       alert("Import is not valid.")
       return()
     } else {
       dat <- fileImport()
-      if(all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))){
-        if(input$SdC %in% colnames(dat)){
+      if (all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))) {
+        if (input$SdC %in% colnames(dat)) {
           XPred <- data.frame(
             Est = dat[, input$MeanC],
             Sd = dat[, input$SdC],
@@ -603,21 +606,21 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         }
     }
     }
-    if(!all(table(XPred$Longitude, XPred$Latitude) == 1)){
+    if (!all(table(XPred$Longitude, XPred$Latitude) == 1)) {
       alert("For each longitude entry all unique latitude entries must be supplied and vice versa")
       return()
     }
     }
     if (input$userMapType == "2") {
-      if(input$customCircles == "multiple"){
+      if (input$customCircles == "multiple") {
         columnsC <- c(input$MeanO, input$SdO, input$LongitudeO, input$LatitudeO, input$RadiusO)
         if (any(is.null(columnsC)) ||
-            any(columnsC == "")){
+            any(columnsC == "")) {
           alert("Import is not valid.")
           return()
         } else {
           dat <- fileImport()
-          if(all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+          if (all(columnsC %in% colnames(dat)) && all(!is.null(colnames(dat)))) {
             XPred <- data.frame(
               Est = dat[, input$MeanO],
               Sd = dat[, input$SdO],
@@ -630,14 +633,15 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
             return()
           }
 
-          if(nrow(XPred) > nrow(na.omit(XPred))){
+          if (nrow(XPred) > nrow(na.omit(XPred))) {
             alert("data contains missing values")
             return()
           }
-          withProgress(
-            coord <- getFullCoordGrid(gridLength = max(XPred$radius) / 10000),
-            value = 80,
-            message = "Generating grid ..."
+          withProgress({
+            coord <- getFullCoordGrid(gridLength = max(XPred$radius) / 10000)
+          },
+          value = 80,
+          message = "Generating grid ..."
           )
           coord <- lapply(1:nrow(XPred), function(x) coord %>%
             filterCoordCircle(
@@ -660,10 +664,11 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
         }
       } else {
-        withProgress(
-          coord <- getFullCoordGrid(gridLength = input$userRadius / 10000),
-          value = 80,
-          message = "Generating grid ..."
+        withProgress({
+          coord <- getFullCoordGrid(gridLength = input$userRadius / 10000)
+        },
+        value = 80,
+        message = "Generating grid ..."
         )
 
         coord <- coord %>%
@@ -683,28 +688,28 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
             XPred <- NULL
           }
       }
-      if(!is.null(XPred)){
+      if (!is.null(XPred)) {
         expanded <- expand.grid(unique(XPred$Longitude), unique(XPred$Latitude))
         colnames(expanded) <- c("Longitude", "Latitude")
         XPred <- left_join(expanded, XPred, by = c("Longitude", "Latitude")) %>% arrange(Latitude, Longitude)
       }
       }
     if (input$userMapType == "3") {
-      if(input$customCircles == "multiple"){
+      if (input$customCircles == "multiple") {
         columnsR <- c(input$MeanR, input$SdR, input$LongitudeL, input$LatitudeL, input$LongitudeU, input$LatitudeU)
 
         if (any(is.null(columnsR)) ||
-            any(columnsR == "")){
+            any(columnsR == "")) {
           alert("Import is not valid.")
           return()
         } else {
           dat <- fileImport()
-          if(all(columnsR %in% colnames(dat)) && all(!is.null(colnames(dat)))){
+          if (all(columnsR %in% colnames(dat)) && all(!is.null(colnames(dat)))) {
             XPred <- data.frame(
             Est = dat[, input$MeanR],
             Sd = dat[, input$SdR],
             upperLeftLong = dat[, input$LongitudeU],
-            upperLeftLat= dat[, input$LatitudeU],
+            upperLeftLat = dat[, input$LatitudeU],
             lowerRightLong = dat[,input$LongitudeL],
             lowerRightLat = dat[,input$LatitudeL]
           )} else {
@@ -732,17 +737,18 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                 XPred[x,"upperLeftLong"]
               )
             )))
-          if(nrow(XPred) > nrow(na.omit(XPred))){
+          if (nrow(XPred) > nrow(na.omit(XPred))) {
             alert("data contains missing values")
             return()
           }
 
-          withProgress(
+          withProgress({
             coord <- getFullCoordGrid(gridLength = mean(c(
                 max(unlist(latLength)), max(unlist(longLength))
-              ) / 2) * 111 / 10000),
-            value = 80,
-            message = "Generating grid ..."
+              ) / 2) * 111 / 10000)
+          },
+          value = 80,
+          message = "Generating grid ..."
           )
           coord <- lapply(1:nrow(XPred), function(x) coord %>%
              filterCoordRectangle(
@@ -788,13 +794,14 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
             )
           ))
 
-        withProgress(
+        withProgress({
           coord <-
             getFullCoordGrid(gridLength = mean(c(
               latLength, longLength
-            ) / 2) * 111 / 10000),
-          value = 80,
-          message = "Generating grid ..."
+            ) / 2) * 111 / 10000)
+        },
+        value = 80,
+        message = "Generating grid ..."
         )
 
         coord <- coord %>%
@@ -816,7 +823,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
           XPred <- NULL
         }
       }
-      if(!is.null(XPred)){
+      if (!is.null(XPred)) {
         expanded <- expand.grid(unique(XPred$Longitude), unique(XPred$Latitude))
         colnames(expanded) <- c("Longitude", "Latitude")
         XPred <- left_join(expanded, XPred, by = c("Longitude", "Latitude")) %>% arrange(Latitude, Longitude)
@@ -837,7 +844,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   observe({
     validate(validInput(MapDiff()))
-    if(input$fixCol == FALSE){
+    if (input$fixCol == FALSE) {
       val <- signif(max(MapDiff()$Sd, na.rm = TRUE), 2)
       updateSliderInput(session, "StdErr", value = signif(val * 5, 2),
                         min = 0, max = signif(val * 5, 2),
@@ -928,7 +935,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   }
 
   rmRow2D <- function(df) {
-    if (nrow(df) > 0) df[- nrow(df), , drop = FALSE]
+    if (nrow(df) > 0) df[-nrow(df), , drop = FALSE]
     else df
   }
 
@@ -1004,44 +1011,44 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     validate(validInput(MapDiff()))
     pointDatOK = pointDatOK()
 
-    if(input$fixCol == FALSE){
+    if (input$fixCol == FALSE) {
       zoom <- values$zoom
 
-      rangey <- - diff(range(MapDiff()$Latitude, na.rm = TRUE)) / 2 +
+      rangey <- -diff(range(MapDiff()$Latitude, na.rm = TRUE)) / 2 +
         max(MapDiff()$Latitude, na.rm = TRUE) + values$up
-      if(!is.na(values$upperLeftLatitude)){
-        rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0) + values$up
+      if (!is.na(values$upperLeftLatitude)) {
+        rangey <- values$upperLeftLatitude + c(-zoom / 2 , 0) + values$up
       } else {
-        rangey <- rangey + c( - zoom / 4, zoom / 4)
+        rangey <- rangey + c( -zoom / 4, zoom / 4)
       }
-      if(input$Centering == "Europe"){
-        rangex <- - diff(range(MapDiff()$Longitude, na.rm = TRUE)) / 2 +
+      if (input$Centering == "Europe") {
+        rangex <- -diff(range(MapDiff()$Longitude, na.rm = TRUE)) / 2 +
           max(MapDiff()$Longitude, na.rm = TRUE) + values$right
-        if(!is.na(values$upperLeftLongitude)){
+        if (!is.na(values$upperLeftLongitude)) {
           rangex <- values$upperLeftLongitude + values$right
           rangex <- rangex + c(0, zoom)
         } else {
-          rangex <- rangex + c( - zoom / 2, zoom / 2)
+          rangex <- rangex + c( -zoom / 2, zoom / 2)
         }
-      } else{
+      } else {
         dataPac <- MapDiff()[, c("Longitude", "Latitude")]
         dataPac$Longitude[MapDiff()$Longitude < -20] <- dataPac$Longitude[MapDiff()$Longitude < -20] + 200
-        dataPac$Longitude[MapDiff()$Longitude >= -20] <- (- 160 + dataPac$Longitude[MapDiff()$Longitude >= -20])
-        rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
+        dataPac$Longitude[MapDiff()$Longitude >= -20] <- (-160 + dataPac$Longitude[MapDiff()$Longitude >= -20])
+        rangex <- -diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
           max(dataPac$Longitude, na.rm = TRUE) + values$right
-        if(!is.na(values$upperLeftLongitude)){
-          rangex <- values$upperLeftLongitude+ values$right
-          if(rangex < -20) rangex <- rangex + 200
-          if(rangex >= -20) rangex <- rangex - 160
+        if (!is.na(values$upperLeftLongitude)) {
+          rangex <- values$upperLeftLongitude + values$right
+          if (rangex < -20) rangex <- rangex + 200
+          if (rangex >= -20) rangex <- rangex - 160
           rangex <- rangex + c(0, zoom)
         } else {
-          rangex <- rangex + c( - zoom / 2, zoom / 2)
+          rangex <- rangex + c( -zoom / 2, zoom / 2)
         }
         }
-      if(rangex[2] > 180){
+      if (rangex[2] > 180){
         rangex <- c(180 - zoom, 180)
       }
-      if(rangex[1] < -180){
+      if (rangex[1] < -180){
         rangex <- c(-180, -180 + zoom)
       }
       if(rangey[2] > 90){
@@ -1076,6 +1083,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              estQuantile = zSettings$Quantile,
              rangez = zSettings$range,
              showModel = zSettings$showModel,
+             contourType = input$contourType,
              colors = input$Colours,
              ncol = values$ncol,
              centerMap = input$Centering,
@@ -1116,12 +1124,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(plot = NULL, predictions = NULL,
-                           set = 0,
-                           upperLeftLongitude = NA,
-                           upperLeftLatitude = NA,
-                           zoom = 50)
-
   output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
@@ -1138,7 +1140,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
-  fileImport <- reactiveVal(NULL)
   observe({
     # reset model
     if (length(importedDat()) == 0 ||  is.null(importedDat()[[1]])) fileImport(NULL)
@@ -1147,7 +1148,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     data <- importedDat()[[1]]
     valid <- validateImport(data, showModal = TRUE, minRows = 2)
 
-    if (!valid){
+    if (!valid) {
       showNotification("Import is not valid.")
       fileImport(NULL)
     } else {

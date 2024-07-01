@@ -292,7 +292,7 @@ dataExplorerServer <- function(id) {
                  importedData <- importDataServer("localData",
                                                   defaultSource = config()[["defaultSourceData"]],
                                                   ckanFileTypes = config()[["ckanFileTypes"]],
-                                                  rPackageName = config()[["rPackageName"]])
+                                                  options = importOptions(rPackageName = config()[["rPackageName"]]))
 
                  observeEvent(importedData(), {
                    req(length(importedData()) > 0)

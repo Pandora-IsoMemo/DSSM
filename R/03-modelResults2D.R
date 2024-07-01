@@ -18,13 +18,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
@@ -81,13 +75,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        label = "Smooth type",
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
-          conditionalPanel(
-            condition = "input.SplineType == '1'",
-            checkboxInput(inputId = ns("correctionPac"),
-                        label = "Border correction for pacific",
-                        value = FALSE),
-            ns = ns
-          ),
+          dataCenterUI(ns),
           sliderInput(inputId = ns("Smoothing"),
                       label = "Number of basis functions",
                       min = 20, max = 1000, value = 70, step = 10),
@@ -238,6 +226,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
         radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                       choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -411,11 +400,20 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #'
 #' @export
 modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "localAvg")
+  observeSavedMaps(input, output, session, savedMaps, type = "localAvg")
 
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  values <- reactiveValues(
+    plot = NULL,
+    predictions = NULL,
+    up = 0,
+    right = 0,
+    set = 0,
+    upperLeftLongitude = NA,
+    upperLeftLatitude = NA,
+    zoom = 50
+  )
+  Model <- reactiveVal(NULL)
+  fileImport <- reactiveVal(NULL)
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -428,6 +426,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "localAvg",
       name = mapName
     )
@@ -475,26 +474,23 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   observeEvent(input$Bayes, {
     if (input$Bayes) alert(alertBayesMessage()) else NULL
   })
 
-  Model <- reactiveVal(NULL)
-
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "AverageR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -504,7 +500,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
 
@@ -540,7 +536,10 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
@@ -566,6 +565,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       tryCatchWithWarningsAndErrors()
 
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   Independent <- reactive({
@@ -908,17 +908,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$plot <- recordPlot()
   })
 
-  values <- reactiveValues(
-    plot = NULL,
-    predictions = NULL,
-    up = 0,
-    right = 0,
-    set = 0,
-    upperLeftLongitude = NA,
-    upperLeftLatitude = NA,
-    zoom = 50
-  )
-
   output$centerEstimate <- renderUI({
     centerEstimate$text()
   })
@@ -993,7 +982,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   ## Import Data ----
   importedDat <- importDataServer("importData")
 
-  fileImport <- reactiveVal(NULL)
   observe({
     # reset model
     Model(NULL)

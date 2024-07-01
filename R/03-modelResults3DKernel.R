@@ -17,13 +17,7 @@ modelResults3DKernelUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -131,6 +125,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           ns = ns),
           sliderInput(inputId = ns("nSim"), label = "Number of simulations (for ci/se prediction)",
           min = 5, max = 100, step = 1, value = 10),
+          dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
                         value = FALSE, width = "100%"),
@@ -242,6 +237,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
                        choices = c("Map", "Time course", "Time intervals by temporal group or cluster"),
@@ -498,11 +494,7 @@ modelResults3DKernelUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "kernel3d")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("kernel3d"))
 
   Model <- reactiveVal()
 
@@ -517,6 +509,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel3d",
       name = mapName
     )
@@ -560,20 +553,19 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelTimeR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model3DKernel"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model3DKernel",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -583,9 +575,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
-
-
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -619,7 +609,10 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
@@ -671,6 +664,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         message = "Generating spatio-temporal kernel density"
       )
       Model(model)
+      updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   Independent <- reactive({

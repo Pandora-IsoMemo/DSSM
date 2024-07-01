@@ -19,13 +19,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
@@ -96,6 +90,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Possible range for clusters",
                         value = c(2,10), min = 2, max = 50, step = 1)
           ),
+          dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
                         value = FALSE, width = "100%"),
@@ -197,6 +192,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
                        choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+          helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -389,11 +385,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
 #' @param fruitsData data for export to FRUITS
 #' @export
 modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "kernel2d")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("kernel2d"))
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -406,6 +398,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "kernel2d",
       name = mapName
     )
@@ -444,23 +437,22 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     )
   })
 
+  outputHelpTextCentering(input, output, session)
+
   Model <- reactiveVal(NULL)
 
   # MODEL DOWN- / UPLOAD ----
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "KernelR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2DKernel"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2DKernel",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -470,7 +462,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
 
@@ -506,7 +498,10 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
@@ -550,6 +545,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       message = "Generating local kernel density model"
     )
     Model(model)
+    updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
   zoomFromModel <- reactiveVal(50)

@@ -7,6 +7,61 @@
 - R-CMD check workflow
 - pkgdown Documentation
 
+# MpiIsoApp 24.05.7
+
+## Bug Fixes
+- _LocateR_: fix pch value when creating a probability map which caused a warning (#224)
+- _Saved maps_: fix issue when thumbnail was missing in former uploaded saved maps
+
+# MpiIsoApp 24.05.6
+
+## New Features
+- _Saved maps_:
+  - option to download a zip file with all plots in a chosen format (#2)
+  - removing option to download saved maps with the current model object, since files become too large
+    and upload takes too long
+
+# MpiIsoApp 24.05.5
+
+## New Features
+- _Saved maps_: export and import of saved maps is now included within the features to down- and
+  upload models (#2)
+  - optionally, the list of saved models can be downloaded
+  - upload checks for a list of saved maps and loads it, if it is available
+
+# MpiIsoApp 24.05.4
+## Bug Fixes
+- fix issue with warning whenever using a bayesian model (#199)
+
+# MpiIsoApp 24.05.3
+
+## Bug Fixes
+- fix for the spread model which was not running if two dates were specified (#218)
+- fixes the case when we have missing longitude or latitude data in the data set (#219)
+
+# MpiIsoApp 24.05.2
+
+## New Features
+- _Interactive Map_: 
+  - possibility of selecting a specific point colour when no point colour variable was 
+    selected ("Fixed" point colour) (#174)
+  - button to apply settings for the style of points
+
+# MpiIsoApp 24.05.1
+
+## New Features
+- define the center of coordinates before modelling in the _Modeling_ tabs. This shifts data to
+respective longitudes (#196)
+  - if "0th meridian" longitudes are transposed to the range (-180, 180)
+  - if "180th meridian" longitudes are transposed to the range (0, 360)
+- a vignette was added to the package describing features for the processing of coordinate data (#196)
+
+# MpiIsoApp 24.05.0
+
+## New Features
+- _OperatoR tab_:
+  - option to create contour maps from saved maps (#202)
+
 # MpiIsoApp 24.04.1
 
 ## Bug Fixes
