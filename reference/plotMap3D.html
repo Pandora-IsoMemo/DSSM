@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">DSSM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.06.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.06.0.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,6 +20,12 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/process_coordinate_data.html">Processing of Coordinate Data</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -57,6 +63,7 @@
   rangex <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">Longitude</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,
   rangey <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">Latitude</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,
   rangez <span class="op">=</span> <span class="cn">NULL</span>,
+  contourType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"filled.contour"</span>, <span class="st">"contour"</span><span class="op">)</span>,
   limitz <span class="op">=</span> <span class="st">"none"</span>,
   centerMap <span class="op">=</span> <span class="st">"Europe"</span>,
   addU <span class="op">=</span> <span class="fl">0</span>,
@@ -152,6 +159,10 @@
 
 <dt>rangez</dt>
 <dd><p>range of estimated values (z axis limits)</p></dd>
+
+
+<dt>contourType</dt>
+<dd><p>one of "filled.contour" or "contour"</p></dd>
 
 
 <dt>limitz</dt>
@@ -352,7 +363,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by INWT.</p>
+  <p></p><p>Developed by Marcus Gross, Antonia Runge.</p>
 </div>
 
 <div class="pkgdown-footer-right">
