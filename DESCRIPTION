@@ -23,6 +23,7 @@ Imports:
     elevatr (>= 0.4.2),
     futile.logger,
     jsonlite (>= 1.5),
+    gdistance (>= 1.6),
     geometry (>= 0.4.0),
     ggplot2,
     grDevices (>= 3.4.4),

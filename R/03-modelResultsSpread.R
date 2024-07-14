@@ -234,7 +234,8 @@ modelResultsSpreadUI <- function(id, title = ""){
           helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
-                       choices = c("Spread", "Speed", "Minima/Maxima"),
+                       choices = c("Spread", "Speed", "Minima/Maxima",
+                                   "Cost-Surface", "Shortest-Path"),
                        selected = "Spread"),
           conditionalPanel(
             ns = ns,
@@ -249,6 +250,28 @@ modelResultsSpreadUI <- function(id, title = ""){
                           label = "Minima/Maxima on:", inline = TRUE,
                          choices = list("Boxplot" = 1, "Map" = 2),
                          selected = 1)
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Cost-Surface' || input.mapType == 'Shortest-Path'",
+            tags$strong("Origin:"),
+            numericInput(inputId = ns("OLat"),
+                         label = "Origin Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("OLong"),
+                         label = "Origin Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Shortest-Path'",
+            tags$strong("Destination:"),
+            numericInput(inputId = ns("DestLat"),
+                         label = "Destination Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("DestLong"),
+                         label = "Destination Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
           ),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -435,7 +458,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert("Please provide a map name")
       return()
     }
-
     map <- createSavedMap(
       model = Model(),
       predictions = values$predictions,
@@ -894,6 +916,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         nMin = input$nMin,
         minDist = input$minDist,
         showMinOnMap = input$showMinOnMap,
+        OLat = input$OLat,
+        OLong = input$OLong,
+        DestLat = input$DestLat,
+        DestLong = input$DestLong,
         ...
       ) %>%
         tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
