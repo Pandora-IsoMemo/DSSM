@@ -255,10 +255,10 @@ modelResultsSpreadUI <- function(id, title = ""){
             condition = "input.mapType == 'Cost-Surface' || input.mapType == 'Shortest-Path'",
             tags$strong("Origin:"),
             numericInput(inputId = ns("OLat"),
-                         label = "Origin Latitude",
+                         label = "Latitude",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("OLong"),
-                         label = "Origin Longitude",
+                         label = "Longitude",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             ns = ns
           ),
@@ -266,10 +266,10 @@ modelResultsSpreadUI <- function(id, title = ""){
             condition = "input.mapType == 'Shortest-Path'",
             tags$strong("Destination:"),
             numericInput(inputId = ns("DestLat"),
-                         label = "Destination Latitude",
+                         label = "Latitude",
                          min = -90, max = 90, value = c(-90), width = "80%"),
             numericInput(inputId = ns("DestLong"),
-                         label = "Destination Longitude",
+                         label = "Longitude",
                          min = -180, max = 180, value = c(-180), width = "80%"),
             ns = ns
           ),
@@ -622,6 +622,22 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     }
   })
 
+  observe({
+    validate(validInput(Model()))
+    updateNumericInput(session, "OLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                         0.35 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                  min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "OLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                        0.35 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                 min(Model()$data$Latitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                            0.65 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                     min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                           0.65 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                    min(Model()$data$Latitude, na.rm = TRUE))))
+  })
+
   output$move <- renderUI({
     moveButtons(ns = session$ns)
   })
@@ -931,8 +947,12 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     withProgress({
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
-    values$predictions <- res$XPred
-    values$plot <- recordPlot()
+    if (is.character(res) & length(res) == 1){
+      alert(res)
+    } else{
+      values$predictions <- res$XPred
+      values$plot <- recordPlot()
+    }
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,

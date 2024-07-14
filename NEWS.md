@@ -1,3 +1,9 @@
+# MpiIsoApp 24.07.1
+
+## New Features
+- _Cost Surface and least-cost path for SpreadR_:
+  - Estimate cost surface and shortest path using the gdistance package
+
 # MpiIsoApp 24.05.2
 
 ## New Features

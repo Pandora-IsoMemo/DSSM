@@ -529,10 +529,12 @@ plotMap <- function(model,
       cost_speed <- getCostSpeed(XPred, MinMax = MinMax)
       cost_surface <- accCost(cost_speed, origin)
       XPred <- XPred %>% arrange(desc(XPred$Latitude), XPred$Longitude)
-      XPred$Est <- cost_surface@data@values
+      XPred$Est2 <- cost_surface@data@values
+      XPred$Est[!is.na(XPred$Est)] <- XPred$Est2[!is.na(XPred$Est)]
+      XPred$Est2 <- NULL
       XPred$Sd <- 0
       XPred <- XPred %>% arrange(XPred$Latitude, XPred$Longitude)
-      rangez <- c(0, max(XPred$Est, na.rm = TRUE))
+      rangez <- c(0, max(XPred$Est[XPred$Est < Inf & XPred$Est > -Inf], na.rm = TRUE))
     }
   }
   if(mapType == "Shortest-Path"){
@@ -811,7 +813,11 @@ plotMap <- function(model,
     if(setAxisLabels){
       main = mainLabel
     } else {
-      main = independent
+      if(mapType != "Cost-Surface"){
+        main = independent
+      } else {
+        main = "Cost"
+      }
     }
   }
 
@@ -821,7 +827,11 @@ plotMap <- function(model,
     if(setAxisLabels){
       mainS = scLabel
     } else {
-      mainS = independent
+      if(mapType != "Cost-Surface"){
+        mainS = independent
+      } else {
+        mainS = "Cost"
+      }
     }
   }
 
@@ -936,11 +946,22 @@ plotMap <- function(model,
                            cex = fontSize * 1.5, col = fontCol, family = fontType)
                     }
                     if(mapType == "Shortest-Path"){
-                      lines(AtoB, lwd = 3)
-                      text(OLong, OLat, "Origin")
-                      text(DestLong, DestLat, "Origin")
-
+                      lines(AtoB, lwd = 3, col = "red")
+                      text(OLong, OLat, "Origin", pos = 4)
+                      text(DestLong, DestLat, "Destination", pos = 4)
+                      points(x = c(OLong, DestLong),
+                             y = c(OLat, DestLat),
+                             cex = pointDat$pointSize,
+                             pch = 16, col = "red")
                     }
+                    if(mapType == "Cost-Surface"){
+                      text(OLong, OLat, "Origin", pos = 4)
+                      points(x = c(OLong),
+                             y = c(OLat),
+                             cex = pointDat$pointSize,
+                             pch = 16, col = "red")
+                    }
+
                     if(!is.null(textLabels)){
                       if(centerMap != "Europe"){
                         text(dataPac$Latitude ~ dataPac$Longitude,
