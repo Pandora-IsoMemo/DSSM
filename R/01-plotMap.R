@@ -353,7 +353,7 @@ plotMap <- function(model,
                         resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
-    Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], newdata = XPred[, 1:2], newdata.guaranteed=TRUE))
+    Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], x = XPred[, 1:2]))
     if(estType == "Mean"){
       Est <- rowMeans(Predictions)
     }
@@ -1426,8 +1426,8 @@ plotMap3D <- function(model,
   if(GAM == TRUE){
     Predictions <- sapply(1:length(model$model),
                           function(x) predict(model$model[[x]],
-                                              newdata = data.frame(Longitude = XPred$Longitude, Latitude = XPred$Latitude,
-                                                         Date2 = (time - mean(data$Date)) / sd(data$Date)), newdata.guaranteed=TRUE))
+                                              x = cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude,
+                                                         Date2 = (time - mean(data$Date)) / sd(data$Date))))
 
     if(estType == "Mean"){
       Est <- rowMeans(Predictions)
@@ -2454,7 +2454,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   }
   if (GAM == TRUE){
     EstTemp <- sapply(1:length(model$model), function(x) predict(model$model[[x]],
-                                                                 newdata =  data.frame(Longitude = XPred$Longitude, Latitude = XPred$Latitude, Date2 = XPred$Date2), newdata.guaranteed=TRUE))
+                                                                 x =  cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude, Date2 = XPred$Date2)))
 
     qs <- apply(EstTemp, 1, quantile, c(1 - pnorm(sdValue), pnorm(sdValue)), names = FALSE)
 
