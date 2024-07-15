@@ -17,13 +17,7 @@ modelResults3DUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -491,11 +485,7 @@ modelResults3DUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "temporalAvg")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("temporalAvg"))
 
   observeEvent(input$saveMap, {
     logDebug("modelResults3D: Button 'Save map' clicked")
@@ -509,6 +499,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "temporalAvg",
       name = mapName
     )
@@ -565,19 +556,16 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   # MODEL DOWN- / UPLOAD ----
 
-  subFolder <- "TimeR"
   uploadedNotes <- reactiveVal(NULL)
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model3D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+  subFolder <- "TimeR"
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model3D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -587,7 +575,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
 
@@ -625,7 +613,10 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     logDebug("modelResults3D: Update model after model import")
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 

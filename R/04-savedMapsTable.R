@@ -24,6 +24,6 @@ mapTable <- function(maps, ns) {
   )
 }
 
-jsSetInputValue<- function(id, value) {
+jsSetInputValue <- function(id, value) {
   paste0("Shiny.setInputValue('", id, "', {i:", value, ", rand: Math.random()});")
 }

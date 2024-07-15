@@ -18,13 +18,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = if (!asFruitsTab) c("Database" = "db", "Upload file" = "file", "Saved map" = "model") else c("Database" = "db"),
@@ -406,11 +400,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #'
 #' @export
 modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "localAvg")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = "localAvg")
 
   values <- reactiveValues(
     plot = NULL,
@@ -436,6 +426,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "localAvg",
       name = mapName
     )
@@ -492,17 +483,14 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   # MODEL DOWN- / UPLOAD ----
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "AverageR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "model2D"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "model2D",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -512,7 +500,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
 
@@ -548,7 +536,10 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 

@@ -99,6 +99,7 @@ batchModeling <- function(input, output, session, data, plotFun, modelParams, ty
                 model = Model(),
                 predictions = values$predictions,
                 plot = values$plot,
+                plotFUN = plotFun(),
                 type = type,
                 name = mapName
             )

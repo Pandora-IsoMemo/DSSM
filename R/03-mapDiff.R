@@ -18,13 +18,7 @@ modelResultsDiffUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Map"),
-        checkboxInput(ns("useDownload"), label = "Download map"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create new map from existing" = "create",
@@ -37,7 +31,7 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Select Map",
                     choices = c(""),
                     selected = ""),
-        actionButton( ns("load"), "load"),
+        actionButton(ns("load"), "load"),
         ns = ns
         ),
         conditionalPanel(
@@ -390,11 +384,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                            upperLeftLatitude = NA,
                            zoom = 50)
 
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), c("difference", "user"))
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("difference", "user"))
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
@@ -415,6 +405,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       model = MapDiff(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "difference",
       name = mapName
     )
@@ -431,17 +422,14 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "OperatoR"
-  downloadModelServer("modelDownload",
-                      dat = savedMaps,
-                      inputs = input,
-                      model = MapDiff,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "difference"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                   dat = savedMaps,
+                   model = MapDiff(),
+                   #savedMaps = savedMaps(),
+                   subFolder = subFolder,
+                   tabId = "difference",
+                   uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -451,7 +439,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -483,7 +471,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    MapDiff(uploadedValues()[[1]][["model"]])
+    MapDiff(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 
