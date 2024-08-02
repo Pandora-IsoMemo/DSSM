@@ -39,7 +39,7 @@
 #' @importFrom rlang .data
 #' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
 #' @importFrom shinycssloaders withSpinner
-#' @importFrom shinyjs alert runjs useShinyjs hide show
+#' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans

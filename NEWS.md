@@ -1,3 +1,8 @@
+# DSSM 24.08.0
+
+## New Features
+- adds option to TimeR and KernelTimeR to download a zipm file that can be uploaded in MapR (#203)
+
 # DSSM 24.06.0
 
 ## New Features

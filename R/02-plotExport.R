@@ -63,20 +63,36 @@ plotExport <- function(input,
                                choices = c(
                                  "Gif + graphic files" = "gifAndZip",
                                  "Graphic files" = "onlyZip",
-                                 "Gif file" = "onlyGif"))),
+                                 "Gif file" = "onlyGif",
+                                 "MapR files" = "mapr"))),
             column(width = 4,
                    conditionalPanel(
-                     condition = "input.typeOfSeries != 'onlyZip'",
+                     condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
                      ns = session$ns,
                      numericInput(session$ns("fpsGif"), "Frames per second", value = 2, min = 1, max = 10)
-                   )),
-            column(width = 4,
-                   style = "margin-top: 1.5em;",
+                   ),
                    conditionalPanel(
-                     condition = "input.typeOfSeries != 'onlyZip'",
+                     condition = "input.typeOfSeries == 'mapr'",
                      ns = session$ns,
+                     textInput(session$ns("mapr-group"), "Group", value = "Groupname"),
+                     textInput(session$ns("mapr-measure"), "Measure", value = "Mean")
+                   )
+                   ),
+                   conditionalPanel(
+                     condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
+                     ns = session$ns,
+                     column(width = 4, style = "margin-top: 2em;",
                      checkboxInput(session$ns("reverseGif"), "Reverse time order")
-                   ))
+                     )
+                   ),
+                   conditionalPanel(
+                     condition = "input.typeOfSeries == 'mapr'",
+                     ns = session$ns,
+                     column(width = 4,
+                     textInput(session$ns("mapr-variable"), "Variable", value = "Variable"),
+                     textInput(session$ns("mapr-measureunit"), "Measure unit", value = "Measure Unit")
+                   )
+                   )
             )
         )
       ),
@@ -84,6 +100,15 @@ plotExport <- function(input,
       easyClose = TRUE
     ))
   })
+
+  observe({
+  if(any(c(input$`mapr-group`,input$`mapr-variable`,input$`mapr-measure`,input$`mapr-measureunit`) == "") && input$typeOfSeries == "mapr"){
+    shinyjs::disable("exportExecute")
+  } else {
+  shinyjs::enable("exportExecute")
+  }
+  }) %>% bindEvent(c(input$typeOfSeries,input$`mapr-group`,input$`mapr-variable`,input$`mapr-measure`,input$`mapr-measureunit`),
+                  ignoreInit = TRUE)
 
   output$plot <- renderPlot({
     replayPlot(plotObj())
@@ -104,8 +129,14 @@ plotExport <- function(input,
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      nameFile(plotType = modelType, exportType = exportType(),
+      filename <- nameFile(plotType = modelType, exportType = exportType(),
                isTimeSeries = isTimeSeriesInput(), typeOfSeries = input$typeOfSeries)
+      if(input$typeOfSeries == "mapr"){
+        # Add .zipm extension for mapr
+        paste0(filename,"m")
+      } else {
+        filename
+      }
     },
     content = function(file){
       if (!isTimeSeriesInput()) {
@@ -118,6 +149,14 @@ plotExport <- function(input,
           suppressWarnings() %>%
           tryCatchWithWarningsAndErrors(errorTitle = "Export of graphic faild")
       } else {
+        if(input$typeOfSeries == "mapr"){
+          exportMapRFiles(file = file,
+                          plotFun = plotFun(),
+                          Model = Model(),
+                          input = input) %>%
+            suppressWarnings() %>%
+            tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics faild")
+        } else {
         exportGraphicSeries(exportType = exportType(),
                             file = file,
                             width = input$width,
@@ -134,6 +173,7 @@ plotExport <- function(input,
                             fpsGif = input$fpsGif) %>%
           suppressWarnings() %>%
           tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics faild")
+        }
       }
     }
   )
@@ -177,6 +217,92 @@ getFileExt <- function(exportType, isTimeSeries, typeOfSeries, isCollection = FA
 
   if (typeOfSeries == "onlyGif") return(".gif") else return(".zip")
 }
+
+exportMapRFiles <- function(file, plotFun, Model, input) {
+  withProgress(message = "Generating series ...", value = 0, {
+    times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
+
+    # create all file names to be put into a zip
+    figFileNames <- sapply(times,
+                           function(i) {
+                             paste0("data","/",
+                                    gsub(" ", "", input$`mapr-group`),"/",
+                                    gsub(" ", "", input$`mapr-variable`),"/",
+                                    gsub(" ", "", input$`mapr-measure`),"/",
+                                    i,".png")
+                           })
+
+    lapply(unique(dirname(figFileNames)), dir.create, recursive = TRUE, showWarnings = FALSE)
+
+    for (i in times) {
+      incProgress(1 / length(times), detail = paste("time: ", i))
+      figFilename <- figFileNames[[which(times == i)]]
+
+      # save desired file type
+      writeGraphics(exportType = "png",
+                    plot = plotFun(model = Model, time = i),
+                    filename = figFilename,
+                    width = input$width,
+                    height = input$height)
+    }
+
+    json_list <- create_image_list_json(input, figFileNames, times)
+
+    # Save JSON content to a temporary file
+    json_file <- file.path("image_list.json")
+    jsonlite::write_json(json_list, json_file, pretty = TRUE)
+
+    zip(file, files = c(json_file, figFileNames))
+
+    # Clean up the temporary files
+    file.remove(figFileNames)
+    file.remove(json_file)
+    unlink(file.path("data"), recursive = TRUE)
+  })
+}
+
+create_image_list_json <- function(input, figFileNames, times){
+  image_list <- list(
+    Selections = list(
+      list(
+        Group = input$`mapr-group`,
+        Group_DOI = 1,
+        Variable = list(
+          list(
+            Variable_name = input$`mapr-variable`,
+            Variable_DOI = 1,
+            Measure = list(
+              list(
+                Measure_name = input$`mapr-measure`,
+                Measure_unit = input$`mapr-measureunit`,
+                images = list(
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+
+  for (image in figFileNames){
+
+    time <- as.character(times[[which(figFileNames == image)]])
+
+    single_image <- list(
+      x_display_value = time,
+      file_type = "png",
+      location_type = "local",
+      address = gsub("data/","",image)
+    )
+
+    # Add the images to the list
+    image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images <- append(image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images, list(single_image))
+  }
+
+  image_list
+}
+
 
 exportGraphicSeries <- function(exportType, file,
                                 width, height, plotFun, Model, predictions,
