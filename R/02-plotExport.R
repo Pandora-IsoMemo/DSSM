@@ -186,20 +186,23 @@ nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
   fileName <- getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i)
 
   # set file extension
-  ## file extension for single plots: from user input 'exportType'
   if (!isTimeSeries || !is.null(i)) {
+    ## file extension for single plots: from user input 'exportType'
+
     # use 'tif' instead of 'geo-tiff'
-    if (exportType == 'geo-tiff') exportType <- "tif"
-
-    fileExt <- paste0(".", exportType)
+    if (exportType == 'geo-tiff') {
+      fileExt <- "tif"
+    } else {
+      fileExt <- exportType
+    }
+  } else {
+    ## file extension for series of plots: from user input 'typeOfSeries'
+    fileExt <- switch(typeOfSeries,
+                      gifAndZip = "zip",
+                      onlyZip = "zip",
+                      onlyGif = "gif",
+                      mapr = "zipm")
   }
-
-  ## file extension for series of plots: from user input 'typeOfSeries'
-  fileExt <- switch(typeOfSeries,
-                    gifAndZip = "zip",
-                    onlyZip = "zip",
-                    onlyGif = "gif",
-                    mapr = "zipm")
 
   # return file name with extension
   paste0(fileName, ".", fileExt)
