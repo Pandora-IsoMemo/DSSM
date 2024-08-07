@@ -129,14 +129,8 @@ plotExport <- function(input,
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      filename <- nameFile(plotType = modelType, exportType = exportType(),
+      nameFile(plotType = modelType, exportType = exportType(),
                isTimeSeries = isTimeSeriesInput(), typeOfSeries = input$typeOfSeries)
-      if(input$typeOfSeries == "mapr"){
-        # Add .zipm extension for mapr
-        paste0(filename,"m")
-      } else {
-        filename
-      }
     },
     content = function(file){
       if (!isTimeSeriesInput()) {
@@ -147,15 +141,15 @@ plotExport <- function(input,
                             plotObj = plotObj(),
                             predictions = predictions()) %>%
           suppressWarnings() %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Export of graphic faild")
+          tryCatchWithWarningsAndErrors(errorTitle = "Export of graphic failed")
       } else {
-        if(input$typeOfSeries == "mapr"){
+        if (input$typeOfSeries == "mapr") {
           exportMapRFiles(file = file,
                           plotFun = plotFun(),
                           Model = Model(),
                           input = input) %>%
             suppressWarnings() %>%
-            tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics faild")
+            tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics failed")
         } else {
         exportGraphicSeries(exportType = exportType(),
                             file = file,
@@ -172,7 +166,7 @@ plotExport <- function(input,
                             reverseGif = input$reverseGif,
                             fpsGif = input$fpsGif) %>%
           suppressWarnings() %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics faild")
+          tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics failed")
         }
       }
     }
@@ -188,9 +182,30 @@ plotExport <- function(input,
 #' @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
 #' @param i (numeric) number of i-th plot of a series of plots
 nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL) {
-  paste0(getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i),
-         getFileExt(exportType = exportType, isTimeSeries = isTimeSeries,
-                    typeOfSeries = typeOfSeries, isCollection = is.null(i)))
+  # set file name
+  fileName <- getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i)
+
+  # set file extension
+  if (!isTimeSeries || !is.null(i)) {
+    ## file extension for single plots: from user input 'exportType'
+
+    # use 'tif' instead of 'geo-tiff'
+    if (exportType == 'geo-tiff') {
+      fileExt <- "tif"
+    } else {
+      fileExt <- exportType
+    }
+  } else {
+    ## file extension for series of plots: from user input 'typeOfSeries'
+    fileExt <- switch(typeOfSeries,
+                      gifAndZip = "zip",
+                      onlyZip = "zip",
+                      onlyGif = "gif",
+                      mapr = "zipm")
+  }
+
+  # return file name with extension
+  paste0(fileName, ".", fileExt)
 }
 
 
@@ -201,21 +216,6 @@ getFileName <- function(plotType, isTimeSeries, i = NULL) {
   if (isTimeSeries && !is.null(i)) return(paste0(plotType, "_", i))
 
   plotType
-}
-
-
-#' Get File Ext
-#'
-#' Get file extension
-#'
-#' @param isCollection (logical) TRUE if this is the container file, FALSE if this is an element file
-#' @inheritParams nameFile
-getFileExt <- function(exportType, isTimeSeries, typeOfSeries, isCollection = FALSE) {
-  if (exportType == 'geo-tiff') exportType <- "tif"
-
-  if (!isTimeSeries || !isCollection) return(paste0(".", exportType))
-
-  if (typeOfSeries == "onlyGif") return(".gif") else return(".zip")
 }
 
 exportMapRFiles <- function(file, plotFun, Model, input) {

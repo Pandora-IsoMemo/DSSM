@@ -7,7 +7,8 @@
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importOptions
 #'  prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
 #'  updateNameEntryIfDuplicate
-#' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
+#' @importFrom dplyr "%>%" arrange distinct filter group_by group_by_at left_join select summarise
+#'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
 #' @importFrom geometry convhulln inhulln
@@ -26,7 +27,6 @@
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magick image_animate image_join image_read image_read_pdf image_read_svg image_write
-#' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te

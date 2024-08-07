@@ -28,7 +28,6 @@ Imports:
     ks (>= 1.0.0),
     leaflet (>= 1.1.0),
     magick,
-    magrittr (>= 1.5),
     maps (>= 3.2.0),
     mapview,
     MASS (>= 7.3.5),
