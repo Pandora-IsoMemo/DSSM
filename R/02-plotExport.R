@@ -64,7 +64,13 @@ plotExport <- function(input,
                                  "Gif + graphic files" = "gifAndZip",
                                  "Graphic files" = "onlyZip",
                                  "Gif file" = "onlyGif",
-                                 "MapR files" = "mapr"))),
+                                 "MapR files" = "mapr")),
+                   conditionalPanel(
+                     condition = "input.typeOfSeries == 'mapr'",
+                     ns = session$ns,
+                     helpText("MapR only supports .png export. Ignoring 'Filetype' input.")
+                   )
+                   ),
             column(width = 4,
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
