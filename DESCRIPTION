@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 24.08.0
+Version: 24.08.1
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut"))
@@ -30,6 +30,7 @@ Imports:
     magick,
     maps (>= 3.2.0),
     mapview,
+    markdown,
     MASS (>= 7.3.5),
     mclust,
     mgcv (>= 1.8.23),

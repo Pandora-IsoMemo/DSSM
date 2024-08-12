@@ -28,6 +28,7 @@
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magick image_animate image_join image_read image_read_pdf image_read_svg image_write
 #' @importFrom maps map map.scale
+#' @importFrom markdown markdownToHTML
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
 #' @importFrom mice mice complete

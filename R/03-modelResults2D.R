@@ -76,9 +76,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
-          sliderInput(inputId = ns("Smoothing"),
-                      label = "Number of basis functions",
-                      min = 20, max = 1000, value = 70, step = 10),
+          smoothingUI(ns, label_slider = "No. of basis functions"),
           radioButtons(inputId = ns("Penalty"),
                       label = "Extrapolation behaviour",
                       choices = c("constant" = "1", "linear" = "2"),
@@ -400,6 +398,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #'
 #' @export
 modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
+  smoothingServer(input, output, session, ns = session$ns)
   observeSavedMaps(input, output, session, savedMaps, type = "localAvg")
 
   values <- reactiveValues(

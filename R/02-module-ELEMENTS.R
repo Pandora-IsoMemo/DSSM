@@ -1,3 +1,53 @@
+## Custom Inputs ----
+
+#' Smoothing UI
+#'
+#' @param ns namespace
+#' @param label_slider label of the slider
+#' @param label_info label of the info button
+#' @param min minimum value of the slider
+#' @param max maximum value of the slider
+#' @param value default value of the slider
+#' @param step step of the slider
+smoothingUI <- function(ns,
+                        label_slider = "No. of basis functions",
+                        label_info = "Basis functions",
+                        min = 20, max = 1000, value = 70, step = 10) {
+  tagList(
+    sliderInput(ns("Smoothing"),
+                label = label_slider,
+                min = min, max = max, value = value, step = step),
+    # info button for more information
+    actionButton(ns("smoothing_info"), label = label_info, icon = icon("info-circle")),
+    tags$br(), tags$br()
+  )
+}
+
+#' Smoothing Server
+#'
+#' @param input shiny input
+#' @param output shiny output
+#' @param session shiny session
+#' @param ns namespace
+#' @param title title of the modal
+smoothingServer <- function(input, output, session, ns,
+                            title = "Number of Basis Functions (Smoothing)") {
+  # Show modal with information about the smoothing
+  observeEvent(input$smoothing_info, {
+    # Convert the markdown file to HTML
+    markdown_html <- markdownToHTML("www/info_basis-functions.md", fragment.only = TRUE)
+
+    showModal(
+      modalDialog(
+        title = title,
+        HTML(markdown_html),  # Include the converted HTML
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      )
+    )
+  })
+}
+
 ## Combined Inputs ----
 
 #' Numeric Input Lat And Long UI
