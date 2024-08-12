@@ -17,6 +17,7 @@ smoothingUI <- function(ns,
     sliderInput(ns("Smoothing"),
                 label = label_slider,
                 min = min, max = max, value = value, step = step),
+    uiOutput(ns("timeBasisFunctionsUI")),
     # info button for more information
     actionButton(ns("smoothing_info"), label = label_info, icon = icon("info-circle")),
     tags$br(), tags$br()
@@ -30,10 +31,42 @@ smoothingUI <- function(ns,
 #' @param session shiny session
 #' @param ns namespace
 #' @param title title of the modal
+#' @param map3D logical, if TRUE, the map is 3D (contains the time dimension)
+#' @param label if `map3D == TRUE` label of the slider for the number of time basis functions
 smoothingServer <- function(input, output, session, ns,
-                            title = "Number of Basis Functions (Smoothing)") {
-  # Show modal with information about the smoothing
-  observeEvent(input$smoothing_info, {
+                            title = "Number of Basis Functions (Smoothing)",
+                            map3D = FALSE,
+                            label = "No. of time basis functions") {
+  # if 3D map and spline type is 2: show UI for TIME basis functions
+  output$timeBasisFunctionsUI <- renderUI({
+    logDebug("Render the number of TIME basis functions for 3D map")
+    if (map3D && (input[["SplineType"]] == 2)) {
+      sliderInput(inputId = ns("SmoothingT"),
+                  label = label, min = 4, max = 50, value = 12, step = 1)
+    } else {
+      NULL
+    }
+  })
+
+  # if 3D map and the spline type changes: update default values for the number of SPATIAL basis functions
+  if (map3D) {
+    observe({
+      logDebug("Update default values for the number of SPATIAL basis functions for 3D map")
+      if (input[["SplineType"]] == 1) {
+        # planar smooth type
+        updateSliderInput(session, "Smoothing",
+                          min = 10, max = 1000, value = 150, step = 5)
+      } else {
+        # spherical smooth type
+        updateSliderInput(session, "Smoothing",
+                          min = 10, max = 250, value = 30, step = 5)
+      }
+    }) %>%
+      bindEvent(input[["SplineType"]])
+  }
+
+  observe({
+    logDebug("Show modal with information about the smoothing")
     # Convert the markdown file to HTML
     markdown_html <- markdownToHTML("www/info_basis-functions.md", fragment.only = TRUE)
 
@@ -45,7 +78,8 @@ smoothingServer <- function(input, output, session, ns,
         footer = modalButton("Close")
       )
     )
-  })
+  }) %>%
+    bindEvent(input[["smoothing_info"]])
 }
 
 ## Combined Inputs ----

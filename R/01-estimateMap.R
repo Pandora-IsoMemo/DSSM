@@ -902,19 +902,14 @@ estimateMap3D <- function(data,
 }
 
 estimateMap3DWrapper <- function(data, input) {
-    if(as.numeric(input$SplineType) == 2){
-        K  <- input$Smoothing
-      } else {
-        K  <- input$SmoothingClassic
-      }
-    if(input$modelArea){
+    if (input$modelArea) {
       restriction <- c(input$mALat1, input$mALat2, input$mALong1, input$mALong2)
       restriction[is.na(restriction)] <- c(-90, 90, -180, 180)[is.na(restriction)]
     } else {
       restriction <- c(-90, 90, -180, 180)
     }
 
-    if(input$Outlier == TRUE){
+    if (input$Outlier == TRUE) {
       withProgress({
         dataOld <- data
         dataD <- data
@@ -935,7 +930,7 @@ estimateMap3DWrapper <- function(data, input) {
                             penalty = as.numeric(input$Penalty),
                             splineType = as.numeric(input$SplineType),
                             DateTwo = input$DateTwo, DateType = input$DateType,
-                            K = K, KT = input$SmoothingT,
+                            K = input$Smoothing, KT = input$SmoothingT,
                             correctionPac = input$correctionPac,
                             restriction = restriction,
                             smoothConst = input$smoothConst,

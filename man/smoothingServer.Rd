@@ -9,7 +9,9 @@ smoothingServer(
   output,
   session,
   ns,
-  title = "Number of Basis Functions (Smoothing)"
+  title = "Number of Basis Functions (Smoothing)",
+  map3D = FALSE,
+  label = "No. of time basis functions"
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ smoothingServer(
 \item{ns}{namespace}
 
 \item{title}{title of the modal}
+
+\item{map3D}{logical, if TRUE, the map is 3D (contains the time dimension)}
+
+\item{label}{if `map3D == TRUE` label of the slider for the number of time basis functions}
 }
 \description{
 Smoothing Server

@@ -88,23 +88,7 @@ modelResults3DUI <- function(id, title = ""){
                       choices = c("planar" = "1", "spherical" = "2"),
                       selected = "1"),
           dataCenterUI(ns),
-          conditionalPanel(
-            condition = "input.SplineType == 2",
-            sliderInput(inputId = ns("Smoothing"),
-                        label = "Number of spatial basis functions",
-                        min = 10, max = 250, value = 30, step = 5),
-            sliderInput(inputId = ns("SmoothingT"),
-                        label = "Number of time basis functions",
-                        min = 4, max = 50, value = 12, step = 1),
-            ns = ns
-          ),
-          conditionalPanel(
-            condition = "input.SplineType == 1",
-            sliderInput(inputId = ns("SmoothingClassic"),
-                        label = "Number of spatial basis functions",
-                        min = 10, max = 1000, value = 150, step = 5),
-            ns = ns
-          ),
+          smoothingUI(ns, label_slider = "No. of spatial basis functions"),
           radioButtons(inputId = ns("Penalty"),
                       label = "Extrapolation behaviour",
                       choices = c("constant" = "1", "linear" = "2"),
@@ -485,6 +469,8 @@ modelResults3DUI <- function(id, title = ""){
 #'
 #' @export
 modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsData){
+  smoothingServer(input, output, session, ns = session$ns,
+                  map3D = TRUE, label = "No. of time basis functions")
   observeSavedMaps(input, output, session, savedMaps, type = c("temporalAvg"))
 
   observeEvent(input$saveMap, {
