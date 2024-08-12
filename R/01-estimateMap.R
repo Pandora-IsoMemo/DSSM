@@ -964,7 +964,7 @@ estimateMap3DWrapper <- function(data, input) {
                     DateTwo = input$DateTwo, DateType = input$DateType,
                     outlierD = input$OutlierD,
                     outlierValueD = input$OutlierValueD,
-                    K = K, KT = input$SmoothingT,
+                    K = input$Smoothing, KT = input$SmoothingT,
                     smoothConst = input$smoothConst,
                     thinning = input$thinning),
       value = 0,
@@ -986,7 +986,7 @@ estimateMap3DWrapper <- function(data, input) {
                   DateTwo = input$DateTwo, DateType = input$DateType,
                   outlierD = input$OutlierD,
                   outlierValueD = input$OutlierValueD,
-                  K = K,
+                  K = input$Smoothing,
                   KT = input$SmoothingT, smoothConst = input$smoothConst,
                   sdVar = input$sdVar,
                   thinning = input$thinning)
