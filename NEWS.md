@@ -1,3 +1,9 @@
+# DSSM 24.08.1
+
+## New Features
+- Adds info button with rule of thumb information on selection of number of basis functions to 
+  "AverageR", "TimeR" and "SpreadR" tabs (#236)
+
 # DSSM 24.08.0
 
 ## New Features

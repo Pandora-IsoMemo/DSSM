@@ -85,6 +85,7 @@ modelResultsSpreadUI <- function(id, title = ""){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
+          smoothingUI(ns, label_slider = "No. of basis functions"),
           conditionalPanel(
             condition = "input.DateType == 'Interval' || input.DateType == 'Mean + 1 SD uncertainty'",
           radioButtons(inputId = ns("dateUnc"),
@@ -94,7 +95,6 @@ modelResultsSpreadUI <- function(id, title = ""){
                                    "uniform (full width)" = "uniform",
                                    "mid point" = "point")),
           ns = ns),
-          smoothingUI(ns, label_slider = "No. of basis functions"),
           radioButtons(inputId = ns("Penalty"),
                        label = "Extrapolation behaviour",
                        choices = c("constant" = "1", "linear" = "2"),
