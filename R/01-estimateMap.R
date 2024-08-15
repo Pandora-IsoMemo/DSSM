@@ -1998,7 +1998,7 @@ invLogit <- function(x){
 #' @param clusterMethod character: cluster method
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param nClust numeric: how many clusters
-#' @param nClustRange numeric: range of potential mclust cluster
+#' @param nClustRange numeric: range of potential mclust or tclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
 #' @param nSim numeric: number of bootstrap samples
 #' @param kdeType character: "1" for correlated bandwidth, "2" for diagonal bandwidth, "3" for diagonal, equal long/lat bandwidth
@@ -2096,7 +2096,7 @@ estimateMapKernel <- function(data,
     data2 <- merge(data2, clust, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
   } else if (clusterMethod == "mclust"){
-
+    browser()
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
     for(i in 1:length(numClusters)){
@@ -2194,7 +2194,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param Weighting character: name of weighting variable
 #' @param clusterMethod character: cluster method
 #' @param nClust numeric: how many clusters
-#' @param nClustRange numeric: range of potential mclust cluster
+#' @param nClustRange numeric: range of potential mclust or tclust cluster
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param clusterTimeRange numeric vector: time range of cluster
 #' @param modelUnc boolean: Include dating uncertainty
@@ -2466,10 +2466,21 @@ estimateMap3DKernel <- function(data,
 
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
+    browser()
     for(i in 1:length(numClusters)){
       set.seed(1234)
       cluster_list[[i]] <- mclust::Mclust(dataC[,c("Longitude","Latitude")], G = numClusters[i])
     }
+    fit <- fsdaR::tclustIC(dataC[,c("Longitude","Latitude")], k = 2:4)
+
+    plot(cluster_list[[6]])
+    curves <- tclust::ctlcurves(dataC[,c("Longitude","Latitude")], k = 2:10, alpha = seq (0, 0.15, by = 0.05))
+
+    variability <- sapply(curves$obj, function(x) apply(x, 1, sd))
+    optimal_k <- which.min(apply(variability, 2, sum))
+
+    # Output the optimal k
+    print(paste("Optimal k is:", optimal_k))
 
     # select best cluster solution based on bic
     best_solution_idx <- which.max(sapply(1:length(cluster_list),function(x) cluster_list[[x]]$bic))

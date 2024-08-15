@@ -67,7 +67,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                       choices = c("")),
           selectizeInput(inputId = ns("clusterMethod"),
                       label = "Cluster Method (optional):",
-                      choices = c("kmeans","mclust"),
+                      choices = c("kmeans","mclust","tclust"),
                       options = list(
                         placeholder = '',
                         onInitialize = I('function() { this.setValue(""); }')
@@ -84,7 +84,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         value = 5, min = 2, max = 15, step = 1)
           ),
           conditionalPanel(
-            condition = "input.clusterMethod == 'mclust'",
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'tclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
                         label = "Possible range for clusters",

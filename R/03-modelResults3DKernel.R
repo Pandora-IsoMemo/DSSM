@@ -79,7 +79,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                       choices = c("")),
           selectizeInput(inputId = ns("clusterMethod"),
                          label = "Cluster Method (optional):",
-                         choices = c("kmeans","mclust"),
+                         choices = c("kmeans","mclust","tclust"),
                          options = list(
                            placeholder = '',
                            onInitialize = I('function() { this.setValue(""); }')
@@ -96,14 +96,14 @@ modelResults3DKernelUI <- function(id, title = ""){
                         value = 5, min = 2, max = 15, step = 1)
           ),
           conditionalPanel(
-            condition = "input.clusterMethod == 'mclust'",
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'tclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
                         label = "Possible range for clusters",
                         value = c(2,10), min = 2, max = 50, step = 1)
           ),
           conditionalPanel(
-            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
+            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans' | input.clusterMethod == 'tclust'",
             ns = ns,
             sliderInput(inputId = ns("timeClust"),
                         label = "Cluster time range",
@@ -821,7 +821,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   observe({
-  if(input[["clusterMethod"]] %in% c("kmeans","mclust")){
+  if(input[["clusterMethod"]] %in% c("kmeans","mclust","tclust")){
   value <- TRUE
   } else {
   value <- FALSE
