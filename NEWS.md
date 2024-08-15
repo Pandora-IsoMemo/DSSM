@@ -1,3 +1,8 @@
+# DSSM 24.08.1
+
+## Bug Fixes
+- fixes cluster ids being non continuous in some cases (#238)
+
 # DSSM 24.08.0
 
 ## New Features
