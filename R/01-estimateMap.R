@@ -2118,11 +2118,7 @@ estimateMapKernel <- function(data,
     data2 <- merge(data2, cluster_centers, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
 
-    # Make cluster ids continuous
-    # When Mclust is used with e.g. 10 clusters, it can still happen that some clusters are empty
-    # In this case we would see a jump in cluster ids e.g. 1,2,5,...
-    # To prevent this, we change the cluster ids here in the last step.
-    data$spatial_cluster <- match(data$spatial_cluster, sort(unique(data$spatial_cluster)))
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
@@ -2533,13 +2529,8 @@ estimateMap3DKernel <- function(data,
     data <- merge(data, clust, sort = FALSE)
     colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
 
-    # Make cluster ids continuous
-    # When Mclust is used with e.g. 10 clusters, it can still happen that some clusters are empty
-    # In this case we would see a jump in cluster ids e.g. 1,2,5,...
-    # To prevent this, we change the cluster ids here in the last step.
-    data$temporal_group <- match(data$temporal_group, sort(unique(data$temporal_group)))
-    data$spatial_cluster <- match(data$spatial_cluster, sort(unique(data$spatial_cluster)))
-
+    data$temporal_group <- data$temporal_group %>% makeClusterIdsContinuous()
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL
