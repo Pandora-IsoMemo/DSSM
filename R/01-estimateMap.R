@@ -2118,7 +2118,7 @@ estimateMapKernel <- function(data,
     data2 <- merge(data2, cluster_centers, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
 
-    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
+    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
