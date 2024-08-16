@@ -7,7 +7,8 @@
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importOptions
 #'  prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
 #'  updateNameEntryIfDuplicate
-#' @importFrom dplyr arrange distinct filter group_by group_by_at left_join select summarise ungroup
+#' @importFrom dplyr "%>%" arrange distinct filter group_by group_by_at left_join select summarise
+#'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
 #' @importFrom gdistance transition transition accCost shortestPath geoCorrection
@@ -27,7 +28,6 @@
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magick image_animate image_join image_read image_read_pdf image_read_svg image_write
-#' @importFrom magrittr "%>%"
 #' @importFrom maps map map.scale
 #' @importFrom MASS mvrnorm kde2d
 #' @importFrom mgcv gam gamm smoothCon s Predict.matrix rig te
@@ -40,7 +40,7 @@
 #' @importFrom rlang .data
 #' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
 #' @importFrom shinycssloaders withSpinner
-#' @importFrom shinyjs alert runjs useShinyjs hide show
+#' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans
@@ -48,7 +48,7 @@
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
-#' @importFrom utils available.packages compareVersion install.packages head
+#' @importFrom utils available.packages compareVersion install.packages head zip
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
 #' @importFrom webshot is_phantomjs_installed
 #' @importFrom yaml read_yaml
