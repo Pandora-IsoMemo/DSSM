@@ -184,9 +184,6 @@
     <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultZMin.html</loc>
   </url>
   <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getFileExt.html</loc>
-  </url>
-  <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/getFileName.html</loc>
   </url>
   <url>
@@ -266,6 +263,9 @@
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/locationFieldsUI.html</loc>
+  </url>
+  <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/makeClusterIdsContinuous.html</loc>
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/mapDiff.html</loc>
