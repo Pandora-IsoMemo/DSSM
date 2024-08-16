@@ -1,3 +1,9 @@
+# DSSM 24.08.2
+
+## New Features
+- _Cost Surface and least-cost path for SpreadR_:
+  - Estimate cost surface and shortest path using the gdistance package
+
 # DSSM 24.08.1
 
 ## Bug Fixes

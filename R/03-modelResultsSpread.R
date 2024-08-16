@@ -228,7 +228,8 @@ modelResultsSpreadUI <- function(id, title = ""){
           helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
-                       choices = c("Spread", "Speed", "Minima/Maxima"),
+                       choices = c("Spread", "Speed", "Minima/Maxima",
+                                   "Cost-Surface", "Shortest-Path"),
                        selected = "Spread"),
           conditionalPanel(
             ns = ns,
@@ -243,6 +244,28 @@ modelResultsSpreadUI <- function(id, title = ""){
                           label = "Minima/Maxima on:", inline = TRUE,
                          choices = list("Boxplot" = 1, "Map" = 2),
                          selected = 1)
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Cost-Surface' || input.mapType == 'Shortest-Path'",
+            tags$strong("Origin:"),
+            numericInput(inputId = ns("OLat"),
+                         label = "Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("OLong"),
+                         label = "Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Shortest-Path'",
+            tags$strong("Destination:"),
+            numericInput(inputId = ns("DestLat"),
+                         label = "Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("DestLong"),
+                         label = "Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
           ),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -423,7 +446,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert("Please provide a map name")
       return()
     }
-
     map <- createSavedMap(
       model = Model(),
       predictions = values$predictions,
@@ -587,6 +609,22 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         values$right <- 0
       })
     }
+  })
+
+  observe({
+    validate(validInput(Model()))
+    updateNumericInput(session, "OLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                         0.35 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                  min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "OLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                        0.35 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                 min(Model()$data$Latitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                            0.65 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                     min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                           0.65 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                    min(Model()$data$Latitude, na.rm = TRUE))))
   })
 
   output$move <- renderUI({
@@ -883,6 +921,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         nMin = input$nMin,
         minDist = input$minDist,
         showMinOnMap = input$showMinOnMap,
+        OLat = input$OLat,
+        OLong = input$OLong,
+        DestLat = input$DestLat,
+        DestLong = input$DestLong,
         ...
       ) %>%
         tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
@@ -894,8 +936,12 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     withProgress({
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
-    values$predictions <- res$XPred
-    values$plot <- recordPlot()
+    if (is.character(res) & length(res) == 1){
+      alert(res)
+    } else{
+      values$predictions <- res$XPred
+      values$plot <- recordPlot()
+    }
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,

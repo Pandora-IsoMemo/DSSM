@@ -11,6 +11,7 @@
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
+#' @importFrom gdistance transition transition accCost shortestPath geoCorrection
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
@@ -33,7 +34,7 @@
 #' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
-#' @importFrom raster raster getValues terrain writeRaster
+#' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
@@ -45,7 +46,7 @@
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans
 #'  mahalanobis median model.matrix na.exclude na.omit pchisq  pf pnorm predict
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
-#' @importFrom sp point.in.polygon plot SpatialPoints
+#' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom utils available.packages compareVersion install.packages head zip
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
