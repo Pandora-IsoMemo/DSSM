@@ -1,8 +1,14 @@
-# DSSM 24.08.2
+# DSSM 24.08.3
 
 ## New Features
 - Adds info button with rule of thumb information on selection of number of basis functions to 
   "AverageR", "TimeR" and "SpreadR" tabs (#236)
+
+# DSSM 24.08.2
+
+## New Features
+- _Cost Surface and least-cost path for SpreadR_:
+  - Estimate cost surface and shortest path using the gdistance package
 
 # DSSM 24.08.1
 
