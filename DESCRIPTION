@@ -1,6 +1,6 @@
-Package: MpiIsoApp
+Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 24.05.2
+Version: 24.07.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut"))
@@ -11,8 +11,6 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.5.0)
-Remotes:
-  github::ben-aaron188/rgpt3
 Imports:
     animation,
     coda,
@@ -44,8 +42,6 @@ Imports:
     rcarbon (>= 1.4.0),
     RColorBrewer (>= 1.1.2),
     Rfast (>= 2.0.0),
-    rgdal,
-    rgeos,
     rlang,
     shiny (>= 1.0.5),
     shinycssloaders,
@@ -53,6 +49,7 @@ Imports:
     shinyMatrix (>= 0.2.1),
     shinythemes (>= 1.1.1),
     shinyWidgets (>= 0.4.1),
+    sf,
     sp (>= 1.2.7),
     stringi (>= 1.1.7),
     webshot,
@@ -66,3 +63,4 @@ Suggests:
     rmarkdown
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr
+URL: https://pandora-isomemo.github.io/DSSM/

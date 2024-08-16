@@ -2094,10 +2094,10 @@ plotDS <- function(XPred,
                       points(x = pointDat$x, y = pointDat$y, cex = pointDat$pointSize, col = pointDat$pointColor, pch = 16)
                       text(pointDat$y ~ pointDat$x, labels = pointDat$label, pos = 4, cex = 1.75)
                     }
-                    if(showValues == TRUE){
+                    if (showValues == TRUE) {
                       op <- par(family = "mono")
-                      titel = paste(capture.output(do.call("rbind", simValues)), collapse='\n')
-                      legend("bottomright", legend = c(""), pch = 26, title= titel ,
+                      titel = paste(capture.output(do.call("rbind", simValues)), collapse = '\n')
+                      legend("bottomright", legend = c(""), pch = NA, title = titel,
                              text.width = strwidth(titel)[1]/2, bty = "n", cex = 2, text.font = 2)
                       par(op)
                     }

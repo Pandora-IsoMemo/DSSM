@@ -43,7 +43,7 @@ utils::globalVariables(c("Longitude", "Latitude", "Longitude2", "Latitude2", "Da
 #' @examples
 #' \dontrun{
 #' #load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", Site = "site")
@@ -51,7 +51,7 @@ utils::globalVariables(c("Longitude", "Latitude", "Longitude2", "Latitude2", "Da
 #' plotMap(model = map)
 #'
 #' # Alternative: use app
-#' shiny::runApp(paste0(system.file(package = "MpiIsoApp"),"/app"))
+#' shiny::runApp(paste0(system.file(package = "DSSM"),"/app"))
 #'
 #' }
 #' @export
@@ -371,7 +371,7 @@ estimateMapWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMapSpread(data = data, Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", iter = 200)
@@ -643,7 +643,7 @@ estimateMapSpreadWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")
@@ -1027,7 +1027,6 @@ modelLocalAvgMC <- function(data, K, iter, burnin, independent, smoothConst,
   return(res)
 }
 
-
 modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
                           IndependentType = "numeric",
                           penalty = 1, splineType = 2, sdVar = FALSE, nChains = 1,
@@ -1048,6 +1047,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
     bs = "ds"
   }
 
+  penalty <- penalty %>% updatePenalty(bs = bs)
   s <- smoothCon(s(Latitude, Longitude, k = nknots, bs = bs, m = penalty),
                  data = data, knots = NULL)[[1]]
 
@@ -1057,7 +1057,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
   M <- qr(P)$rank
   nknots <- dim(P)[1]
 
-  sV <- smoothCon(s(Latitude, Longitude, m = 1,
+  sV <- smoothCon(s(Latitude, Longitude, m = c(1,0.5),
                     k = max(10, min(100, ceiling(K / 2))), bs = bs),
                   data = data, knots = NULL)[[1]]
 
@@ -1792,6 +1792,7 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
     bs = "ds"
   }
 
+  penalty <- penalty %>% updatePenalty(bs = bs)
   s <- smoothCon(s(Latitude, Longitude, k = nknots, bs = bs, m = penalty),
                  data = data, knots = NULL)[[1]]
 
@@ -1966,6 +1967,14 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
                   (XX %*% betamc[usedsamples[x], ]) * sRe + mRe), 1, var))))))
 }
 
+updatePenalty <- function(penalty, bs) {
+  if (bs == "ds" & penalty == 1) {
+    penalty <- c(1, 0.5)
+  }
+
+  penalty
+}
+
 dALDFast <- function(x, mu, sigma, p){
   ret <- x
   ret[x < mu] <- (p * (1 - p) / sigma) * exp((1 - p) * (x[x < mu] - mu)/sigma)
@@ -1997,7 +2006,7 @@ invLogit <- function(x){
 #' @examples
 #' \dontrun{
 #' #load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", Site = "site")
@@ -2005,7 +2014,7 @@ invLogit <- function(x){
 #' plotMap(model = map)
 #'
 #' # Alternative: use app
-#' shiny::runApp(paste0(system.file(package = "MpiIsoApp"),"/app"))
+#' shiny::runApp(paste0(system.file(package = "DSSM"),"/app"))
 #'
 #' }
 #' @export
@@ -2197,7 +2206,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @examples
 #' \dontrun{
 #' # load data
-#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "MpiIsoApp"))
+#' data <- readRDS(system.file("extData", "exampleData.Rds", package = "DSSM"))
 #' # estimate model-map
 #' map <- estimateMap3D(data = data, independent = "d13C", Longitude = "longitude",
 #' Latitude = "latitude", DateOne = "dateLower", DateTwo = "dateUpper", Site = "site")

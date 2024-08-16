@@ -255,11 +255,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     weightMap = NULL
   )
 
-  observeEvent(savedMaps(), {
-    choices <- getMapChoices(savedMaps(), "similarity")
-
-    updateSelectInput(session, "savedModel", choices = choices)
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = c("similarity"))
 
   observeEvent(savedMaps(), {
     choices <- getMapChoices(savedMaps(), c("localAvg", "temporalAvg", "spread", "difference",
@@ -307,9 +303,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
         class = "numeric",
         cols = list(
           names = TRUE,
-          createHeader = "MpiIsoApp.doubleHeader.create",
-          updateHeader = "MpiIsoApp.doubleHeader.update",
-          getHeader = "MpiIsoApp.doubleHeader.get"
+          createHeader = "DSSM.doubleHeader.create",
+          updateHeader = "DSSM.doubleHeader.update",
+          getHeader = "DSSM.doubleHeader.get"
         ),
         rows = list(extend = TRUE, editableNames = TRUE, names = TRUE),
       ),
@@ -669,6 +665,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "similarity",
       name = mapName
     )

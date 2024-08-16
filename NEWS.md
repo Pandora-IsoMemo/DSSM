@@ -1,8 +1,49 @@
-# MpiIsoApp 24.07.1
+# DSSM 24.07.0
 
 ## New Features
 - _Cost Surface and least-cost path for SpreadR_:
   - Estimate cost surface and shortest path using the gdistance package
+
+# DSSM 24.06.0
+
+## New Features
+- replace `rgeos::gCentroids()` with `sf::st_centroid()` because of retired packages `rgeos` and
+  `rgdal` (#228)
+- Renaming of the Package
+- R-CMD check workflow
+- pkgdown Documentation
+
+# MpiIsoApp 24.05.7
+
+## Bug Fixes
+- _LocateR_: fix pch value when creating a probability map which caused a warning (#224)
+- _Saved maps_: fix issue when thumbnail was missing in former uploaded saved maps
+
+# MpiIsoApp 24.05.6
+
+## New Features
+- _Saved maps_:
+  - option to download a zip file with all plots in a chosen format (#2)
+  - removing option to download saved maps with the current model object, since files become too large
+    and upload takes too long
+
+# MpiIsoApp 24.05.5
+
+## New Features
+- _Saved maps_: export and import of saved maps is now included within the features to down- and
+  upload models (#2)
+  - optionally, the list of saved models can be downloaded
+  - upload checks for a list of saved maps and loads it, if it is available
+
+# MpiIsoApp 24.05.4
+## Bug Fixes
+- fix issue with warning whenever using a bayesian model (#199)
+
+# MpiIsoApp 24.05.3
+
+## Bug Fixes
+- fix for the spread model which was not running if two dates were specified (#218)
+- fixes the case when we have missing longitude or latitude data in the data set (#219)
 
 # MpiIsoApp 24.05.2
 

@@ -2,7 +2,7 @@
 title: "Processing of Coordinate Data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{process_coordinate_data}
+  %\VignetteIndexEntry{Processing_of_Coordinate_Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, include = FALSE}
-library(MpiIsoApp)
+library(DSSM)
 ```
 
 The different modeling tabs contain options for specifying how coordinate data can be processed. 

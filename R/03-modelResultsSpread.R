@@ -18,13 +18,7 @@ modelResultsSpreadUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         importDataUI(ns("modelUpload"), label = "Import Model"),
-        checkboxInput(ns("useDownload"), label = "Download model"),
-        conditionalPanel(
-          ns = ns,
-          condition = "input.useDownload == true",
-          downloadModelUI(ns("modelDownload"), label = "Download")
-        ),
-        tags$hr(),
+        downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Database" = "db",
@@ -444,13 +438,7 @@ modelResultsSpreadUI <- function(id, title = ""){
 #'
 #' @export
 modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
-  observeEvent(savedMaps(), {
-    observeEvent(savedMaps(), {
-      choices <- getMapChoices(savedMaps(), "spread")
-
-      updateSelectInput(session, "savedModel", choices = choices)
-    })
-  })
+  observeSavedMaps(input, output, session, savedMaps, type = "spread")
 
   observeEvent(input$saveMap, {
     mapName <- trimws(input$saveMapName)
@@ -462,6 +450,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       model = Model(),
       predictions = values$predictions,
       plot = values$plot,
+      plotFUN = plotFun(),
       type = "spread",
       name = mapName
     )
@@ -508,17 +497,14 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
   uploadedNotes <- reactiveVal(NULL)
   subFolder <- "SpreadR"
-  downloadModelServer("modelDownload",
-                      dat = data,
-                      inputs = input,
-                      model = Model,
-                      rPackageName = config()[["rPackageName"]],
-                      subFolder = subFolder,
-                      fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = "spread"),
-                      modelNotes = uploadedNotes,
-                      triggerUpdate = reactive(TRUE),
-                      compressionLevel = 1)
+
+  downloadDSSMModel(input, output, session,
+                    dat = data,
+                    model = Model(),
+                    #savedMaps = savedMaps(),
+                    subFolder = subFolder,
+                    tabId = "spread",
+                    uploadedNotes = uploadedNotes)
 
   uploadedValues <- importDataServer("modelUpload",
                                      title = "Import Model",
@@ -528,7 +514,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
                                      fileExtension = config()[["fileExtension"]],
-                                     rPackageName = config()[["rPackageName"]])
+                                     options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -562,7 +548,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   observe(priority = 10, {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
-    Model(uploadedValues()[[1]][["model"]])
+    Model(unpackModel(uploadedValues()[[1]][["model"]]))
+
+    uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
+    savedMaps(c(savedMaps(), uploadedSavedMaps))
   }) %>%
     bindEvent(uploadedValues())
 

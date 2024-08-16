@@ -1,4 +1,4 @@
 library(testthat)
-library(MpiIsoApp)
+library(DSSM)
 
-test_check("MpiIsoApp")
+test_check("DSSM")
