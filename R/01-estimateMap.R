@@ -2117,6 +2117,8 @@ estimateMapKernel <- function(data,
     cluster_centers$cluster <- 1:nrow(cluster_centers)
     data2 <- merge(data2, cluster_centers, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
+
+    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
@@ -2526,6 +2528,9 @@ estimateMap3DKernel <- function(data,
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
     colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
+
+    data$temporal_group <- data$temporal_group %>% makeClusterIdsContinuous()
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL
