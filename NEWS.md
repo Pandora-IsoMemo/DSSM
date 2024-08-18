@@ -1,3 +1,8 @@
+# DSSM 24.08.3
+
+## New Features
+- _OperatoR_: New plot option ("estimation type"): 'Significance (Overlap)': Shows which non-significant overlap in difference maps
+  
 # DSSM 24.08.2
 
 ## New Features

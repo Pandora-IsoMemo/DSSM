@@ -1944,6 +1944,10 @@ plotDS <- function(XPred,
     XPred$Est <- XPred$Est / XPred$Sd
   }
 
+  if(estType == "Significance (Overlap)"){
+    XPred$Est <- as.numeric(abs(XPred$Est) > qnorm(estQuantile) * XPred$Sd)
+  }
+
   if(estType == "Quantile"){
     XPred$Est <- XPred$Est + qnorm(estQuantile) * XPred$Sd
     if(type == "similarity"){
@@ -1959,9 +1963,13 @@ plotDS <- function(XPred,
   }
 
   Maps <- loadMaps()
-  levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
-
-  colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
+  if(estType == "Significance (Overlap)"){
+    levels <- pretty(c(0, 1), n = 2)
+    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)
+  } else {
+    levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
+    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
+  }
 
   if(reverseColors){
     colors <- rev(colors)
@@ -1997,7 +2005,11 @@ plotDS <- function(XPred,
   }
 
   if(titleMain){
-    main = ""
+    if(estType == "Significance (Overlap)"){
+      main = "Overlap (0-no significant difference) vs. Non-overlap (1-significant difference)"
+    } else {
+      main = ""
+    }
   } else {
     if(setAxisLabels){
       main = mainLabel
@@ -2039,8 +2051,8 @@ plotDS <- function(XPred,
                   showScale = showScale,
                   cex.axis = 1.5, cex.main = 1.5, cex.lab = 1.5,
                   asp = 1, key.axes = axis(side = 4, at = levelsLegend, cex.axis = cex4),
-                  key.title = title(main = main, cex.main = 0.8),
-                  plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = mainS)},
+                  key.title = title(main = mainS, cex.main = 0.8),
+                  plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = main)},
                   plot.axes = {
                     par(fg = "black", col="black");
                     if (terrestrial == 1){
