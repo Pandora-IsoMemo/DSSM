@@ -8,8 +8,8 @@ ckanFileTypes:
   - "odt"
   - "txt"
 ckanModelTypes:
-  - "zip"
   - "dssm"
+  - "zip"
 githubRepo: "DSSM"        # for import of models
 fileExtension: "dssm"      # for download of models
 rPackageName: "DSSM"       # for download and import of models
