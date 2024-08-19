@@ -537,13 +537,13 @@ zScaleUI <-
       ),
       conditionalPanel(
         ns = ns,
-        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL' || input.estType == 'Significance (Overlap)'",
         sliderInput(
           inputId = ns("Quantile"),
           label = "Estimation quantile",
           min = 0.01,
           max = 0.99,
-          value = c(0.9),
+          value = c(0.95),
           width = "100%"
         )
       ),
@@ -552,16 +552,20 @@ zScaleUI <-
         label = "Show model estimates",
         value = TRUE
       ),
-      htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
-      numericInput(
-        inputId = ns("max"),
-        label = "Max range",
-        value = 10
-      ),
-      numericInput(
-        inputId = ns("min"),
-        label = "Min range",
-        value = 0
+      conditionalPanel(
+        ns = ns,
+        condition = "input.estType != 'Significance (Overlap)'",
+        htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
+        numericInput(
+          inputId = ns("max"),
+          label = "Max range",
+          value = 10
+        ),
+        numericInput(
+          inputId = ns("min"),
+          label = "Min range",
+          value = 0
+        ),
       ),
       conditionalPanel(
         ns = ns,
@@ -673,7 +677,7 @@ zScaleServer <- function(id,
                    # reset Quantile
                    values$Quantile <- NULL
 
-                   req(input$estType %in% c("Quantile", "QuantileTOTAL"))
+                   req(input$estType %in% c("Quantile", "QuantileTOTAL", "Significance (Overlap)"))
                    values$Quantile <- input$Quantile
                  })
 
@@ -852,6 +856,18 @@ getZValuesMapDiff <-
         list(value = maxValue,
              min = minValue,
              max = maxValue)
+      return(zValues)
+    }
+
+    if (estimationType == "Significance (Overlap)"){
+      zValues$minInput <-
+        list(value = 0,
+             min = 0,
+             max = 1)
+      zValues$maxInput <-
+        list(value = 1,
+             min = 0,
+             max = 1)
       return(zValues)
     }
 

@@ -998,7 +998,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                               "2 SE",
                               "Quantile",
                               "Significance (p-value)",
-                              "Significance (z-value)"
+                              "Significance (z-value)",
+                              "Significance (Overlap)"
                             )),
                             restrictOption = reactive("hide"),
                             zValuesFun = getZValuesMapDiff,
@@ -1092,8 +1093,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              grid = input$grid,
              arrow = input$arrow,
              scale = input$scale,
-             titleMain = !input$titleMain,
-             titleScale = !input$titleScale,
+             titleMain = input$titleMain,
+             titleScale = input$titleScale,
              showScale = input$showScale,
              setAxisLabels = input$setAxisLabels,
              mainLabel = input$mainLabel,
