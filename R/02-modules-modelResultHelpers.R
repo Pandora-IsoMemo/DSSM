@@ -552,10 +552,10 @@ zScaleUI <-
         label = "Show model estimates",
         value = TRUE
       ),
-      htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
       conditionalPanel(
         ns = ns,
         condition = "input.estType != 'Significance (Overlap)'",
+        htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
         numericInput(
           inputId = ns("max"),
           label = "Max range",

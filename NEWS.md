@@ -1,8 +1,13 @@
-# DSSM 24.08.3
+# DSSM 24.08.4
 
 ## New Features
 - _OperatoR_: New plot option ("estimation type"): 'Significance (Overlap)': Shows which non-significant overlap in difference maps
   
+# DSSM 24.08.3
+
+- Adds info button with rule of thumb information on selection of number of basis functions to 
+  "AverageR", "TimeR" and "SpreadR" tabs (#236)
+
 # DSSM 24.08.2
 
 ## New Features

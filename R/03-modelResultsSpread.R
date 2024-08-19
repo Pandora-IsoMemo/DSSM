@@ -17,7 +17,7 @@ modelResultsSpreadUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Model"),
+        importUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -85,6 +85,7 @@ modelResultsSpreadUI <- function(id, title = ""){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
+          smoothingUI(ns, label_slider = "No. of basis functions"),
           conditionalPanel(
             condition = "input.DateType == 'Interval' || input.DateType == 'Mean + 1 SD uncertainty'",
           radioButtons(inputId = ns("dateUnc"),
@@ -94,9 +95,6 @@ modelResultsSpreadUI <- function(id, title = ""){
                                    "uniform (full width)" = "uniform",
                                    "mid point" = "point")),
           ns = ns),
-          sliderInput(inputId = ns("Smoothing"),
-                      label = "Number of basis functions",
-                      min = 20, max = 1000, value = 70, step = 10),
           radioButtons(inputId = ns("Penalty"),
                        label = "Extrapolation behaviour",
                        choices = c("constant" = "1", "linear" = "2"),
@@ -438,6 +436,7 @@ modelResultsSpreadUI <- function(id, title = ""){
 #'
 #' @export
 modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
+  smoothingServer(input, output, session, ns = session$ns)
   observeSavedMaps(input, output, session, savedMaps, type = "spread")
 
   observeEvent(input$saveMap, {
@@ -506,7 +505,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                     tabId = "spread",
                     uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],

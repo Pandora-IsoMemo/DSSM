@@ -18,7 +18,7 @@ modelResultsSimUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
-        # importDataUI(ns("modelUpload"), label = "Import Model"),
+        # importUI(ns("modelUpload"), label = "Import Model"),
         # checkboxInput(ns("useDownload"), label = "Download model"),
         # conditionalPanel(
         #   ns = ns,
@@ -363,7 +363,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                     triggerUpdate = reactive(TRUE),
   #                     compressionLevel = 1)
   #
-  # uploadedValues <- importDataServer("modelUpload",
+  # uploadedValues <- importServer("modelUpload",
   #                                    title = "Import Model",
   #                                    defaultSource = config()[["defaultSourceModel"]],
   #                                    importType = "model",
