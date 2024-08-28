@@ -1,3 +1,24 @@
+# DSSM 24.08.4
+
+## New Features
+- _OperatoR_: New plot option ("estimation type"): 'Significance (Overlap)': Shows which non-significant overlap in difference maps
+  
+# DSSM 24.08.3
+
+- Adds info button with rule of thumb information on selection of number of basis functions to 
+  "AverageR", "TimeR" and "SpreadR" tabs (#236)
+
+# DSSM 24.08.2
+
+## New Features
+- _Cost Surface and least-cost path for SpreadR_:
+  - Estimate cost surface and shortest path using the gdistance package
+
+# DSSM 24.08.1
+
+## Bug Fixes
+- fixes cluster ids being non continuous in some cases (#238)
+
 # DSSM 24.08.0
 
 ## New Features

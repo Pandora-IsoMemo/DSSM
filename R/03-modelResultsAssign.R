@@ -15,7 +15,7 @@ modelResultsAssignUI <- function(id, title = "") {
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Model"),
+        importUI(ns("modelUpload"), label = "Import Model"),
         checkboxInput(ns("useDownload"), label = "Download model"),
         conditionalPanel(
           ns = ns,
@@ -237,7 +237,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
                     tabId = "assign",
                     uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],

@@ -64,7 +64,11 @@ plotMap(
   MinMax = "Min",
   nMin = 3,
   minDist = 250,
-  showMinOnMap = FALSE
+  showMinOnMap = FALSE,
+  OLat = NULL,
+  OLong = NULL,
+  DestLat = NULL,
+  DestLong = NULL
 )
 }
 \arguments{
@@ -190,6 +194,14 @@ of a series of spatial points}
 \item{minDist}{Distance between minima/maxima, only for spread model}
 
 \item{showMinOnMap}{Show minima on map yes/no, only for spread model if maptype = "Minima/Maxima"}
+
+\item{OLat}{Origin Latitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"}
+
+\item{OLong}{Origin Longitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"}
+
+\item{DestLat}{Origin Latitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"}
+
+\item{DestLong}{Origin Longitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"}
 }
 \description{
 Plots map of a spatial average or spread model from estimateMap() or estimateMapSpread() functions

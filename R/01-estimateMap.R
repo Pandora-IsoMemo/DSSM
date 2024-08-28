@@ -902,19 +902,14 @@ estimateMap3D <- function(data,
 }
 
 estimateMap3DWrapper <- function(data, input) {
-    if(as.numeric(input$SplineType) == 2){
-        K  <- input$Smoothing
-      } else {
-        K  <- input$SmoothingClassic
-      }
-    if(input$modelArea){
+    if (input$modelArea) {
       restriction <- c(input$mALat1, input$mALat2, input$mALong1, input$mALong2)
       restriction[is.na(restriction)] <- c(-90, 90, -180, 180)[is.na(restriction)]
     } else {
       restriction <- c(-90, 90, -180, 180)
     }
 
-    if(input$Outlier == TRUE){
+    if (input$Outlier == TRUE) {
       withProgress({
         dataOld <- data
         dataD <- data
@@ -935,7 +930,7 @@ estimateMap3DWrapper <- function(data, input) {
                             penalty = as.numeric(input$Penalty),
                             splineType = as.numeric(input$SplineType),
                             DateTwo = input$DateTwo, DateType = input$DateType,
-                            K = K, KT = input$SmoothingT,
+                            K = input$Smoothing, KT = input$SmoothingT,
                             correctionPac = input$correctionPac,
                             restriction = restriction,
                             smoothConst = input$smoothConst,
@@ -969,7 +964,7 @@ estimateMap3DWrapper <- function(data, input) {
                     DateTwo = input$DateTwo, DateType = input$DateType,
                     outlierD = input$OutlierD,
                     outlierValueD = input$OutlierValueD,
-                    K = K, KT = input$SmoothingT,
+                    K = input$Smoothing, KT = input$SmoothingT,
                     smoothConst = input$smoothConst,
                     thinning = input$thinning),
       value = 0,
@@ -991,7 +986,7 @@ estimateMap3DWrapper <- function(data, input) {
                   DateTwo = input$DateTwo, DateType = input$DateType,
                   outlierD = input$OutlierD,
                   outlierValueD = input$OutlierValueD,
-                  K = K,
+                  K = input$Smoothing,
                   KT = input$SmoothingT, smoothConst = input$smoothConst,
                   sdVar = input$sdVar,
                   thinning = input$thinning)
@@ -2117,6 +2112,8 @@ estimateMapKernel <- function(data,
     cluster_centers$cluster <- 1:nrow(cluster_centers)
     data2 <- merge(data2, cluster_centers, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
+
+    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
@@ -2536,6 +2533,9 @@ estimateMap3DKernel <- function(data,
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
     colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
+
+    data$temporal_group <- data$temporal_group %>% makeClusterIdsContinuous()
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL
