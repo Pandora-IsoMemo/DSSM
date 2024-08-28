@@ -1992,6 +1992,7 @@ invLogit <- function(x){
 #' @param Weighting character: name of weighting variable
 #' @param clusterMethod character: cluster method
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
+#' @param trimRatio numeric: proportion of observations to be trimmed by tclust
 #' @param nClust numeric: how many clusters
 #' @param nClustRange numeric: range of potential mclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
@@ -2208,6 +2209,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param nClust numeric: how many clusters
 #' @param nClustRange numeric: range of potential mclust cluster
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
+#' @param trimRatio numeric: proportion of observations to be trimmed by tclust
 #' @param clusterTimeRange numeric vector: time range of cluster
 #' @param modelUnc boolean: Include dating uncertainty
 #' @param dateUnc character: one of "uniform", "normal", "point"

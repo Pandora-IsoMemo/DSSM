@@ -46,6 +46,8 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 
 \item{kMeansAlgo}{character: kmeans algorithm as in stats:kmeans}
 
+\item{trimRatio}{numeric: proportion of observations to be trimmed by tclust}
+
 \item{restriction}{numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)}
 
 \item{nSim}{numeric: number of bootstrap samples}

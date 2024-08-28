@@ -58,6 +58,8 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 
 \item{kMeansAlgo}{character: kmeans algorithm as in stats:kmeans}
 
+\item{trimRatio}{numeric: proportion of observations to be trimmed by tclust}
+
 \item{clusterTimeRange}{numeric vector: time range of cluster}
 
 \item{modelUnc}{boolean: Include dating uncertainty}
