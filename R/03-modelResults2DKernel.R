@@ -78,13 +78,16 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             selectInput(inputId = ns("kMeansAlgo"),
                         label = "K-means algorithm:",
                         choices = c("Hartigan-Wong", "Lloyd", "Forgy",
-                                    "MacQueen")),
+                                    "MacQueen"))),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'kmeans' | input.clusterMethod == 'tclust'",
+            ns = ns,
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
                         value = 5, min = 2, max = 15, step = 1)
           ),
           conditionalPanel(
-            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'tclust'",
+            condition = "input.clusterMethod == 'mclust'",
             ns = ns,
             sliderInput(inputId = ns("nClustRange"),
                         label = "Possible range for clusters",

@@ -1998,7 +1998,7 @@ invLogit <- function(x){
 #' @param clusterMethod character: cluster method
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param nClust numeric: how many clusters
-#' @param nClustRange numeric: range of potential mclust or tclust cluster
+#' @param nClustRange numeric: range of potential mclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
 #' @param nSim numeric: number of bootstrap samples
 #' @param kdeType character: "1" for correlated bandwidth, "2" for diagonal bandwidth, "3" for diagonal, equal long/lat bandwidth
@@ -2194,7 +2194,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param Weighting character: name of weighting variable
 #' @param clusterMethod character: cluster method
 #' @param nClust numeric: how many clusters
-#' @param nClustRange numeric: range of potential mclust or tclust cluster
+#' @param nClustRange numeric: range of potential mclust cluster
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param clusterTimeRange numeric vector: time range of cluster
 #' @param modelUnc boolean: Include dating uncertainty
@@ -2471,7 +2471,6 @@ estimateMap3DKernel <- function(data,
       set.seed(1234)
       cluster_list[[i]] <- mclust::Mclust(dataC[,c("Longitude","Latitude")], G = numClusters[i])
     }
-    fit <- fsdaR::tclustIC(dataC[,c("Longitude","Latitude")], k = 2:4)
 
     plot(cluster_list[[6]])
     curves <- tclust::ctlcurves(dataC[,c("Longitude","Latitude")], k = 2:10, alpha = seq (0, 0.15, by = 0.05))
