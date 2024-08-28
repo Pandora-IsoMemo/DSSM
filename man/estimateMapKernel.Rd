@@ -16,6 +16,7 @@ estimateMapKernel(
   nClust = 5,
   nClustRange = c(2, 10),
   kMeansAlgo = "Hartigan-Wong",
+  trimRatio = 0.05,
   restriction = c(-90, 90, -180, 180),
   nSim = 10,
   kdeType = "1"

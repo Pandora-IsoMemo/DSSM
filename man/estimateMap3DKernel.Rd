@@ -19,6 +19,7 @@ estimateMap3DKernel(
   nClust = 5,
   nClustRange = c(2, 10),
   kMeansAlgo = "Hartigan-Wong",
+  trimRatio = 0.05,
   clusterTimeRange = c(0, 1000),
   modelUnc = FALSE,
   dateUnc = "point",

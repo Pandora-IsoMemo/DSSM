@@ -84,7 +84,15 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             ns = ns,
             sliderInput(inputId = ns("nClust"),
                         label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1)
+                        value = 5, min = 2, max = 15, step = 1),
+            helpText("Please adjust the number of clusters depending on the data.")
+          ),
+          conditionalPanel(
+            condition = "input.clusterMethod == 'tclust'",
+            ns = ns,
+            sliderInput(inputId = ns("trimRatio"),
+                        label = "Proportion of observations to be trimmed by tclust",
+                        value = 0.05, min = 0, max = 1, step = 0.05)
           ),
           conditionalPanel(
             condition = "input.clusterMethod == 'mclust'",
@@ -539,6 +547,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   nClust = input$nClust,
                   nClustRange = input$nClustRange,
                   kMeansAlgo = input$kMeansAlgo,
+                  trimRatio = input$trimRatio,
                   restriction = restriction,
                   nSim = input$nSim,
                   kdeType = input$kdeType) %>%

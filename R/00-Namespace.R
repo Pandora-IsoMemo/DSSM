@@ -49,6 +49,7 @@
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
+#' @importFrom tclust tclust
 #' @importFrom utils available.packages compareVersion install.packages head zip
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
 #' @importFrom webshot is_phantomjs_installed

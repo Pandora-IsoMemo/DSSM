@@ -2024,6 +2024,7 @@ estimateMapKernel <- function(data,
                               nClust = 5,
                               nClustRange = c(2,10),
                               kMeansAlgo = "Hartigan-Wong",
+                              trimRatio = 0.05,
                               restriction = c(-90, 90, -180, 180),
                               nSim = 10,
                               kdeType = "1"){
@@ -2091,7 +2092,6 @@ estimateMapKernel <- function(data,
     data2 <- merge(data2, clust, sort = FALSE)
     colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
   } else if (clusterMethod == "mclust"){
-    browser()
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
     for(i in 1:length(numClusters)){
@@ -2108,6 +2108,21 @@ estimateMapKernel <- function(data,
 
     # merge cluster centers
     cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
+    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
+    cluster_centers$cluster <- 1:nrow(cluster_centers)
+    data2 <- merge(data2, cluster_centers, sort = FALSE)
+    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
+
+    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
+  } else if (clusterMethod == "tclust"){
+
+    cluster_solution <- tclust(data2[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
+
+    # assign cluster to data
+    data2$cluster <- cluster_solution$cluster
+
+    # merge cluster centers
+    cluster_centers <- data.frame(t(cluster_solution$centers))
     colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
     cluster_centers$cluster <- 1:nrow(cluster_centers)
     data2 <- merge(data2, cluster_centers, sort = FALSE)
@@ -2225,6 +2240,7 @@ estimateMap3DKernel <- function(data,
                                 nClust = 5,
                                 nClustRange = c(2,10),
                                 kMeansAlgo = "Hartigan-Wong",
+                                trimRatio = 0.05,
                                 clusterTimeRange = c(0,1000),
                                 modelUnc = FALSE,
                                 dateUnc = "point",
@@ -2452,7 +2468,7 @@ estimateMap3DKernel <- function(data,
     clust$cluster <- 1:nrow(clust)
     data <- merge(data, clust, sort = FALSE)
     colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
-  } else if (clusterMethod == "mclust"){
+  } else if (clusterMethod %in% c("mclust","tclust")){
   # MCLUST Clustering ----
     data$id <- 1:nrow(data)
 
@@ -2461,23 +2477,13 @@ estimateMap3DKernel <- function(data,
                     ((data$Date + 2*data$Uncertainty) <= clusterTimeRange[2] & (data$Date + 2*data$Uncertainty) >= clusterTimeRange[1]) |
                     ((data$Date) <= clusterTimeRange[2] & (data$Date) >= clusterTimeRange[1]), ]
 
+    if(clusterMethod == "mclust"){
     numClusters <- seq(nClustRange[1],nClustRange[2])
     cluster_list <- vector("list", length(numClusters))
-    browser()
     for(i in 1:length(numClusters)){
       set.seed(1234)
       cluster_list[[i]] <- mclust::Mclust(dataC[,c("Longitude","Latitude")], G = numClusters[i])
     }
-
-    plot(cluster_list[[6]])
-    curves <- tclust::ctlcurves(dataC[,c("Longitude","Latitude")], k = 2:10, alpha = seq (0, 0.15, by = 0.05))
-
-    variability <- sapply(curves$obj, function(x) apply(x, 1, sd))
-    optimal_k <- which.min(apply(variability, 2, sum))
-
-    # Output the optimal k
-    print(paste("Optimal k is:", optimal_k))
-
     # select best cluster solution based on bic
     best_solution_idx <- which.max(sapply(1:length(cluster_list),function(x) cluster_list[[x]]$bic))
     best_solution_cluster <- numClusters[[best_solution_idx]]
@@ -2503,29 +2509,41 @@ estimateMap3DKernel <- function(data,
     data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
     data$id <- NULL
     colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
-    dataC$cluster <- NULL
     dataC <- dataC[order(dataC$id),]
+
+    } else {
+      # tclust
+      cluster_solution <- tclust(dataC[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
+
+      ## Filtered data ----
+      dataC$cluster <- cluster_solution$cluster
+      clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$centers)),t(cluster_solution$centers))
+      names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
+      dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
+      data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
+      data$id <- NULL
+      colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+      dataC <- dataC[order(dataC$id),]
+    }
 
     ## optimal centroids: ----
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
                                                                                                                       Date2 = (seq(clusterTimeRange[1], clusterTimeRange[2],
                                                                                                                                    length.out = 100) - mean(data$Date)) / (sd(data$Date))))))})
-    # assign cluster to data
-    dataC$cluster <- cluster_solution$classification
 
     densM <- colMeans(clustDens)
     densSD <- apply(clustDens, 2, sd)
     densQ <- densM / densSD
 
-    clusterCentroids <- do.call("rbind", (lapply(1:best_solution_cluster, function(j){
+    clusterCentroids <- do.call("rbind", (lapply(1:max(dataC$cluster), function(j){
       dataC[dataC$cluster == j, ][which.max(densQ[dataC$cluster == j]), c("Longitude", "Latitude")]
     })))
 
     data$cluster <- sapply(1:nrow(data),
-                           function(x) which.min(rowSums((data[rep(x, best_solution_cluster), c("Longitude", "Latitude")] -
+                           function(x) which.min(rowSums((data[rep(x, max(dataC$cluster)), c("Longitude", "Latitude")] -
                                                             as.matrix(clusterCentroids))^2)))
     if(length(unique(data$cluster)) < length(unique(dataC$cluster))){
-    showNotification(paste0("Note: mclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
+    showNotification(paste0("Note: mclust/tclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
     }
 
     clust <- clusterCentroids

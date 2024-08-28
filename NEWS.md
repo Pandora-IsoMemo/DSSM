@@ -1,3 +1,8 @@
+# DSSM 24.08.5
+
+## New Features
+- Adds tclust as clustering method in KernelR and KernelTimeR (#204)
+
 # DSSM 24.08.4
 
 ## New Features
