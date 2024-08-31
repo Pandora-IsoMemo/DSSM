@@ -1,3 +1,8 @@
+# DSSM 24.09.0
+
+## New Features
+- _KernelR_ + _KernelTimeR_: New option to adjust smoothness of kernel density estimator
+
 # DSSM 24.08.4
 
 ## New Features
