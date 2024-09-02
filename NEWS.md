@@ -3,6 +3,9 @@
 ## New Features
 - Adds tclust as clustering method in KernelR and KernelTimeR (#204)
 
+## Bug Fixes
+- solves issue with the plotting and export of cluster data in KernelR
+
 # DSSM 24.08.4
 
 ## New Features
