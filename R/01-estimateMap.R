@@ -2084,53 +2084,6 @@ estimateMapKernel <- function(data,
 
   # calculate model ----
   set.seed(1234)
-  if(clusterMethod == "kmeans"){
-    clust <- kmeans(cbind(data2$Longitude, data2$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
-    data2$cluster <- clust$cluster
-    clust <- as.data.frame(clust$centers)
-    names(clust) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    clust$cluster <- 1:nrow(clust)
-    data2 <- merge(data2, clust, sort = FALSE)
-    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
-  } else if (clusterMethod == "mclust"){
-    numClusters <- seq(nClustRange[1],nClustRange[2])
-    cluster_list <- vector("list", length(numClusters))
-    for(i in 1:length(numClusters)){
-        set.seed(1234)
-      cluster_list[[i]] <- mclust::Mclust(data2[,c("Longitude","Latitude")], G = numClusters[i])
-    }
-
-    # select best cluster solution based on bic
-    cluster_solution <- cluster_list[[which.max(sapply(1:length(cluster_list),
-                                             function(x) cluster_list[[x]]$bic))]]
-
-    # assign cluster to data
-    data2$cluster <- cluster_solution$classification
-
-    # merge cluster centers
-    cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
-    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data2 <- merge(data2, cluster_centers, sort = FALSE)
-    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
-
-    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
-  } else if (clusterMethod == "tclust"){
-
-    cluster_solution <- tclust(data2[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
-
-    # assign cluster to data
-    data2$cluster <- cluster_solution$cluster
-
-    # merge cluster centers
-    cluster_centers <- data.frame(t(cluster_solution$centers))
-    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data2 <- merge(data2, cluster_centers, sort = FALSE)
-    colnames(data2)[colnames(data2)=="cluster"] <- "spatial_cluster"
-
-    data2$spatial_cluster <- data2$spatial_cluster %>% makeClusterIdsContinuous()
-  }
   if(!is.null(Weighting) & !(Weighting == "")){
     model <- try(lapply(1:nSim, function(x){
       data3 <- data2[sample(1:nrow(data2), nrow(data2), replace = T), ]
@@ -2168,6 +2121,57 @@ estimateMapKernel <- function(data,
   if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
   sc <- NULL
   class(model) <- c(class(model), "kde")
+
+  # cluster data ----
+  ## cluster on original data
+  if(clusterMethod == "kmeans"){
+    clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
+    data$cluster <- clust$cluster
+    clust <- as.data.frame(clust$centers)
+    names(clust) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
+    clust$cluster <- 1:nrow(clust)
+    data <- merge(data, clust, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+  } else if (clusterMethod == "mclust"){
+    numClusters <- seq(nClustRange[1],nClustRange[2])
+    cluster_list <- vector("list", length(numClusters))
+    for(i in 1:length(numClusters)){
+      set.seed(1234)
+      cluster_list[[i]] <- mclust::Mclust(data[,c("Longitude","Latitude")], G = numClusters[i])
+    }
+
+    # select best cluster solution based on bic
+    cluster_solution <- cluster_list[[which.max(sapply(1:length(cluster_list),
+                                                       function(x) cluster_list[[x]]$bic))]]
+
+    # assign cluster to data
+    data$cluster <- cluster_solution$classification
+
+    # merge cluster centers
+    cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
+    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
+    cluster_centers$cluster <- 1:nrow(cluster_centers)
+    data <- merge(data, cluster_centers, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
+  } else if (clusterMethod == "tclust"){
+
+    cluster_solution <- tclust(data[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
+
+    # assign cluster to data
+    data$cluster <- cluster_solution$cluster
+
+    # merge cluster centers
+    cluster_centers <- data.frame(t(cluster_solution$centers))
+    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
+    cluster_centers$cluster <- 1:nrow(cluster_centers)
+    data <- merge(data, cluster_centers, sort = FALSE)
+    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+
+    data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
+  }
+
   return(list(model = model, data = data, sc = sc, independent = independent))
 }
 
