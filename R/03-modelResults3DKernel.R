@@ -1245,7 +1245,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       }

@@ -528,6 +528,20 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   zoomFromModel <- reactiveVal(50)
 
   observe({
+    if(input[["clusterMethod"]] %in% c("kmeans","mclust","tclust")){
+      value <- TRUE
+    } else {
+      value <- FALSE
+    }
+    updateCheckboxInput(
+      session,
+      "cluster",
+      value = value
+    )
+  }) %>%
+    bindEvent(input[["clusterMethod"]])
+
+  observe({
     validate(validInput(Model()))
     if(input$fixCol == FALSE){
       newZoom <- extractZoomFromLongRange(
@@ -918,7 +932,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$spatial_cluster)){
+      if (!is.null(Model()$data$spatial_cluster)) {
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
@@ -931,7 +945,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       }
