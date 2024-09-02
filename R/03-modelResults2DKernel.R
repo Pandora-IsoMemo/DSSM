@@ -65,42 +65,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          selectizeInput(inputId = ns("clusterMethod"),
-                      label = "Cluster Method (optional):",
-                      choices = c("kmeans","mclust","tclust"),
-                      options = list(
-                        placeholder = '',
-                        onInitialize = I('function() { this.setValue(""); }')
-                      )),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'kmeans'",
-            ns = ns,
-            selectInput(inputId = ns("kMeansAlgo"),
-                        label = "K-means algorithm:",
-                        choices = c("Hartigan-Wong", "Lloyd", "Forgy",
-                                    "MacQueen"))),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'kmeans' | input.clusterMethod == 'tclust'",
-            ns = ns,
-            sliderInput(inputId = ns("nClust"),
-                        label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1),
-            helpText("Please adjust the number of clusters depending on the data.")
-          ),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'tclust'",
-            ns = ns,
-            sliderInput(inputId = ns("trimRatio"),
-                        label = "Proportion of observations to be trimmed by tclust",
-                        value = 0.05, min = 0, max = 1, step = 0.05)
-          ),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'mclust'",
-            ns = ns,
-            sliderInput(inputId = ns("nClustRange"),
-                        label = "Possible range for clusters",
-                        value = c(2,10), min = 2, max = 50, step = 1)
-          ),
+          clusterMethodUI(ns = ns),
           dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",

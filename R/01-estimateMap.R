@@ -2436,15 +2436,12 @@ estimateMap3DKernel <- function(data,
     # data$cluster <- NULL
 
     ## Filtered data ----
-    dataC$cluster <- clust$cluster
-    clust_centroid <- data.frame(cluster=1:nrow(clust$centers),clust$centers)
-    names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
-    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
-    data$id <- NULL
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
-    dataC$cluster <- NULL
-    dataC <- dataC[order(dataC$id),]
+    dataC <- dataC %>%
+      getCentroid(cluster = clust$cluster,
+                  centers = clust$centers,
+                  removeClusterCol = TRUE)
+
+    data <- data %>% joinCentroid(dataC)
 
     ## Optimal Centroids ----
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2471,7 +2468,7 @@ estimateMap3DKernel <- function(data,
     data <- merge(data, clust, sort = FALSE)
     colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
   } else if (clusterMethod %in% c("mclust","tclust")){
-  # MCLUST Clustering ----
+  # MCLUST & TCLUST Clustering ----
     data$id <- 1:nrow(data)
 
     # Clustering on filtered data
@@ -2504,28 +2501,21 @@ estimateMap3DKernel <- function(data,
     # data$cluster <- NULL
 
     ## Filtered data ----
-    dataC$cluster <- cluster_solution$classification
-    clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$parameters$mean)),t(cluster_solution$parameters$mean))
-    names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
-    dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-    data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
-    data$id <- NULL
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
-    dataC <- dataC[order(dataC$id),]
+    dataC <- dataC %>%
+      getCentroid(cluster = cluster_solution$classification,
+                  centers = t(cluster_solution$parameters$mean))
 
+    data <- data %>% joinCentroid(dataC)
     } else {
       # tclust
       cluster_solution <- tclust(dataC[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
 
       ## Filtered data ----
-      dataC$cluster <- cluster_solution$cluster
-      clust_centroid <- data.frame(cluster=1:nrow(t(cluster_solution$centers)),t(cluster_solution$centers))
-      names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
-      dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-      data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
-      data$id <- NULL
-      colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
-      dataC <- dataC[order(dataC$id),]
+      dataC <- dataC %>%
+        getCentroid(cluster = cluster_solution$cluster,
+                    centers = t(cluster_solution$centers))
+
+      data <- data %>% joinCentroid(dataC)
     }
 
     ## optimal centroids: ----
