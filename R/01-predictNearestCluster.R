@@ -21,34 +21,38 @@ makeClusterIdsContinuous <- function(column_with_ids) {
   match(column_with_ids, sort(unique(column_with_ids)))
 }
 
-#' Get centroid of clusters
+#' Add centroid of clusters
 #'
 #' @param dataC Filtered data
-#' @param clust_centroid Centroid of clusters
-#' @param removeClusterCol Remove cluster column from data
+#' @param cluster Cluster ids
+#' @param centers Cluster centers
+#' @param type Type of centroid
 #'
-#' @return Filtered data with centroid
-getCentroid <- function(dataC, cluster, centers, removeClusterCol = FALSE) {
+#' @return Data with centroids
+addCentroids <- function(dataC, cluster, centers, type = c("centroid_spatial_cluster", "temporal_group_reference_point")) {
+  type <- match.arg(type)
+
   clust_centroid = data.frame(cluster = 1:nrow(centers), centers)
-  names(clust_centroid) <- c("cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")
+  names(clust_centroid) <- c("cluster", sprintf("long_%s", type), sprintf("lat_%s", type))
 
   dataC$cluster <- cluster
   dataC <- merge(dataC, clust_centroid, by = "cluster", sort = FALSE)
-  dataC <- dataC[order(dataC$id),]
 
-  if (removeClusterCol) {
-    dataC$cluster <- NULL
+  if (!is.null(dataC$id)) {
+    dataC <- dataC[order(dataC$id),]
   }
 
   dataC
 }
 
-#' Join centroid to data
+#' Join centroid data to data
 #'
 #' @param data Data
 #' @param dataC Filtered data with centroid
-joinCentroid <- function(data, dataC) {
-  data <- data %>% left_join(dataC[,c("id","cluster","long_centroid_spatial_cluster","lat_centroid_spatial_cluster")], by = "id")
+#'
+#' @return Data with centroid
+joinCentroidData <- function(data, dataC) {
+  data <- data %>% left_join(dataC[,c("id", "cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")], by = "id")
   data$id <- NULL
   colnames(data)[colnames(data) == "cluster"] <- "spatial_cluster"
 

@@ -2126,11 +2126,11 @@ estimateMapKernel <- function(data,
   ## cluster on original data
   if(clusterMethod == "kmeans"){
     clust <- kmeans(cbind(data$Longitude, data$Latitude), nClust, nstart = 25, algorithm = kMeansAlgo)
-    data$cluster <- clust$cluster
-    clust <- as.data.frame(clust$centers)
-    names(clust) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    clust$cluster <- 1:nrow(clust)
-    data <- merge(data, clust, sort = FALSE)
+
+    data <- data %>%
+      addCentroids(cluster = clust$cluster,
+                   centers = clust$centers)
+
     colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
   } else if (clusterMethod == "mclust"){
     numClusters <- seq(nClustRange[1],nClustRange[2])
@@ -2144,31 +2144,22 @@ estimateMapKernel <- function(data,
     cluster_solution <- cluster_list[[which.max(sapply(1:length(cluster_list),
                                                        function(x) cluster_list[[x]]$bic))]]
 
-    # assign cluster to data
-    data$cluster <- cluster_solution$classification
-
     # merge cluster centers
-    cluster_centers <- data.frame(t(cluster_solution$parameters$mean))
-    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data <- merge(data, cluster_centers, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+    data <- data %>%
+      addCentroids(cluster = cluster_solution$classification,
+                   centers = t(cluster_solution$parameters$mean))
 
+    colnames(data)[colnames(data) == "cluster"] <- "spatial_cluster"
     data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
-  } else if (clusterMethod == "tclust"){
-
+  } else if (clusterMethod == "tclust") {
     cluster_solution <- tclust(data[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
 
-    # assign cluster to data
-    data$cluster <- cluster_solution$cluster
-
     # merge cluster centers
-    cluster_centers <- data.frame(t(cluster_solution$centers))
-    colnames(cluster_centers) <- c("long_centroid_spatial_cluster", "lat_centroid_spatial_cluster")
-    cluster_centers$cluster <- 1:nrow(cluster_centers)
-    data <- merge(data, cluster_centers, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "spatial_cluster"
+    data <- data %>%
+      addCentroids(cluster = cluster_solution$cluster,
+                   centers = t(cluster_solution$centers))
 
+    colnames(data)[colnames(data) == "cluster"] <- "spatial_cluster"
     data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
 
@@ -2409,6 +2400,11 @@ estimateMap3DKernel <- function(data,
       }
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
+
+  if (class(model)[1] == "try-error") {return("Error in Model Fitting.")}
+  sc <- NULL
+  class(model) <- c(class(model), "kde")
+
   if(clusterMethod == "kmeans"){
 # K-Means Clustering ----
     # discussion about the clustering here: https://github.com/Pandora-IsoMemo/iso-app/issues/54
@@ -2441,11 +2437,12 @@ estimateMap3DKernel <- function(data,
 
     ## Filtered data ----
     dataC <- dataC %>%
-      getCentroid(cluster = clust$cluster,
-                  centers = clust$centers,
-                  removeClusterCol = TRUE)
+      addCentroids(cluster = clust$cluster,
+                   centers = clust$centers)
 
-    data <- data %>% joinCentroid(dataC)
+    data <- data %>% joinCentroidData(dataC)
+
+    dataC$cluster <- NULL
 
     ## Optimal Centroids ----
     clustDens <- sapply(1:nrow(dataC), function(z) {rowMeans(sapply(1:nSim, function(k) predict(model[[k]], x = cbind(dataC[rep(z, 100), c("Longitude", "Latitude")],
@@ -2466,11 +2463,12 @@ estimateMap3DKernel <- function(data,
                            function(x) which.min(rowSums((data[rep(x, nClust), c("Longitude", "Latitude")] -
                                                         as.matrix(clusterCentroids))^2)))
 
-    clust <- clusterCentroids
-    names(clust) <- c("long_temporal_group_reference_point", "lat_temporal_group_reference_point")
-    clust$cluster <- 1:nrow(clust)
-    data <- merge(data, clust, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
+    data <- data %>%
+      addCentroids(cluster = data$cluster,
+                   centers = clusterCentroids,
+                   type = c("temporal_group_reference_point"))
+
+    colnames(data)[colnames(data) == "cluster"] <- "temporal_group"
   } else if (clusterMethod %in% c("mclust","tclust")){
   # MCLUST & TCLUST Clustering ----
     data$id <- 1:nrow(data)
@@ -2506,20 +2504,20 @@ estimateMap3DKernel <- function(data,
 
     ## Filtered data ----
     dataC <- dataC %>%
-      getCentroid(cluster = cluster_solution$classification,
-                  centers = t(cluster_solution$parameters$mean))
+      addCentroids(cluster = cluster_solution$classification,
+                   centers = t(cluster_solution$parameters$mean))
 
-    data <- data %>% joinCentroid(dataC)
+    data <- data %>% joinCentroidData(dataC)
     } else {
       # tclust
       cluster_solution <- tclust(dataC[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
 
       ## Filtered data ----
       dataC <- dataC %>%
-        getCentroid(cluster = cluster_solution$cluster,
-                    centers = t(cluster_solution$centers))
+        addCentroids(cluster = cluster_solution$cluster,
+                     centers = t(cluster_solution$centers))
 
-      data <- data %>% joinCentroid(dataC)
+      data <- data %>% joinCentroidData(dataC)
     }
 
     ## optimal centroids: ----
@@ -2542,18 +2540,17 @@ estimateMap3DKernel <- function(data,
     showNotification(paste0("Note: mclust/tclust selected ",length(unique(dataC$cluster))," cluster. However the temporal algorithm assigned all data to only ",length(unique(data$cluster))," of these clusters."))
     }
 
-    clust <- clusterCentroids
-    names(clust) <- c("long_temporal_group_reference_point", "lat_temporal_group_reference_point")
-    clust$cluster <- 1:nrow(clust)
-    data <- merge(data, clust, sort = FALSE)
-    colnames(data)[colnames(data)=="cluster"] <- "temporal_group"
+    data <- data %>%
+      addCentroids(cluster = data$cluster,
+                   centers = clusterCentroids,
+                   type = c("temporal_group_reference_point"))
+
+    colnames(data)[colnames(data) == "cluster"] <- "temporal_group"
 
     data$temporal_group <- data$temporal_group %>% makeClusterIdsContinuous()
     data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   }
-  if ( class(model)[1] == "try-error") {return("Error in Model Fitting.")}
-  sc <- NULL
-  class(model) <- c(class(model), "kde")
+
   return(list(model = model, data = data, sc = sc, independent = independent))
 }
 
