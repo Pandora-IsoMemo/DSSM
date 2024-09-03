@@ -16,6 +16,7 @@ estimateMapKernel(
   nClust = 5,
   nClustRange = c(2, 10),
   kMeansAlgo = "Hartigan-Wong",
+  trimRatio = 0.05,
   restriction = c(-90, 90, -180, 180),
   nSim = 10,
   kdeType = "1"
@@ -44,6 +45,8 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 \item{nClustRange}{numeric: range of potential mclust cluster}
 
 \item{kMeansAlgo}{character: kmeans algorithm as in stats:kmeans}
+
+\item{trimRatio}{numeric: proportion of observations to be trimmed by tclust}
 
 \item{restriction}{numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)}
 
