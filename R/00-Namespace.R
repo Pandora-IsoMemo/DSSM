@@ -7,7 +7,7 @@
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importUI importServer
 #'  importOptions prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
 #'  updateNameEntryIfDuplicate
-#' @importFrom dplyr "%>%" arrange distinct filter group_by group_by_at left_join select summarise
+#' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join select summarise
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point

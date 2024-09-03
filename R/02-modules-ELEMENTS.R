@@ -1,5 +1,61 @@
 ## Custom Inputs ----
 
+#' Cluster Method UI
+#'
+#' UI for the cluster method
+#'
+#' @param ns namespace
+#' @param timeRangeInput logical, if TRUE, the time range input is shown
+clusterMethodUI <- function(ns, timeRangeInput = FALSE) {
+  tagList(
+    selectizeInput(inputId = ns("clusterMethod"),
+                   label = "Cluster Method (optional):",
+                   choices = c("kmeans","mclust","tclust"),
+                   options = list(
+                     placeholder = '',
+                     onInitialize = I('function() { this.setValue(""); }')
+                   )),
+    conditionalPanel(
+      condition = "input.clusterMethod == 'kmeans'",
+      ns = ns,
+      selectInput(inputId = ns("kMeansAlgo"),
+                  label = "K-means algorithm:",
+                  choices = c("Hartigan-Wong", "Lloyd", "Forgy",
+                              "MacQueen"))),
+    conditionalPanel(
+      condition = "input.clusterMethod == 'kmeans' | input.clusterMethod == 'tclust'",
+      ns = ns,
+      sliderInput(inputId = ns("nClust"),
+                  label = "Number of clusters",
+                  value = 5, min = 2, max = 15, step = 1),
+      helpText("Please adjust the number of clusters depending on the data.")
+    ),
+    conditionalPanel(
+      condition = "input.clusterMethod == 'tclust'",
+      ns = ns,
+      sliderInput(inputId = ns("trimRatio"),
+                  label = "Proportion of observations to be trimmed by tclust",
+                  value = 0.05, min = 0, max = 1, step = 0.05)
+    ),
+    conditionalPanel(
+      condition = "input.clusterMethod == 'mclust'",
+      ns = ns,
+      sliderInput(inputId = ns("nClustRange"),
+                  label = "Possible range for clusters",
+                  value = c(2,10), min = 2, max = 50, step = 1)
+    ),
+    if (timeRangeInput) {
+      conditionalPanel(
+        condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans' | input.clusterMethod == 'tclust'",
+        ns = ns,
+        sliderInput(inputId = ns("timeClust"),
+                    label = "Cluster time range",
+                    min = 0, max = 15000, value = c(1000, 5000), step = 100)
+      )
+    } else NULL
+  )
+}
+
 #' Smoothing UI
 #'
 #' @param ns namespace
