@@ -1999,6 +1999,7 @@ invLogit <- function(x){
 #' @param nClustRange numeric: range of potential mclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
 #' @param nSim numeric: number of bootstrap samples
+#' @param smoothness numeric: smoothness adjustment
 #' @param kdeType character: "1" for correlated bandwidth, "2" for diagonal bandwidth, "3" for diagonal, equal long/lat bandwidth
 #' @inheritParams centerData
 #' @examples
@@ -2030,6 +2031,7 @@ estimateMapKernel <- function(data,
                               trimRatio = 0.05,
                               restriction = c(-90, 90, -180, 180),
                               nSim = 10,
+                              smoothness = 1,
                               kdeType = "1"){
   center <- match.arg(center)
 
@@ -2099,7 +2101,8 @@ estimateMapKernel <- function(data,
         H = Hpi.diag(cbind(data3$Longitude, data3$Latitude))
         diag(H) <- prod(diag(H)^0.5)
       }
-
+      #smoothness adjustment
+      H = H*smoothness
       kde(cbind(data3$Longitude, data3$Latitude), w = data3[,Weighting], H=H)
     }),
     silent = TRUE)
@@ -2116,7 +2119,8 @@ estimateMapKernel <- function(data,
         H = Hpi.diag(cbind(data3$Longitude, data3$Latitude))
         diag(H) <- prod(diag(H)^0.5)
       }
-
+      #smoothness adjustment
+      H = H*smoothness
       kde(cbind(data3$Longitude, data3$Latitude), H=H)
     }), silent = TRUE)
   }
@@ -2186,6 +2190,7 @@ estimateMapKernelWrapper <- function(data, input) {
                 kMeansAlgo = input$kMeansAlgo,
                 restriction = restriction,
                 nSim = input$nSim,
+
                 kdeType = input$kdeType)
 }
 
@@ -2212,6 +2217,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param dateUnc character: one of "uniform", "normal", "point"
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
 #' @param nSim numeric: number of bootstrap samples
+#' @param smoothness numeric: smoothness adjustment
 #' @param kdeType character: "1" for correlated bandwidth, "2" for diagonal bandwidth, "3" for diagonal, equal long/lat bandwidth
 #' @inheritParams centerData
 #' @examples
@@ -2245,6 +2251,7 @@ estimateMap3DKernel <- function(data,
                                 dateUnc = "point",
                                 restriction = c(-90, 90, -180, 180),
                                 nSim = 10,
+                                smoothness = 1,
                                 kdeType = "1") {
   center <- match.arg(center)
 
@@ -2377,7 +2384,8 @@ estimateMap3DKernel <- function(data,
         H = Hpi.diag(cbind(data3$Longitude, data3$Latitude, data3$Date2))
         diag(H)[1:2] <- prod(diag(H)[1:2]^0.5)
       }
-
+      #smoothness adjustment
+      H = H*smoothness
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H= H, w = data3[,Weighting])
     }), silent = TRUE)
   } else {
@@ -2400,6 +2408,8 @@ estimateMap3DKernel <- function(data,
         H = Hpi.diag(cbind(data3$Longitude, data3$Latitude, data3$Date2))
         diag(H) <- prod(diag(H)^0.5)
       }
+      #smoothness adjustment
+      H = H*smoothness
       kde(cbind(data3$Longitude, data3$Latitude, data3$Date2), H = H)}), silent = TRUE)
   }
 

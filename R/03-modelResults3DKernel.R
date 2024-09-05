@@ -117,6 +117,7 @@ modelResults3DKernelUI <- function(id, title = ""){
             ns = ns
           )
         ),
+        sliderInput(ns("smoothParam"), value = 1.0, min = 0.1, max = 5.0, step = 0.1, label = "Adjust smoothness (optional)"),
         radioButtons(ns("kdeType"), "Bandwidth matrix type",
                      choices = c("Correlated" = "1", "Diagonal" = "2", "Diagonal + equal in longitudes and latitudes" = "3")),
         actionButton( ns("start"), "Start"),
@@ -627,6 +628,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       modelUnc = input$modelUnc,
                       restriction = restriction,
                       nSim = input$nSim,
+                      smoothness = input$smoothParam,
                       kdeType = input$kdeType) %>%
           tryCatchWithWarningsAndErrors()
         },

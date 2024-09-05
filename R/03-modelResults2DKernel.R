@@ -91,6 +91,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
             ns = ns
           )
         ),
+        sliderInput(ns("smoothParam"), value = 1.0, min = 0.1, max = 5.0, step = 0.1, label = "Adjust smoothness (optional)"),
         radioButtons(ns("kdeType"), "Bandwidth matrix type",
                      choices = c("Correlated" = "1", "Diagonal" = "2", "Diagonal + equal in longitudes and latitudes" = "3")),
         actionButton( ns("start"), "Start"),
@@ -515,6 +516,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   trimRatio = input$trimRatio,
                   restriction = restriction,
                   nSim = input$nSim,
+                  smoothness = input$smoothParam,
                   kdeType = input$kdeType) %>%
         tryCatchWithWarningsAndErrors()
       },
