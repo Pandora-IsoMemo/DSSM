@@ -19,6 +19,7 @@ estimateMap3DKernel(
   nClust = 5,
   nClustRange = c(2, 10),
   kMeansAlgo = "Hartigan-Wong",
+  trimRatio = 0.05,
   clusterTimeRange = c(0, 1000),
   modelUnc = FALSE,
   dateUnc = "point",
@@ -57,6 +58,8 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 \item{nClustRange}{numeric: range of potential mclust cluster}
 
 \item{kMeansAlgo}{character: kmeans algorithm as in stats:kmeans}
+
+\item{trimRatio}{numeric: proportion of observations to be trimmed by tclust}
 
 \item{clusterTimeRange}{numeric vector: time range of cluster}
 

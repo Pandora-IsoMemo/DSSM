@@ -7,7 +7,7 @@
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importUI importServer
 #'  importOptions prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
 #'  updateNameEntryIfDuplicate
-#' @importFrom dplyr "%>%" arrange distinct filter group_by group_by_at left_join select summarise
+#' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join select summarise
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
@@ -49,6 +49,7 @@
 #'  qnorm quantile rbeta residuals rgamma rnorm runif sd var
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
+#' @importFrom tclust tclust
 #' @importFrom utils available.packages compareVersion install.packages head zip
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
 #' @importFrom webshot is_phantomjs_installed

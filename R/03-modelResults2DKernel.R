@@ -65,31 +65,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          selectizeInput(inputId = ns("clusterMethod"),
-                      label = "Cluster Method (optional):",
-                      choices = c("kmeans","mclust"),
-                      options = list(
-                        placeholder = '',
-                        onInitialize = I('function() { this.setValue(""); }')
-                      )),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'kmeans'",
-            ns = ns,
-            selectInput(inputId = ns("kMeansAlgo"),
-                        label = "K-means algorithm:",
-                        choices = c("Hartigan-Wong", "Lloyd", "Forgy",
-                                    "MacQueen")),
-            sliderInput(inputId = ns("nClust"),
-                        label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1)
-          ),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'mclust'",
-            ns = ns,
-            sliderInput(inputId = ns("nClustRange"),
-                        label = "Possible range for clusters",
-                        value = c(2,10), min = 2, max = 50, step = 1)
-          ),
+          clusterMethodUI(ns = ns),
           dataCenterUI(ns, displayCondition = "true", hideCorrection = TRUE),
           checkboxInput(inputId = ns("modelArea"),
                         label = "Restrict model area",
@@ -537,6 +513,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   nClust = input$nClust,
                   nClustRange = input$nClustRange,
                   kMeansAlgo = input$kMeansAlgo,
+                  trimRatio = input$trimRatio,
                   restriction = restriction,
                   nSim = input$nSim,
                   smoothness = input$smoothParam,
@@ -551,6 +528,20 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   zoomFromModel <- reactiveVal(50)
+
+  observe({
+    if(input[["clusterMethod"]] %in% c("kmeans","mclust","tclust")){
+      value <- TRUE
+    } else {
+      value <- FALSE
+    }
+    updateCheckboxInput(
+      session,
+      "cluster",
+      value = value
+    )
+  }) %>%
+    bindEvent(input[["clusterMethod"]])
 
   observe({
     validate(validInput(Model()))
@@ -943,7 +934,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   dataFun <- reactive({
     req(Model())
     function() {
-      if(!is.null(Model()$data$spatial_cluster)){
+      if (!is.null(Model()$data$spatial_cluster)) {
         allData <- data()
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
@@ -956,7 +947,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       }

@@ -1,7 +1,20 @@
-# DSSM 24.09.0
+# DSSM 24.09.1
 
 ## New Features
 - _KernelR_ + _KernelTimeR_: New option to adjust smoothness of kernel density estimator
+
+# DSSM 24.09.0
+
+## Bug Fixes
+- fix issue with failing modeling for "Smooth Type" = "planar" with 'number of spatial basis functions' input (#247)
+
+# DSSM 24.08.5
+
+## New Features
+- Adds tclust as clustering method in KernelR and KernelTimeR (#204)
+
+## Bug Fixes
+- solves issue with the plotting and export of cluster data in KernelR
 
 # DSSM 24.08.4
 
