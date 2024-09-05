@@ -773,7 +773,9 @@ estimateMap3D <- function(data,
     K <- ceiling(0.9 * nrow(unique(data[, c(Longitude, Latitude)])))
     if (K < 4) {return("less than 4 rows")}
   }
-  if (length(unique(data[, c("Date")])) <= KT) {
+
+  # KT = input[["SmoothingT"]] now can become NULL if splineType != 2
+  if (splineType == 2 && length(unique(data[, c("Date")])) <= KT) {
     KT <- ceiling(0.9 * length(unique(data[, c("Date")])))
     if (KT < 4) {return("less than 4 rows")}
   }

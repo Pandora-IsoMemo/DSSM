@@ -1,3 +1,8 @@
+# DSSM 24.09.0
+
+## Bug Fixes
+- fix issue with failing modeling for "Smooth Type" = "planar" with 'number of spatial basis functions' input (#247)
+
 # DSSM 24.08.5
 
 ## New Features
