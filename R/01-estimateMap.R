@@ -1054,7 +1054,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
   M <- qr(P)$rank
   nknots <- dim(P)[1]
 
-  sV <- smoothCon(s(Latitude, Longitude, m = c(1,0.5),
+  sV <- smoothCon(s(Latitude, Longitude, m = penalty,
                     k = max(10, min(100, ceiling(K / 2))), bs = bs),
                   data = data, knots = NULL)[[1]]
 
