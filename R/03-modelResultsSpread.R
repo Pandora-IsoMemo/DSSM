@@ -412,13 +412,13 @@ modelResultsSpreadUI <- function(id, title = ""){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
       )
