@@ -12,9 +12,10 @@ centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
+    tags$strong("Center estimates:"),
     numericInput(
       inputId = ns("centerY"),
-      label = "Center point latitude",
+      label = "Latitude",
       min = -180,
       max = 180,
       value = c(),
@@ -23,7 +24,7 @@ centerEstimateUI <- function(id, title = "") {
     ),
     numericInput(
       inputId = ns("centerX"),
-      label = "Center point longitude",
+      label = "Longitude",
       min = -90,
       max = 90,
       value = c(),
@@ -31,27 +32,27 @@ centerEstimateUI <- function(id, title = "") {
       width = "100%"
     ),
     conditionalPanel(
+      ns = ns,
       condition =
         "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != '' && output.isCenterEstimateMap == true",
       numericInput(
         inputId = ns("decimalPlace"),
-        label = "Decimal places for Mean/Error at the Center point",
+        label = "Decimal places for Mean/Error",
         min = 0,
         max = 10,
         value = 2,
         step = 1,
         width = "100%"
       ),
-      ns = ns
-    ),
-    sliderInput(
-      inputId = ns("Radius"),
-      label = "Radius (km)",
-      min = 10,
-      max = 300,
-      value = 100,
-      step = 10,
-      width = "100%"
+      sliderInput(
+        inputId = ns("Radius"),
+        label = "Radius (km)",
+        min = 10,
+        max = 300,
+        value = 100,
+        step = 10,
+        width = "100%"
+      )
     )
   )
 }

@@ -1,3 +1,8 @@
+# DSSM 24.09.2
+
+## New Features
+- _Centerpoint estimates_: Radius input is now hidden if the center coordinates are not set (#252)
+
 # DSSM 24.09.1
 
 ## New Features
