@@ -2,7 +2,7 @@ pipeline {
     agent any
     options { disableConcurrentBuilds() }
     environment {
-        CUR_PROJ = 'iso-app' // github repo name
+        CUR_PROJ = 'dssm' // github repo name
         CUR_PKG_FOLDER = '.' // defaults to root
         TMP_SUFFIX = """${sh(returnStdout: true, script: 'echo `cat /dev/urandom | tr -dc \'a-z\' | fold -w 6 | head -n 1`')}"""
         GH_TOKEN = credentials("github-isomemo")
