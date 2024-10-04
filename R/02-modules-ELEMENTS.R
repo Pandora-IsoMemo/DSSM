@@ -33,9 +33,13 @@ clusterMethodUI <- function(ns, timeRangeInput = FALSE) {
     conditionalPanel(
       condition = "input.clusterMethod == 'tclust'",
       ns = ns,
+      tags$a(href = "https://cran.r-project.org/web/packages/tclust/tclust.pdf", "tclust documentation", target = "_blank"),
       sliderInput(inputId = ns("trimRatio"),
                   label = "Proportion of observations to be trimmed by tclust",
-                  value = 0.05, min = 0, max = 1, step = 0.05)
+                  value = 0.05, min = 0, max = 1, step = 0.05),
+      numericInput(inputId = ns("restr.fact"),
+                   label = "Clustering restriction factor (restr.fact)",
+                   value = 12, min = 1, max = NA, step = 1)
     ),
     conditionalPanel(
       condition = "input.clusterMethod == 'mclust'",

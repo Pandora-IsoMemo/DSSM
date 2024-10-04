@@ -513,6 +513,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                   nClustRange = input$nClustRange,
                   kMeansAlgo = input$kMeansAlgo,
                   trimRatio = input$trimRatio,
+                  restr.fact = input$restr.fact,
                   restriction = restriction,
                   nSim = input$nSim,
                   smoothness = input$smoothParam,

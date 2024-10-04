@@ -1,3 +1,8 @@
+# DSSM 24.10.0
+
+## New Features
+- _KernelR_ + _KernelTimeR_: New restriction factor input for tclust clustering (#204)
+
 # DSSM 24.09.2
 
 ## New Features
