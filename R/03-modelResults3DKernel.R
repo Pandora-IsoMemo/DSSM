@@ -77,7 +77,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
+          tags$br(),
           clusterMethodUI(ns = ns, timeRangeInput = TRUE),
+          tags$br(),
           checkboxInput(inputId = ns("modelUnc"),
                         label = "Include dating uncertainty", value = TRUE),
           conditionalPanel(
