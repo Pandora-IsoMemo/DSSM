@@ -62,6 +62,11 @@
 #' @param nMin Number of minima to compare, only for spread model
 #' @param minDist Distance between minima/maxima, only for spread model
 #' @param showMinOnMap Show minima on map yes/no, only for spread model if maptype = "Minima/Maxima"
+#' @param OLat Origin Latitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"
+#' @param OLong Origin Longitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"
+#' @param DestLat Origin Latitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"
+#' @param DestLong Origin Longitude for Cost-Surface Plot, only for spread model if maptype = "Cost-Surface"
+
 #' @inheritParams filled.contour2
 #'
 #' @export
@@ -112,7 +117,11 @@ plotMap <- function(model,
                     MinMax = "Min",
                     nMin = 3,
                     minDist = 250,
-                    showMinOnMap = FALSE){
+                    showMinOnMap = FALSE,
+                    OLat = NULL,
+                    OLong = NULL,
+                    DestLat = NULL,
+                    DestLong = NULL){
   options(scipen=999)
   contourType <- match.arg(contourType)
   minRangeFactor <- 0.75
@@ -137,7 +146,6 @@ plotMap <- function(model,
   if(is.null(rangez)){
     rangez = range(model$data[, independent], na.rm = TRUE)
   }
-
   Bayes = TRUE
   GAM = FALSE
   if("gamm" %in% class(model$model)){
@@ -171,7 +179,6 @@ plotMap <- function(model,
   latitudes <- seq(max(-90, rangey[1] - 0.1 * diff(rangey)),
                    min(90, rangey[2] + 0.1 * diff(rangey)), length.out = resolution)
   XPred <- expand.grid(Longitude = longitudes, Latitude = latitudes)
-
   if(centerMap != "Europe"){
     rangexEU <- rangex
     rangex[rangexEU < 20] <- rangex[rangexEU < 20] + 160
@@ -226,7 +233,6 @@ plotMap <- function(model,
   }
 
   XPred <- centerData(XPred, center = centerMap)
-
   if (Bayes == TRUE & GAM == FALSE){
     PredMatr <- Predict.matrix(sc, data = XPred)
 
@@ -276,26 +282,31 @@ plotMap <- function(model,
     }
 
     if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile)
+      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
     }
     if(estType == "QuantileTOTAL"){
       Est <- rowMeans(Predictions + qnorm(estQuantile) * sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2))
     }
+    #precomputing quantiles for faster execution
+    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975),
+                names = FALSE)
+    qs2 <- apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1,
+                 quantile, c(0.025, 0.975), names = FALSE)
     XPred <- data.frame(XPred,
-                        Est = Est,
-                        Sd = apply(Predictions, 1, sd),
-                        SDPop = PredictionsSigma,
-                        SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                        IntLower = apply(Predictions, 1, quantile, 0.025),
-                        IntUpper = apply(Predictions, 1, quantile, 0.975),
-                        IntLowerTotal = apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                                              1, quantile, 0.025),
-                        IntUpperTotal = apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                                              1, quantile, 0.975),
-                        resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2))
-  }
+                    Est = Est,
+                    Sd = apply(Predictions, 1, sd),
+                    SDPop = PredictionsSigma,
+                    SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
+                    IntLower = qs[1,],
+                    IntUpper = qs[2,],
+                    IntLowerTotal = qs2[1,],
+                    IntUpperTotal = qs2[2,],
+                    resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2)
+    )
+    }
   if (Bayes == FALSE & GAM == FALSE){
-    Est <- predict(model$model$gam, XPred, se.fit = TRUE, type = "response")
+
+    Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
     if(estType == "1 SE"){
       Est$fit <- Est$se.fit
     }
@@ -326,7 +337,10 @@ plotMap <- function(model,
       Est$fit <- Est$fit + qnorm(estQuantile) *
         sqrt(Est$se.fit^2 + varM)
     }
-
+    fitted_values <- model$model$gam$fitted.values
+    if(model$model$gam$family$family == "binomial"){
+      fitted_values <- 1 / (1+exp(-fitted_values))
+    }
     XPred <- data.frame(XPred,
                         Est = Est$fit,
                         Sd = Est$se.fit,
@@ -336,7 +350,7 @@ plotMap <- function(model,
                         IntUpper = Est$fit + 1.96 * Est$se.fit,
                         IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + varM),
                         IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + varM),
-                        resError = sqrt(mean((predict(model$model$gam, type = "response") - model$model$gam$y)^2)))
+                        resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
     Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], x = XPred[, 1:2]))
@@ -351,14 +365,15 @@ plotMap <- function(model,
     }
 
     if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile)
+      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
     }
+    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
 
     XPred <- data.frame(XPred,
                         Est = Est,
                         Sd = apply(Predictions, 1, sd),
-                        IntLower = pmax(0, apply(Predictions, 1, quantile, 0.025)),
-                        IntUpper = apply(Predictions, 1, quantile, 0.975))
+                        IntLower = pmax(0, qs[1,]),
+                        IntUpper = qs[2,])
   }
   if (estType != "1 SE" && estType != "2 SE" &&
       estType != "1 SETOTAL" &&
@@ -455,7 +470,6 @@ plotMap <- function(model,
   }
 
   XPred$Est[XPred$Sd > StdErr] <- NA
-  levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
 
 
   if(mapType == "Minima/Maxima"){
@@ -507,6 +521,35 @@ plotMap <- function(model,
     }
   }
 
+  if(mapType == "Cost-Surface"){
+    origin <- c(OLong, OLat)
+    if(origin[1]>max(XPred$Longitude) | origin[1]<min(XPred$Longitude)|origin[2]>max(XPred$Latitude) | origin[2]<min(XPred$Latitude)){
+      return(paste0("The given coordinates are lying outside the box of provided data. The coordinates must be within [",min(XPred$Longitude),", ", max(XPred$Longitude), "] degrees Longitude and [" ,min(XPred$Latitude),", ", max(XPred$Latitude), "] degrees Latitude"))
+    } else {
+      cost_speed <- getCostSpeed(XPred, MinMax = MinMax)
+      cost_surface <- accCost(cost_speed, origin)
+      XPred <- XPred %>% arrange(desc(XPred$Latitude), XPred$Longitude)
+      XPred$Est2 <- cost_surface@data@values
+      XPred$Est[!is.na(XPred$Est)] <- XPred$Est2[!is.na(XPred$Est)]
+      XPred$Est2 <- NULL
+      XPred$Sd <- 0
+      XPred <- XPred %>% arrange(XPred$Latitude, XPred$Longitude)
+      rangez <- c(0, max(XPred$Est[XPred$Est < Inf & XPred$Est > -Inf], na.rm = TRUE))
+    }
+  }
+  if(mapType == "Shortest-Path"){
+    origin <- c(OLong, OLat)
+    destination <- c(DestLong, DestLat)
+    if(origin[1]>max(XPred$Longitude) | origin[1]<min(XPred$Longitude)|origin[2]>max(XPred$Latitude) | origin[2]<min(XPred$Latitude) |
+       destination[1]>max(XPred$Longitude) | destination[1]<min(XPred$Longitude)|destination[2]>max(XPred$Latitude) | destination[2]<min(XPred$Latitude)){
+      return(paste0("The given coordinates are lying outside the box of provided data. The coordinates must be within [",min(XPred$Longitude),", ", max(XPred$Longitude), "] degrees Longitude and [" ,min(XPred$Latitude),", ", max(XPred$Latitude), "] degrees Latitude"))
+    } else {
+      cost_speed <- getCostSpeed(XPred, MinMax = MinMax)
+      AtoB <- shortestPath(cost_speed, origin, destination, output = "SpatialLines")
+    }
+  }
+  levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
+
   #if (!all(is.na(XPred$Est))){
   if (mapType == "Speed"){
     if(centerMap != "Europe"){
@@ -527,7 +570,7 @@ plotMap <- function(model,
     tankilometers <- sqrt(diff(latitudes)[1] * diff(longitudes)[1]) * 111
     z2 <- log(((1/z2) / tankilometers) + 1E-10)
     z2levels <- signif(exp(pretty(as.vector(z2), n = ncol)), 2)
-    q99 <- quantile(as.vector(exp(z2)), na.rm = TRUE, 0.975)
+    q99 <- quantile(as.vector(exp(z2)), na.rm = TRUE, 0.975, names = FALSE)
     z2levels <- z2levels[z2levels < q99]
     z2levels <- unique(c(z2levels, signif(q99, 2),
                          signif(max(as.vector(exp(z2)), na.rm = TRUE), 2)))
@@ -770,7 +813,11 @@ plotMap <- function(model,
     if(setAxisLabels){
       main = mainLabel
     } else {
-      main = independent
+      if(mapType != "Cost-Surface"){
+        main = independent
+      } else {
+        main = "Cost"
+      }
     }
   }
 
@@ -780,7 +827,11 @@ plotMap <- function(model,
     if(setAxisLabels){
       mainS = scLabel
     } else {
-      mainS = independent
+      if(mapType != "Cost-Surface"){
+        mainS = independent
+      } else {
+        mainS = "Cost"
+      }
     }
   }
 
@@ -792,7 +843,6 @@ plotMap <- function(model,
     xlab = "Longitude"
     ylab = "Latitude"
   }
-
 
   filled.contour2(longitudes, latitudes, z = matrix(XPredPlot$Est, ncol = resolution),
                   contourType = contourType,
@@ -895,6 +945,23 @@ plotMap <- function(model,
                       text(dataMinPlot$Latitude ~ dataMinPlot$Longitude, labels = paste0(MinMax, "ima", 1:nMin), pos = 4,
                            cex = fontSize * 1.5, col = fontCol, family = fontType)
                     }
+                    if(mapType == "Shortest-Path"){
+                      lines(AtoB, lwd = 3, col = "red")
+                      text(OLong, OLat, "Origin", pos = 4)
+                      text(DestLong, DestLat, "Destination", pos = 4)
+                      points(x = c(OLong, DestLong),
+                             y = c(OLat, DestLat),
+                             cex = pointDat$pointSize,
+                             pch = 16, col = "red")
+                    }
+                    if(mapType == "Cost-Surface"){
+                      text(OLong, OLat, "Origin", pos = 4)
+                      points(x = c(OLong),
+                             y = c(OLat),
+                             cex = pointDat$pointSize,
+                             pch = 16, col = "red")
+                    }
+
                     if(!is.null(textLabels)){
                       if(centerMap != "Europe"){
                         text(dataPac$Latitude ~ dataPac$Longitude,
@@ -1284,29 +1351,31 @@ plotMap3D <- function(model,
       Est <- PredictionsSigma * 2
     }
     if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile)
+      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
     }
     if(estType == "QuantileTOTAL"){
       Est <- rowMeans(Predictions +  qnorm(estQuantile) * sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2))
     }
+    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
+    qs2 <- apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1,
+                 quantile, c(0.025, 0.975), names = FALSE)
 
-    XPred <-
-      data.frame(XPred,
+    XPred <- data.frame(XPred,
                  Est = Est,
                  Sd = apply(Predictions, 1, sd),
                  SDPop = PredictionsSigma,
                  SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                 IntLower = apply(Predictions, 1, quantile, 0.025),
-                 IntUpper = apply(Predictions, 1, quantile, 0.975),
-                 IntLowerTotal = apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1, quantile, 0.025),
-                 IntUpperTotal = apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1, quantile, 0.975),
+                 IntLower = qs[1,],
+                 IntUpper = qs[2,],
+                 IntLowerTotal = qs2[1,],
+                 IntUpperTotal = qs2[2,],
                  resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2))
   }
   if (Bayes == FALSE & GAM == FALSE){
     Est <- predict(model$model$gam,
-                   data.frame(XPred,
+                   newdata = data.frame(XPred,
                               Date2 = (time - mean(data$Date)) /
-                                sd(data$Date)), se.fit = TRUE, type = "response")
+                                sd(data$Date)), se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
     if(estType == "1 SE"){
       Est$fit <- Est$se.fit
     }
@@ -1337,6 +1406,11 @@ plotMap3D <- function(model,
       Est$fit <- Est$fit + qnorm(estQuantile) *
         sqrt(Est$se.fit^2 + varM)
     }
+    fitted_values <- model$model$gam$fitted.values
+    if(model$model$gam$family$family == "binomial"){
+      fitted_values <- 1 / (1+exp(-fitted_values))
+    }
+
     XPred <- data.frame(XPred,
                         Est = Est$fit, Sd = Est$se.fit,
                         SDPop = sqrt(varM),
@@ -1347,12 +1421,12 @@ plotMap3D <- function(model,
                           sqrt(Est$se.fit^2 + varM),
                         IntUpperTotal = Est$fit + 1.96 *
                           sqrt(Est$se.fit^2 + varM),
-                        resError = sqrt(mean((predict(model$model$gam, type = "response") - model$model$gam$y)^2)))
+                        resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
     Predictions <- sapply(1:length(model$model),
                           function(x) predict(model$model[[x]],
-                                              x =  cbind(XPred$Longitude, XPred$Latitude,
+                                              x = cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude,
                                                          Date2 = (time - mean(data$Date)) / sd(data$Date))))
 
     if(estType == "Mean"){
@@ -1366,14 +1440,14 @@ plotMap3D <- function(model,
     }
 
     if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile)
+      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
     }
-
+    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
     XPred <- data.frame(XPred,
                         Est = Est,
                         Sd = apply(Predictions, 1, sd),
-                        IntLower = apply(Predictions, 1, quantile, 0.025),
-                        IntUpper = apply(Predictions, 1, quantile, 0.975))
+                        IntLower = qs[1,],
+                        IntUpper = qs[2,])
   }
   if (estType != "1 SE" && estType != "1 SETOTAL" && estType != "2 SE" &&
       estType != "2 SETOTAL" &&
@@ -1870,6 +1944,10 @@ plotDS <- function(XPred,
     XPred$Est <- XPred$Est / XPred$Sd
   }
 
+  if(estType == "Significance (Overlap)"){
+    XPred$Est <- as.numeric(abs(XPred$Est) > qnorm(estQuantile) * XPred$Sd)
+  }
+
   if(estType == "Quantile"){
     XPred$Est <- XPred$Est + qnorm(estQuantile) * XPred$Sd
     if(type == "similarity"){
@@ -1885,9 +1963,13 @@ plotDS <- function(XPred,
   }
 
   Maps <- loadMaps()
-  levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
-
-  colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
+  if(estType == "Significance (Overlap)"){
+    levels <- pretty(c(0, 1), n = 2)
+    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)
+  } else {
+    levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
+    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
+  }
 
   if(reverseColors){
     colors <- rev(colors)
@@ -1923,7 +2005,11 @@ plotDS <- function(XPred,
   }
 
   if(titleMain){
-    main = ""
+    if(estType == "Significance (Overlap)"){
+      main = "Overlap (0-no significant difference) vs. Non-overlap (1-significant difference)"
+    } else {
+      main = ""
+    }
   } else {
     if(setAxisLabels){
       main = mainLabel
@@ -1965,8 +2051,8 @@ plotDS <- function(XPred,
                   showScale = showScale,
                   cex.axis = 1.5, cex.main = 1.5, cex.lab = 1.5,
                   asp = 1, key.axes = axis(side = 4, at = levelsLegend, cex.axis = cex4),
-                  key.title = title(main = main, cex.main = 0.8),
-                  plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = mainS)},
+                  key.title = title(main = mainS, cex.main = 0.8),
+                  plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = main)},
                   plot.axes = {
                     par(fg = "black", col="black");
                     if (terrestrial == 1){
@@ -2366,7 +2452,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
                       "(", centerY,",", centerX,")" ," with credible intervals")
   }
   if (Bayes == FALSE & GAM == FALSE){
-    Est <- predict(model$model$gam, XPred, se.fit = TRUE, type = "response")
+    Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
     XPred <- data.frame(XPred, Est = Est$fit, Sd = Est$se.fit,
                         SdTotal = sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
                         PredictionsSigma = sd(residuals(model$model$gam)),
@@ -2380,14 +2466,16 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   }
   if (GAM == TRUE){
     EstTemp <- sapply(1:length(model$model), function(x) predict(model$model[[x]],
-                                                                 x =  cbind(XPred$Longitude, XPred$Latitude, XPred$Date2)))
+                                                                 x =  cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude, Date2 = XPred$Date2)))
+
+    qs <- apply(EstTemp, 1, quantile, c(1 - pnorm(sdValue), pnorm(sdValue)), names = FALSE)
 
     estQuantile <-
     XPred <- data.frame(XPred,
                         Est = rowMeans(EstTemp),
                         Sd = apply(EstTemp, 1, sd),
-                        IntLower = pmax(0, apply(EstTemp, 1, quantile, 1 - pnorm(sdValue))),
-                        IntUpper = pmax(0, apply(EstTemp, 1, quantile, pnorm(sdValue))))
+                        IntLower = pmax(0, qs[1,]),
+                        IntUpper = pmax(0, qs[2,]))
     mainlab <- paste0("Density estimate in time course at coordinates ",
                       "(", centerY,",", centerX,").")
 
@@ -2884,4 +2972,42 @@ getPColor <- function(data, cluster, palName, pColor) {
   if (!cluster) return(pColor)
 
   colorRampPalette(brewer.pal(8, palName))(max(data$cluster))[data$cluster]
+}
+
+#' Get Speed or Cost object for Cost-Surface and least-cost path
+#'
+#' @param XPred (data.frame) data frame containing the spread function estimates
+#' @param MinMax (string) are we estimating min or max
+#' @return speed object
+getCostSpeed <- function(XPred, MinMax){
+  XPred$Est[is.na(XPred$Est)] <- 999999
+  z <- SpatialPixelsDataFrame(points = as.matrix(XPred[, c("Longitude", "Latitude")]),
+                              data = XPred[, "Est", drop = FALSE])
+  r <- rasterFromXYZ(z)
+  medianSD <- min(XPred$SdTotal[!is.na(XPred$Est)])
+  if(MinMax == "Min"){
+    tl <- transition(r, function(x){
+      if((x[2]-x[1]) > 0){
+        return(1)
+      }
+      else{
+        return(1/(1-(pnorm((x[1]-x[2]) / medianSD))))
+      }
+    }, 16, symm = F)
+  } else {
+    tl <- transition(r, function(x){
+      if((x[2]-x[1]) <= 0){
+        return(1)
+      }
+      else{
+        return(1/(1-(pnorm((x[2]-x[1]) / medianSD))))
+      }
+    }, 16, symm = F)
+  }
+  speed <- geoCorrection(tl)
+
+  adj <- adjacent(r, cells = 1:ncell(r), pairs = TRUE, directions = 16)
+  speed[adj] <- 1/speed[adj]
+  speed <- geoCorrection(speed)
+  return(speed)
 }

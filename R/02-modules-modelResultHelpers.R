@@ -12,9 +12,10 @@ centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
+    tags$strong("Center estimates:"),
     numericInput(
       inputId = ns("centerY"),
-      label = "Center point latitude",
+      label = "Latitude",
       min = -180,
       max = 180,
       value = c(),
@@ -23,7 +24,7 @@ centerEstimateUI <- function(id, title = "") {
     ),
     numericInput(
       inputId = ns("centerX"),
-      label = "Center point longitude",
+      label = "Longitude",
       min = -90,
       max = 90,
       value = c(),
@@ -31,27 +32,27 @@ centerEstimateUI <- function(id, title = "") {
       width = "100%"
     ),
     conditionalPanel(
+      ns = ns,
       condition =
         "input.centerY != null && input.centerY != '' && input.centerX != null && input.centerX != '' && output.isCenterEstimateMap == true",
       numericInput(
         inputId = ns("decimalPlace"),
-        label = "Decimal places for Mean/Error at the Center point",
+        label = "Decimal places for Mean/Error",
         min = 0,
         max = 10,
         value = 2,
         step = 1,
         width = "100%"
       ),
-      ns = ns
-    ),
-    sliderInput(
-      inputId = ns("Radius"),
-      label = "Radius (km)",
-      min = 10,
-      max = 300,
-      value = 100,
-      step = 10,
-      width = "100%"
+      sliderInput(
+        inputId = ns("Radius"),
+        label = "Radius (km)",
+        min = 10,
+        max = 300,
+        value = 100,
+        step = 10,
+        width = "100%"
+      )
     )
   )
 }
@@ -537,13 +538,13 @@ zScaleUI <-
       ),
       conditionalPanel(
         ns = ns,
-        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL'",
+        condition = "input.estType == 'Quantile' || input.estType == 'QuantileTOTAL' || input.estType == 'Significance (Overlap)'",
         sliderInput(
           inputId = ns("Quantile"),
           label = "Estimation quantile",
           min = 0.01,
           max = 0.99,
-          value = c(0.9),
+          value = c(0.95),
           width = "100%"
         )
       ),
@@ -552,16 +553,20 @@ zScaleUI <-
         label = "Show model estimates",
         value = TRUE
       ),
-      htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
-      numericInput(
-        inputId = ns("max"),
-        label = "Max range",
-        value = 10
-      ),
-      numericInput(
-        inputId = ns("min"),
-        label = "Min range",
-        value = 0
+      conditionalPanel(
+        ns = ns,
+        condition = "input.estType != 'Significance (Overlap)'",
+        htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
+        numericInput(
+          inputId = ns("max"),
+          label = "Max range",
+          value = 10
+        ),
+        numericInput(
+          inputId = ns("min"),
+          label = "Min range",
+          value = 0
+        ),
       ),
       conditionalPanel(
         ns = ns,
@@ -673,7 +678,7 @@ zScaleServer <- function(id,
                    # reset Quantile
                    values$Quantile <- NULL
 
-                   req(input$estType %in% c("Quantile", "QuantileTOTAL"))
+                   req(input$estType %in% c("Quantile", "QuantileTOTAL", "Significance (Overlap)"))
                    values$Quantile <- input$Quantile
                  })
 
@@ -852,6 +857,18 @@ getZValuesMapDiff <-
         list(value = maxValue,
              min = minValue,
              max = maxValue)
+      return(zValues)
+    }
+
+    if (estimationType == "Significance (Overlap)"){
+      zValues$minInput <-
+        list(value = 0,
+             min = 0,
+             max = 1)
+      zValues$maxInput <-
+        list(value = 1,
+             min = 0,
+             max = 1)
       return(zValues)
     }
 

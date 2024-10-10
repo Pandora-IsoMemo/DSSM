@@ -17,7 +17,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Model"),
+        importUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -76,9 +76,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
-          sliderInput(inputId = ns("Smoothing"),
-                      label = "Number of basis functions",
-                      min = 20, max = 1000, value = 70, step = 10),
+          smoothingUI(ns, label_slider = "No. of basis functions"),
           radioButtons(inputId = ns("Penalty"),
                       label = "Extrapolation behaviour",
                       choices = c("constant" = "1", "linear" = "2"),
@@ -375,14 +373,13 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
                       label = "Colour of font",
                       value = "#2C2161")
           , ns = ns),
-        centerEstimateUI(ns("centerEstimateParams")),
         sliderInput(inputId = ns("AxisSize"),
                     label = "Axis title font size",
                     min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
         sliderInput(inputId = ns("AxisLSize"),
                     label = "Axis label font size",
                     min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
-
+        centerEstimateUI(ns("centerEstimateParams")),
         batchPointEstimatesUI(ns("batch"))
       )
     )
@@ -400,6 +397,7 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
 #'
 #' @export
 modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsData){
+  smoothingServer(input, output, session, ns = session$ns)
   observeSavedMaps(input, output, session, savedMaps, type = "localAvg")
 
   values <- reactiveValues(
@@ -492,7 +490,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
                     tabId = "model2D",
                     uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],

@@ -17,7 +17,7 @@ modelResultsSpreadUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Model"),
+        importUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -85,6 +85,7 @@ modelResultsSpreadUI <- function(id, title = ""){
                        choices = c("planar" = "1", "spherical" = "2"),
                        selected = "1"),
           dataCenterUI(ns),
+          smoothingUI(ns, label_slider = "No. of basis functions"),
           conditionalPanel(
             condition = "input.DateType == 'Interval' || input.DateType == 'Mean + 1 SD uncertainty'",
           radioButtons(inputId = ns("dateUnc"),
@@ -94,9 +95,6 @@ modelResultsSpreadUI <- function(id, title = ""){
                                    "uniform (full width)" = "uniform",
                                    "mid point" = "point")),
           ns = ns),
-          sliderInput(inputId = ns("Smoothing"),
-                      label = "Number of basis functions",
-                      min = 20, max = 1000, value = 70, step = 10),
           radioButtons(inputId = ns("Penalty"),
                        label = "Extrapolation behaviour",
                        choices = c("constant" = "1", "linear" = "2"),
@@ -228,7 +226,8 @@ modelResultsSpreadUI <- function(id, title = ""){
           helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("mapType"), label = "Plot type", inline = TRUE,
-                       choices = c("Spread", "Speed", "Minima/Maxima"),
+                       choices = c("Spread", "Speed", "Minima/Maxima",
+                                   "Cost-Surface", "Shortest-Path"),
                        selected = "Spread"),
           conditionalPanel(
             ns = ns,
@@ -243,6 +242,28 @@ modelResultsSpreadUI <- function(id, title = ""){
                           label = "Minima/Maxima on:", inline = TRUE,
                          choices = list("Boxplot" = 1, "Map" = 2),
                          selected = 1)
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Cost-Surface' || input.mapType == 'Shortest-Path'",
+            tags$strong("Origin:"),
+            numericInput(inputId = ns("OLat"),
+                         label = "Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("OLong"),
+                         label = "Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
+          ),
+          conditionalPanel(
+            condition = "input.mapType == 'Shortest-Path'",
+            tags$strong("Destination:"),
+            numericInput(inputId = ns("DestLat"),
+                         label = "Latitude",
+                         min = -90, max = 90, value = c(-90), width = "80%"),
+            numericInput(inputId = ns("DestLong"),
+                         label = "Longitude",
+                         min = -180, max = 180, value = c(-180), width = "80%"),
+            ns = ns
           ),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
                        choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
@@ -391,13 +412,13 @@ modelResultsSpreadUI <- function(id, title = ""){
             colourInput(inputId = ns("fontCol"),
                         label = "Colour of font",
                         value = "#2C2161"), ns = ns),
-          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
       )
@@ -415,6 +436,7 @@ modelResultsSpreadUI <- function(id, title = ""){
 #'
 #' @export
 modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruitsData){
+  smoothingServer(input, output, session, ns = session$ns)
   observeSavedMaps(input, output, session, savedMaps, type = "spread")
 
   observeEvent(input$saveMap, {
@@ -423,7 +445,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert("Please provide a map name")
       return()
     }
-
     map <- createSavedMap(
       model = Model(),
       predictions = values$predictions,
@@ -484,7 +505,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                     tabId = "spread",
                     uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],
@@ -587,6 +608,22 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         values$right <- 0
       })
     }
+  })
+
+  observe({
+    validate(validInput(Model()))
+    updateNumericInput(session, "OLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                         0.35 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                  min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "OLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                        0.35 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                 min(Model()$data$Latitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLong", value = round(min(Model()$data$Longitude, na.rm = TRUE) +
+                                                            0.65 * (max(Model()$data$Longitude, na.rm = TRUE) -
+                                                                     min(Model()$data$Longitude, na.rm = TRUE))))
+    updateNumericInput(session, "DestLat", value = round(min(Model()$data$Latitude, na.rm = TRUE) +
+                                                           0.65 * (max(Model()$data$Latitude, na.rm = TRUE) -
+                                                                    min(Model()$data$Latitude, na.rm = TRUE))))
   })
 
   output$move <- renderUI({
@@ -883,6 +920,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         nMin = input$nMin,
         minDist = input$minDist,
         showMinOnMap = input$showMinOnMap,
+        OLat = input$OLat,
+        OLong = input$OLong,
+        DestLat = input$DestLat,
+        DestLong = input$DestLong,
         ...
       ) %>%
         tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
@@ -894,8 +935,12 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     withProgress({
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
-    values$predictions <- res$XPred
-    values$plot <- recordPlot()
+    if (is.character(res) & length(res) == 1){
+      alert(res)
+    } else{
+      values$predictions <- res$XPred
+      values$plot <- recordPlot()
+    }
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,

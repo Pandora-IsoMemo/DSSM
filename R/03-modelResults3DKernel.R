@@ -16,7 +16,7 @@ modelResults3DKernelUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Model"),
+        importUI(ns("modelUpload"), label = "Import Model"),
         downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -77,38 +77,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
-          selectizeInput(inputId = ns("clusterMethod"),
-                         label = "Cluster Method (optional):",
-                         choices = c("kmeans","mclust"),
-                         options = list(
-                           placeholder = '',
-                           onInitialize = I('function() { this.setValue(""); }')
-                         )),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'kmeans'",
-            ns = ns,
-            selectInput(inputId = ns("kMeansAlgo"),
-                        label = "K-means algorithm:",
-                        choices = c("Hartigan-Wong", "Lloyd", "Forgy",
-                                    "MacQueen")),
-            sliderInput(inputId = ns("nClust"),
-                        label = "Number of clusters",
-                        value = 5, min = 2, max = 15, step = 1)
-          ),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'mclust'",
-            ns = ns,
-            sliderInput(inputId = ns("nClustRange"),
-                        label = "Possible range for clusters",
-                        value = c(2,10), min = 2, max = 50, step = 1)
-          ),
-          conditionalPanel(
-            condition = "input.clusterMethod == 'mclust' | input.clusterMethod == 'kmeans'",
-            ns = ns,
-            sliderInput(inputId = ns("timeClust"),
-                        label = "Cluster time range",
-                        min = 0, max = 15000, value = c(1000, 5000), step = 100)
-          ),
+          tags$br(),
+          clusterMethodUI(ns = ns, timeRangeInput = TRUE),
+          tags$br(),
           checkboxInput(inputId = ns("modelUnc"),
                         label = "Include dating uncertainty", value = TRUE),
           conditionalPanel(
@@ -148,6 +119,7 @@ modelResults3DKernelUI <- function(id, title = ""){
             ns = ns
           )
         ),
+        sliderInput(ns("smoothParam"), value = 1.0, min = 0.1, max = 5.0, step = 0.1, label = "Adjust smoothness (optional)"),
         radioButtons(ns("kdeType"), "Bandwidth matrix type",
                      choices = c("Correlated" = "1", "Diagonal" = "2", "Diagonal + equal in longitudes and latitudes" = "3")),
         actionButton( ns("start"), "Start"),
@@ -567,7 +539,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                     tabId = "model3DKernel",
                     uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],
@@ -653,10 +625,13 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       kMeansAlgo = input$kMeansAlgo,
                       nClust = input$nClust,
                       nClustRange = input$nClustRange,
+                      trimRatio = input$trimRatio,
+                      restr.fact = input$restr.fact,
                       clusterTimeRange = input$timeClust,
                       modelUnc = input$modelUnc,
                       restriction = restriction,
                       nSim = input$nSim,
+                      smoothness = input$smoothParam,
                       kdeType = input$kdeType) %>%
           tryCatchWithWarningsAndErrors()
         },
@@ -821,7 +796,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   observe({
-  if(input[["clusterMethod"]] %in% c("kmeans","mclust")){
+  if(input[["clusterMethod"]] %in% c("kmeans","mclust","tclust")){
   value <- TRUE
   } else {
   value <- FALSE
@@ -1275,7 +1250,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         allData$rNames <- rownames(allData)
         modelData <- Model()$data
         modelData$rNames <- rownames(modelData)
-        modelData <- merge(modelData[, c("rNames")], allData, all.y = FALSE, sort = FALSE)
+        modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
         return(modelData)
       }

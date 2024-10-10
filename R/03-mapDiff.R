@@ -17,7 +17,7 @@ modelResultsDiffUI <- function(id, title = ""){
       sidebarPanel(
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
-        importDataUI(ns("modelUpload"), label = "Import Map"),
+        importUI(ns("modelUpload"), label = "Import Map"),
         downloadDSSMModelUI(ns = ns),
         selectInput(ns("dataSource"),
                     "Data source",
@@ -349,13 +349,13 @@ modelResultsDiffUI <- function(id, title = ""){
           sliderInput(inputId = ns("ncol"),
                       label = "Approximate number of colour levels",
                       min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
       )
@@ -431,7 +431,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                    tabId = "difference",
                    uploadedNotes = uploadedNotes)
 
-  uploadedValues <- importDataServer("modelUpload",
+  uploadedValues <- importServer("modelUpload",
                                      title = "Import Model",
                                      importType = "model",
                                      ckanFileTypes = config()[["ckanModelTypes"]],
@@ -998,7 +998,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                               "2 SE",
                               "Quantile",
                               "Significance (p-value)",
-                              "Significance (z-value)"
+                              "Significance (z-value)",
+                              "Significance (Overlap)"
                             )),
                             restrictOption = reactive("hide"),
                             zValuesFun = getZValuesMapDiff,
@@ -1092,8 +1093,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              grid = input$grid,
              arrow = input$arrow,
              scale = input$scale,
-             titleMain = !input$titleMain,
-             titleScale = !input$titleScale,
+             titleMain = input$titleMain,
+             titleScale = input$titleScale,
              showScale = input$showScale,
              setAxisLabels = input$setAxisLabels,
              mainLabel = input$mainLabel,

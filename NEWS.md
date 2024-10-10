@@ -1,3 +1,52 @@
+# DSSM 24.10.1
+
+## Bug Fixes
+- fix issue with penalty parameter when using Bayesian Modelling (#251)
+
+# DSSM 24.10.0
+
+## New Features
+- _KernelR_ + _KernelTimeR_: New restriction factor input for tclust clustering (#204)
+
+# DSSM 24.09.2
+
+## New Features
+- _Centerpoint estimates_: Radius input is now hidden if the center coordinates are not set (#252)
+
+# DSSM 24.09.1
+
+## New Features
+- _KernelR_ + _KernelTimeR_: New option to adjust smoothness of kernel density estimator
+
+# DSSM 24.09.0
+
+## Bug Fixes
+- fix issue with failing modeling for "Smooth Type" = "planar" with 'number of spatial basis functions' input (#247)
+
+# DSSM 24.08.5
+
+## New Features
+- Adds tclust as clustering method in KernelR and KernelTimeR (#204)
+
+## Bug Fixes
+- solves issue with the plotting and export of cluster data in KernelR
+
+# DSSM 24.08.4
+
+## New Features
+- _OperatoR_: New plot option ("estimation type"): 'Significance (Overlap)': Shows which non-significant overlap in difference maps
+  
+# DSSM 24.08.3
+
+- Adds info button with rule of thumb information on selection of number of basis functions to 
+  "AverageR", "TimeR" and "SpreadR" tabs (#236)
+
+# DSSM 24.08.2
+
+## New Features
+- _Cost Surface and least-cost path for SpreadR_:
+  - Estimate cost surface and shortest path using the gdistance package
+
 # DSSM 24.08.1
 
 ## Bug Fixes

@@ -18,7 +18,7 @@ modelResultsSimUI <- function(id, title = ""){
         width = 2,
         style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
         # !!! Uploading of inputs is not working: inputs are cleaned when updating "values" ----
-        # importDataUI(ns("modelUpload"), label = "Import Model"),
+        # importUI(ns("modelUpload"), label = "Import Model"),
         # checkboxInput(ns("useDownload"), label = "Download model"),
         # conditionalPanel(
         #   ns = ns,
@@ -221,13 +221,13 @@ modelResultsSimUI <- function(id, title = ""){
           sliderInput(inputId = ns("ncol"),
                       label = "Approximate number of colour levels",
                       min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          centerEstimateUI(ns("centerEstimateParams")),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
       )
@@ -363,7 +363,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                     triggerUpdate = reactive(TRUE),
   #                     compressionLevel = 1)
   #
-  # uploadedValues <- importDataServer("modelUpload",
+  # uploadedValues <- importServer("modelUpload",
   #                                    title = "Import Model",
   #                                    defaultSource = config()[["defaultSourceModel"]],
   #                                    importType = "model",
