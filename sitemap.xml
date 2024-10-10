@@ -22,6 +22,9 @@
     <loc>https://pandora-isomemo.github.io/DSSM/news/index.html</loc>
   </url>
   <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/addCentroids.html</loc>
+  </url>
+  <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/addFormattedAxis.html</loc>
   </url>
   <url>
@@ -44,6 +47,9 @@
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/centerXPred.html</loc>
+  </url>
+  <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/clusterMethodUI.html</loc>
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/config.html</loc>
@@ -172,6 +178,9 @@
     <loc>https://pandora-isomemo.github.io/DSSM/reference/getCoordCenter.html</loc>
   </url>
   <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/getCostSpeed.html</loc>
+  </url>
+  <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultCoordColumn.html</loc>
   </url>
   <url>
@@ -233,6 +242,9 @@
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/jitter_latlong.html</loc>
+  </url>
+  <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/joinCentroidData.html</loc>
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletExport.html</loc>
@@ -410,6 +422,12 @@
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/sliderAndNumericInputUI.html</loc>
+  </url>
+  <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingServer.html</loc>
+  </url>
+  <url>
+    <loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingUI.html</loc>
   </url>
   <url>
     <loc>https://pandora-isomemo.github.io/DSSM/reference/startApplication.html</loc>

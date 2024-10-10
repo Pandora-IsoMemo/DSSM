@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">DSSM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.08.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">24.10.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,8 +63,11 @@
 <span>  nClust <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  nClustRange <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">10</span><span class="op">)</span>,</span>
 <span>  kMeansAlgo <span class="op">=</span> <span class="st">"Hartigan-Wong"</span>,</span>
+<span>  trimRatio <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  restr.fact <span class="op">=</span> <span class="fl">12</span>,</span>
 <span>  restriction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">90</span>, <span class="fl">90</span>, <span class="op">-</span><span class="fl">180</span>, <span class="fl">180</span><span class="op">)</span>,</span>
 <span>  nSim <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  smoothness <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  kdeType <span class="op">=</span> <span class="st">"1"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -116,12 +119,24 @@ One of "decimal degrees", "degrees minutes seconds" and "degrees decimal minutes
 <dd><p>character: kmeans algorithm as in stats:kmeans</p></dd>
 
 
+<dt>trimRatio</dt>
+<dd><p>numeric: proportion of observations to be trimmed by tclust</p></dd>
+
+
+<dt>restr.fact</dt>
+<dd><p>numeric: clustering restriction factor</p></dd>
+
+
 <dt>restriction</dt>
 <dd><p>numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)</p></dd>
 
 
 <dt>nSim</dt>
 <dd><p>numeric: number of bootstrap samples</p></dd>
+
+
+<dt>smoothness</dt>
+<dd><p>numeric: smoothness adjustment</p></dd>
 
 
 <dt>kdeType</dt>
