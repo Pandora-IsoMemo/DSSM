@@ -1,7 +1,12 @@
-# DSSM 24.09.3
+# DSSM 24.10.1
 
 ## Bug Fixes
 - fix issue with penalty parameter when using Bayesian Modelling (#251)
+
+# DSSM 24.10.0
+
+## New Features
+- _KernelR_ + _KernelTimeR_: New restriction factor input for tclust clustering (#204)
 
 # DSSM 24.09.2
 

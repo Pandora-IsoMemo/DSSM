@@ -1995,6 +1995,7 @@ invLogit <- function(x){
 #' @param clusterMethod character: cluster method
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param trimRatio numeric: proportion of observations to be trimmed by tclust
+#' @param restr.fact numeric: clustering restriction factor
 #' @param nClust numeric: how many clusters
 #' @param nClustRange numeric: range of potential mclust cluster
 #' @param restriction numeric vector: spatially restricts model data 4 entries for latitude (min/max) and longitude(min/max)
@@ -2029,6 +2030,7 @@ estimateMapKernel <- function(data,
                               nClustRange = c(2,10),
                               kMeansAlgo = "Hartigan-Wong",
                               trimRatio = 0.05,
+                              restr.fact = 12,
                               restriction = c(-90, 90, -180, 180),
                               nSim = 10,
                               smoothness = 1,
@@ -2158,7 +2160,7 @@ estimateMapKernel <- function(data,
     colnames(data)[colnames(data) == "cluster"] <- "spatial_cluster"
     data$spatial_cluster <- data$spatial_cluster %>% makeClusterIdsContinuous()
   } else if (clusterMethod == "tclust") {
-    cluster_solution <- tclust(data[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
+    cluster_solution <- tclust(data[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio, restr.fact = restr.fact)
 
     # merge cluster centers
     data <- data %>%
@@ -2188,6 +2190,8 @@ estimateMapKernelWrapper <- function(data, input) {
                 nClust = input$nClust,
                 nClustRange = input$nClustRange,
                 kMeansAlgo = input$kMeansAlgo,
+                trimRatio = input$trimRatio,
+                restr.fact = input$restr.fact,
                 restriction = restriction,
                 nSim = input$nSim,
 
@@ -2212,6 +2216,7 @@ estimateMapKernelWrapper <- function(data, input) {
 #' @param nClustRange numeric: range of potential mclust cluster
 #' @param kMeansAlgo character: kmeans algorithm as in stats:kmeans
 #' @param trimRatio numeric: proportion of observations to be trimmed by tclust
+#' @param restr.fact numeric: clustering restriction factor
 #' @param clusterTimeRange numeric vector: time range of cluster
 #' @param modelUnc boolean: Include dating uncertainty
 #' @param dateUnc character: one of "uniform", "normal", "point"
@@ -2246,6 +2251,7 @@ estimateMap3DKernel <- function(data,
                                 nClustRange = c(2,10),
                                 kMeansAlgo = "Hartigan-Wong",
                                 trimRatio = 0.05,
+                                restr.fact = 12,
                                 clusterTimeRange = c(0,1000),
                                 modelUnc = FALSE,
                                 dateUnc = "point",
@@ -2522,7 +2528,7 @@ estimateMap3DKernel <- function(data,
     data <- data %>% joinCentroidData(dataC)
     } else {
       # tclust
-      cluster_solution <- tclust(dataC[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio)
+      cluster_solution <- tclust(dataC[,c("Longitude","Latitude")], k = nClust, alpha = trimRatio, restr.fact = restr.fact)
 
       ## Filtered data ----
       dataC <- dataC %>%
@@ -2586,6 +2592,8 @@ estimateMap3DKernelWrapper <- function(data, input) {
     nClust = input$nClust,
     nClustRange = input$nClustRange,
     clusterTimeRange = input$timeClust,
+    trimRatio = input$trimRatio,
+    restr.fact = input$restr.fact,
     modelUnc = input$modelUnc,
     restriction = restriction,
     nSim = input$nSim,

@@ -77,7 +77,9 @@ modelResults3DKernelUI <- function(id, title = ""){
           selectInput(inputId = ns("Weighting"),
                       label = "Weighting variable (optional):",
                       choices = c("")),
+          tags$br(),
           clusterMethodUI(ns = ns, timeRangeInput = TRUE),
+          tags$br(),
           checkboxInput(inputId = ns("modelUnc"),
                         label = "Include dating uncertainty", value = TRUE),
           conditionalPanel(
@@ -624,6 +626,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       nClust = input$nClust,
                       nClustRange = input$nClustRange,
                       trimRatio = input$trimRatio,
+                      restr.fact = input$restr.fact,
                       clusterTimeRange = input$timeClust,
                       modelUnc = input$modelUnc,
                       restriction = restriction,
