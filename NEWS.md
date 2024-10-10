@@ -1,3 +1,8 @@
+# DSSM 24.10.1
+
+## Bug Fixes
+- fix issue with penalty parameter when using Bayesian Modelling (#251)
+
 # DSSM 24.10.0
 
 ## New Features
