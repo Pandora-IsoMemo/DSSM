@@ -337,7 +337,7 @@ exportGraphicSeries <- function(exportType, file,
       figFilename <- figFileNames[[which(times == i)]]
 
       if (exportType == "geo-tiff"){
-        # filter for i ???
+        # filter for i ??? <- probably one needs to re-create the plot using: res <- plotFun(model = Model, time = i) and get the predictions from res$XPred
         writeGeoTiff(predictions, figFilename)
       } else {
         # save desired file type
