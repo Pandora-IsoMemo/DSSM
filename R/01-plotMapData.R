@@ -16,6 +16,25 @@ centerPlotData <- function(data, centerMap = c("Europe", "Pacific")) {
   return(dataPac)
 }
 
+# Shift Longitudes
+#
+# @param longitudes (numeric) longitudes to be shifted
+# @param threshold (numeric) threshold value
+# @param shift (numeric) shift value
+# @param order (logical) whether to order the shifted values
+shiftLongitudes <- function(longitudes, threshold = 20, shift = 180, order = FALSE) {
+  shifted <- longitudes
+  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + (shift - threshold)
+  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - (shift + threshold)
+  if (order) {
+    # Order the shifted values
+    shifted <- shifted[order(shifted)]
+  }
+
+  return(shifted)
+}
+
+
 #' Filter Time
 #'
 #' @param data (data.frame) data to be filtered by time containing columns "Date" and "Uncertainty"
