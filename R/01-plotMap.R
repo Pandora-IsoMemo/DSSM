@@ -638,44 +638,9 @@ plotMap <- function(model,
                     key.title = title(main = mainS, cex.main = 0.8),
                     plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = main)},
                     plot.axes = {
-                      par(fg = "black", col="black");
-                      if (terrestrial == 1){
-                        if(centerMap != "Europe"){
-                          sp::plot(Maps$ocean160, add = T, col = "lightblue", lwd = 1, border = NA);
-                          sp::plot(Maps$ocean200, add = T, col = "lightblue", lwd = 1, border = NA);
-                        } else {
-                          sp::plot(Maps$ocean, add = T, col = "lightblue", lwd = 1);
-                        }
-                      }
-                      if (terrestrial == -1){
-                        if(centerMap != "Europe"){
-                          sp::plot(Maps$land160, add = T, lwd = 1, col = "grey96", border = NA);
-                          sp::plot(Maps$land200, add = T, lwd = 1, col = "grey96", border = NA);
-                        } else {
-                          sp::plot(Maps$land, add = T, lwd = 1, col = "grey96", border = NA);
-                        }
-                      }
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$coast160, add = T, lwd = 1);
-                        sp::plot(Maps$coast200, add = T, lwd = 1);
-                      } else {
-                        sp::plot(Maps$coast, add = T, lwd = 1);
-                      }
-                      if (grid == TRUE){
-                        if(centerMap != "Europe"){
-                          sp::plot(Maps$grids160, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                          sp::plot(Maps$grids200, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                        } else {
-                          sp::plot(Maps$grids, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                        }
-                      }
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$borders160, add = T, col = "darkgrey", lwd = 1);
-                        sp::plot(Maps$borders200, add = T, col = "darkgrey", lwd = 1);
-
-                      } else {
-                        sp::plot(Maps$borders, add = T, col = "darkgrey", lwd = 1);
-                      }
+                      par(fg = "black", col = "black");
+                      # draw map layers ----
+                      addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                       if (points == TRUE){
                         if(!is.null(pointLabels)){
                           pointLabels <- as.numeric(pointLabels)
@@ -854,45 +819,9 @@ plotMap <- function(model,
                   key.title = title(main = mainS, cex.main = 0.8),
                   plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = main)},
                   plot.axes = {
-                    par(fg = "black", col="black");
-                    if (terrestrial == 1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$ocean160, add = T, col = "lightblue", lwd = 1, border = NA);
-                        sp::plot(Maps$ocean200, add = T, col = "lightblue", lwd = 1, border = NA);
-                      } else {
-                        sp::plot(Maps$ocean, add = T, col = "lightblue", lwd = 1);
-                      }
-                    }
-                    if (terrestrial == -1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$land160, add = T, lwd = 1, col = "grey96", border = NA);
-                        sp::plot(Maps$land200, add = T, lwd = 1, col = "grey96", border = NA);
-                      } else {
-                        sp::plot(Maps$land, add = T, lwd = 1, col = "grey96", border = NA);
-                      }
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$coast160, add = T, lwd = 1);
-                      sp::plot(Maps$coast200, add = T, lwd = 1);
-                    } else {
-                      sp::plot(Maps$coast, add = T, lwd = 1);
-                    }
-                    if (grid == TRUE){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$grids160, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                        sp::plot(Maps$grids200, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      } else {
-                        sp::plot(Maps$grids, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      }
-
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$borders160, add = T, col = "darkgrey", lwd = 1);
-                      sp::plot(Maps$borders200, add = T, col = "darkgrey", lwd = 1);
-
-                    } else {
-                      sp::plot(Maps$borders, add = T, col = "darkgrey", lwd = 1);
-                    }
+                    par(fg = "black", col = "black");
+                    # draw map layers ----
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
                         pointLabels <- as.numeric(pointLabels)
@@ -1607,45 +1536,9 @@ plotMap3D <- function(model,
                   key.title = title(main = main, cex.main = 0.8),
                   plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = mainS)},
                   plot.axes = {
-                    par(fg = "black", col="black");
-                    if (terrestrial == 1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$ocean160, add = T, col = "lightblue", lwd = 1, border = NA);
-                        sp::plot(Maps$ocean200, add = T, col = "lightblue", lwd = 1, border = NA);
-                      } else {
-                        sp::plot(Maps$ocean, add = T, col = "lightblue", lwd = 1);
-                      }
-                    }
-                    if (terrestrial == -1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$land160, add = T, lwd = 1, col = "grey96", border = NA);
-                        sp::plot(Maps$land200, add = T, lwd = 1, col = "grey96", border = NA);
-                      } else {
-                        sp::plot(Maps$land, add = T, lwd = 1, col = "grey96", border = NA);
-                      }
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$coast160, add = T, lwd = 1);
-                      sp::plot(Maps$coast200, add = T, lwd = 1);
-                    } else {
-                      sp::plot(Maps$coast, add = T, lwd = 1);
-                    }
-                    if (grid == TRUE){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$grids160, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                        sp::plot(Maps$grids200, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      } else {
-                        sp::plot(Maps$grids, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      }
-
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$borders160, add = T, col = "darkgrey", lwd = 1);
-                      sp::plot(Maps$borders200, add = T, col = "darkgrey", lwd = 1);
-
-                    } else {
-                      sp::plot(Maps$borders, add = T, col = "darkgrey", lwd = 1);
-                    }
+                    par(fg = "black", col = "black");
+                    # draw map layers ----
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                     # add points and/or centroids ----
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
@@ -2054,45 +1947,9 @@ plotDS <- function(XPred,
                   key.title = title(main = mainS, cex.main = 0.8),
                   plot.title = {title(cex.lab = AxisSize, xlab = xlab, ylab = ylab, main = main)},
                   plot.axes = {
-                    par(fg = "black", col="black");
-                    if (terrestrial == 1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$ocean160, add = T, col = "lightblue", lwd = 1, border = NA);
-                        sp::plot(Maps$ocean200, add = T, col = "lightblue", lwd = 1, border = NA);
-                      } else {
-                        sp::plot(Maps$ocean, add = T, col = "lightblue", lwd = 1);
-                      }
-                    }
-                    if (terrestrial == -1){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$land160, add = T, lwd = 1, col = "grey96", border = NA);
-                        sp::plot(Maps$land200, add = T, lwd = 1, col = "grey96", border = NA);
-                      } else {
-                        sp::plot(Maps$land, add = T, lwd = 1, col = "grey96", border = NA);
-                      }
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$coast160, add = T, lwd = 1);
-                      sp::plot(Maps$coast200, add = T, lwd = 1);
-                    } else {
-                      sp::plot(Maps$coast, add = T, lwd = 1);
-                    }
-                    if (grid == TRUE){
-                      if(centerMap != "Europe"){
-                        sp::plot(Maps$grids160, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                        sp::plot(Maps$grids200, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      } else {
-                        sp::plot(Maps$grids, add = T, col = "grey", lty = 2, xlim = c(0, 1));
-                      }
-
-                    }
-                    if(centerMap != "Europe"){
-                      sp::plot(Maps$borders160, add = T, col = "darkgrey", lwd = 1);
-                      sp::plot(Maps$borders200, add = T, col = "darkgrey", lwd = 1);
-
-                    } else {
-                      sp::plot(Maps$borders, add = T, col = "darkgrey", lwd = 1);
-                    }
+                    par(fg = "black", col = "black");
+                    # draw map layers ----
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                     if(centerMap != "Europe"){
                       lab <- pretty(rangex)
                       lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
