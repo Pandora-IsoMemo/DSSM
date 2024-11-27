@@ -30,21 +30,37 @@ Maps <- list(
 
 # Tests for addMapLayers
 test_that("addMapLayers handles terrestrial = 1 correctly with dummy data", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Europe", grid = TRUE))
-  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Other", grid = TRUE))
+  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Pacific", grid = TRUE))
 })
 
 test_that("addMapLayers handles terrestrial = -1 correctly with dummy data", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Europe", grid = TRUE))
-  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Other", grid = FALSE))
+  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Pacific", grid = FALSE))
 })
 
 test_that("addMapLayers handles missing grid parameter correctly with dummy data", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Europe"))
-  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Other"))
+  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Pacific"))
 })
 
 test_that("addMapLayers handles invalid inputs gracefully with dummy data", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_error(addMapLayers(NULL, terrestrial = 1, centerMap = "Europe"), "'Maps' cannot be NULL. Please provide a valid 'Maps' object.")
   expect_error(addMapLayers(Maps, terrestrial = 2, centerMap = "Europe"), "'terrestrial' must be either 1 (ocean) or -1 (land).", fixed = TRUE)
 })
@@ -54,21 +70,37 @@ Maps <- loadMaps()
 
 # Tests for addMapLayers
 test_that("addMapLayers handles terrestrial = 1 correctly with saved maps", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Europe", grid = TRUE))
-  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Other", grid = TRUE))
+  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Pacific", grid = TRUE))
 })
 
 test_that("addMapLayers handles terrestrial = -1 correctly with saved maps", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Europe", grid = TRUE))
-  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Other", grid = FALSE))
+  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Pacific", grid = FALSE))
 })
 
 test_that("addMapLayers handles missing grid parameter correctly with saved maps", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Europe"))
-  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Other"))
+  expect_silent(addMapLayers(Maps, terrestrial = -1, centerMap = "Pacific"))
 })
 
 test_that("addMapLayers handles invalid inputs gracefully with saved maps", {
+  # Initialize a blank plot
+  plot.new()  # Start a new plot
+  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+
   expect_error(addMapLayers(NULL, terrestrial = 1, centerMap = "Europe"), "'Maps' cannot be NULL. Please provide a valid 'Maps' object.")
   expect_error(addMapLayers(Maps, terrestrial = 2, centerMap = "Europe"), "'terrestrial' must be either 1 (ocean) or -1 (land).", fixed = TRUE)
 })
