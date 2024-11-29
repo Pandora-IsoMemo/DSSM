@@ -560,7 +560,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
         constrainLatitudeRange()
 
       rangex <- Model() %>%
-        centerPlotData(centerMap = input$Centering) %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
         extractRangeFromData(column = "Longitude", move = values$right) %>%
         zoomLongitudeRange(zoom = zoom,
                            upperLeftLongitude = values$upperLeftLongitude,

@@ -762,7 +762,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
           constrainLatitudeRange()
 
         rangex <- model$data %>%
-          centerPlotData(centerMap = input$Centering) %>%
+          shiftDataToCenter(centerMap = input$Centering) %>%
           extractRangeFromData(column = "Longitude", move = values$right) %>%
           zoomLongitudeRange(zoom = zoom,
                              upperLeftLongitude = values$upperLeftLongitude,

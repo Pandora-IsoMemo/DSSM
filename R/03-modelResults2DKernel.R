@@ -702,15 +702,15 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       if(input$fixCol == FALSE){
         zoom <- values$zoom
 
-        rangey <- Model() %>%
+        rangey <- Model()$data %>%
           extractRangeFromData(column = "Latitude", move = values$up) %>%
           zoomLatitudeRange(zoom = zoom,
                             upperLeftLatitude = values$upperLeftLatitude,
                             move = values$up) %>%
           constrainLatitudeRange()
 
-        rangex <- Model() %>%
-        centerPlotData(centerMap = input$Centering) %>%
+        rangex <- Model()$data %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
           extractRangeFromData(column = "Longitude", move = values$right) %>%
           zoomLongitudeRange(zoom = zoom,
                              upperLeftLongitude = values$upperLeftLongitude,

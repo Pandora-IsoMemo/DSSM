@@ -4,40 +4,26 @@
 # @param centerMap (character) center of map, one of "Europe" and "Pacific"
 #
 # @return data frame
-centerPlotData <- function(data, centerMap = c("Europe", "Pacific")) {
+shiftDataToCenter <- function(data, centerMap = c("Europe", "Pacific"), threshold = -20) {
   centerMap <- match.arg(centerMap)
   if (centerMap == "Europe") return(data)
 
   # if centerMap != "Europe":
   dataPac <- data
-  dataPac$Longitude <- dataPac$Longitude %>% shiftToPacific()
+  dataPac$Longitude <- dataPac$Longitude %>% shiftLongitudesToPacific(threshold = threshold)
 
   return(dataPac)
 }
 
-# Shift Longitudes
+# Shift to Pacific
 #
 # @param longitudes (numeric) longitudes to be shifted
 # @param threshold (numeric) threshold value
-# @param shift (numeric) shift value
 # @param order (logical) whether to order the shifted values
-shiftLongitudes <- function(longitudes, threshold = 20, shift = 180, order = FALSE) {
+shiftLongitudesToPacific <- function(longitudes, threshold = -20, order = FALSE) {
   shifted <- longitudes
-  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + (shift - threshold)
-  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - (shift + threshold)
-  if (order) {
-    # Order the shifted values
-    shifted <- shifted[order(shifted)]
-  }
-
-  return(shifted)
-}
-
-shiftToPacific <- function(longitudes, center = 160, order = FALSE) {
-  threshold <- center - 180
-  shifted <- longitudes
-  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + 360 - center
-  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - center
+  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + 180 - threshold
+  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - 180 - threshold
   if (order) {
     # Order the shifted values
     shifted <- shifted[order(shifted)]
@@ -61,7 +47,7 @@ zoomLongitudeRange <- function(rangex, zoom, upperLeftLongitude, center = c("Eur
   # set custom range
   rangex <- upperLeftLongitude + move
   if (center != "Europe") {
-    rangex <- rangex %>% shiftLongitudes(threshold = 0)
+    rangex <- rangex %>% shiftLongitudesToPacific()
   }
 
   return(rangex + c(0, zoom))
@@ -118,13 +104,13 @@ extractMaskDraw <- function(dat, maskRadius, XPred) {
   return(maskDraw)
 }
 
-#' Center XPred
-#'
-#' @param XPred (matrix) matrix of predictions
-#' @param XPredPac (matrix) matrix of predictions for Pacific
-#' @param centerMap (character) center of map, one of "Europe" and "Pacific"
-#'
-#' @return (matrix) matrix of predictions
+# Center XPred
+#
+# @param XPred (matrix) matrix of predictions
+# @param XPredPac (matrix) matrix of predictions for Pacific
+# @param centerMap (character) center of map, one of "Europe" and "Pacific"
+#
+# @return (matrix) matrix of predictions
 centerXPred <- function(XPred, XPredPac, centerMap) {
   if(centerMap != "Europe"){
     return(XPredPac)

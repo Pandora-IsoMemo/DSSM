@@ -1099,11 +1099,8 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   } else {
     longRange <- list(Longitude = rangeLongitude) %>%
       centerData(center = mapCentering) %>%
+      shiftDataToCenter(centerMap = mapCentering, threshold = -20) %>%
       range()
-    longRange[rangeLongitude < -20] <-
-      longRange[rangeLongitude < -20] + 200
-    longRange[rangeLongitude >= -20] <-
-      (-160 + longRange[rangeLongitude >= -20])
     rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
   }
 

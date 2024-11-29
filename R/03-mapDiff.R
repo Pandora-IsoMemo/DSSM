@@ -1023,7 +1023,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         constrainLatitudeRange()
 
       rangex <- MapDiff() %>%
-        centerPlotData(centerMap = input$Centering) %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
         extractRangeFromData(column = "Longitude", move = values$right) %>%
         zoomLongitudeRange(zoom = zoom,
                            upperLeftLongitude = values$upperLeftLongitude,

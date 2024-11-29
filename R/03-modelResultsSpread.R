@@ -792,7 +792,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
           constrainLatitudeRange()
 
         rangex <- model$data %>%
-        centerPlotData(centerMap = input$Centering) %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
           extractRangeFromData(column = "Longitude", move = values$right) %>%
           zoomLongitudeRange(zoom = zoom,
                              upperLeftLongitude = values$upperLeftLongitude,
