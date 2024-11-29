@@ -8,7 +8,7 @@
 # @param centerMap A character string specifying the center of the map. Possible values are "Europe" and "Pacific".
 # @param grid A logical indicating whether to add grid lines to the plot.
 # @param centerLine A logical indicating whether to add a vertical line at the center longitude.
-addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine = TRUE) {
+addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine = FALSE) {
   # Validate input
   if (is.null(Maps)) {
     stop("'Maps' cannot be NULL. Please provide a valid 'Maps' object.")

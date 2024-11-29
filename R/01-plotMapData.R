@@ -1,17 +1,16 @@
-#' Center Plot Data
-#'
-#' @param data data frame
-#' @param centerMap (character) center of map, one of "Europe" and "Pacific"
-#'
-#' @return data frame
+# Center the plot data to Pacific if centerMap is "Pacific"
+#
+# @param data data frame
+# @param centerMap (character) center of map, one of "Europe" and "Pacific"
+#
+# @return data frame
 centerPlotData <- function(data, centerMap = c("Europe", "Pacific")) {
   centerMap <- match.arg(centerMap)
   if (centerMap == "Europe") return(data)
 
   # if centerMap != "Europe":
   dataPac <- data
-  dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-  dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+  dataPac$Longitude <- dataPac$Longitude %>% shiftToPacific()
 
   return(dataPac)
 }
@@ -34,6 +33,62 @@ shiftLongitudes <- function(longitudes, threshold = 20, shift = 180, order = FAL
   return(shifted)
 }
 
+shiftToPacific <- function(longitudes, center = 160, order = FALSE) {
+  threshold <- center - 180
+  shifted <- longitudes
+  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + 360 - center
+  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - center
+  if (order) {
+    # Order the shifted values
+    shifted <- shifted[order(shifted)]
+  }
+
+  return(shifted)
+}
+
+extractRangeFromData <- function(data, column = c("Longitude", "Latitude"), move = 0) {
+  column <- match.arg(column)
+
+  - diff(range(data[[column]], na.rm = TRUE)) / 2 +
+    max(data[[column]], na.rm = TRUE) + move
+}
+
+zoomLongitudeRange <- function(rangex, zoom, upperLeftLongitude, center = c("Europe", "Pacific"), move = 0) {
+  center <- match.arg(center)
+
+  if (is.na(upperLeftLongitude)) return(rangex + c(-zoom / 2, zoom / 2))
+
+  # set custom range
+  rangex <- upperLeftLongitude + move
+  if (center != "Europe") {
+    rangex <- rangex %>% shiftLongitudes(threshold = 0)
+  }
+
+  return(rangex + c(0, zoom))
+}
+
+zoomLatitudeRange <- function(rangey, zoom, upperLeftLatitude, move = 0) {
+  if (is.na(upperLeftLatitude)) return(rangey + c(-zoom / 4, zoom / 4))
+
+  rangey <- upperLeftLatitude + move + c(-zoom / 2, 0)
+  return(rangey)
+}
+
+constrainLongitudeRange <- function(rangex, zoom = 50) {
+  rangex <- pmin(pmax(rangex, -180), 180)
+  if (rangex[2] > 180) rangex <- c(180 - zoom, 180)
+  if (rangex[1] < -180) rangex <- c(-180, -180 + zoom)
+
+  rangex
+}
+
+constrainLatitudeRange <- function(rangey) {
+  rangey <- pmin(90, pmax(-90, rangey))
+  if (rangey[2] > 90) rangey <- pmin(90, rangey - (rangey[2] - 90))
+  if (rangey[1] < -90) rangey <- pmax(-90, rangey - (rangey[1] + 90))
+
+  rangey
+}
 
 #' Filter Time
 #'
