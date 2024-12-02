@@ -156,7 +156,7 @@ plotMap <- function(model,
     independent <- "Density"
   }
 
-  Maps <- loadMaps()
+  Maps <- loadMaps_sf()
   data <- model$data
 
   if(!is.null(textLabels)){
@@ -1093,7 +1093,7 @@ plotMap3D <- function(model,
     independent = "Density"
   }
 
-  Maps <- loadMaps()
+  Maps <- loadMaps_sf()
   data <- model$data
   sc <- model$sc
 
@@ -1834,7 +1834,7 @@ plotDS <- function(XPred,
     z <- matrix(XPred$Est, ncol = length(unique(XPred$Latitude)))
   }
 
-  Maps <- loadMaps()
+  Maps <- loadMaps_sf()
   if(estType == "Significance (Overlap)"){
     levels <- pretty(c(0, 1), n = 2)
     colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)

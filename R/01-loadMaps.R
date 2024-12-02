@@ -48,39 +48,58 @@ loadMaps <- function(){
               ocean180 = ocean180, grids180 = grids180, borders180 = borders180, coast180 = coast180, land180 = land180))
 }
 
-createMap180 <- function(layer = c("ocean", "grids", "borders", "coast", "land")) {
-  layer <- match.arg(layer)
-
-  message("Reading layer: ", layer)
-  # we use the file "*160.RDS" as basis for the transformation
-  # there had been error messages for "*200.RDS" files and for "*.RDS" files
-  map <- readRDS(system.file(sprintf("maps/%s160.RDS", layer), package = "DSSM"))
-
-  message("Transforming layer: ", layer)
-  # try create a map centered on 180th Meridian
-  tryCatch({
-    # Perform the operations
-    res <- map %>%
-      st_as_sf() %>%
-      sf::st_wrap_dateline(options = c("WRAPDATELINE=YES"), quiet = TRUE) %>%
+#' loadMaps from sf
+#' @export
+loadMaps_sf <- function(layers = c("ocean", "grids", "borders", "coast", "land")){
+  all_layers <- c(layers, paste0(layers, "-180"), paste0(layers, "+180"))
+  maps <- lapply(all_layers, function(layer) {
+    readRDS(system.file(sprintf("maps/%s_sf.RDS", layer), package = "DSSM")) %>%
       sf::as_Spatial()
-  }, error = function(e) {
-    # Handle errors
-    message("Error processing layer: ", layer)
-    message("Error message: ", e$message)
   })
+  names(maps) <- all_layers
+  return(maps)
+}
 
-  # Save the result to an RDS file if no errors occur
-  if (exists("res") && !inherits(res, "try-error")) {
-    saveRDS(res, file = paste0(layer, "180.RDS"))
-    message("Successfully processed and saved: ", paste0(getwd(), "/", layer, "180.RDS"))
+# Update maps of package
+#
+# This function downloads maps from the package 'rnaturalearth' and saves them in the folder for
+# maps of the package 'DSSM'. Only needed if the maps are outdated or if new maps are needed.
+# This function is only for maintenance of the package and not needed for running the shiny app.
+#
+# @param layers character vector of layers to update
+updateMapsOfPackage <- function(layers = c("ocean", "grids", "borders", "coast", "land")) {
+  # check if package rnaturalearth is installed
+  if (!requireNamespace("rnaturalearth", quietly = TRUE)) {
+    stop("Package 'rnaturalearth' is not installed. Please install it first.")
+  }
+
+  library(rnaturalearth)
+
+  for (layer in layers) {
+    message("Downloading layer: ", layer, " ...")
+    map <- switch(layer,
+                  "ocean" = rnaturalearth::ne_download(scale = "medium", type = "ocean", category = "physical", returnclass = "sf"),
+                  "grids" = rnaturalearth::ne_download(scale = "medium", type = "graticules_10", category = "physical", returnclass = "sf"),
+                  "borders" = rnaturalearth::ne_download(scale = "medium", type = "admin_0_boundary_lines_land", category = "cultural", returnclass = "sf"),
+                  "coast" = rnaturalearth::ne_download(scale = "medium", type = "coastline", category = "physical", returnclass = "sf"),
+                  "land" = rnaturalearth::ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf"))
+
+    message("Creating layers moved by -/+180° : ", layer, " ...")
+    map_left <- map %>% moveMap(x = -180, y = 0)
+    map_right <- map %>% moveMap(x = 180, y = 0)
+
+    message("Saving layers(original and original -/+ c(180, 0): ", layer, " ...")
+    saveRDS(map, file = file.path(system.file("maps", package = "DSSM"), sprintf("%s_sf.RDS", layer)))
+    saveRDS(map_left, file = file.path(system.file("maps", package = "DSSM"), sprintf("%s-180_sf.RDS", layer)))
+    saveRDS(map_right, file = file.path(system.file("maps", package = "DSSM"), sprintf("%s+180_sf.RDS", layer)))
+    message("... updated layer: ", layer)
   }
 }
 
-createAllLayers180 <- function() {
-  layers <- c("ocean", "grids", "borders", "coast", "land")
+moveMap <- function(map, x = 0, y = 0) {
+  library(sf) # load library to enable overwriting of st_geometry and st_crs
 
-  for (layer in layers) {
-    createMap180(layer)
-  }
+  st_geometry(map) <- st_geometry(map) + c(x, y)
+  st_crs(map) <- st_crs(map)
+  return(map)
 }

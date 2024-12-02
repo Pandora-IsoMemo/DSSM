@@ -39,7 +39,7 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
-#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
+#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates st_crs st_geometry
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
