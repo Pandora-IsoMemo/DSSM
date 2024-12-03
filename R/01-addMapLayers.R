@@ -20,8 +20,6 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   # Draw base maps
   if (terrestrial == 1) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$ocean160, add = TRUE, col = "lightblue", lwd = 1, border = NA)
-      #sp::plot(Maps$ocean200, add = TRUE, col = "lightblue", lwd = 1, border = NA)
       sp::plot(Maps$`ocean-180`, add = TRUE, col = "lightblue", lwd = 1, border = NA)
       sp::plot(Maps$`ocean+180`, add = TRUE, col = "lightblue", lwd = 1, border = NA)
     } else {
@@ -30,8 +28,6 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   }
   if (terrestrial == -1) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$land160, add = TRUE, col = "grey96", lwd = 1, border = NA)
-      #sp::plot(Maps$land200, add = TRUE, col = "grey96", lwd = 1, border = NA)
       sp::plot(Maps$`land-180`, add = TRUE, col = "grey96", lwd = 1, border = NA)
       sp::plot(Maps$`land+180`, add = TRUE, col = "grey96", lwd = 1, border = NA)
     } else {
@@ -41,8 +37,6 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
 
   # Add coastlines
   if (centerMap != "Europe") {
-    #sp::plot(Maps$coast160, add = TRUE, lwd = 1)
-    #sp::plot(Maps$coast200, add = TRUE, lwd = 1)
     sp::plot(Maps$`coast-180`, add = TRUE, lwd = 1)
     sp::plot(Maps$`coast+180`, add = TRUE, lwd = 1)
   } else {
@@ -52,8 +46,6 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   # Add grid lines
   if (grid) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$grids160, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
-      #sp::plot(Maps$grids200, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
       sp::plot(Maps$`grids-180`, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
       sp::plot(Maps$`grids+180`, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
     } else {
@@ -63,8 +55,6 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
 
   # Add borders
   if (centerMap != "Europe") {
-    #sp::plot(Maps$borders160, add = TRUE, col = "darkgrey", lwd = 1)
-    #sp::plot(Maps$borders200, add = TRUE, col = "darkgrey", lwd = 1)
     sp::plot(Maps$`borders-180`, add = TRUE, col = "darkgrey", lwd = 1)
     sp::plot(Maps$`borders+180`, add = TRUE, col = "darkgrey", lwd = 1)
   } else {
