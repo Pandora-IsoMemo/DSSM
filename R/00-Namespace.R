@@ -15,7 +15,7 @@
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
-#' @importFrom graphics axis contour filled.contour hist plot points title boxplot par image lines
+#' @importFrom graphics axis abline contour filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
 #'  recordPlot replayPlot rgb svg tiff
@@ -39,7 +39,7 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
-#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates st_crs st_geometry
+#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
