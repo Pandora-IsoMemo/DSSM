@@ -156,7 +156,7 @@ plotMap <- function(model,
     independent <- "Density"
   }
 
-  Maps <- loadMaps_sf()
+  Maps <- loadMaps()
   data <- model$data
 
   if(!is.null(textLabels)){
@@ -181,12 +181,12 @@ plotMap <- function(model,
   XPred <- expand.grid(Longitude = longitudes, Latitude = latitudes)
   if(centerMap != "Europe"){
     rangexEU <- rangex
-    rangex <- rangex %>% shiftLongitudesToPacific(threshold = 20, order = TRUE)
+    rangex <- rangex %>% shiftLongitudesToPacific(order = TRUE)
     longitudesPac <- longitudes
-    longitudes <- longitudes %>% shiftLongitudesToPacific(threshold = 20)
+    longitudes <- longitudes %>% shiftLongitudesToPacific()
     XPredPac <- XPred
-    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap, threshold = 20)
-    dataPac <- data %>% shiftDataToCenter(centerMap = centerMap, threshold = -20)
+    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap)
+    dataPac <- data %>% shiftDataToCenter(centerMap = centerMap)
   }
 
   if (interior == TRUE){
@@ -661,7 +661,7 @@ plotMap <- function(model,
                           centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
                           if(centerMap != "Europe"){
-                            centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific(threshold = -20)
+                            centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                           }
                         }
                         if(centerMap != "Europe"){
@@ -692,7 +692,7 @@ plotMap <- function(model,
                         }
                       }
                       if(centerMap != "Europe"){
-                        lab <- pretty(rangex) %>% shiftLongitudesToPacific(threshold = 20)
+                        lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                         axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                       } else{
                         axis(1, cex.axis = AxisLSize);
@@ -837,7 +837,7 @@ plotMap <- function(model,
                         centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
-                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific(threshold = -20)
+                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                         }
                       }
 
@@ -896,7 +896,7 @@ plotMap <- function(model,
                       text(pointDat$y ~ pointDat$x, labels = pointDat$label, pos = 4, cex = 1.75)
                     }
                     if(centerMap != "Europe"){
-                      lab <- pretty(rangex) %>% shiftLongitudesToPacific(threshold = 20)
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);
@@ -1093,7 +1093,7 @@ plotMap3D <- function(model,
     independent = "Density"
   }
 
-  Maps <- loadMaps_sf()
+  Maps <- loadMaps()
   data <- model$data
   sc <- model$sc
 
@@ -1122,19 +1122,23 @@ plotMap3D <- function(model,
 
   if(centerMap != "Europe"){
     rangexEU <- rangex
-    rangex <- rangex %>% shiftLongitudesToPacific(threshold = 20, order = TRUE)
+    rangex <- rangex %>% shiftLongitudesToPacific(order = TRUE)
     longitudesPac <- longitudes
-    longitudes <- longitudes %>% shiftLongitudesToPacific(threshold = 20)
+    longitudes <- longitudes %>% shiftLongitudesToPacific()
     XPredPac <- XPred
-    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap, threshold = 20)
+    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap)
     XPred$Longitude2 = (XPred$Longitude - mean(data$Longitude)) / sd(data$Longitude)
     dataPac <- data %>% shiftDataToCenter(centerMap = centerMap)
     dataTPac <- dataPac %>% filterT(addU = addU, time = time)
   }
 
   if (interior > 0){
+    # estimates are drawn within the convex hull of the data points
+    # WE NEED TO FIX/SPLIT LONGITUDES FOR PACIFIC or we simply do not use this as default, or add a warning
+    # if center modelling and center map differ for this option
     if(centerMap != "Europe"){
       if(interior == 1){
+        # "spatio-temporal" convex hull
         cData <- rbind(data.frame(Date = dataPac$Date + 2 * dataPac$Uncertainty, dataPac[, c("Longitude", "Latitude")]),
                        data.frame(Date = dataPac$Date - 2 * dataPac$Uncertainty, dataPac[, c("Longitude", "Latitude")]))
         if(nrow(cData) > 0){
@@ -1144,6 +1148,7 @@ plotMap3D <- function(model,
           draw <- rep(0, nrow(XPred))
         }
       } else {
+        # "time-sliced spatial" convex hull
         cData <- dataTPac[, c("Longitude", "Latitude")]
         if(nrow(cData) > 2){
           convHull <- convhulln(cData)
@@ -1155,6 +1160,7 @@ plotMap3D <- function(model,
 
     } else {
       if(interior == 1){
+        # "spatio-temporal" convex hull
         cData <- rbind(data.frame(Date = data$Date + 2 * data$Uncertainty, data[, c("Longitude", "Latitude")]),
                        data.frame(Date = data$Date - 2 * data$Uncertainty, data[, c("Longitude", "Latitude")]))
         if(nrow(unique(cData)) > 3){
@@ -1165,6 +1171,7 @@ plotMap3D <- function(model,
         }
 
       } else {
+        # "time-sliced spatial" convex hull
         cData <- filterT(data, addU = addU, time = time)[, c("Longitude", "Latitude")]
         if(nrow(unique(cData)) > 3){
           convHull <- convhulln(cData)
@@ -1177,6 +1184,7 @@ plotMap3D <- function(model,
   }
 
   if(mask == TRUE){
+    # estimates are drawn within a small radius around the data points
     if(exists("cData")){
       maskData <- unique(cData[, c("Longitude", "Latitude")])
     } else {
@@ -1552,7 +1560,7 @@ plotMap3D <- function(model,
                         }
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
-                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific(threshold = -20)
+                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                         }
                       }
 
@@ -1616,7 +1624,7 @@ plotMap3D <- function(model,
                     }
                     # update axis if center Pacific
                     if (centerMap != "Europe") {
-                      lab <- pretty(rangex) %>% shiftLongitudesToPacific(threshold = 20)
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);
@@ -1834,7 +1842,7 @@ plotDS <- function(XPred,
     z <- matrix(XPred$Est, ncol = length(unique(XPred$Latitude)))
   }
 
-  Maps <- loadMaps_sf()
+  Maps <- loadMaps()
   if(estType == "Significance (Overlap)"){
     levels <- pretty(c(0, 1), n = 2)
     colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)
@@ -1858,7 +1866,7 @@ plotDS <- function(XPred,
   XPred$EstForCenter <- XPred$Est
 
   if(centerMap != "Europe"){
-    XPredPac <- XPred %>% shiftDataToCenter(centerMap = centerMap, threshold = -20)
+    XPredPac <- XPred %>% shiftDataToCenter(centerMap = centerMap)
     XPredPlot <- data.frame(XPredPac[order(XPredPac$Latitude, XPredPac$Longitude),])
     z <- matrix(XPredPlot$Est, ncol = length(unique(XPredPlot$Latitude)))
   } else {
@@ -1928,7 +1936,7 @@ plotDS <- function(XPred,
                     # draw map layers ----
                     addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                     if(centerMap != "Europe"){
-                      lab <- pretty(rangex) %>% shiftLongitudesToPacific(threshold = 20)
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);

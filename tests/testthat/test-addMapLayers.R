@@ -11,25 +11,20 @@ dummy_map <- function(name) {
 }
 
 Maps <- list(
-  ocean160 = dummy_map("ocean160"),
-  ocean200 = dummy_map("ocean200"),
-  ocean180 = dummy_map("ocean180"),
+  `ocean+180` = dummy_map("ocean+180"),
+  `ocean-180` = dummy_map("ocean-180"),
   ocean = dummy_map("ocean"),
-  land160 = dummy_map("land160"),
-  land200 = dummy_map("land200"),
-  land180 = dummy_map("land180"),
+  `land+180` = dummy_map("land+180"),
+  `land-180` = dummy_map("land-180"),
   land = dummy_map("land"),
-  coast160 = dummy_map("coast160"),
-  coast200 = dummy_map("coast200"),
-  coast180 = dummy_map("coast180"),
+  `coast+180` = dummy_map("coast+180"),
+  `coast-180` = dummy_map("coast-180"),
   coast = dummy_map("coast"),
-  grids160 = dummy_map("grids160"),
-  grids200 = dummy_map("grids200"),
-  grids180 = dummy_map("grids180"),
+  `grids+180` = dummy_map("grids+180"),
+  `grids-180` = dummy_map("grids-180"),
   grids = dummy_map("grids"),
-  borders160 = dummy_map("borders160"),
-  borders200 = dummy_map("borders200"),
-  borders180 = dummy_map("borders180"),
+  `borders+180` = dummy_map("borders+180"),
+  `borders-180` = dummy_map("borders-180"),
   borders = dummy_map("borders")
 )
 

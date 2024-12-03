@@ -4,7 +4,7 @@
 # @param centerMap (character) center of map, one of "Europe" and "Pacific"
 #
 # @return data frame
-shiftDataToCenter <- function(data, centerMap = c("Europe", "Pacific"), threshold = -20) {
+shiftDataToCenter <- function(data, centerMap = c("Europe", "Pacific"), threshold = 0) {
   centerMap <- match.arg(centerMap)
   if (centerMap == "Europe") return(data)
 
@@ -20,7 +20,7 @@ shiftDataToCenter <- function(data, centerMap = c("Europe", "Pacific"), threshol
 # @param longitudes (numeric) longitudes to be shifted
 # @param threshold (numeric) threshold value
 # @param order (logical) whether to order the shifted values
-shiftLongitudesToPacific <- function(longitudes, threshold = -20, order = FALSE) {
+shiftLongitudesToPacific <- function(longitudes, threshold = 0, order = FALSE) {
   shifted <- longitudes
   shifted[longitudes < threshold] <- shifted[longitudes < threshold] + 180 - threshold
   shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - 180 - threshold

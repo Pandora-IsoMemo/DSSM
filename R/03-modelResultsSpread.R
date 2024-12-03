@@ -654,7 +654,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     }
   })
 
-  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel, mapCenter = reactive(input$Centering))
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -672,7 +672,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     values$right <- values$right + values$zoom / 40
   })
 
-  observeEvent(input$center, {
+  observeEvent(input$Centering, {
     values$upperLeftLatitude <- NA
     values$upperLeftLongitude <- NA
     values$up <- 0

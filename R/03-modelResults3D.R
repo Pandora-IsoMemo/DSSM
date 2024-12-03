@@ -729,7 +729,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$right <- values$right + values$zoom / 40
   })
 
-  observeEvent(input$center, {
+  observeEvent(input$Centering, {
     values$upperLeftLatitude <- NA
     values$upperLeftLongitude <- NA
     values$up <- 0
@@ -749,7 +749,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                         dateMax = reactive(dateExtent$max),
                                         dateValue = reactive(dateExtent$mean),
                                         dateStep = reactive(dateExtent$step),
-                                        zoomValue = zoomFromModel)
+                                        zoomValue = zoomFromModel,
+                                        mapCenter = reactive(input$Centering))
 
   observeEvent(mapSection$set, {
     mapSectionVars <- names(mapSection)

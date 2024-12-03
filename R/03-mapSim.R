@@ -702,7 +702,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
                             zValuesFun = getZValuesMapSim,
                             zValuesFactor = 1)
 
-  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel, mapCenter = reactive(input$Centering))
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -720,7 +720,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
     values$right <- values$right + values$zoom / 40
   })
 
-  observeEvent(input$center, {
+  observeEvent(input$Centering, {
     values$upperLeftLatitude <- NA
     values$upperLeftLongitude <- NA
     values$up <- 0

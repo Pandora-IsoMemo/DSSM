@@ -342,12 +342,12 @@ formatTimeCourseServer <-
 ## Time and Map Section ----
 
 
-#' Time And Map Section UI
-#'
-#' UI of the module
-#'
-#' @param id id of module
-#' @param label label
+# Time And Map Section UI
+#
+# UI of the module
+#
+# @param id id of module
+# @param label label
 timeAndMapSectionUI <- function(id, label) {
   ns <- NS(id)
   tagList(
@@ -376,21 +376,23 @@ timeAndMapSectionUI <- function(id, label) {
 }
 
 
-#' Time And Map Section Server
-#'
-#' Server function of the module
-#' @param id id of module
-#' @param dateMin (reactive) min date
-#' @param dateMax (reactive) max date
-#' @param dateValue (reactive) value date
-#' @param dateStep (reactive) step date
-#' @param zoomValue (reactive) default zoom given by model output
+# Time And Map Section Server
+#
+# Server function of the module
+# @param id id of module
+# @param dateMin (reactive) min date
+# @param dateMax (reactive) max date
+# @param dateValue (reactive) value date
+# @param dateStep (reactive) step date
+# @param zoomValue (reactive) default zoom given by model output
+# @param mapCenter (reactive) center of the map
 timeAndMapSectionServer <- function(id,
                                     dateMin,
                                     dateMax,
                                     dateValue,
                                     dateStep,
-                                    zoomValue) {
+                                    zoomValue,
+                                    mapCenter = reactiveVal("Europe")) {
   moduleServer(id,
                function(input, output, session) {
                  mapAndTimeSettings <- reactiveValues(
@@ -411,7 +413,7 @@ timeAndMapSectionServer <- function(id,
                    )
 
                  mapSectionParams <-
-                   mapSectionServer("mapSection", zoomValue = zoomValue)
+                   mapSectionServer("mapSection", zoomValue = zoomValue, mapCenter = mapCenter)
 
                  # default values depend on model output
                  observeEvent(list(dateValue(),
@@ -441,11 +443,11 @@ timeAndMapSectionServer <- function(id,
 }
 
 
-#' Map Section UI
-#'
-#' UI of the module
-#'
-#' @param id id of module
+# Map Section UI
+#
+# UI of the module
+#
+# @param id id of module
 mapSectionUI <- function(id) {
   ns <- NS(id)
   tagList(
@@ -483,13 +485,15 @@ mapSectionUI <- function(id) {
 }
 
 
-#' Map Section Server
-#'
-#' Server function of the module
-#' @param id id of module
-#' @param zoomValue (reactive) default zoom given by model output
+# Map Section Server
+#
+# Server function of the module
+# @param id id of module
+# @param zoomValue (reactive) default zoom given by model output
+# @param mapCenter (reactive) center of the map
 mapSectionServer <- function(id,
-                             zoomValue) {
+                             zoomValue,
+                             mapCenter = reactiveVal("Europe")) {
   moduleServer(id,
                function(input, output, session) {
                  mapSettings <- reactiveValues(
@@ -505,6 +509,29 @@ mapSectionServer <- function(id,
                    max = reactive(360),
                    step = reactive(1)
                  )
+
+                 observe({
+                   req(mapCenter())
+
+                   if (mapCenter() == "Europe") {
+                     range <- c(-180, 180)
+                   } else {
+                     range <- c(0, 360)
+                   }
+
+                   updateNumericInput(
+                     session,
+                     "upperLeftLongitude",
+                     value = numeric(0),
+                     min = range[1],
+                     max = range[2]
+                   )
+                   updateNumericInput(
+                     session,
+                     "upperLeftLatitude",
+                     value = numeric(0)
+                   )
+                 })
 
                  # update upperLeftLatitude/upperLeftLongitude if values$up/... change ----
 
@@ -1099,7 +1126,7 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   } else {
     longRange <- list(Longitude = rangeLongitude) %>%
       centerData(center = mapCentering) %>%
-      shiftDataToCenter(centerMap = mapCentering, threshold = -20) %>%
+      shiftDataToCenter(centerMap = mapCentering) %>%
       range()
     rangeLong <- diff(range(longRange, na.rm = TRUE) + c(-1, 1))
   }

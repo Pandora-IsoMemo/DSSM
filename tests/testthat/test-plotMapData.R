@@ -1,7 +1,7 @@
 test_that("shiftLongitudesToPacific shifts values correctly with default parameters", {
   longitudes <- c(-190, 10, 25, -170, 180)
   result <- shiftLongitudesToPacific(longitudes)
-  expected <- c(10, -150, -135, 30, 20)
+  expected <- c(-10, -170, -155, 10, 0)
   expect_equal(result, expected)
 })
 
