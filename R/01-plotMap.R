@@ -181,18 +181,12 @@ plotMap <- function(model,
   XPred <- expand.grid(Longitude = longitudes, Latitude = latitudes)
   if(centerMap != "Europe"){
     rangexEU <- rangex
-    rangex[rangexEU < 20] <- rangex[rangexEU < 20] + 160
-    rangex[rangexEU >= 20] <- (- 200 + rangex[rangexEU >= 20])
-    rangex <- rangex[order(rangex)]
+    rangex <- rangex %>% shiftLongitudesToPacific(order = TRUE)
     longitudesPac <- longitudes
-    longitudes[longitudesPac < 20] <- longitudes[longitudesPac < 20] + 160
-    longitudes[longitudesPac >= 20] <- (- 200 + longitudes[longitudesPac >= 20])
+    longitudes <- longitudes %>% shiftLongitudesToPacific()
     XPredPac <- XPred
-    XPred$Longitude[XPredPac$Longitude < 20] <- XPred$Longitude[XPredPac$Longitude < 20] + 160
-    XPred$Longitude[XPredPac$Longitude >= 20] <- (- 200 + XPred$Longitude[XPredPac$Longitude >= 20])
-    dataPac <- data
-    dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-    dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap)
+    dataPac <- data %>% shiftDataToCenter(centerMap = centerMap)
   }
 
   if (interior == TRUE){
@@ -214,7 +208,7 @@ plotMap <- function(model,
     }
   }
   if(mask == TRUE){
-    maskDraw <- extractMaskDraw(dat = centerPlotData(data, centerMap = centerMap),
+    maskDraw <- extractMaskDraw(dat = shiftDataToCenter(data, centerMap = centerMap),
                                 maskRadius = maskRadius,
                                 XPred = centerXPred(XPred = XPred,
                                                     XPredPac = XPredPac,
@@ -234,6 +228,7 @@ plotMap <- function(model,
 
   XPred <- centerData(XPred, center = centerMap)
   if (Bayes == TRUE & GAM == FALSE){
+    # predict estimates: Bayes == TRUE & GAM == FALSE ----
     PredMatr <- Predict.matrix(sc, data = XPred)
 
     betas <- model$model$beta
@@ -248,6 +243,7 @@ plotMap <- function(model,
     }
 
     if(!is.null(betaSigma)){
+      # predict sigma: !is.null(betaSigma) ----
       PredMatrV <- Predict.matrix(model$scV, data = XPred)
       PredictionsSigma <-
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
@@ -305,7 +301,7 @@ plotMap <- function(model,
     )
     }
   if (Bayes == FALSE & GAM == FALSE){
-
+    # predict estimates: Bayes == FALSE & GAM == FALSE ----
     Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
     if(estType == "1 SE"){
       Est$fit <- Est$se.fit
@@ -353,6 +349,7 @@ plotMap <- function(model,
                         resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
+    # predict estimates: GAM == TRUE ----
     Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], x = XPred[, 1:2]))
     if(estType == "Mean"){
       Est <- rowMeans(Predictions)
@@ -664,10 +661,7 @@ plotMap <- function(model,
                           centroids <- unique(data[, data_names])
                           centroids <- centroids[order(centroids[,1]), ]
                           if(centerMap != "Europe"){
-                            centroids2 <- centroids
-                            centroids2[,2][centroids[,2] < -20] <- centroids2[,2][centroids[,2] < -20] + 200
-                            centroids2[,2][centroids[,2] >= -20] <- (- 160 + centroids2[,2][centroids[,2] >= -20])
-                            centroids <- centroids2
+                            centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                           }
                         }
                         if(centerMap != "Europe"){
@@ -698,9 +692,7 @@ plotMap <- function(model,
                         }
                       }
                       if(centerMap != "Europe"){
-                        lab <- pretty(rangex)
-                        lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
-                        lab[pretty(rangex) < 20] <- lab[pretty(rangex) < 20] + 160
+                        lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                         axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                       } else{
                         axis(1, cex.axis = AxisLSize);
@@ -845,10 +837,7 @@ plotMap <- function(model,
                         centroids <- unique(data[, data_names])
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
-                          centroids2 <- centroids
-                          centroids2[,2][centroids[,2] < -20] <- centroids2[,2][centroids[,2] < -20] + 200
-                          centroids2[,2][centroids[,2] >= -20] <- (- 160 + centroids2[,2][centroids[,2] >= -20])
-                          centroids <- centroids2
+                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                         }
                       }
 
@@ -907,9 +896,7 @@ plotMap <- function(model,
                       text(pointDat$y ~ pointDat$x, labels = pointDat$label, pos = 4, cex = 1.75)
                     }
                     if(centerMap != "Europe"){
-                      lab <- pretty(rangex)
-                      lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
-                      lab[pretty(rangex) < 20] <- lab[pretty(rangex) < 20] + 160
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);
@@ -1135,26 +1122,23 @@ plotMap3D <- function(model,
 
   if(centerMap != "Europe"){
     rangexEU <- rangex
-    rangex[rangexEU < 20] <- rangex[rangexEU < 20] + 160
-    rangex[rangexEU >= 20] <- (- 200 + rangex[rangexEU >= 20])
-    rangex <- rangex[order(rangex)]
+    rangex <- rangex %>% shiftLongitudesToPacific(order = TRUE)
     longitudesPac <- longitudes
-    longitudes[longitudesPac < 20] <- longitudes[longitudesPac < 20] + 160
-    longitudes[longitudesPac >= 20] <- (- 200 + longitudes[longitudesPac >= 20])
+    longitudes <- longitudes %>% shiftLongitudesToPacific()
     XPredPac <- XPred
-    XPred$Longitude[XPredPac$Longitude < 20] <- XPred$Longitude[XPredPac$Longitude < 20] + 160
-    XPred$Longitude[XPredPac$Longitude >= 20] <- (- 200 + XPred$Longitude[XPredPac$Longitude >= 20])
+    XPred <- XPred %>% shiftDataToCenter(centerMap = centerMap)
     XPred$Longitude2 = (XPred$Longitude - mean(data$Longitude)) / sd(data$Longitude)
-    dataPac <- data %>%
-      centerPlotData(centerMap = centerMap)
-    dataTPac <- dataPac %>%
-      filterT(addU = addU, time = time)
+    dataPac <- data %>% shiftDataToCenter(centerMap = centerMap)
+    dataTPac <- dataPac %>% filterT(addU = addU, time = time)
   }
 
-
   if (interior > 0){
+    # estimates are drawn within the convex hull of the data points
+    # WE NEED TO FIX/SPLIT LONGITUDES FOR PACIFIC or we simply do not use this as default, or add a warning
+    # if center modelling and center map differ for this option
     if(centerMap != "Europe"){
       if(interior == 1){
+        # "spatio-temporal" convex hull
         cData <- rbind(data.frame(Date = dataPac$Date + 2 * dataPac$Uncertainty, dataPac[, c("Longitude", "Latitude")]),
                        data.frame(Date = dataPac$Date - 2 * dataPac$Uncertainty, dataPac[, c("Longitude", "Latitude")]))
         if(nrow(cData) > 0){
@@ -1164,6 +1148,7 @@ plotMap3D <- function(model,
           draw <- rep(0, nrow(XPred))
         }
       } else {
+        # "time-sliced spatial" convex hull
         cData <- dataTPac[, c("Longitude", "Latitude")]
         if(nrow(cData) > 2){
           convHull <- convhulln(cData)
@@ -1175,6 +1160,7 @@ plotMap3D <- function(model,
 
     } else {
       if(interior == 1){
+        # "spatio-temporal" convex hull
         cData <- rbind(data.frame(Date = data$Date + 2 * data$Uncertainty, data[, c("Longitude", "Latitude")]),
                        data.frame(Date = data$Date - 2 * data$Uncertainty, data[, c("Longitude", "Latitude")]))
         if(nrow(unique(cData)) > 3){
@@ -1185,6 +1171,7 @@ plotMap3D <- function(model,
         }
 
       } else {
+        # "time-sliced spatial" convex hull
         cData <- filterT(data, addU = addU, time = time)[, c("Longitude", "Latitude")]
         if(nrow(unique(cData)) > 3){
           convHull <- convhulln(cData)
@@ -1197,6 +1184,7 @@ plotMap3D <- function(model,
   }
 
   if(mask == TRUE){
+    # estimates are drawn within a small radius around the data points
     if(exists("cData")){
       maskData <- unique(cData[, c("Longitude", "Latitude")])
     } else {
@@ -1227,6 +1215,7 @@ plotMap3D <- function(model,
   }
 
   if (Bayes == TRUE & GAM == FALSE){
+    # predict estimates: Bayes == TRUE & GAM == FALSE ----
     PredMatr <- Predict.matrix(sc,
                                data = data.frame(XPred,
                                                  Date2 = (time - mean(data$Date)) /
@@ -1244,6 +1233,7 @@ plotMap3D <- function(model,
     }
 
     if(!is.null(betaSigma)){
+      # predict sigma: !is.null(betaSigma) ----
       PredMatrV <- Predict.matrix(model$scV,
                                   data = data.frame(XPred,
                                                     Date2 = (time - mean(data$Date)) /
@@ -1301,6 +1291,7 @@ plotMap3D <- function(model,
                  resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2))
   }
   if (Bayes == FALSE & GAM == FALSE){
+    # predict estimates: Bayes == FALSE & GAM == FALSE ----
     Est <- predict(model$model$gam,
                    newdata = data.frame(XPred,
                               Date2 = (time - mean(data$Date)) /
@@ -1353,6 +1344,7 @@ plotMap3D <- function(model,
                         resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
   }
   if(GAM == TRUE){
+    # predict estimates: GAM == TRUE ----
     Predictions <- sapply(1:length(model$model),
                           function(x) predict(model$model[[x]],
                                               x = cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude,
@@ -1568,10 +1560,7 @@ plotMap3D <- function(model,
                         }
                         centroids <- centroids[order(centroids[,1]), ]
                         if(centerMap != "Europe"){
-                          centroidsPac <- centroids
-                          centroidsPac[,2][centroids[,2] < -20] <- centroidsPac[,2][centroids[,2] < -20] + 200
-                          centroidsPac[,2][centroids[,2] >= -20] <- (- 160 + centroidsPac[,2][centroids[,2] >= -20])
-                          centroids <- centroidsPac
+                          centroids[,2] <- centroids[,2] %>% shiftLongitudesToPacific()
                         }
                       }
 
@@ -1580,7 +1569,7 @@ plotMap3D <- function(model,
                       ## if not show only centroids
                       if (!cluster || clusterAll != "-1") {
                         dataPlot <- data %>%
-                          centerPlotData(centerMap = centerMap)
+                          shiftDataToCenter(centerMap = centerMap)
 
                         ## if there is no clustering, or
                         ## if not "Show points for all times"
@@ -1635,9 +1624,7 @@ plotMap3D <- function(model,
                     }
                     # update axis if center Pacific
                     if (centerMap != "Europe") {
-                      lab <- pretty(rangex)
-                      lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
-                      lab[pretty(rangex) < 20] <- lab[pretty(rangex) < 20] + 160
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);
@@ -1879,9 +1866,7 @@ plotDS <- function(XPred,
   XPred$EstForCenter <- XPred$Est
 
   if(centerMap != "Europe"){
-    XPredPac <- XPred
-    XPredPac$Longitude[XPred$Longitude < -20] <- XPredPac$Longitude[XPred$Longitude < -20] + 200
-    XPredPac$Longitude[XPred$Longitude >= -20] <- (- 160 + XPredPac$Longitude[XPred$Longitude >= -20])
+    XPredPac <- XPred %>% shiftDataToCenter(centerMap = centerMap)
     XPredPlot <- data.frame(XPredPac[order(XPredPac$Latitude, XPredPac$Longitude),])
     z <- matrix(XPredPlot$Est, ncol = length(unique(XPredPlot$Latitude)))
   } else {
@@ -1951,9 +1936,7 @@ plotDS <- function(XPred,
                     # draw map layers ----
                     addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
                     if(centerMap != "Europe"){
-                      lab <- pretty(rangex)
-                      lab[pretty(rangex) >= 20] <- lab[pretty(rangex) >= 20] - 200
-                      lab[pretty(rangex) < 20] <- lab[pretty(rangex) < 20] + 160
+                      lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
                     } else{
                       axis(1, cex.axis = AxisLSize);
@@ -2048,6 +2031,7 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
                             yaxs = "i", las = 1, axes = TRUE, frame.plot = axes, ...)
 {
   contourType <- match.arg(contourType)
+  message(sprintf("xlim: %s", paste(xlim, collapse = ", ")))
 
   if (missing(z)) {
     if (!missing(x)) {
@@ -2264,6 +2248,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
                       Latitude = centerY)
 
   if (Bayes == TRUE & GAM == FALSE){
+    # predict estimates: Bayes == TRUE & GAM == FALSE ----
     sc <- model$sc
     PredMatr <- Predict.matrix(sc, data = XPred)
 
@@ -2279,6 +2264,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
     }
 
     if(!is.null(betaSigma)){
+      # predict sigma: !is.null(betaSigma) ----
       PredMatrV <- Predict.matrix(model$scV, data = XPred)
       PredictionsSigma <-
         rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
@@ -2309,6 +2295,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
                       "(", centerY,",", centerX,")" ," with credible intervals")
   }
   if (Bayes == FALSE & GAM == FALSE){
+    # predict estimates: Bayes == FALSE & GAM == FALSE ----
     Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
     XPred <- data.frame(XPred, Est = Est$fit, Sd = Est$se.fit,
                         SdTotal = sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
@@ -2322,6 +2309,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
                       "(", centerY,",", centerX,")" ," with confidence intervals")
   }
   if (GAM == TRUE){
+    # predict estimates: GAM == TRUE ----
     EstTemp <- sapply(1:length(model$model), function(x) predict(model$model[[x]],
                                                                  x =  cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude, Date2 = XPred$Date2)))
 

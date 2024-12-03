@@ -97,7 +97,7 @@ test_that("Test extractZoomFromLongRange", {
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(13, 97), mapCentering = centering), 86)
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(3, 9), mapCentering = centering), 8)
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(-10, 84), mapCentering = centering), 268)
-  expect_equal(extractZoomFromLongRange(rangeLongitude = c(-60, 50), mapCentering = centering), 112)
+  expect_equal(extractZoomFromLongRange(rangeLongitude = c(-60, 50), mapCentering = centering), 252)
   })
 
 

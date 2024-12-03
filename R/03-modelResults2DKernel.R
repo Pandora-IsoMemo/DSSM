@@ -170,7 +170,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
           style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
-                       choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+                       choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
           helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
           radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
@@ -576,7 +576,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                             zValuesFactor = 1.25
                             )
 
-  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel, mapCenter = reactive(input$Centering))
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -591,7 +591,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   observeEvent(input$right, {
     values$right <- values$right + values$zoom / 40
   })
-  observeEvent(input$center, {
+  observeEvent(input$Centering, {
     values$upperLeftLatitude <- NA
     values$upperLeftLongitude <- NA
     values$up <- 0
@@ -702,51 +702,22 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       if(input$fixCol == FALSE){
         zoom <- values$zoom
 
-        rangey <- - diff(range(Model()$data$Latitude, na.rm = TRUE)) / 2 +
-          max(Model()$data$Latitude, na.rm = TRUE) + values$up
-        if(!is.na(values$upperLeftLatitude)){
-          rangey <- values$upperLeftLatitude + c(- zoom / 2 , 0) + values$up
-        } else {
-          rangey <- rangey + c( - zoom / 4, zoom / 4)
-        }
-        if(input$Centering == "Europe"){
-          rangex <- - diff(range(Model()$data$Longitude, na.rm = TRUE)) / 2 +
-            max(Model()$data$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude)){
-            rangex <- values$upperLeftLongitude + values$right
-            rangex <- rangex + c(0, zoom)
-          } else {
-            rangex <- rangex + c( - zoom / 2, zoom / 2)
-          }
-        } else{
-          dataPac <- Model()$data
-          dataPac$Longitude[Model()$data$Longitude < -20] <- dataPac$Longitude[Model()$data$Longitude < -20] + 200
-          dataPac$Longitude[Model()$data$Longitude >= -20] <- (- 160 + dataPac$Longitude[Model()$data$Longitude >= -20])
-          rangex <- - diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
-            max(dataPac$Longitude, na.rm = TRUE) + values$right
-          if(!is.na(values$upperLeftLongitude)){
-            rangex <- values$upperLeftLongitude + values$right
-            if(rangex < -20) rangex <- rangex + 200
-            if(rangex >= -20) rangex <- rangex - 160
-            rangex <- rangex + c(0, zoom)
-          } else {
-            rangex <- rangex + c( - zoom / 2, zoom / 2)
-          }
-          }
-        if(rangex[2] > 180){
-          rangex <- c(180 - zoom, 180)
-        }
-        if(rangex[1] < -180){
-          rangex <- c(-180, -180 + zoom)
-        }
-        if(rangey[2] > 90){
-          coordDiff <- rangey[2] - 90
-          rangey <- pmin(90, pmax(-90, rangey - coordDiff))
-        }
-        if(rangey[1] < -90){
-          coordDiff <- rangey[1] + 90
-          rangey <- pmin(90, pmax(-90, rangey - coordDiff))
-        }
+        rangey <- Model()$data %>%
+          extractRangeFromData(column = "Latitude", move = values$up) %>%
+          zoomLatitudeRange(zoom = zoom,
+                            upperLeftLatitude = values$upperLeftLatitude,
+                            move = values$up) %>%
+          constrainLatitudeRange()
+
+        rangex <- Model()$data %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
+          extractRangeFromData(column = "Longitude", move = values$right) %>%
+          zoomLongitudeRange(zoom = zoom,
+                             upperLeftLongitude = values$upperLeftLongitude,
+                             center = input$Centering,
+                             move = values$right) %>%
+          constrainLongitudeRange(zoom = zoom)
+
         values$rangex <- rangex
         values$rangey <- rangey
       }

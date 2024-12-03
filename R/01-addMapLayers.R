@@ -8,7 +8,7 @@
 # @param centerMap A character string specifying the center of the map. Possible values are "Europe" and "Pacific".
 # @param grid A logical indicating whether to add grid lines to the plot.
 # @param centerLine A logical indicating whether to add a vertical line at the center longitude.
-addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine = TRUE) {
+addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine = FALSE) {
   # Validate input
   if (is.null(Maps)) {
     stop("'Maps' cannot be NULL. Please provide a valid 'Maps' object.")
@@ -20,18 +20,16 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   # Draw base maps
   if (terrestrial == 1) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$ocean160, add = TRUE, col = "lightblue", lwd = 1, border = NA)
-      #sp::plot(Maps$ocean200, add = TRUE, col = "lightblue", lwd = 1, border = NA)
-      sp::plot(Maps$ocean180, add = TRUE, col = "lightblue", lwd = 1, border = NA)
+      sp::plot(Maps$`ocean-180`, add = TRUE, col = "lightblue", lwd = 1, border = NA)
+      sp::plot(Maps$`ocean+180`, add = TRUE, col = "lightblue", lwd = 1, border = NA)
     } else {
       sp::plot(Maps$ocean, add = TRUE, col = "lightblue", lwd = 1)
     }
   }
   if (terrestrial == -1) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$land160, add = TRUE, col = "grey96", lwd = 1, border = NA)
-      #sp::plot(Maps$land200, add = TRUE, col = "grey96", lwd = 1, border = NA)
-      sp::plot(Maps$land180, add = TRUE, col = "grey96", lwd = 1, border = NA)
+      sp::plot(Maps$`land-180`, add = TRUE, col = "grey96", lwd = 1, border = NA)
+      sp::plot(Maps$`land+180`, add = TRUE, col = "grey96", lwd = 1, border = NA)
     } else {
       sp::plot(Maps$land, add = TRUE, col = "grey96", lwd = 1, border = NA)
     }
@@ -39,9 +37,8 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
 
   # Add coastlines
   if (centerMap != "Europe") {
-    #sp::plot(Maps$coast160, add = TRUE, lwd = 1)
-    #sp::plot(Maps$coast200, add = TRUE, lwd = 1)
-    sp::plot(Maps$coast180, add = TRUE, lwd = 1)
+    sp::plot(Maps$`coast-180`, add = TRUE, lwd = 1)
+    sp::plot(Maps$`coast+180`, add = TRUE, lwd = 1)
   } else {
     sp::plot(Maps$coast, add = TRUE, lwd = 1)
   }
@@ -49,9 +46,8 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   # Add grid lines
   if (grid) {
     if (centerMap != "Europe") {
-      #sp::plot(Maps$grids160, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
-      #sp::plot(Maps$grids200, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
-      sp::plot(Maps$grids180, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
+      sp::plot(Maps$`grids-180`, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
+      sp::plot(Maps$`grids+180`, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
     } else {
       sp::plot(Maps$grids, add = TRUE, col = "grey", lty = 2, xlim = c(0, 1))
     }
@@ -59,9 +55,8 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
 
   # Add borders
   if (centerMap != "Europe") {
-    #sp::plot(Maps$borders160, add = TRUE, col = "darkgrey", lwd = 1)
-    #sp::plot(Maps$borders200, add = TRUE, col = "darkgrey", lwd = 1)
-    sp::plot(Maps$borders180, add = TRUE, col = "darkgrey", lwd = 1)
+    sp::plot(Maps$`borders-180`, add = TRUE, col = "darkgrey", lwd = 1)
+    sp::plot(Maps$`borders+180`, add = TRUE, col = "darkgrey", lwd = 1)
   } else {
     sp::plot(Maps$borders, add = TRUE, col = "darkgrey", lwd = 1)
   }
