@@ -4,6 +4,7 @@
 - _Modeling tabs_: updated the process of map centering (#248)
   - now the Pacific center is at 180° longitudes instead of 160° longitudes
   - old maps for Pacific were replaced by new maps
+  - the code to create plots had to be refactored significantly
 
 # DSSM 24.10.1
 
