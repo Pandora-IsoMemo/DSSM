@@ -18,17 +18,24 @@ dataCenterUI <- function(ns, displayCondition = "input.SplineType == '1'", hideC
 }
 
 helpTextCenteringUI <- function(ns) {
-  conditionalPanel(
-    ns = ns,
-    condition = "input.Centering != input.centerOfData",
-    helpText(textOutput(ns("helpTextCentering")))
+  tagList(
+    conditionalPanel(
+      ns = ns,
+      condition = "input.Centering != 'Europe'",
+      helpText("Changing the center may alter the definition of the 'convex hull' for predictions.")
+    ),
+    conditionalPanel(
+      ns = ns,
+      condition = "input.Centering != input.centerOfData",
+      helpText(textOutput(ns("helpTextCentering")))
+    )
   )
 }
 
 outputHelpTextCentering <- function(input, output, session) {
   output$helpTextCentering <- renderText({
     if (input$centerOfData != input$Centering) {
-      sprintf("The 'Center of data' was set to '%s' for modelling, but 'Map Center' is set to '%s'. Please use the same centering, or keep in mind that modelling and predictions are based on different centers of coordinates.",
+      sprintf("The 'Center of data' was set to '%s' for modelling, but 'Map Center' (which is used for predictions and plotting) is set to '%s'. Please avoid using different centers.",
               input$centerOfData, input$Centering)
     } else {
       ""
