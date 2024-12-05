@@ -41,7 +41,7 @@ plotExport <- function(input,
       ),
       conditionalPanel(
         condition = paste0("'", modelType, "' == 'spatio-temporal-average' & ",
-                           "'", mapType(), "' == 'Map' & input.exportType != 'geo-tiff'"),
+                           "'", mapType(), "' == 'Map'"), #& input.exportType != 'geo-tiff'
         ns = session$ns,
         checkboxInput(session$ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
@@ -336,9 +336,10 @@ exportGraphicSeries <- function(exportType, file,
       incProgress(1 / length(times), detail = paste("time: ", i))
       figFilename <- figFileNames[[which(times == i)]]
 
-      if (exportType == "geo-tiff"){
+      if (exportType == "geo-tiff") {
         # filter for i ??? <- probably one needs to re-create the plot using: res <- plotFun(model = Model, time = i) and get the predictions from res$XPred
-        writeGeoTiff(predictions, figFilename)
+        # LOGIC FOR TIME SERIES WILL BE ADDED SOON
+        NULL
       } else {
         # save desired file type
         writeGraphics(exportType = exportType,

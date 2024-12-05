@@ -1,19 +1,79 @@
-#' Center Plot Data
-#'
-#' @param data data frame
-#' @param centerMap (character) center of map, one of "Europe" and "Pacific"
-#'
-#' @return data frame
-centerPlotData <- function(data, centerMap = c("Europe", "Pacific")) {
+# Center the plot data to Pacific if centerMap is "Pacific"
+#
+# @param data data frame
+# @param centerMap (character) center of map, one of "Europe" and "Pacific"
+#
+# @return data frame
+shiftDataToCenter <- function(data, centerMap = c("Europe", "Pacific"), threshold = 0) {
   centerMap <- match.arg(centerMap)
   if (centerMap == "Europe") return(data)
 
   # if centerMap != "Europe":
   dataPac <- data
-  dataPac$Longitude[data$Longitude < -20] <- dataPac$Longitude[data$Longitude < -20] + 200
-  dataPac$Longitude[data$Longitude >= -20] <- (- 160 + dataPac$Longitude[data$Longitude >= -20])
+  dataPac$Longitude <- dataPac$Longitude %>% shiftLongitudesToPacific(threshold = threshold)
 
   return(dataPac)
+}
+
+# Shift to Pacific
+#
+# @param longitudes (numeric) longitudes to be shifted
+# @param threshold (numeric) threshold value
+# @param order (logical) whether to order the shifted values
+shiftLongitudesToPacific <- function(longitudes, threshold = 0, order = FALSE) {
+  shifted <- longitudes
+  shifted[longitudes < threshold] <- shifted[longitudes < threshold] + 180 - threshold
+  shifted[longitudes >= threshold] <- shifted[longitudes >= threshold] - 180 - threshold
+  if (order) {
+    # Order the shifted values
+    shifted <- shifted[order(shifted)]
+  }
+
+  return(shifted)
+}
+
+extractRangeFromData <- function(data, column = c("Longitude", "Latitude"), move = 0) {
+  column <- match.arg(column)
+
+  - diff(range(data[[column]], na.rm = TRUE)) / 2 +
+    max(data[[column]], na.rm = TRUE) + move
+}
+
+zoomLongitudeRange <- function(rangex, zoom, upperLeftLongitude, center = c("Europe", "Pacific"), move = 0) {
+  center <- match.arg(center)
+
+  if (is.na(upperLeftLongitude)) return(rangex + c(-zoom / 2, zoom / 2))
+
+  # set custom range
+  rangex <- upperLeftLongitude + move
+  if (center != "Europe") {
+    rangex <- rangex %>% shiftLongitudesToPacific()
+  }
+
+  return(rangex + c(0, zoom))
+}
+
+zoomLatitudeRange <- function(rangey, zoom, upperLeftLatitude, move = 0) {
+  if (is.na(upperLeftLatitude)) return(rangey + c(-zoom / 4, zoom / 4))
+
+  rangey <- upperLeftLatitude + move + c(-zoom / 2, 0)
+  return(rangey)
+}
+
+constrainLongitudeRange <- function(rangex, zoom = 50) {
+  rangex <- pmin(pmax(rangex, -180), 180)
+  if (rangex[2] > 180) rangex <- c(180 - zoom, 180)
+  if (rangex[1] < -180) rangex <- c(-180, -180 + zoom)
+
+  rangex
+}
+
+constrainLatitudeRange <- function(rangey) {
+  rangey <- pmin(90, pmax(-90, rangey))
+  if (rangey[2] > 90) rangey <- pmin(90, rangey - (rangey[2] - 90))
+  if (rangey[1] < -90) rangey <- pmax(-90, rangey - (rangey[1] + 90))
+
+  rangey
 }
 
 #' Filter Time
@@ -44,13 +104,13 @@ extractMaskDraw <- function(dat, maskRadius, XPred) {
   return(maskDraw)
 }
 
-#' Center XPred
-#'
-#' @param XPred (matrix) matrix of predictions
-#' @param XPredPac (matrix) matrix of predictions for Pacific
-#' @param centerMap (character) center of map, one of "Europe" and "Pacific"
-#'
-#' @return (matrix) matrix of predictions
+# Center XPred
+#
+# @param XPred (matrix) matrix of predictions
+# @param XPredPac (matrix) matrix of predictions for Pacific
+# @param centerMap (character) center of map, one of "Europe" and "Pacific"
+#
+# @return (matrix) matrix of predictions
 centerXPred <- function(XPred, XPredPac, centerMap) {
   if(centerMap != "Europe"){
     return(XPredPac)

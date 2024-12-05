@@ -15,7 +15,7 @@
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
-#' @importFrom graphics axis contour filled.contour hist plot points title boxplot par image lines
+#' @importFrom graphics axis abline contour filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
 #'  recordPlot replayPlot rgb svg tiff
