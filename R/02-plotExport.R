@@ -422,7 +422,7 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
     jpeg = jpeg(filename, width = width, height = height),
     pdf = pdf(filename, width = width / 72, height = height / 72),
     tiff = tiff(filename, width = width, height = height),
-    svg = svg(filename, width = width / 72, height = height / 72)
+    svg = CairoSVG(filename, width = width / 72, height = height / 72)
   )
   plot
   dev.off()

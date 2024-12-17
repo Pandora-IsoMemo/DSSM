@@ -1,3 +1,8 @@
+# DSSM 24.12.1
+
+## Bug Fixes
+- use `Cairo::CairoSVG` for export of `.svg` plots
+
 # DSSM 24.12.0
 
 ## Updates
