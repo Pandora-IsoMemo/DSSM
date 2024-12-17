@@ -1,5 +1,6 @@
 #' @rawNamespace import(shiny, except = c(renderDataTable, dataTableOutput))
 #' @importFrom animation saveGIF
+#' @importFrom Cairo CairoSVG
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
