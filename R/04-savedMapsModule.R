@@ -293,7 +293,7 @@ savedMapsExportServer <- function(id, savedMaps) {
                                height = input$height,
                                exportType = input$exportType) %>%
             suppressWarnings() %>%
-            tryCatchWithWarningsAndErrors(errorTitle = "Export of Saved Maps faild")
+            shinyTryCatch(errorTitle = "Export of Saved Maps faild")
         }
       )
     })

@@ -425,7 +425,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
                                         negZero = input$negZero,
                                         invWeight = input$invWeight,
                                         weightDecay = input$weightDecay) %>%
-          tryCatchWithWarningsAndErrors()
+          shinyTryCatch()
         Model(model)
         },
         value = 0,
@@ -442,7 +442,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
                                         negZero = input$negZero,
                                         invWeight = input$invWeight,
                                         weightDecay = input$weightDecay) %>%
-          tryCatchWithWarningsAndErrors()
+          shinyTryCatch()
         Model(model)
         },
         value = 0,
@@ -621,7 +621,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              pointDat = pointDatOK,
              ...
              ) %>%
-        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+        shinyTryCatch(errorTitle = "Plotting failed")
     }
   })
 

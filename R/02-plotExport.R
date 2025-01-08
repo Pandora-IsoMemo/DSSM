@@ -147,7 +147,7 @@ plotExport <- function(input,
                             plotObj = plotObj(),
                             predictions = predictions()) %>%
           suppressWarnings() %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Export of graphic failed")
+          shinyTryCatch(errorTitle = "Export of graphic failed")
       } else {
         if (input$typeOfSeries == "mapr") {
           exportMapRFiles(file = file,
@@ -155,7 +155,7 @@ plotExport <- function(input,
                           Model = Model(),
                           input = input) %>%
             suppressWarnings() %>%
-            tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics failed")
+            shinyTryCatch(errorTitle = "Export of series of graphics failed")
         } else {
         exportGraphicSeries(exportType = exportType(),
                             file = file,
@@ -172,7 +172,7 @@ plotExport <- function(input,
                             reverseGif = input$reverseGif,
                             fpsGif = input$fpsGif) %>%
           suppressWarnings() %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Export of series of graphics failed")
+          shinyTryCatch(errorTitle = "Export of series of graphics failed")
         }
       }
     }

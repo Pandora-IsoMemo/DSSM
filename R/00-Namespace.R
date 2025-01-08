@@ -5,8 +5,7 @@
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importUI importServer
-#'  importOptions prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
-#'  updateNameEntryIfDuplicate
+#'  importOptions prefixSysTime previewDataUI previewDataServer updateNameEntryIfDuplicate
 #' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join select summarise
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
@@ -43,6 +42,7 @@
 #'  st_crs st_geometry st_intersects st_intersection st_polygon st_sf st_sfc st_transform st_union
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
+#' @importFrom shinyTools shinyTryCatch
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans

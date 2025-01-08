@@ -48,6 +48,7 @@ Imports:
     shinyjs (>= 1.0),
     shinyMatrix (>= 0.2.1),
     shinythemes (>= 1.1.1),
+    shinyTools,
     shinyWidgets (>= 0.4.1),
     sf,
     sp (>= 1.2.7),

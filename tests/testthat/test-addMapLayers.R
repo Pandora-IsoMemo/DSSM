@@ -74,7 +74,7 @@ test_that("addMapLayers to contour with terrestrial maps", {
   expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Pacific"))
 })
 
-test_that("addMapLayers to contour with terrestrial maps", {
+test_that("addMapLayers to contour with terrestrial maps for Pacific", {
   # Create example data
   x <- seq(-190, -130, length.out = 50)  # Longitude range
   y <- seq(20, 60, length.out = 50)   # Latitude range
@@ -82,7 +82,7 @@ test_that("addMapLayers to contour with terrestrial maps", {
 
   # Initialize a blank plot
   plot.new()  # Start a new plot
-  plot.window(xlim = c(-180, 540), ylim = c(-90, 90))  # Define plot window
+  plot.window(xlim = c(-360, 540), ylim = c(-90, 90))  # Define plot window
 
   # add simple contour for testing
   .filled.contour(x, y, z,

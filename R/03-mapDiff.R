@@ -518,7 +518,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         model <- createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
                                           savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
                                           operation = input$operation) %>%
-          tryCatchWithWarningsAndErrors()
+          shinyTryCatch()
         MapDiff(model)
         },
         value = 0,
@@ -1083,7 +1083,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              pointDat = pointDatOK,
              ...
       ) %>%
-        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+        shinyTryCatch(errorTitle = "Plotting failed")
     }
   })
 
