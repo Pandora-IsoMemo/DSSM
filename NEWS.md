@@ -6,7 +6,7 @@
 - handle the case of the _ocean_ layer where geometries are added implicitly
   - cannot use intersection of the map with a bounding box
   - the layer must be subtracted from the bounding box
-  - for pacific centering xlim must be splitted into parts smaller and larger zero
+  - for pacific centering xlim must be split into parts smaller and larger zero
 
 # DSSM 24.12.1
 
