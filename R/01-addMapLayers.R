@@ -76,7 +76,7 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
 
 splitXlim <- function(xlim) {
   if (length(xlim) != 2 || xlim[1] >= xlim[2]) {
-    return(xlim)
+    return(list(left = xlim, right = xlim))
   }
 
   # Case 1: Entire range is below 0
