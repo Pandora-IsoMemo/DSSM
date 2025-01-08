@@ -1,7 +1,17 @@
+# DSSM 25.01.0
+
+## Bug Fixes
+- remove `Cairo::CairoSVG` since it did not help
+- clip map layers to ranges xlim, ylim before adding them to the map (#259)
+- handle the case of the _ocean_ layer where geometries are added implicitly
+  - cannot use intersection of the map with a bounding box
+  - the layer must be subtracted from the bounding box
+  - for pacific centering xlim must be splitted into parts smaller and larger zero
+
 # DSSM 24.12.1
 
 ## Bug Fixes
-- use `Cairo::CairoSVG` for export of `.svg` plots
+- use `Cairo::CairoSVG` for export of `.svg` plots (#259)
 
 # DSSM 24.12.0
 
