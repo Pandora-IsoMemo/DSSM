@@ -13,7 +13,6 @@ LazyData: true
 Depends: R (>= 3.5.0)
 Imports:
     animation,
-    Cairo,
     coda,
     colourpicker,
     DataTools (>= 24.04.3),

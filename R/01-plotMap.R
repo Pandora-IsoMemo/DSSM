@@ -637,7 +637,7 @@ plotMap <- function(model,
                     plot.axes = {
                       par(fg = "black", col = "black");
                       # draw map layers ----
-                      addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
+                      addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
                       if (points == TRUE){
                         if(!is.null(pointLabels)){
                           pointLabels <- as.numeric(pointLabels)
@@ -813,7 +813,7 @@ plotMap <- function(model,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
                         pointLabels <- as.numeric(pointLabels)
@@ -1530,7 +1530,7 @@ plotMap3D <- function(model,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
                     # add points and/or centroids ----
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
@@ -1934,7 +1934,7 @@ plotDS <- function(XPred,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, grid = grid)
+                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
                     if(centerMap != "Europe"){
                       lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
@@ -2110,7 +2110,7 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
   # set up (filled.)contour
   mar <- mar.orig
   mar[4L] <- 1
-  par(mar = mar)
+  par(mar = mar, xpd = FALSE)
 
   a = (pin1[1] + par("mai")[2] + par("mai")[4])
   b = (pin1[2] + par("mai")[1] + par("mai")[3])

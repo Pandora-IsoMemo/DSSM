@@ -1,6 +1,5 @@
 #' @rawNamespace import(shiny, except = c(renderDataTable, dataTableOutput))
 #' @importFrom animation saveGIF
-#' @importFrom Cairo CairoSVG
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
@@ -40,7 +39,8 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
-#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
+#' @importFrom sf st_as_sf st_as_sfc st_bbox st_centroid st_combine st_coordinates st_difference
+#'  st_crs st_geometry st_intersects st_intersection st_polygon st_sf st_sfc st_transform st_union
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
