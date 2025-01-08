@@ -17,10 +17,17 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   # Draw base maps
   if (as.numeric(terrestrial) == 1) {
     if (centerMap != "Europe") {
-      sp::plot(Maps$`ocean-180` %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$`land-180`),
-               add = TRUE, col = "lightblue", lwd = 1, border = NA)
-      sp::plot(Maps$`ocean+180` %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$`land+180`),
-               add = TRUE, col = "lightblue", lwd = 1, border = NA)
+      slitted_xlim <- splitXlim(xlim)
+      # x: -360 to 0
+      if (!is.null(slitted_xlim$left)) {
+        sp::plot(Maps$`ocean-180` %>% clipMap(layer = "ocean", xlim = slitted_xlim$left, ylim = ylim, mapLand = Maps$`land-180`),
+                 add = TRUE, col = "lightblue", lwd = 1, border = NA)
+      }
+      # x: 0 to 360
+      if (!is.null(slitted_xlim$right)) {
+        sp::plot(Maps$`ocean+180` %>% clipMap(layer = "ocean", xlim = slitted_xlim$right, ylim = ylim, mapLand = Maps$`land+180`),
+                 add = TRUE, col = "lightblue", lwd = 1, border = NA)
+      }
     } else {
       sp::plot(Maps$ocean %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$land),
                add = TRUE, col = "lightblue", lwd = 1)
@@ -67,6 +74,28 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   }
 }
 
+splitXlim <- function(xlim) {
+  if (length(xlim) != 2 || xlim[1] >= xlim[2]) {
+    return(xlim)
+  }
+
+  # Case 1: Entire range is below 0
+  if (xlim[2] <= 0) {
+    return(list(left = xlim, right = NULL))
+  }
+
+  # Case 2: Entire range is above 0
+  if (xlim[1] >= 0) {
+    return(list(left = NULL, right = xlim))
+  }
+
+  # Case 3: Range spans 0
+  left_range <- c(xlim[1], 0)
+  right_range <- c(0, xlim[2])
+
+  return(list(left = left_range, right = right_range))
+}
+
 # Clip map
 #
 # This function clips a map to the specified limits.
@@ -95,7 +124,8 @@ clipMap <- function(map, layer, xlim, ylim, mapLand = NULL) {
     # st_union(mapLand) combines all land polygons into a single geometry
     # which allows to subtract the land from the bounding box
     allLand <- st_union(mapLand)
-    if (!any(sf::st_intersects(allLand, bbox_polygon, sparse = FALSE))) {
+
+    if (!any(st_intersects(allLand, bbox_polygon, sparse = FALSE))) {
       return(sf::as_Spatial(map))
     }
 
@@ -103,7 +133,7 @@ clipMap <- function(map, layer, xlim, ylim, mapLand = NULL) {
     clipped_sf <- st_sf(geometry = st_sfc(bbox_polygon),
                         crs = st_crs(mapLand))
   } else {
-    if (!any(sf::st_intersects(map, bbox_polygon, sparse = FALSE))) {
+    if (!any(st_intersects(map, bbox_polygon, sparse = FALSE))) {
       return(sf::as_Spatial(map))
     }
     # Clip map for other layers

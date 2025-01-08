@@ -4,7 +4,7 @@ Maps <- loadMaps()
 # Tests clipping
 test_that("clipMap produces valid clipped SpatialLines object", {
   # Test parameters
-  xlim <- c(-10, 40)
+  xlim <- c(0, 360)
   ylim <- c(10, 70)
 
   # Run the function
@@ -62,7 +62,7 @@ test_that("addMapLayers to contour with terrestrial maps", {
 
   # Initialize a blank plot
   plot.new()  # Start a new plot
-  plot.window(xlim = c(-180, 180), ylim = c(-90, 90))  # Define plot window
+  plot.window(xlim = c(-40, 120), ylim = c(-90, 90))  # Define plot window
 
   # add simple contour for testing
   .filled.contour(x, y, z,
@@ -82,14 +82,14 @@ test_that("addMapLayers to contour with terrestrial maps for Pacific", {
 
   # Initialize a blank plot
   plot.new()  # Start a new plot
-  plot.window(xlim = c(-360, 540), ylim = c(-90, 90))  # Define plot window
+  plot.window(xlim = c(0, 360), ylim = c(-90, 90))  # Define plot window
 
   # add simple contour for testing
   .filled.contour(x, y, z,
                   levels = pretty(range(z), n = 10),  # Define contour levels
                   col = terrain.colors(10))          # Use a color palette
 
-  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Pacific"))
+  expect_silent(addMapLayers(Maps, terrestrial = 1, centerMap = "Pacific", xlim = c(0, 360), ylim = c(-90, 90)))
 
   # Initialize a blank plot
   plot.new()  # Start a new plot
