@@ -180,13 +180,13 @@ plotExport <- function(input,
 }
 
 
-#' Name File
-#'
-#' @param plotType (character) plot specification
-#' @param exportType (character) file type of exported plot
-#' @param isTimeSeries (logical) if TRUE, set file names for a series of plots
-#' @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
-#' @param i (numeric) number of i-th plot of a series of plots
+# Name File
+#
+# @param plotType (character) plot specification
+# @param exportType (character) file type of exported plot
+# @param isTimeSeries (logical) if TRUE, set file names for a series of plots
+# @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
+# @param i (numeric) number of i-th plot of a series of plots
 nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL) {
   # set file name
   fileName <- getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i)
@@ -215,9 +215,11 @@ nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
 }
 
 
-#' Get File Name
-#'
-#' @inheritParams nameFile
+# Get File Name
+#
+# @param plotType (character) plot specification
+# @param isTimeSeries (logical) if TRUE, set file names for a series of plots
+# @param i (numeric) number of i-th plot of a series of plots
 getFileName <- function(plotType, isTimeSeries, i = NULL) {
   if (isTimeSeries && !is.null(i)) return(paste0(plotType, "_", i))
 
@@ -410,11 +412,11 @@ writeGeoTiff <- function(XPred, file){
   file.rename("out.tif", file)
 }
 
-#' Write Graphics
-#'
-#' @param exportType (character) file type of exported plot
-#' @param plot (object) plot object
-#' @inheritParams grDevices::png
+# Write Graphics
+#
+# @param exportType (character) file type of exported plot
+# @param plot (object) plot object
+# @inheritParams grDevices::png
 writeGraphics <- function(exportType, plot, filename, width, height) {
   switch(
     exportType,
@@ -422,18 +424,18 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
     jpeg = jpeg(filename, width = width, height = height),
     pdf = pdf(filename, width = width / 72, height = height / 72),
     tiff = tiff(filename, width = width, height = height),
-    svg = CairoSVG(filename, width = width / 72, height = height / 72)
+    svg = svg(filename, width = width / 72, height = height / 72)
   )
   plot
   dev.off()
 }
 
-#' Generate GIF
-#'
-#' @param gifFile The gif file to create
-#' @param files a list of files, url's, or raster objects or bitmap arrays
-#' @param fps frames per second
-#' @inheritParams nameFile
+# Generate GIF
+#
+# @param gifFile The gif file to create
+# @param files a list of files, url's, or raster objects or bitmap arrays
+# @param exportType (character) file type of exported plot
+# @param fps frames per second
 generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
   image_list <- lapply(files, image_read)
 
@@ -443,20 +445,20 @@ generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
     image_write(path = gifFile)
 }
 
-#' Add GIF
-#'
-#' @param gifFile The gif file to add a slide to
-#' @param file the file, url, or raster object or bitmap array to be added to gifFileSource
-addGif <- function(gifFile, file) {
-  #Create image object for new slide
-  new_slide <- image_read(file)
-
-  #Read an existing gif
-  existing_gif <- image_read(gifFile)
-
-  #Append new slide to existing gif
-  final_gif <- c(existing_gif, new_slide)
-
-  #Write new gif
-  image_write(final_gif, path = gifFile)
-}
+# Add GIF
+#
+# @param gifFile The gif file to add a slide to
+# @param file the file, url, or raster object or bitmap array to be added to gifFileSource
+# addGif <- function(gifFile, file) {
+#   #Create image object for new slide
+#   new_slide <- image_read(file)
+#
+#   #Read an existing gif
+#   existing_gif <- image_read(gifFile)
+#
+#   #Append new slide to existing gif
+#   final_gif <- c(existing_gif, new_slide)
+#
+#   #Write new gif
+#   image_write(final_gif, path = gifFile)
+# }
