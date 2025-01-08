@@ -574,7 +574,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     params$coordType <- coordType()
 
     model <- estimateMapSpreadWrapper(data(), params) %>%
-      tryCatchWithWarningsAndErrors()
+      shinyTryCatch()
 
     Model(model)
     updateSelectInput(session, "Centering", selected = input$centerOfData)
@@ -897,7 +897,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         DestLong = input$DestLong,
         ...
       ) %>%
-        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+        shinyTryCatch(errorTitle = "Plotting failed")
     }
   })
 

@@ -627,7 +627,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params$coordType <- coordType()
 
     model <- estimateMap3DWrapper(data(), params) %>%
-      tryCatchWithWarningsAndErrors()
+      shinyTryCatch()
 
     Model(model)
     updateSelectInput(session, "Centering", selected = input$centerOfData)
@@ -980,7 +980,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                        intTime = input$intTime,
                        formatTimeCourse = formatTimeCourse(),
                        ...) %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+          shinyTryCatch(errorTitle = "Plotting failed")
       } else {
         req(zSettings$estType)
         plotMap3D(
@@ -1038,7 +1038,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           pointDat = pointDatOK,
           ...
         ) %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+          shinyTryCatch(errorTitle = "Plotting failed")
       }
     }
   })

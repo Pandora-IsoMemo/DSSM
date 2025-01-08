@@ -560,7 +560,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params$coordType <- coordType()
 
     model <- estimateMapWrapper(data(), params) %>%
-      tryCatchWithWarningsAndErrors()
+      shinyTryCatch()
 
     Model(model)
     updateSelectInput(session, "Centering", selected = input$centerOfData)
@@ -862,7 +862,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         pointDat = pointDatOK,
         ...
       ) %>%
-        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+        shinyTryCatch(errorTitle = "Plotting failed")
     }
   })
 

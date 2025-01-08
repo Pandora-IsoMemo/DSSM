@@ -1,13 +1,11 @@
 #' @rawNamespace import(shiny, except = c(renderDataTable, dataTableOutput))
 #' @importFrom animation saveGIF
-#' @importFrom Cairo CairoSVG
 #' @importFrom coda raftery.diag gelman.diag geweke.diag heidel.diag mcmc
 #' @importFrom colourpicker colourInput
 #' @importFrom rcarbon calibrate sampleDates
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importUI importServer
-#'  importOptions prefixSysTime previewDataUI previewDataServer tryCatchWithWarningsAndErrors
-#'  updateNameEntryIfDuplicate
+#'  importOptions prefixSysTime previewDataUI previewDataServer updateNameEntryIfDuplicate
 #' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join select summarise
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
@@ -40,9 +38,11 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
-#' @importFrom sf st_as_sf st_centroid st_combine st_coordinates
+#' @importFrom sf as_Spatial st_as_sf st_as_sfc st_bbox st_centroid st_combine st_coordinates
+#'  st_difference st_crs st_geometry st_intersects st_intersection st_sf st_sfc st_union
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
+#' @importFrom shinyTools shinyTryCatch
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans

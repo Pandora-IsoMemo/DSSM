@@ -633,7 +633,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       nSim = input$nSim,
                       smoothness = input$smoothParam,
                       kdeType = input$kdeType) %>%
-          tryCatchWithWarningsAndErrors()
+          shinyTryCatch()
         },
         value = 0,
         message = "Generating spatio-temporal kernel density"
@@ -1103,7 +1103,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
           pointDat = pointDatOK,
           ...
         ) %>%
-          tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+          shinyTryCatch(errorTitle = "Plotting failed")
       }
       }
     }
