@@ -1,5 +1,5 @@
 
-#' ui function of modelResultsDiffSim module
+#' ui function of modelResultsDiffSim module (OperateR)
 #'
 #' @param id namespace
 #' @param title title in tab
@@ -23,7 +23,8 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Data source",
                     choices = c("Create new map from existing" = "create",
                                 "Create new map from scratch" = "createN",
-                                "Load OperatoR map" = "model"),
+                                "Load OperatoR map" = "model",
+                                "Geotiff file" = "geotiff"),
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'model'",

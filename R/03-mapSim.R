@@ -1,5 +1,5 @@
 
-#' ui function of modelResultsDiffSim module
+#' ui function of modelResultsDiffSim module (LocateR)
 #'
 #' @param id namespace
 #' @param title title in tab
@@ -29,7 +29,8 @@ modelResultsSimUI <- function(id, title = ""){
         selectInput(ns("dataSource"),
                     "Data source",
                     choices = c("Create map" = "create",
-                                "Saved map" = "model"),
+                                "Saved map" = "model",
+                                "Geotiff file" = "geotiff"),
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'model'",
