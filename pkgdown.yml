@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   process_coordinate_data: process_coordinate_data.html
-last_built: 2024-12-18T08:13Z
+last_built: 2025-02-04T15:38Z
 urls:
   reference: https://pandora-isomemo.github.io/DSSM/reference
   article: https://pandora-isomemo.github.io/DSSM/articles
