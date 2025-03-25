@@ -38,6 +38,6 @@ tagList(
       tags$script(src = "ReSources/removeName.js")
     ) else NULL
   ),
-  shinyTools::headerButtonsUI(id = "header", help_link = "https://pandora-isomemo.github.io/DSSM/"),
+  shinyTools::headerButtonsUI(id = "header", help_link = "https://pandora-isomemo.github.io/DSSM/articles/how-to-use-DSSM.html"),
   shinyjs::useShinyjs()
 )
