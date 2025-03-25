@@ -1,9 +1,11 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.01.0.1
+Version: 25.03.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
-            person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut"))
+            person("Ricardo", "Fernandes", email = "fernandes@gea.mpg.de", role = c("aut")),
+            person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("ctb")),
+            person("Andreas", "Neudecker", email = "andreas.neudecker@inwt-statistics.de", role = c("ctb"))
             )
 Maintainer: INWT Statistics GmbH <antonia.runge@inwt-statistics.de>
 Description: Shiny App contains: a data explorer tab, an interactive map and a static map, which should present model results.

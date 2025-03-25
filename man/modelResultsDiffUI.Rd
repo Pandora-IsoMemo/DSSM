@@ -2,7 +2,7 @@
 % Please edit documentation in R/03-mapDiff.R
 \name{modelResultsDiffUI}
 \alias{modelResultsDiffUI}
-\title{ui function of modelResultsDiffSim module}
+\title{ui function of modelResultsDiffSim module (OperateR)}
 \usage{
 modelResultsDiffUI(id, title = "")
 }
@@ -12,5 +12,5 @@ modelResultsDiffUI(id, title = "")
 \item{title}{title in tab}
 }
 \description{
-ui function of modelResultsDiffSim module
+ui function of modelResultsDiffSim module (OperateR)
 }

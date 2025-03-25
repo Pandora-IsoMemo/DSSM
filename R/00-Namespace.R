@@ -42,7 +42,7 @@
 #'  st_difference st_crs st_geometry st_intersects st_intersection st_sf st_sfc st_union
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
-#' @importFrom shinyTools shinyTryCatch
+#' @importFrom shinyTools headerButtonsUI shinyTryCatch
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans

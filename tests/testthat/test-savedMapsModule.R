@@ -4,7 +4,7 @@ test_that("Test create circle", {
   centerLongitude <- 50
 
   expectedCoords <-
-    readRDS(testthat::test_path("test-savedMapsModule-data.rds"))
+    readRDS(testthat::test_path("testdata", "test-savedMapsModule-data.rds"))
 
   testCoords <- getFullCoordGrid(gridLength = testRadius / 10000)
   expect_equal(testCoords, expectedCoords$expectedGrid)

@@ -1,3 +1,10 @@
+# DSSM 25.03.0
+
+## Updates
+- shift content of the help popup into a new vignette "How to use DSSM"
+- update links in ReadMe and in app header
+- reduce package size by optimizing test data and including test-model files into the `.Rbuildignore`
+
 # DSSM 25.01.0
 
 ## Bug Fixes

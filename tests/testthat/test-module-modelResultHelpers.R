@@ -102,13 +102,31 @@ test_that("Test extractZoomFromLongRange", {
 
 
 test_that("Test getZvalues", {
-  testModel <- readRDS(testthat::test_path("averageR_testModel_numeric.rds"))
+  testModel <- list(model = list(range =
+                                   list(
+                                     mean = c(6.84823132750112, 14.0322064173745),
+                                     se = c(0.267713290127531, 1.35253926021341),
+                                     seTotal = c(2.07465656603779, 2.07465656603779)
+                                   )), IndependentType = "numeric")
 
   expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
                list(minInput = list(value = 6.1, min = 6.1, max = 15), maxInput = list(
                  value = 15, min = 6.1, max = 15)))
 
-  testModel <- readRDS(testthat::test_path("averageR_testModel_categorical.rds"))
+  testModel <- list(model = list(
+    range = list(
+      mean = c(0.00705933196811234, 0.998884818239983),
+      se = c(0.00167118789553051, 0.520753450779121),
+      seTotal = c(1.03670887844351, 1.03670887844351)
+    ),
+    expert = list(range = list(
+      mean = c(0.00705933196811234, 0.998884818239983),
+      se = c(0.00167118789553051, 0.520753450779121),
+      seTotal = c(1.03670887844351, 1.03670887844351)
+    ))
+
+  ),
+  IndependentType = "categorical")
 
   expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
                list(minInput = list(value = 0, min = 0, max = 1), maxInput = list(
