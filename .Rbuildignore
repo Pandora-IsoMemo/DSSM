@@ -21,4 +21,3 @@
 ^\.github$
 ^inst/app/predefinedModels/
 ^inst/app/dataQueries/
-^inst/maps/
