@@ -14,9 +14,10 @@ testthat::test_that("function addFormattedAxis", {
 })
 
 testthat::test_that("function plotMap3D with 3DKernel model", {
-  skip_if_not(Sys.getenv("RUN_LOCAL_TESTS") == "true", "Skipping large data test on CI")
+  data_path <- testthat::test_path("testdata_large", "test-plotMap3DKernel-data.rds")
+  skip_if_not(file.exists(data_path), "Skipping large data test on CI or for devtools:check()")
 
-  testModel <- readRDS(testthat::test_path("testdata_large", "test-plotMap3DKernel-data.rds"))
+  testModel <- readRDS(data_path)
 
   # clusterAll = "0"
   testInputs <- list(model = testModel, time = 1000, points = TRUE, pointSize = 1.3, rangex = c(-123.6565125,
