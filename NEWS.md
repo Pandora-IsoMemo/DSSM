@@ -1,3 +1,8 @@
+# DSSM 25.04.0
+
+## Updates
+- use most recent shinyTools version with smaller header logos
+
 # DSSM 25.03.1
 
 ## Updates

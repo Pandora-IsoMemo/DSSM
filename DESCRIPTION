@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.03.1
+Version: 25.04.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "fernandes@gea.mpg.de", role = c("aut")),
@@ -50,7 +50,7 @@ Imports:
     shinyjs (>= 1.0),
     shinyMatrix (>= 0.2.1),
     shinythemes (>= 1.1.1),
-    shinyTools,
+    shinyTools (>= 25.04.0),
     shinyWidgets (>= 0.4.1),
     sf,
     sp (>= 1.2.7),
