@@ -3,7 +3,7 @@ Title: Pandora & IsoMemo spatiotemporal modeling
 Version: 25.04.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
-            person("Ricardo", "Fernandes", email = "fernandes@gea.mpg.de", role = c("aut")),
+            person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
             person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("ctb")),
             person("Andreas", "Neudecker", email = "andreas.neudecker@inwt-statistics.de", role = c("ctb"))
             )
