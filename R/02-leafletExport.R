@@ -4,13 +4,7 @@
 leafletExportButton <- function(id) {
   ns <- NS(id)
 
-  tagList(actionButton(ns("exportLeaflet"), "Export map"),
-          div(
-            id = ns("phantomjsHelp"),
-            helpText(
-              "To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)"
-            )
-          ))
+  actionButton(ns("exportLeaflet"), "Export map")
 }
 
 
@@ -38,15 +32,6 @@ leafletExport <- function(input,
                           leafletValues,
                           leafletPointValues) {
   ns <- session$ns
-
-  observe({
-    if (webshot::is_phantomjs_installed()) {
-     shinyjs::enable("exportLeaflet")
-     shinyjs::hide("phantomjsHelp")
-    } else {
-      shinyjs::disable("exportLeaflet")
-    }
-  })
 
   observeEvent(input$exportLeaflet, {
     showModal(
@@ -84,13 +69,12 @@ leafletExport <- function(input,
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
 
-        mapview::mapshot(
-          m,
-          file = filename,
-          remove_controls = "zoomControl",
-          vwidth = input$width,
-          vheight = input$height
-        )
+        temp_file <- tempfile(fileext = ".html")
+        htmlwidgets::saveWidget(m,
+                                file = temp_file,
+                                selfcontained = TRUE)
+        webshot2::webshot(temp_file, file = filename, vwidth = input$width, vheight = input$height)
+        unlink(temp_file)
       },
       value = 0.9,
       message = "Exporting ...")
