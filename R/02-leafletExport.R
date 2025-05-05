@@ -45,6 +45,8 @@ leafletExport <- function(input,
         ),
         numericInput(ns("width"), "Width (px)", value = width()),
         numericInput(ns("height"), "Height (px)", value = height()),
+        textInput(ns("exportFilename"), "Filename (without extension)", value = sprintf("plot-%s", Sys.Date())),
+        tags$br(),
         downloadButton(session$ns("exportLeafletMap"), "Export"),
         easyClose = TRUE
       )
@@ -53,7 +55,7 @@ leafletExport <- function(input,
 
   output$exportLeafletMap <- downloadHandler(
     filename = function() {
-      paste0('plot-', Sys.Date(), '.', input$exportType)
+      paste0(input$exportFilename, '.', input$exportType)
     },
     content = function(filename) {
       withProgress({
