@@ -248,6 +248,7 @@ pointColourUI <- function(id) {
 pointColourServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
+                 # use reactiveValues to pass values only after "apply"
                  colourValues <- reactiveValues()
 
                  pointAesteticsServer("colour", loadedData)
@@ -315,6 +316,7 @@ pointSizeUI <- function(id) {
 pointSizeServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
+                 # use reactiveValues to pass values only after "apply"
                  sizeValues <- reactiveValues()
 
                  pointAesteticsServer("size", loadedData, onlyNumCols = TRUE)
@@ -402,6 +404,7 @@ pointSymbolUI <- function(id) {
 pointSymbolServer <- function(id, loadedData, apply) {
   moduleServer(id,
                function(input, output, session) {
+                 # use reactiveValues to pass values only after "apply"
                  symbolValues <- reactiveValues(pointSymbol = 19)
 
                  pointAesteticsServer("symbol", loadedData, onlyFacCols = TRUE)
