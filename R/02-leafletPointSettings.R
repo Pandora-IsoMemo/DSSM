@@ -115,15 +115,346 @@ leafletPointSettingsServer <- function(id, loadedData) {
                })
 }
 
+
+pointAestheticUI <- function(id) {
+  capitalize <- function(x) {
+    paste0(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))))
+  }
+
+  ns <- NS(id)
+  aesthetic <- sub(".*-", "", id) %>% capitalize()
+
+  tagList(
+    fluidRow(
+      column(8,
+             checkboxInput(ns("fixed"), sprintf("Fixed %s", aesthetic), value = TRUE),
+             conditionalPanel(
+               ns = ns,
+               condition = "input.fixed == false",
+               selectInput(
+                 ns("column"),
+                 sprintf("Point %s Variable", aesthetic),
+                 choices = c("Select a column ..." = "")
+               )
+             )),
+      column(4, checkboxInput(
+        ns("legend"), "Legend", value = FALSE
+      ))
+    ),
+
+  )
+}
+
+
+pointAesteticsServer <- function(id, loadedData, onlyNumCols = FALSE, onlyFacCols = FALSE) {
+  moduleServer(id,
+               function(input, output, session) {
+                 observe({
+                   logDebug("%s: Update loadedData()", id)
+                   if (is.null(loadedData())) {
+                     choices <- c("No data ..." = "")
+                     showLegendVal <- FALSE
+                   } else if (onlyNumCols) {
+                     numCols <- numericColumns(loadedData())
+                     if (length(numCols) == 0) {
+                       choices <- c("No numeric columns ..." = "")
+                       showLegendVal <- FALSE
+                     } else {
+                       choices <- c("Select a numeric column ..." = "", numCols)
+                       showLegendVal <- TRUE
+                     }
+                   } else if (onlyFacCols) {
+                     facCols <- factorColumns(loadedData())
+                     if (length(facCols) == 0) {
+                       choices <- c("No character columns ..." = "")
+                       showLegendVal <- FALSE
+                     } else {
+                       choices <- c("Select a ccharacter olumn ..." = "", facCols)
+                       showLegendVal <- TRUE
+                     }
+                   } else {
+                     choices <- c("Select a column ..." = "", colnames(loadedData()))
+                     showLegendVal <- TRUE
+                   }
+
+                   updateSelectInput(
+                     session = session,
+                     "column",
+                     choices = choices,
+                     selected = ""
+                   )
+                   updateCheckboxInput(session = session,
+                                       "legend",
+                                       value = showLegendVal)
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   logDebug("%s: Update input$column", id)
+
+                   if (input$fixed) {
+                     updateSelectInput(session = session, "column", selected = "")
+                   }
+                 }) %>%
+                   bindEvent(input$fixed)
+               })
+}
+
 #' ui function of leaflet point settings module
 #'
 #' @param id namespace
 pointColourUI <- function(id) {
   ns <- NS(id)
 
+  colourPalettes <- leaflet_point_colours()
+
+  tagList(
+    pointAestheticUI(ns("colour")),
+    conditionalPanel(
+      ns = ns,
+      condition = "input['colour-fixed'] == false",
+      fluidRow(
+        column(8,
+               selectInput(
+                 ns("paletteName"),
+                 label = NULL,
+                 choices = colourPalettes,
+                 selected = "Dark2"
+               )),
+        column(4,
+               style = "margin-top: -0.25em;",
+               checkboxInput(
+                 ns("isReversePalette"), "Reverse", value = FALSE
+               ))
+      )
+    ),
+    conditionalPanel(
+      ns = ns,
+      condition = "input['colour-fixed'] == true",
+      fluidRow(column(8, colourInput(
+        ns("fixedPointColour"),
+        "Fixed colour",
+        value = "#459778"
+      )))
+    )
+  )
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @param apply (reactive) apply button input
+#' @inheritParams leafletPointSettingsServer
+pointColourServer <- function(id, loadedData, apply) {
+  moduleServer(id,
+               function(input, output, session) {
+                 colourValues <- reactiveValues()
+
+                 pointAesteticsServer("colour", loadedData)
+
+                 observe({
+                   logDebug("%s: Reset after loadedData()", id)
+                   colourValues$columnForPointColour <- ""
+                   colourValues$showColourLegend <- TRUE
+                   colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
+                     getColourPal(paletteName = input$fixedPointColour,
+                                  isReversePalette = input$isReversePalette)
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   logDebug("%s: Update colourValues", id)
+                   colourValues$showColourLegend <- input[["colour-legend"]]
+
+                   if (is.null(input[["colour-column"]]) || input[["colour-column"]] == "") {
+                     colourValues$columnForPointColour <- ""
+                     paletteName <- input$fixedPointColour
+                   } else {
+                     colourValues$columnForPointColour <- input[["colour-column"]]
+                     paletteName <- input$paletteName
+                   }
+
+                   colourValues$pointColourPalette <- getColourCol(
+                     loadedData(),
+                     colName = input[["colour-column"]]
+                   ) %>%
+                     getColourPal(paletteName = paletteName,
+                                  isReversePalette = input$isReversePalette)
+                 }) %>%
+                   bindEvent(apply())
+
+                 return(colourValues)
+               })
+}
+
+
+#' ui function of leaflet point settings module
+#'
+#' @param id namespace
+pointSizeUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    pointAestheticUI(ns("size")),
+    sliderInput(
+      ns("sizeFactor"),
+      "Size Factor",
+      min = 0.5,
+      max = 5.5,
+      value = 1,
+      step = 0.5
+    )
+  )
+}
+
+
+#' server funtion of leaflet point settings module
+#'
+#' @param apply (reactive) apply button input
+#' @inheritParams leafletPointSettingsServer
+pointSizeServer <- function(id, loadedData, apply) {
+  moduleServer(id,
+               function(input, output, session) {
+                 sizeValues <- reactiveValues()
+
+                 pointAesteticsServer("size", loadedData, onlyNumCols = TRUE)
+
+                 observe({
+                   logDebug("%s: Reset after loadedData()", id)
+                   radiusAndLegend <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = "",
+                     sizeFactor = input$sizeFactor
+                   )
+                   sizeValues$pointRadius <-
+                     radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <-
+                     radiusAndLegend$sizeLegendValues
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   req(loadedData())
+                   radiusAndLegend <- getPointSize(
+                     df = loadedData(),
+                     columnForPointSize = input[["size-column"]],
+                     sizeFactor = input$sizeFactor
+                   )
+                   sizeValues$pointRadius <-
+                     radiusAndLegend$pointSizes
+                   sizeValues$sizeLegendValues <-
+                     radiusAndLegend$sizeLegendValues
+                 }) %>%
+                   bindEvent(apply(), ignoreInit = TRUE)
+
+                 observe({
+                   sizeValues$showSizeLegend <- input[["size-legend"]]
+                 }) %>%
+                   bindEvent(apply())
+
+                 return(sizeValues)
+               })
+}
+
+
+#' ui function of leaflet point symbol settings module
+#'
+#' @param id namespace
+pointSymbolUI <- function(id) {
+  ns <- NS(id)
+
+  tagList(
+    pointAestheticUI(ns("symbol")),
+    fluidRow(
+      column(8,
+             pickerInput(
+               ns("pointSymbol"),
+               label = "Point symbol",
+               choices = pchChoices(),
+               selected = "",
+               options = list(
+                 `actions-box` = TRUE,
+                 size = 25,
+                 `selected-text-format` = "count > 8",
+                 `none-selected-text` = "Select symbols ..."
+               ),
+               multiple = TRUE
+             )
+      ),
+      column(4,
+             numericInput(
+               ns("pointWidth"),
+               "Line width",
+               value = 1,
+               min = 1,
+               max = 10
+             )
+      )
+    )
+  )
+}
+
+
+#' server function of leaflet point symbol settings module
+#'
+#' @param apply (reactive) apply button input
+#' @inheritParams leafletPointSettingsServer
+pointSymbolServer <- function(id, loadedData, apply) {
+  moduleServer(id,
+               function(input, output, session) {
+                 symbolValues <- reactiveValues(pointSymbol = 19)
+
+                 pointAesteticsServer("symbol", loadedData, onlyFacCols = TRUE)
+
+                 observe({
+                   updatePickerInput(session = session,
+                                     "pointSymbol",
+                                     selected = 19)
+
+                   symbolsAndLegend <- getPointSymbols(
+                     df = loadedData(),
+                     columnForPointSymbol = "",
+                     symbols = 19
+                   )
+                   symbolValues$pointSymbol <-
+                     symbolsAndLegend$pointSymbol
+                   symbolValues$symbolLegendValues <-
+                     symbolsAndLegend$symbolLegendValues
+
+                   symbolValues$columnForPointSymbol <- ""
+                   symbolValues$showSymbolLegend <- input[["symbol-legend"]]
+                 }) %>%
+                   bindEvent(loadedData())
+
+                 observe({
+                   req(loadedData(), input$pointSymbol)
+                   symbolsAndLegend <- getPointSymbols(
+                     df = loadedData(),
+                     columnForPointSymbol = input[["symbol-column"]],
+                     symbols = as.numeric(input$pointSymbol)
+                   )
+                   symbolValues$pointSymbol <-
+                     symbolsAndLegend$pointSymbol
+                   symbolValues$symbolLegendValues <-
+                     symbolsAndLegend$symbolLegendValues
+
+                   symbolValues$columnForPointSymbol <- input[["symbol-column"]]
+                   symbolValues$showSymbolLegend <- input[["symbol-legend"]]
+                   symbolValues$pointWidth <- input$pointWidth
+                 }) %>%
+                   bindEvent(apply(), ignoreInit = TRUE)
+
+                 return(symbolValues)
+               })
+}
+
+
+# Helper functions ----
+
+leaflet_point_colours <- function() {
   # using colours from: RColorBrewer::brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
   # adding full names manually
-  colourPalettes <- list(
+  list(
     `diverging palettes` = c(
       "Brown-BlueGreen" = "BrBG",
       "Pink-Green" = "PiYG",
@@ -158,353 +489,7 @@ pointColourUI <- function(id) {
       "YellowOrangeRed" = "YlOrRd"
     )
   )
-
-  tagList(fluidRow(
-    column(8,
-           selectInput(
-             ns("columnForPointColour"),
-             "Point colour variable",
-             choices = c("[Fixed]" = "")
-           )),
-    column(4,
-           style = "margin-top: 1.5em;",
-           checkboxInput(
-             ns("showColourLegend"), "Legend", value = FALSE
-           ))
-  ),
-  conditionalPanel(
-    ns = ns,
-    condition = "input.columnForPointColour != ''",
-    fluidRow(
-      column(8,
-             selectInput(
-               ns("paletteName"),
-               label = NULL,
-               choices = colourPalettes,
-               selected = "Dark2"
-             )),
-      column(4,
-             style = "margin-top: -0.25em;",
-             checkboxInput(
-               ns("isReversePalette"), "Reverse", value = FALSE
-             ))
-    )
-  ),
-  conditionalPanel(
-    ns = ns,
-    condition = "input.columnForPointColour == ''",
-    fluidRow(column(8, colourInput(
-               ns("fixedPointColour"),
-               "Fixed colour",
-               value = "#459778"
-    )))
-  )
-  )
 }
-
-
-#' server funtion of leaflet point settings module
-#'
-#' @param apply (reactive) apply button input
-#' @inheritParams leafletPointSettingsServer
-pointColourServer <- function(id, loadedData, apply) {
-  moduleServer(id,
-               function(input, output, session) {
-                 colourValues <- reactiveValues()
-
-                 observe({
-                   logDebug("Update showColourLegend")
-                   colourValues$showColourLegend <- input$showColourLegend
-                 }) %>%
-                   bindEvent(apply())
-
-                 observe({
-                   logDebug("Update loadedData()")
-                   if (is.null(loadedData())) {
-                     choices <- c("[Fixed]" = "")
-                   } else {
-                     choices <- c("[Fixed]" = "", colnames(loadedData()))
-                   }
-
-                   updateSelectInput(
-                     session = session,
-                     "columnForPointColour",
-                     choices = choices
-                   )
-                   updateCheckboxInput(session = session,
-                                       "showColourLegend",
-                                       value = TRUE)
-
-                   colourValues$columnForPointColour <- ""
-                   colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
-                     getColourPal(paletteName = input$fixedPointColour,
-                                  isReversePalette = input$isReversePalette)
-                 }) %>%
-                   bindEvent(loadedData())
-
-                 observe({
-                     logDebug("Update colourValues")
-                     if (is.null(input$columnForPointColour)) {
-                       colourValues$columnForPointColour <- ""
-                       paletteName <- input$fixedPointColour
-                     } else {
-                       colourValues$columnForPointColour <- input$columnForPointColour
-
-                       if (input$columnForPointColour == "") {
-                         paletteName <- input$fixedPointColour
-                       } else {
-                         paletteName <- input$paletteName
-                       }
-                     }
-
-                     colourValues$pointColourPalette <- getColourCol(
-                       loadedData(),
-                       colName = input$columnForPointColour
-                     ) %>%
-                       getColourPal(paletteName = paletteName,
-                                    isReversePalette = input$isReversePalette)
-                   }
-                 ) %>%
-                   bindEvent(apply())
-
-                 return(colourValues)
-               })
-}
-
-
-#' ui function of leaflet point settings module
-#'
-#' @param id namespace
-pointSizeUI <- function(id) {
-  ns <- NS(id)
-
-  tagList(
-    fluidRow(
-      column(8,
-             selectInput(
-               ns("columnForPointSize"),
-               "Point size variable",
-               choices = c("[Fixed]" = "")
-             )),
-      column(4,
-             style = "margin-top: 1.5em;",
-             checkboxInput(ns("showSizeLegend"), "Legend", value = FALSE))
-    ),
-    sliderInput(
-      ns("sizeFactor"),
-      "Size Factor",
-      min = 0.5,
-      max = 5.5,
-      value = 1,
-      step = 0.5
-    )
-  )
-}
-
-
-#' server funtion of leaflet point settings module
-#'
-#' @param apply (reactive) apply button input
-#' @inheritParams leafletPointSettingsServer
-pointSizeServer <- function(id, loadedData, apply) {
-  moduleServer(id,
-               function(input, output, session) {
-                 sizeValues <- reactiveValues()
-
-                 observe({
-                   if (is.null(loadedData())) {
-                     choices <- c("[Fixed]" = "")
-                     showLegendVal <- FALSE
-                   } else {
-                     numCols <- numericColumns(loadedData())
-                     if (length(numCols) == 0) {
-                       choices <- c("[Fixed] (No numeric columns ...)" = "")
-                       showLegendVal <- FALSE
-                     } else {
-                       choices <- c("[Fixed]" = "", numCols)
-                     }
-                     showLegendVal <- TRUE
-                   }
-
-                   updateSelectInput(
-                     session = session,
-                     "columnForPointSize",
-                     choices = choices,
-                     selected = ""
-                   )
-                   updateCheckboxInput(session = session, "showSizeLegend", value = showLegendVal)
-
-                   radiusAndLegend <- getPointSize(
-                     df = loadedData(),
-                     columnForPointSize = "",
-                     sizeFactor = input$sizeFactor
-                   )
-                   sizeValues$pointRadius <-
-                     radiusAndLegend$pointSizes
-                   sizeValues$sizeLegendValues <-
-                     radiusAndLegend$sizeLegendValues
-                   sizeValues$showSizeLegend <- showLegendVal
-                 }) %>%
-                   bindEvent(loadedData())
-
-                 observe({
-                   req(loadedData())
-                   radiusAndLegend <- getPointSize(
-                     df = loadedData(),
-                     columnForPointSize = input$columnForPointSize,
-                     sizeFactor = input$sizeFactor
-                   )
-                   sizeValues$pointRadius <-
-                     radiusAndLegend$pointSizes
-                   sizeValues$sizeLegendValues <-
-                     radiusAndLegend$sizeLegendValues
-                 }) %>%
-                   bindEvent(apply(), ignoreInit = TRUE)
-
-                 observe({
-                   sizeValues$showSizeLegend <- input$showSizeLegend
-                 }) %>%
-                   bindEvent(apply())
-
-                 return(sizeValues)
-               })
-}
-
-
-#' ui function of leaflet point symbol settings module
-#'
-#' @param id namespace
-pointSymbolUI <- function(id) {
-  ns <- NS(id)
-
-  tagList(fluidRow(column(
-    8,
-    selectInput(
-      ns("columnForPointSymbol"),
-      "Point symbol variable",
-      choices = c("[Fixed]" = "")
-    )
-  ),
-  column(
-    4,
-    numericInput(
-      ns("pointWidth"),
-      "Line width",
-      value = 1,
-      min = 1,
-      max = 10
-    )
-  )),
-  fluidRow(column(
-    8,
-    pickerInput(
-      ns("pointSymbol"),
-      label = NULL,
-      choices = pchChoices(),
-      selected = "",
-      options = list(
-        `actions-box` = TRUE,
-        size = 25,
-        `selected-text-format` = "count > 8",
-        `none-selected-text` = "Select symbols ..."
-      ),
-      multiple = TRUE
-    )
-  ),
-  column(
-    4,
-    checkboxInput(ns("showSymbolLegend"), "Legend", value = FALSE)
-  )))
-}
-
-
-#' server function of leaflet point symbol settings module
-#'
-#' @param apply (reactive) apply button input
-#' @inheritParams leafletPointSettingsServer
-pointSymbolServer <- function(id, loadedData, apply) {
-  moduleServer(id,
-               function(input, output, session) {
-                 symbolValues <- reactiveValues(pointSymbol = 19)
-
-                 observe({
-                   if (is.null(loadedData())) {
-                     choices <- c("[Fixed]" = "")
-                     selectedDefault <- ""
-                     showLegendVal <- FALSE
-                   } else {
-                     facCols <- factorColumns(loadedData())
-                     if (length(facCols) == 0) {
-                       choices <- c("[Fixed] (No character columns ...)" = "")
-                       selectedDefault <- ""
-                       showLegendVal <- FALSE
-                     } else {
-                       choices <- c("[Fixed]" = "", facCols)
-                     }
-                     selectedDefault <- ""
-                     showLegendVal <- TRUE
-                   }
-
-                   updateSelectInput(
-                     session = session,
-                     "columnForPointSymbol",
-                     choices = choices,
-                     selected = selectedDefault
-                   )
-                   updatePickerInput(session = session,
-                                     "pointSymbol",
-                                     selected = 19)
-                   updateCheckboxInput(session = session,
-                                       "showSymbolLegend",
-                                       value = showLegendVal)
-
-                   symbolsAndLegend <- getPointSymbols(
-                     df = loadedData(),
-                     columnForPointSymbol = selectedDefault,
-                     symbols = 19
-                   )
-                   symbolValues$pointSymbol <-
-                     symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegendValues <-
-                     symbolsAndLegend$symbolLegendValues
-                   symbolValues$columnForPointSymbol <-
-                     selectedDefault
-                   symbolValues$showSymbolLegend <- showLegendVal
-                 }) %>%
-                   bindEvent(loadedData())
-
-                 observe({
-                   req(loadedData(), input$pointSymbol)
-                   symbolsAndLegend <- getPointSymbols(
-                     df = loadedData(),
-                     columnForPointSymbol = input$columnForPointSymbol,
-                     symbols = as.numeric(input$pointSymbol)
-                   )
-                   symbolValues$pointSymbol <-
-                     symbolsAndLegend$pointSymbol
-                   symbolValues$symbolLegendValues <-
-                     symbolsAndLegend$symbolLegendValues
-                   symbolValues$columnForPointSymbol <-
-                     input$columnForPointSymbol
-                 }) %>%
-                   bindEvent(apply(), ignoreInit = TRUE)
-
-                 observe({
-                   symbolValues$pointWidth <- input$pointWidth
-                 }) %>%
-                   bindEvent(apply())
-
-                 observe({
-                   symbolValues$showSymbolLegend <- input$showSymbolLegend
-                 }) %>%
-                   bindEvent(apply())
-
-                 return(symbolValues)
-               })
-}
-
-
-# Helper functions ----
 
 #' Update Data On Map
 #'
