@@ -101,10 +101,6 @@ leafletPointSettingsServer <- function(id, loadedData) {
 
                  observe({
                    values$pointOpacity <- input$pointOpacity
-                 }) %>%
-                   bindEvent(input$applyPointSettings, ignoreNULL = FALSE)
-
-                 observe({
                    values$jitterMaxKm <- ifelse(input$useJitter,
                                                 input$jitterMaxKm,
                                                 NA_real_)
@@ -254,7 +250,7 @@ pointColourServer <- function(id, loadedData, apply) {
                  pointAesteticsServer("colour", loadedData)
 
                  observe({
-                   logDebug("%s: Reset after loadedData()", id)
+                   logDebug("%s: Initialize after loadedData()", id)
                    colourValues$columnForPointColour <- ""
                    colourValues$showColourLegend <- TRUE
                    colourValues$pointColourPalette <- getColourCol(loadedData(), colName = "") %>%
@@ -322,7 +318,7 @@ pointSizeServer <- function(id, loadedData, apply) {
                  pointAesteticsServer("size", loadedData, onlyNumCols = TRUE)
 
                  observe({
-                   logDebug("%s: Reset after loadedData()", id)
+                   logDebug("%s: Initialize after loadedData()", id)
                    radiusAndLegend <- getPointSize(
                      df = loadedData(),
                      columnForPointSize = "",
@@ -410,6 +406,8 @@ pointSymbolServer <- function(id, loadedData, apply) {
                  pointAesteticsServer("symbol", loadedData, onlyFacCols = TRUE)
 
                  observe({
+                   logDebug("%s: Initialize after loadedData()", id)
+
                    updatePickerInput(session = session,
                                      "pointSymbol",
                                      selected = 19)
