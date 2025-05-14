@@ -11,82 +11,94 @@ interactiveMapUI <- function(id, title = "") {
     title,
     id = id,
     value = id,
+    useShinyjs(),
     div(class = "map-container",
         leafletOutput(
           ns("map"), width = "100%", height = "100%"
         )),
     conditionalPanel(
       condition = "$('#interactivemap-map').css('visibility') != 'hidden'",
-      absolutePanel(
-        tags$script(
-          paste0(
-            '
+      div(
+        id = "show_checkbox",
+        style = "top:60px; left:60px; z-index: 9999; position:fixed",
+        checkboxInput(ns("show_panel"), "Show Panels", value = TRUE)
+      )
+    ),
+    conditionalPanel(
+      condition = "$('#interactivemap-map').css('visibility') != 'hidden'",
+      div(
+        id = "stats_panel",  # ID to control visibility
+        absolutePanel(
+          tags$script(
+            paste0(
+              '
             $(document).on("shiny:visualchange", function(e) {
               let box = document.querySelector("#',
-            ns('map'),
-            '");
+              ns('map'),
+              '");
               let width = box.offsetWidth;
               let height = box.offsetHeight;
               Shiny.setInputValue("',
-            ns('map_width'),
-            '", width);
+              ns('map_width'),
+              '", width);
               Shiny.setInputValue("',
-            ns('map_height'),
-            '", height);
+              ns('map_height'),
+              '", height);
             });
             $(window).resize(function(e) {
               let box = document.querySelector("#',
-            ns('map'),
-            '");
+              ns('map'),
+              '");
               let width = box.offsetWidth;
               let height = box.offsetHeight;
               Shiny.setInputValue("',
-            ns('map_width'),
-            '", width);
+              ns('map_width'),
+              '", width);
               Shiny.setInputValue("',
-            ns('map_height'),
-            '", height);
+              ns('map_height'),
+              '", height);
             });
           '
-          )
-        ),
-        id = "controls",
-        class = "panel panel-default",
-        fixed = TRUE,
-        draggable = TRUE,
-        top = 110,
-        left = "auto",
-        right = 40,
-        bottom = "auto",
-        width = 330,
-        height = "auto",
-        h2("Statistics"),
-        selectizeInput(
-          ns("var1"),
-          "Variable 1",
-          choices = character(0),
-          options = list(allowEmptyOption = TRUE)
-        ),
-        selectizeInput(
-          ns("var2"),
-          "Variable 2",
-          choices = character(0),
-          options = list(allowEmptyOption = TRUE)
-        ),
-        div(
-          id = "stats-sidebar-container",
-          sidebarPlotOutput(ns("plot1"),
-                            condition = paste0("input['", ns("var1"), "'] != ''")),
-          sidebarPlotOutput(ns("plot2"),
-                            condition = paste0("input['", ns("var2"), "'] != ''")),
-          sidebarPlotOutput(
-            ns("plot3"),
-            condition = paste0(
-              "input['",
-              ns("var1"),
-              "'] != '' && input['",
-              ns("var2"),
-              "'] != ''"
+            )
+          ),
+          id = "controls",
+          class = "panel panel-default",
+          fixed = TRUE,
+          draggable = TRUE,
+          top = 110,
+          left = "auto",
+          right = 40,
+          bottom = "auto",
+          width = 330,
+          height = "auto",
+          h2("Statistics"),
+          selectizeInput(
+            ns("var1"),
+            "Variable 1",
+            choices = character(0),
+            options = list(allowEmptyOption = TRUE)
+          ),
+          selectizeInput(
+            ns("var2"),
+            "Variable 2",
+            choices = character(0),
+            options = list(allowEmptyOption = TRUE)
+          ),
+          div(
+            id = "stats-sidebar-container",
+            sidebarPlotOutput(ns("plot1"),
+                              condition = paste0("input['", ns("var1"), "'] != ''")),
+            sidebarPlotOutput(ns("plot2"),
+                              condition = paste0("input['", ns("var2"), "'] != ''")),
+            sidebarPlotOutput(
+              ns("plot3"),
+              condition = paste0(
+                "input['",
+                ns("var1"),
+                "'] != '' && input['",
+                ns("var2"),
+                "'] != ''"
+              )
             )
           )
         )
@@ -94,18 +106,21 @@ interactiveMapUI <- function(id, title = "") {
     ),
     conditionalPanel(
       condition = "$('#interactivemap-map').css('visibility') != 'hidden'",
-      absolutePanel(
-        id = "controls",
-        class = "panel panel-default",
-        draggable = TRUE,
-        top = 110,
-        right = "auto",
-        left = 50,
-        bottom = "auto",
-        style = "position:fixed; width:330px; overflow-y:auto; height:85%",
-        leafletSettingsUI(ns("mapSettings"), "Map Settings"),
-        leafletPointSettingsUI(ns("mapPointSettings")),
-        leafletExportButton(ns("exportLeaflet"))
+      div(
+        id = "leaflet_panel",  # ID to control visibility
+        absolutePanel(
+          id = "controls",
+          class = "panel panel-default",
+          draggable = TRUE,
+          top = 110,
+          right = "auto",
+          left = 60,
+          bottom = "auto",
+          style = "position:fixed; width:330px; overflow-y:auto; height:85%",
+          leafletSettingsUI(ns("mapSettings"), "Map Settings"),
+          leafletPointSettingsUI(ns("mapPointSettings")),
+          leafletExportButton(ns("exportLeaflet"))
+        )
       )
     )
   )
@@ -122,6 +137,17 @@ interactiveMapUI <- function(id, title = "") {
 #' @export
 interactiveMap <- function(input, output, session, isoData) {
   ns <- session$ns
+
+  observe({
+    if (input$show_panel) {
+      shinyjs::show("leaflet_panel", asis = TRUE)
+      shinyjs::show("stats_panel", asis = TRUE)
+    } else {
+      shinyjs::hide("leaflet_panel", asis = TRUE)
+      shinyjs::hide("stats_panel", asis = TRUE)
+    }
+  }) %>%
+    bindEvent(input$show_panel)
 
   leafletValues <- callModule(leafletSettings, "mapSettings")
 
@@ -337,6 +363,7 @@ interactiveMap <- function(input, output, session, isoData) {
     isoData()[[input$var2]]
   })
 
+  # export leaflet ----
   callModule(
     leafletExport,
     "exportLeaflet",

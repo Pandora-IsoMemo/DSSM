@@ -147,30 +147,22 @@ pointAesteticsServer <- function(id, loadedData, onlyNumCols = FALSE, onlyFacCol
                function(input, output, session) {
                  observe({
                    logDebug("%s: Update loadedData()", id)
-                   if (is.null(loadedData())) {
+
+                   data <- loadedData()
+                   if (is.null(data)) {
                      choices <- c("No data ..." = "")
-                     showLegendVal <- FALSE
-                   } else if (onlyNumCols) {
-                     numCols <- numericColumns(loadedData())
-                     if (length(numCols) == 0) {
-                       choices <- c("No numeric columns ..." = "")
-                       showLegendVal <- FALSE
-                     } else {
-                       choices <- c("Select a numeric column ..." = "", numCols)
-                       showLegendVal <- TRUE
-                     }
-                   } else if (onlyFacCols) {
-                     facCols <- factorColumns(loadedData())
-                     if (length(facCols) == 0) {
-                       choices <- c("No character columns ..." = "")
-                       showLegendVal <- FALSE
-                     } else {
-                       choices <- c("Select a ccharacter olumn ..." = "", facCols)
-                       showLegendVal <- TRUE
-                     }
                    } else {
-                     choices <- c("Select a column ..." = "", colnames(loadedData()))
-                     showLegendVal <- TRUE
+                     if (onlyNumCols) {
+                       cols <- numericColumns(data)
+                       label <- if (length(cols) == 0) "No numeric columns ..." else "Select a numeric column ..."
+                     } else if (onlyFacCols) {
+                       cols <- factorColumns(data)
+                       label <- if (length(cols) == 0) "No character columns ..." else "Select a character column ..."
+                     } else {
+                       cols <- colnames(data)
+                       label <- "Select a column ..."
+                     }
+                     choices <- c(label = "", cols)
                    }
 
                    updateSelectInput(
@@ -181,7 +173,7 @@ pointAesteticsServer <- function(id, loadedData, onlyNumCols = FALSE, onlyFacCol
                    )
                    updateCheckboxInput(session = session,
                                        "legend",
-                                       value = showLegendVal)
+                                       value = FALSE)
                  }) %>%
                    bindEvent(loadedData())
 
@@ -540,6 +532,21 @@ updateDataOnLeafletMap <-
         pointOpacity = leafletPointValues$pointOpacity,
         pointSymbol = leafletPointValues$pointSymbol,
         pointWidth = leafletPointValues$pointWidth
+      ) %>%
+      setColorLegend(
+        showLegend = leafletPointValues$showColourLegend,
+        title = leafletPointValues$columnForPointColour,
+        pal = leafletPointValues$pointColourPalette,
+        values = getColourCol(plotData,
+                              colName = leafletPointValues$columnForPointColour)
+      ) %>%
+      setSizeLegend(
+        sizeLegend = leafletPointValues$sizeLegendValues,
+        showLegend = leafletPointValues$showSizeLegend
+      ) %>%
+      setSymbolLegend(
+        symbolLegend = leafletPointValues$symbolLegendValues,
+        showLegend = leafletPointValues$showSymbolLegend
       ) %>%
       addLayersControl(
         overlayGroups = c("Data Points"),
