@@ -716,7 +716,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                              upperLeftLongitude = values$upperLeftLongitude,
                              center = input$Centering,
                              move = values$right) %>%
-          constrainLongitudeRange(zoom = zoom)
+          constrainLongitudeRange(zoom = zoom, center = input$Centering)
 
         values$rangex <- rangex
         values$rangey <- rangey

@@ -45,12 +45,12 @@ zoomLongitudeRange <- function(rangex, zoom, upperLeftLongitude, center = c("Eur
   if (is.na(upperLeftLongitude)) return(rangex + c(-zoom / 2, zoom / 2))
 
   # set custom range
-  rangex <- upperLeftLongitude + move
+  upperLeftLongitude <- upperLeftLongitude + move
   if (center != "Europe") {
-    rangex <- rangex %>% shiftLongitudesToPacific()
+    upperLeftLongitude <- upperLeftLongitude %>% shiftLongitudesToPacific()
   }
 
-  return(rangex + c(0, zoom))
+  return(upperLeftLongitude + c(0, zoom))
 }
 
 zoomLatitudeRange <- function(rangey, zoom, upperLeftLatitude, move = 0) {
@@ -60,10 +60,15 @@ zoomLatitudeRange <- function(rangey, zoom, upperLeftLatitude, move = 0) {
   return(rangey)
 }
 
-constrainLongitudeRange <- function(rangex, zoom = 50) {
-  rangex <- pmin(pmax(rangex, -180), 180)
-  if (rangex[2] > 180) rangex <- c(180 - zoom, 180)
-  if (rangex[1] < -180) rangex <- c(-180, -180 + zoom)
+constrainLongitudeRange <- function(rangex, zoom = 50, center = c("Europe", "Pacific")) {
+  center = match.arg(center)
+  if (center == "Europe") {
+    if (rangex[2] > 180) rangex <- c(180 - zoom, 180)
+    if (rangex[1] < -180) rangex <- c(-180, -180 + zoom)
+  } else {
+    if (rangex[2] > 360) rangex <- c(360 - zoom, 360)
+    if (rangex[1] < 0) rangex <- c(0, 0 + zoom)
+  }
 
   rangex
 }

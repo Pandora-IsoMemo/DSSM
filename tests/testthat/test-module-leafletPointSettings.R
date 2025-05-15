@@ -90,8 +90,9 @@ test_that("Test module pointColourServer", {
 
                # Act
                session$setInputs(
-                 columnForPointColour = "source",
-                 showColourLegend = FALSE,
+                 `colour-fixed` = FALSE,
+                 `colour-column` = "source",
+                 `colour-legend` = FALSE,
                  paletteName = "Dark2",
                  isReversePalette = FALSE
                )
@@ -123,7 +124,7 @@ test_that("Test module pointSizeServer", {
                print("test pointSizeServer")
 
                # Act
-               session$setInputs(columnForPointSize = "b",
+               session$setInputs(`size-column` = "b",
                                  sizeFactor = FALSE)
 
                # Assert

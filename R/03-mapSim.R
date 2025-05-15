@@ -567,7 +567,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
                            upperLeftLongitude = values$upperLeftLongitude,
                            center = input$Centering,
                            move = values$right) %>%
-        constrainLongitudeRange(zoom = zoom)
+        constrainLongitudeRange(zoom = zoom, center = input$Centering)
 
       values$rangex <- rangex
       values$rangey <- rangey
