@@ -13,7 +13,6 @@ RUN apt-get update \
     && rm /tmp/google-chrome.deb \
     && rm -rf /var/lib/apt/lists/*
 
-
 RUN installPackage ReSources \
     && installPackage
 
