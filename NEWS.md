@@ -1,3 +1,10 @@
+# DSSM 25.05.1
+
+## Bug Fixes
+- _interactive Map_:
+  - remove maps from the dropdown that cannot be accessed anymore (#267)
+  - fix issue with scrolling bar in the window list (#267)
+
 # DSSM 25.05.0
 
 ## Updates
