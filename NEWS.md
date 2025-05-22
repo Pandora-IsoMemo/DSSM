@@ -5,7 +5,8 @@
   - _export_: switch from deprecated phantomjs to chromium for webshot2 (#267)
   - _Map Settings_: separate checkbox for "Fixed" point aesthetics (#267)
   - option to show/hide the panels _Map Settings_ and _Statistics_
-- fix an issue with the longitude range for a Pacfic Center for maps in the modeling tabs
+- _modelling tabs_:
+  - fix an issues with the plotting of maps for different ranges (#270)
 
 # DSSM 25.04.0
 

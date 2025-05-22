@@ -20,17 +20,20 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
       slitted_xlim <- splitXlim(xlim)
       # x: -360 to 0
       if (!is.null(slitted_xlim$left)) {
-        sp::plot(Maps$`ocean-180` %>% clipMap(layer = "ocean", xlim = slitted_xlim$left, ylim = ylim, mapLand = Maps$`land-180`),
-                 add = TRUE, col = "lightblue", lwd = 1, border = NA)
+        Maps$`ocean-180` %>%
+          clipMap(layer = "ocean", xlim = slitted_xlim$left, ylim = ylim, mapLand = Maps$`land-180`) %>%
+          sp::plot(add = TRUE, col = "lightblue", lwd = 1, border = NA)
       }
       # x: 0 to 360
       if (!is.null(slitted_xlim$right)) {
-        sp::plot(Maps$`ocean+180` %>% clipMap(layer = "ocean", xlim = slitted_xlim$right, ylim = ylim, mapLand = Maps$`land+180`),
-                 add = TRUE, col = "lightblue", lwd = 1, border = NA)
+        Maps$`ocean+180` %>%
+          clipMap(layer = "ocean", xlim = slitted_xlim$right, ylim = ylim, mapLand = Maps$`land+180`) %>%
+          sp::plot(add = TRUE, col = "lightblue", lwd = 1, border = NA)
       }
     } else {
-      sp::plot(Maps$ocean %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$land),
-               add = TRUE, col = "lightblue", lwd = 1)
+      Maps$`ocean` %>%
+        clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$`land`) %>%
+        sp::plot(add = TRUE, col = "lightblue", lwd = 1, border = NA)
     }
   }
   if (as.numeric(terrestrial) == -1) {
@@ -142,7 +145,8 @@ clipMap <- function(map, layer, xlim, ylim, mapLand = NULL) {
   }
 
   # Convert to sp
-  sf::as_Spatial(clipped_sf)
+  clipped_sf %>%
+    sf::as_Spatial()
 }
 
 clipTolerance <- function() {
