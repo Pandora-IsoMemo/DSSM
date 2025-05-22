@@ -71,15 +71,52 @@ leafletExport <- function(input,
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
 
-        temp_file <- tempfile(fileext = ".html")
-        htmlwidgets::saveWidget(m,
-                                file = temp_file,
-                                selfcontained = TRUE)
-        webshot2::webshot(temp_file, file = filename, vwidth = input$width, vheight = input$height)
-        unlink(temp_file)
+        m %>%
+          exportWidgetSnapshot(filename = filename,
+                               fileext = input$exportType,
+                               width = input$width,
+                               height = input$height)
       },
       value = 0.9,
       message = "Exporting ...")
     }
   )
 }
+
+exportWidgetSnapshot <- function(widget, filename, fileext, width, height) {
+  # Create temporary HTML file
+  temp_file <- tempfile(fileext = ".html")
+  saveWidget(widget, file = temp_file, selfcontained = TRUE)
+
+  if (fileext == "pdf") {
+    # Save temporary PNG file
+    temp_png <- tempfile(fileext = ".png")
+    webshot(temp_file, file = temp_png, vwidth = width, vheight = height)
+
+    # Use magick to read PNG and convert to raster for PDF export
+    img <- image_read(temp_png)
+    # We cannot use image_write to write pdf, it is blocked by ImageMagick for shiny, docker, ...
+    #magick::image_write(img, path = filename, format = "pdf")
+
+    bitmap <- as.raster(img)
+    dims <- image_info(img)
+
+    pdf(filename, width = dims$width / 72, height = dims$height / 72)
+    grid::grid.raster(bitmap)
+    dev.off()
+
+    # Clean up temp PNG
+    unlink(temp_png)
+
+  } else if (fileext %in% c("png", "jpeg", "jpg")) {
+    # Direct export for image formats
+    webshot(temp_file, file = filename, vwidth = width, vheight = height)
+
+  } else {
+    stop("Unsupported file extension: must be one of 'png', 'jpeg', or 'pdf'")
+  }
+
+  # Clean up temp HTML
+  unlink(temp_file)
+}
+
