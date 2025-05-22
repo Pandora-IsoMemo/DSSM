@@ -10,7 +10,7 @@
   - switch from deprecated phantomjs to chromium for webshot2 (#267)
   - fix issue with PDF export of maps
 - _modelling tabs_:
-  - fix an issues with the plotting of maps for different ranges (#270)
+  - update all maps to fix an issues with the plotting of maps for different ranges (#270)
 
 # DSSM 25.04.0
 
