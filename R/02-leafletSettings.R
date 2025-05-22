@@ -16,7 +16,6 @@ leafletSettingsUI <- function(id, title = "") {
         "OpenStreetMap.Mapnik",
         "OpenStreetMap.DE",
         "OpenTopoMap",
-        "Stamen.TonerLite",
         "Esri",
         "Esri.WorldTopoMap",
         "Esri.OceanBasemap"
@@ -31,7 +30,7 @@ leafletSettingsUI <- function(id, title = "") {
         "Esri.WorldPhysical"
       ),
       `custom maps` = list(
-        "Stamen.Watercolor"
+        "NASAGIBS.ViirsEarthAtNight2012"
       )
     ),
     options = list(create = TRUE)
@@ -49,9 +48,8 @@ leafletSettingsUI <- function(id, title = "") {
                              " 3. Paste the name of the map into the field 'Map type'.",
                              " 4. Click 'Add...', and the custom map will be selected. ",
                              " ",
-                             "Some maps are not supported, e.g. those that are selectable via a checkbox, and",
-                             " not via a radion button. Please try maps from e.g. following providers",
-                             " 'OpenStreetMap', 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             "Some maps are not supported, e.g. they require a sign in. Prefer open",
+                             " providers like: 'OpenStreetMap', 'Esri', 'CartoDB', 'NASAGIBS'.",
                              sep = "\n"
                            )),
                          ": <br>",
