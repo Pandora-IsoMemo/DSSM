@@ -96,20 +96,8 @@ leafletSettingsUI <- function(id, title = "") {
     conditionalPanel(
       condition = "input.fitBounds == true",
       tags$hr(),
-      sliderInput(
-        ns("boundsLat"),
-        "Latitude: South - North",
-        value = defaultBounds()$lat,
-        min = -90,
-        max = 90
-      ),
-      sliderInput(
-        ns("boundsLng"),
-        "Longitude: West - East",
-        value = defaultBounds()$lng,
-        min = -180,
-        max = 360
-      ),
+      boundsLatLongNumericUI(ns("bounds"), defaultBounds),
+      tags$br(),
       fluidRow(column(5, actionButton(
         ns("applyBounds"), "Apply"
       )),
@@ -160,10 +148,10 @@ leafletSettings <- function(input, output, session) {
 
     values$bounds <-
       reactiveValues(
-        north = input$boundsLat[[2]],
-        south = input$boundsLat[[1]],
-        east = input$boundsLng[[2]],
-        west = input$boundsLng[[1]]
+        north = input$`bounds-north`,
+        south = input$`bounds-south`,
+        east = input$`bounds-east`,
+        west = input$`bounds-west`,
       )
   })
 
@@ -181,6 +169,54 @@ leafletSettings <- function(input, output, session) {
     values
   })
 }
+
+
+boundsLatLongNumericUI <- function(id, defaultBounds) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(
+      column(6,
+             numericInput(
+               ns("south"),
+               "Latitude: South",
+               value = defaultBounds()$lat[1],
+               min = -90,
+               max = 90
+             )
+      ),
+      column(6,
+             numericInput(
+               ns("north"),
+               "Latitude: North",
+               value = defaultBounds()$lat[2],
+               min = -90,
+               max = 90
+             )
+      )
+    ),
+    fluidRow(
+      column(6,
+             numericInput(
+               ns("west"),
+               "Longitude: West",
+               value = defaultBounds()$lng[1],
+               min = -180,
+               max = 360
+             )
+      ),
+      column(6,
+             numericInput(
+               ns("east"),
+               "Longitude: East",
+               value = defaultBounds()$lng[2],
+               min = -180,
+               max = 360
+             )
+      )
+    )
+  )
+}
+
 
 
 #' Customize Leaflet Map

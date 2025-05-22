@@ -1,10 +1,14 @@
 # DSSM 25.05.0
 
-## Bug Fixes
-- _interactive Map_:
-  - _export_: switch from deprecated phantomjs to chromium for webshot2 (#267)
+## Updates
+- _interactive Map_: 
   - _Map Settings_: separate checkbox for "Fixed" point aesthetics (#267)
-  - option to show/hide the panels _Map Settings_ and _Statistics_
+  - option to close and open the view of the _Map settings_ and _Statistics_ panels (#267)
+
+## Bug Fixes
+- _interactive Map export_:
+  - switch from deprecated phantomjs to chromium for webshot2 (#267)
+  - fix issue with PDF export of maps
 - _modelling tabs_:
   - fix an issues with the plotting of maps for different ranges (#270)
 
