@@ -18,6 +18,7 @@
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
 #'  recordPlot replayPlot rgb svg tiff
+#' @importFrom htmlwidgets saveWidget
 #' @importFrom IsoMemo getData getDatabaseList getFields getMappings
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
@@ -26,7 +27,8 @@
 #'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
 #'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
-#' @importFrom magick image_animate image_join image_read image_read_pdf image_read_svg image_write
+#' @importFrom magick image_animate image_info image_join image_read image_read_pdf image_read_svg
+#'  image_write
 #' @importFrom maps map map.scale
 #' @importFrom markdown markdownToHTML
 #' @importFrom MASS mvrnorm kde2d
@@ -53,7 +55,7 @@
 #' @importFrom tclust tclust
 #' @importFrom utils available.packages compareVersion install.packages head zip
 #'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
-#' @importFrom webshot is_phantomjs_installed
+#' @importFrom webshot2 webshot
 #' @importFrom yaml read_yaml
 #' @importFrom zip zipr
 NULL

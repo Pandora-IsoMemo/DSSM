@@ -4,13 +4,7 @@
 leafletExportButton <- function(id) {
   ns <- NS(id)
 
-  tagList(actionButton(ns("exportLeaflet"), "Export map"),
-          div(
-            id = ns("phantomjsHelp"),
-            helpText(
-              "To export map you need to install PhantomJS (https://www.rdocumentation.org/packages/webshot/versions/0.5.2/topics/install_phantomjs)"
-            )
-          ))
+  actionButton(ns("exportLeaflet"), "Export map")
 }
 
 
@@ -39,15 +33,6 @@ leafletExport <- function(input,
                           leafletPointValues) {
   ns <- session$ns
 
-  observe({
-    if (webshot::is_phantomjs_installed()) {
-     shinyjs::enable("exportLeaflet")
-     shinyjs::hide("phantomjsHelp")
-    } else {
-      shinyjs::disable("exportLeaflet")
-    }
-  })
-
   observeEvent(input$exportLeaflet, {
     showModal(
       modalDialog(
@@ -60,6 +45,8 @@ leafletExport <- function(input,
         ),
         numericInput(ns("width"), "Width (px)", value = width()),
         numericInput(ns("height"), "Height (px)", value = height()),
+        textInput(ns("exportFilename"), "Filename (without extension)", value = sprintf("plot-%s", Sys.Date())),
+        tags$br(),
         downloadButton(session$ns("exportLeafletMap"), "Export"),
         easyClose = TRUE
       )
@@ -68,7 +55,7 @@ leafletExport <- function(input,
 
   output$exportLeafletMap <- downloadHandler(
     filename = function() {
-      paste0('plot-', Sys.Date(), '.', input$exportType)
+      paste0(input$exportFilename, '.', input$exportType)
     },
     content = function(filename) {
       withProgress({
@@ -84,16 +71,52 @@ leafletExport <- function(input,
           updateDataOnLeafletMap(isoData = isoData(),
                                  leafletPointValues = leafletPointValues)
 
-        mapview::mapshot(
-          m,
-          file = filename,
-          remove_controls = "zoomControl",
-          vwidth = input$width,
-          vheight = input$height
-        )
+        m %>%
+          exportWidgetSnapshot(filename = filename,
+                               fileext = input$exportType,
+                               width = input$width,
+                               height = input$height)
       },
       value = 0.9,
       message = "Exporting ...")
     }
   )
 }
+
+exportWidgetSnapshot <- function(widget, filename, fileext, width, height) {
+  # Create temporary HTML file
+  temp_file <- tempfile(fileext = ".html")
+  saveWidget(widget, file = temp_file, selfcontained = TRUE)
+
+  if (fileext == "pdf") {
+    # Save temporary PNG file
+    temp_png <- tempfile(fileext = ".png")
+    webshot(temp_file, file = temp_png, vwidth = width, vheight = height)
+
+    # Use magick to read PNG and convert to raster for PDF export
+    img <- image_read(temp_png)
+    # We cannot use image_write to write pdf, it is blocked by ImageMagick for shiny, docker, ...
+    #magick::image_write(img, path = filename, format = "pdf")
+
+    bitmap <- as.raster(img)
+    dims <- image_info(img)
+
+    pdf(filename, width = dims$width / 72, height = dims$height / 72)
+    grid::grid.raster(bitmap)
+    dev.off()
+
+    # Clean up temp PNG
+    unlink(temp_png)
+
+  } else if (fileext %in% c("png", "jpeg", "jpg")) {
+    # Direct export for image formats
+    webshot(temp_file, file = filename, vwidth = width, vheight = height)
+
+  } else {
+    stop("Unsupported file extension: must be one of 'png', 'jpeg', or 'pdf'")
+  }
+
+  # Clean up temp HTML
+  unlink(temp_file)
+}
+

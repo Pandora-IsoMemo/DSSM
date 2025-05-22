@@ -2,7 +2,7 @@
 Maps <- loadMaps()
 
 # Tests clipping
-test_that("clipMap produces valid clipped SpatialLines object", {
+test_that("clipMap (Pacific) produces valid clipped SpatialLines object", {
   # Test parameters
   xlim <- c(0, 360)
   ylim <- c(10, 70)
@@ -23,6 +23,84 @@ test_that("clipMap produces valid clipped SpatialLines object", {
   expect_true(clip_extent["x", "max"] <= xlim[2] + tolerance)
   expect_true(clip_extent["y", "min"] >= ylim[1] - tolerance)
   expect_true(clip_extent["y", "max"] <= ylim[2] + tolerance)
+})
+
+test_that("clipMap (Europe) produces valid clipped SpatialLines object", {
+  # Test parameters
+  xlim <- c(-180, 180)
+  ylim <- c(-90, 90)
+
+  # Run the function
+  clipped <- Maps$`ocean` %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$`land`)
+
+  # Check the class
+  expect_s4_class(clipped, "SpatialPolygons")
+
+  # Check the feature count (non-zero)
+  expect_true(length(clipped) > 0)
+
+  # Check the extent
+  clip_extent <- sp::bbox(clipped)
+  tolerance <- clipTolerance() + 1e-0
+  expect_true(clip_extent["x", "min"] >= xlim[1] - tolerance)
+  expect_true(clip_extent["x", "max"] <= xlim[2] + tolerance)
+  expect_true(clip_extent["y", "min"] >= ylim[1] - tolerance)
+  expect_true(clip_extent["y", "max"] <= ylim[2] + tolerance)
+})
+
+test_that("clipMap (ocean) works for different ranges", {
+  for (z in seq(10, 80, by = 10)) {
+    cat(".")
+    xlim <- c(-2*z, 180)
+    ylim <- c(-z, 90)
+
+    clipped <- Maps$`ocean` %>% clipMap(layer = "ocean", xlim = xlim, ylim = ylim, mapLand = Maps$`land`)
+    #expect_s4_class(clipped, "SpatialPolygons")
+    expect_true(length(clipped) > 0)
+  }
+
+  for (z in seq(10, 80, by = 10)) {
+    cat(".")
+    xlim <- c(-2*z, 180) + 180
+    ylim <- c(-z, 90)
+
+    slitted_xlim <- splitXlim(xlim)
+    clipped1 <- Maps$`ocean-180` %>%
+      clipMap(layer = "ocean", xlim = slitted_xlim$left, ylim = ylim, mapLand = Maps$`land-180`)
+    clipped2 <- Maps$`ocean+180` %>%
+      clipMap(layer = "ocean", xlim = slitted_xlim$right, ylim = ylim, mapLand = Maps$`land+180`)
+    #expect_s4_class(clipped1, "SpatialPolygons")
+    #expect_s4_class(clipped2, "SpatialPolygons")
+    expect_true(length(clipped1) > 0)
+    expect_true(length(clipped2) > 0)
+  }
+})
+
+test_that("clipMap (coast) works for different ranges", {
+  for (z in seq(10, 80, by = 10)) {
+    cat(".")
+    xlim <- c(-2*z, 180)
+    ylim <- c(-z, 90)
+
+    #print(sprintf("z: %s, xlim: (%s), ylim: (%s)", z, paste(xlim, collapse = ", "), paste(ylim, collapse = ", ")))
+    clipped <- Maps$`coast` %>% clipMap(layer = "coast", xlim = xlim, ylim = ylim)
+    expect_s4_class(clipped, "SpatialLinesDataFrame")
+    expect_true(length(clipped) > 0)
+  }
+
+  for (z in seq(10, 80, by = 10)) {
+    cat(".")
+    xlim <- c(-2*z, 180) + 180
+    ylim <- c(-z, 90)
+
+    slitted_xlim <- splitXlim(xlim)
+    clipped1 <- Maps$`coast-180` %>% clipMap(layer = "coast", xlim = xlim, ylim = ylim)
+    clipped2 <- Maps$`coast+180` %>% clipMap(layer = "coast", xlim = xlim, ylim = ylim)
+    expect_s4_class(clipped1, "SpatialLinesDataFrame")
+    expect_s4_class(clipped2, "SpatialLinesDataFrame")
+    expect_true(length(clipped1) > 0)
+    expect_true(length(clipped2) > 0)
+  }
 })
 
 # Tests for addMapLayers
