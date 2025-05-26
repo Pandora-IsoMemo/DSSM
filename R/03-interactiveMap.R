@@ -192,7 +192,7 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # adjust the view
+  # adjust the zoom
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
     # not exact bounds, only fit to input$map_bounds
@@ -204,22 +204,6 @@ interactiveMap <- function(input, output, session, isoData) {
         lat2 = leafletValues()$bounds$north
       )
   })
-
-  observe({
-    req(isoData()$longitude, isoData()$latitude)
-
-    leafletProxy("map") %>%
-      setView(lng = isoData()$longitude %>%
-                centerLongitudes(center = input[["mapPointSettings-leafletCenter"]]) %>%
-                range() %>%
-                mean(),
-              lat = isoData()$latitude %>%
-                range() %>%
-                mean(),
-              zoom = input$map_zoom)
-  }) %>%
-    bindEvent(input[["mapSettings-centerMapButton"]])
-
 
   # adjust map type
   observe({
@@ -259,7 +243,9 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # adjust map center
   observe({
-    center <- defaultCenter(center = input[["mapPointSettings-leafletCenter"]])
+    center <- defaultCenter(centerType = input[["mapPointSettings-leafletCenter"]]) %>%
+      shiftCenter(centerType = input[["mapPointSettings-leafletCenter"]],
+                  isoData = isoData())
     leafletProxy("map") %>%
       setView(lng = center$lng,
               lat = center$lat,
@@ -397,6 +383,21 @@ interactiveMap <- function(input, output, session, isoData) {
 
 
 # helper functions ####
+
+shiftCenter <- function(center, centerType, isoData) {
+  if (length(isoData) == 0 || is.null(centerType) || centerType != "data") return(center)
+
+  center = list(
+    lng = isoData$longitude %>%
+      range() %>%
+      mean(),
+    lat = isoData$latitude %>%
+      range() %>%
+      mean()
+  )
+
+  return(center)
+}
 
 #'  draw Interactive Map
 #' @param isoData isoData data

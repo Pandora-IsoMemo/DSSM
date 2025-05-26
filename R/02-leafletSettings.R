@@ -82,22 +82,14 @@ leafletSettingsUI <- function(id, title = "") {
         selected = "bottomright"
       )
     )),
-    fluidRow(
-      column(width = 6,
-             checkboxInput(ns("fitBounds"), "Fit boundaries")),
-      column(width = 6,
-             align = "right",
-             actionButton(ns(
-               "centerMapButton"
-             ), "Data Center", width = "100%"))
-    ),
+    checkboxInput(ns("fitBounds"), "Zoom into boundaries"),
     conditionalPanel(
       condition = "input.fitBounds == true",
       tags$hr(),
       boundsLatLongNumericUI(ns("bounds"), defaultBounds),
       tags$br(),
       fluidRow(column(5, actionButton(
-        ns("applyBounds"), "Apply"
+        ns("applyBounds"), "Zoom"
       )),
       column(
         7, checkboxInput(ns("showBounds"), "Show boundaries", value = TRUE)
@@ -153,10 +145,6 @@ leafletSettings <- function(input, output, session) {
       )
   })
 
-  observeEvent(input$centerMapButton, {
-    values$centerMapButton <- input$centerMapButton
-  })
-
   observeEvent({
     input$showBounds & input$fitBounds
   }, {
@@ -171,48 +159,43 @@ leafletSettings <- function(input, output, session) {
 
 boundsLatLongNumericUI <- function(id, defaultBounds) {
   ns <- NS(id)
-  tagList(
-    fluidRow(
-      column(6,
-             numericInput(
-               ns("south"),
-               "Latitude: South",
-               value = defaultBounds()$lat[1],
-               min = -90,
-               max = 90
-             )
-      ),
-      column(6,
-             numericInput(
-               ns("north"),
-               "Latitude: North",
-               value = defaultBounds()$lat[2],
-               min = -90,
-               max = 90
-             )
-      )
-    ),
-    fluidRow(
-      column(6,
-             numericInput(
-               ns("west"),
-               "Longitude: West",
-               value = defaultBounds()$lng[1],
-               min = -180,
-               max = 360
-             )
-      ),
-      column(6,
-             numericInput(
-               ns("east"),
-               "Longitude: East",
-               value = defaultBounds()$lng[2],
-               min = -180,
-               max = 360
-             )
-      )
+  tagList(fluidRow(column(
+    6,
+    numericInput(
+      ns("south"),
+      "Latitude: South",
+      value = defaultBounds()$lat[1],
+      min = -90,
+      max = 90
     )
-  )
+  ), column(
+    6,
+    numericInput(
+      ns("north"),
+      "Latitude: North",
+      value = defaultBounds()$lat[2],
+      min = -90,
+      max = 90
+    )
+  )), fluidRow(column(
+    6,
+    numericInput(
+      ns("west"),
+      "Longitude: West",
+      value = defaultBounds()$lng[1],
+      min = -180,
+      max = 360
+    )
+  ), column(
+    6,
+    numericInput(
+      ns("east"),
+      "Longitude: East",
+      value = defaultBounds()$lng[2],
+      min = -180,
+      max = 360
+    )
+  )))
 }
 
 
@@ -264,10 +247,10 @@ drawFittedBounds <- function(map, showBounds, bounds) {
   map
 }
 
-defaultCenter <- function(center = "atlantic") {
-  if (is.null(center)) return(list(lng = 0, lat = 30))
+defaultCenter <- function(centerType = "atlantic") {
+  if (is.null(centerType)) return(list(lng = 0, lat = 30))
 
-  switch(center,
+  switch(centerType,
          "atlantic" = list(lng = 0, lat = 30),
          "pacific" = list(lng = 180, lat = 0))
 }
@@ -285,6 +268,10 @@ centerLongitudes <- function(longitude, center) {
 
   if (center == "pacific") {
     longitude[longitude < 0] <- longitude[longitude < 0] + 360
+  }
+
+  if (center == "atlantic") {
+    longitude[longitude > 180] <- longitude[longitude > 180] - 360
   }
 
   longitude

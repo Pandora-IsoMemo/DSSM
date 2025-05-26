@@ -32,61 +32,94 @@ leafletExport <- function(input,
                           leafletValues,
                           leafletPointValues) {
   ns <- session$ns
+  previewImagePath <- reactiveVal(NULL)
+
+  finalLeafletMap <- reactive({
+    leafletMap() %>%
+      setView(lng = center()$lng, lat = center()$lat, zoom = zoom()) %>%
+      customizeLeafletMap(leafletValues()) %>%
+      updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
+  })
 
   observeEvent(input$exportLeaflet, {
+    withProgress(message = "Generating preview...", value = 0.7, {
+     previewImagePath(createPreview(finalLeafletMap(), width(), height()))
+    })
+
     showModal(
       modalDialog(
         title = "Export Map",
         footer = modalButton("OK"),
-        selectInput(
-          ns("exportType"),
-          "Filetype",
-          choices = c("png", "pdf", "jpeg")
+        fluidRow(
+          column(4, numericInput(ns("width"), "Width (px)", value = width())),
+          column(4, numericInput(ns("height"), "Height (px)", value = height())),
+          column(4, align = "right", style = "margin-top: 1.75em", actionButton(ns("generatePreview"), "Preview"))
         ),
-        numericInput(ns("width"), "Width (px)", value = width()),
-        numericInput(ns("height"), "Height (px)", value = height()),
-        textInput(ns("exportFilename"), "Filename (without extension)", value = sprintf("plot-%s", Sys.Date())),
         tags$br(),
-        downloadButton(session$ns("exportLeafletMap"), "Export"),
+        div(
+          style = "height: 310px; max-width: 600px; overflow-x: auto; overflow-y: hidden; margin: auto; white-space: nowrap;",
+          imageOutput(ns("previewImage"), height = "300px") %>% withSpinner(color = "#20c997")
+        ),
+        tags$br(),
+        fluidRow(
+          column(5, textInput(ns("exportFilename"), "Filename (without extension)", value = sprintf("plot-%s", Sys.Date()))),
+          column(3, selectInput(ns("exportType"), "Filetype",choices = c("png", "pdf", "jpeg"))),
+          column(4, align = "right", style = "margin-top: 1.75em", downloadButton(session$ns("exportLeafletMap"), "Export"))
+        ),
         easyClose = TRUE
       )
     )
   })
+
+  observeEvent(input$generatePreview, {
+    req(input$width, input$height)
+    withProgress(message = "Generating preview...", value = 0.7, {
+      previewImagePath(createPreview(finalLeafletMap(), input$width, input$height))
+    })
+  })
+
+  output$previewImage <- renderImage({
+    validate(
+      need(previewImagePath(), "Click 'Preview' to generate map preview.")
+    )
+
+    list(
+      src = previewImagePath(),
+      contentType = "image/png",
+      height = 300,
+      alt = "Map preview"
+    )
+  }, deleteFile = TRUE)
 
   output$exportLeafletMap <- downloadHandler(
     filename = function() {
       paste0(input$exportFilename, '.', input$exportType)
     },
     content = function(filename) {
-      withProgress({
-        m <- leafletMap() %>%
-          setView(lng = center()$lng,
-                  lat = center()$lat,
-                  zoom = zoom())
-
-        m <- m %>%
-          customizeLeafletMap(leafletValues())
-
-        m <- m %>%
-          updateDataOnLeafletMap(isoData = isoData(),
-                                 leafletPointValues = leafletPointValues)
-
-        m %>%
+      withProgress(message = "Exporting ...", value = 0.7, {
+        finalLeafletMap() %>%
           exportWidgetSnapshot(filename = filename,
                                fileext = input$exportType,
                                width = input$width,
                                height = input$height)
-      },
-      value = 0.9,
-      message = "Exporting ...")
+      })
     }
   )
+}
+
+createPreview <- function(finalLeafletMap, width, height) {
+  tmp_html <- tempfile(fileext = ".html")
+  tmp_png <- tempfile(fileext = ".png")
+  saveWidget(finalLeafletMap, file = tmp_html, selfcontained = FALSE)
+  webshot(tmp_html, file = tmp_png, vwidth = width, vheight = height)
+
+  return(tmp_png)
 }
 
 exportWidgetSnapshot <- function(widget, filename, fileext, width, height) {
   # Create temporary HTML file
   temp_file <- tempfile(fileext = ".html")
-  saveWidget(widget, file = temp_file, selfcontained = TRUE)
+  saveWidget(widget, file = temp_file, selfcontained = FALSE)
 
   if (fileext == "pdf") {
     # Save temporary PNG file

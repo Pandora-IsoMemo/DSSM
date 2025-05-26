@@ -12,54 +12,72 @@ plotExport <- function(input,
                        plotFun = NULL,
                        Model = NULL,
                        mapType = reactive("Map")){
+  ns <- session$ns
+  previewImagePath <- reactiveVal(NULL)
+  width <- reactiveVal(1280)
+  height <- reactiveVal(800)
+
   observeEvent(input$export, {
+    withProgress(message = "Generating preview...", value = 0.7, {
+      previewImagePath(createPlotPreview(replayPlot(plotObj()), width(), height()))
+    })
+
     showModal(modalDialog(
       title = "Export Graphic",
       footer = modalButton("OK"),
-      plotOutput(session$ns("plot"), height = "300px"),
-      tags$br(),
-      fluidRow(column(width = 4,
-                      selectInput(
-                        session$ns("exportType"), "Filetype",
-                        choices = c(
-                          "jpeg", "png", "pdf", "svg", "tiff",
-                          if(!is.null(predictions())) "geo-tiff" else NULL
-                        )
-                      )),
-        column(width = 4,
-               conditionalPanel(
-                 condition = "input.exportType != 'geo-tiff'",
-                 ns = session$ns,
-                 numericInput(session$ns("width"), "Width (px)", value = 1280)
-               )),
-        column(width = 4,
-               conditionalPanel(
-                 condition = "input.exportType != 'geo-tiff'",
-                 ns = session$ns,
-                 numericInput(session$ns("height"), "Height (px)", value = 800)
-               ))
+      conditionalPanel(
+        condition = "input.exportType != 'geo-tiff'",
+        ns = ns,
+        fluidRow(
+          column(4, numericInput(ns("preview-width"), "Width (px)", value = width())),
+          column(4, numericInput(ns("preview-height"), "Height (px)", value = height())),
+          column(4, align = "right", style = "margin-top: 1.75em", actionButton(ns("generatePreview"), "Preview"))
+        ),
+        tags$br(),
+        div(
+          style = "height: 310px; max-width: 600px; overflow-x: auto; overflow-y: hidden; margin: auto; white-space: nowrap;",
+          imageOutput(ns("previewImage"), height = "300px") %>% withSpinner(color = "#20c997")
+        )
+      ),
+      fluidRow(column(
+        8,
+        textInput(
+          ns("exportFilename"),
+          "Filename (without extension)",
+          value = getFileName(plotType = modelType, isTimeSeries = FALSE),
+          width = "100%"
+        )),
+        column(
+          4,
+          selectInput(
+            ns("exportType"), "Filetype",
+            choices = c(
+              "jpeg", "png", "pdf", "svg", "tiff",
+              if(!is.null(predictions())) "geo-tiff" else NULL
+            )
+          ))
       ),
       conditionalPanel(
         condition = paste0("'", modelType, "' == 'spatio-temporal-average' & ",
                            "'", mapType(), "' == 'Map'"), #& input.exportType != 'geo-tiff'
-        ns = session$ns,
-        checkboxInput(session$ns("isTimeSeries"), "Export time series"),
+        ns = ns,
+        checkboxInput(ns("isTimeSeries"), "Export time series"),
         conditionalPanel(
           condition = "input.isTimeSeries",
-          ns = session$ns,
+          ns = ns,
           fluidRow(column(
             width = 4,
-            numericInput(session$ns("minTime"), "Time begin of series", value = 0)),
+            numericInput(ns("minTime"), "Time begin of series", value = 0)),
           column(
             width = 4,
-            numericInput(session$ns("maxTime"), "Time end of series", value = 5000)),
+            numericInput(ns("maxTime"), "Time end of series", value = 5000)),
           column(
             width = 4,
-            numericInput(session$ns("intTime"), "Time interval length", value = 1000))
+            numericInput(ns("intTime"), "Time interval length", value = 1000))
           ),
           fluidRow(
             column(width = 4,
-                   selectInput(session$ns("typeOfSeries"), "Type of time series",
+                   selectInput(ns("typeOfSeries"), "Type of time series",
                                choices = c(
                                  "Gif + graphic files" = "gifAndZip",
                                  "Graphic files" = "onlyZip",
@@ -67,45 +85,65 @@ plotExport <- function(input,
                                  "MapR files" = "mapr")),
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'mapr'",
-                     ns = session$ns,
+                     ns = ns,
                      helpText("MapR only supports .png export. Ignoring 'Filetype' input.")
                    )
                    ),
             column(width = 4,
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
-                     ns = session$ns,
-                     numericInput(session$ns("fpsGif"), "Frames per second", value = 2, min = 1, max = 10)
+                     ns = ns,
+                     numericInput(ns("fpsGif"), "Frames per second", value = 2, min = 1, max = 10)
                    ),
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'mapr'",
-                     ns = session$ns,
-                     textInput(session$ns("mapr-group"), "Group", value = "Groupname"),
-                     textInput(session$ns("mapr-measure"), "Measure", value = "Mean")
+                     ns = ns,
+                     textInput(ns("mapr-group"), "Group", value = "Groupname"),
+                     textInput(ns("mapr-measure"), "Measure", value = "Mean")
                    )
                    ),
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
-                     ns = session$ns,
+                     ns = ns,
                      column(width = 4, style = "margin-top: 2em;",
-                     checkboxInput(session$ns("reverseGif"), "Reverse time order")
+                     checkboxInput(ns("reverseGif"), "Reverse time order")
                      )
                    ),
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'mapr'",
-                     ns = session$ns,
+                     ns = ns,
                      column(width = 4,
-                     textInput(session$ns("mapr-variable"), "Variable", value = "Variable"),
-                     textInput(session$ns("mapr-measureunit"), "Measure unit", value = "Measure Unit")
+                     textInput(ns("mapr-variable"), "Variable", value = "Variable"),
+                     textInput(ns("mapr-measureunit"), "Measure unit", value = "Measure Unit")
                    )
                    )
             )
         )
       ),
-      downloadButton(session$ns("exportExecute"), "Export"),
+      downloadButton(ns("exportExecute"), "Export"),
       easyClose = TRUE
     ))
   })
+
+  observeEvent(input$generatePreview, {
+    req(input$`preview-width`, input$`preview-height`)
+    withProgress(message = "Generating preview...", value = 0.7, {
+      previewImagePath(createPlotPreview(replayPlot(plotObj()), input$`preview-width`, input$`preview-height`))
+    })
+  })
+
+  output$previewImage <- renderImage({
+    validate(
+      need(previewImagePath(), "Click 'Preview' to generate map preview.")
+    )
+
+    list(
+      src = previewImagePath(),
+      contentType = "image/png",
+      height = 300,
+      alt = "Map preview"
+    )
+  }, deleteFile = TRUE)
 
   observe({
   if(any(c(input$`mapr-group`,input$`mapr-variable`,input$`mapr-measure`,input$`mapr-measureunit`) == "") && input$typeOfSeries == "mapr"){
@@ -115,10 +153,6 @@ plotExport <- function(input,
   }
   }) %>% bindEvent(c(input$typeOfSeries,input$`mapr-group`,input$`mapr-variable`,input$`mapr-measure`,input$`mapr-measureunit`),
                   ignoreInit = TRUE)
-
-  output$plot <- renderPlot({
-    replayPlot(plotObj())
-  })
 
   isTimeSeriesInput <- reactiveVal(FALSE)
   exportType <- reactiveVal("png")
@@ -135,15 +169,14 @@ plotExport <- function(input,
 
   output$exportExecute <- downloadHandler(
     filename = function(){
-      nameFile(plotType = modelType, exportType = exportType(),
-               isTimeSeries = isTimeSeriesInput(), typeOfSeries = input$typeOfSeries)
+      paste0(input$exportFilename, '.', getExtension(exportType(), isTimeSeriesInput(), input$typeOfSeries))
     },
     content = function(file){
       if (!isTimeSeriesInput()) {
         exportGraphicSingle(exportType = exportType(),
                             file = file,
-                            width = input$width,
-                            height = input$height,
+                            width = input$`preview-width`,
+                            height = input$`preview-height`,
                             plotObj = plotObj(),
                             predictions = predictions()) %>%
           suppressWarnings() %>%
@@ -159,8 +192,8 @@ plotExport <- function(input,
         } else {
         exportGraphicSeries(exportType = exportType(),
                             file = file,
-                            width = input$width,
-                            height = input$height,
+                            width = input$`preview-width`,
+                            height = input$`preview-height`,
                             plotFun = plotFun(),
                             Model = Model(),
                             predictions = predictions(),
@@ -179,6 +212,14 @@ plotExport <- function(input,
   )
 }
 
+createPlotPreview <- function(plot, width, height) {
+  tmp_png <- tempfile(fileext = ".png")
+  png(tmp_png, width = width, height = height)
+  plot
+  dev.off()
+
+  return(tmp_png)
+}
 
 # Name File
 #
@@ -192,6 +233,25 @@ nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
   fileName <- getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i)
 
   # set file extension
+  fileExt <- getExtension(exportType, isTimeSeries, typeOfSeries, i)
+
+  # return file name with extension
+  paste0(fileName, ".", fileExt)
+}
+
+
+# Get File Name
+#
+# @param plotType (character) plot specification
+# @param isTimeSeries (logical) if TRUE, set file names for a series of plots
+# @param i (numeric) number of i-th plot of a series of plots
+getFileName <- function(plotType, isTimeSeries, i = NULL) {
+  if (isTimeSeries && !is.null(i)) return(paste0(plotType, "_", i))
+
+  plotType
+}
+
+getExtension <- function(exportType, isTimeSeries, typeOfSeries = "gifAndZip", i = NULL) {
   if (!isTimeSeries || !is.null(i)) {
     ## file extension for single plots: from user input 'exportType'
 
@@ -209,21 +269,6 @@ nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL)
                       onlyGif = "gif",
                       mapr = "zipm")
   }
-
-  # return file name with extension
-  paste0(fileName, ".", fileExt)
-}
-
-
-# Get File Name
-#
-# @param plotType (character) plot specification
-# @param isTimeSeries (logical) if TRUE, set file names for a series of plots
-# @param i (numeric) number of i-th plot of a series of plots
-getFileName <- function(plotType, isTimeSeries, i = NULL) {
-  if (isTimeSeries && !is.null(i)) return(paste0(plotType, "_", i))
-
-  plotType
 }
 
 exportMapRFiles <- function(file, plotFun, Model, input) {
@@ -250,8 +295,8 @@ exportMapRFiles <- function(file, plotFun, Model, input) {
       writeGraphics(exportType = "png",
                     plot = plotFun(model = Model, time = i),
                     filename = figFilename,
-                    width = input$width,
-                    height = input$height)
+                    width = input$`preview-width`,
+                    height = input$`preview-height`)
     }
 
     json_list <- create_image_list_json(input, figFileNames, times)

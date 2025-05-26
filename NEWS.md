@@ -2,8 +2,12 @@
 
 ## Bug Fixes
 - _interactive Map_:
-  - remove maps from the dropdown that cannot be accessed anymore (#267)
-  - fix issue with scrolling bar in the window list (#267)
+  - removed maps from the dropdown that can no longer be accessed (#267)
+  - fixed issue with scrolling bar in the window list (#267)
+  - added a preview to the export modal, allowing users to check the effect of width and height
+    settings before exporting the map (#267)
+  - Renamed input "Fit boundaries" to "Zoom into boundaries" to more clearly indicate the option 
+    for zoom fine-tuning (#267)
 
 # DSSM 25.05.0
 
