@@ -6,22 +6,22 @@
 \usage{
 drawIcons(
   map,
-  northArrow = FALSE,
-  northArrowPosition = "bottomright",
-  scale = FALSE,
-  scalePosition = "topleft"
+  northArrowPosition = "none",
+  northArrowSize = 80,
+  scalePosition = "none",
+  scaleSize = 100
 )
 }
 \arguments{
 \item{map}{leaflet map}
 
-\item{northArrow}{show north arrow?}
-
 \item{northArrowPosition}{position of north arrow}
 
-\item{scale}{show scale?}
-
 \item{scalePosition}{position of scale}
+
+\item{northArrow}{show north arrow?}
+
+\item{scale}{show scale?}
 }
 \description{
 Draw Icons on Interactive Map

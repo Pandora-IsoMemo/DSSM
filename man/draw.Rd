@@ -8,10 +8,8 @@ draw(
   isoData,
   zoom = 5,
   type = "1",
-  northArrow = FALSE,
-  northArrowPosition = "bottomright",
-  scale = FALSE,
-  scalePosition = "topleft",
+  northArrowPosition = "none",
+  scalePosition = "none",
   center = NULL,
   bounds = NULL
 )
@@ -23,11 +21,7 @@ draw(
 
 \item{type}{map type}
 
-\item{northArrow}{show north arrow?}
-
 \item{northArrowPosition}{position of north arrow}
-
-\item{scale}{show scale?}
 
 \item{scalePosition}{position of scale}
 
