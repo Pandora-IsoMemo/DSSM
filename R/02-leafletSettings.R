@@ -58,30 +58,8 @@ leafletSettingsUI <- function(id, title = "") {
                                 target = "_blank"),
                          " "
     ))),
-    fluidRow(column(6, checkboxInput(
-      ns("includeNorthArrow"), "North Arrow"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("northArrowPosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
-    fluidRow(column(6, checkboxInput(
-      ns("includeScale"), "Scale"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("scalePosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
+    scaleOrNorthArrowUI(ns("northArrow"), label = "North Arrow", sizeValue = 80),
+    scaleOrNorthArrowUI(ns("scale"), label = "Scale", sizeValue = 100),
     checkboxInput(ns("fitBounds"), "Zoom into boundaries"),
     conditionalPanel(
       condition = "input.fitBounds == true",
@@ -122,15 +100,13 @@ leafletSettings <- function(input, output, session) {
   })
 
   observe({
-    values$scalePosition <-
-      ifelse(input$includeScale, input$scalePosition, NA_character_)
+    values$scalePosition <- input$`scale-position`
+    values$scaleSize <- input$`scale-size`
   })
 
   observe({
-    values$northArrowPosition <-
-      ifelse(input$includeNorthArrow,
-             input$northArrowPosition,
-             NA_character_)
+    values$northArrowPosition <- input$`northArrow-position`
+    values$northArrowSize <- input$`northArrow-size`
   })
 
   observeEvent(input$applyBounds, {
@@ -156,6 +132,34 @@ leafletSettings <- function(input, output, session) {
   })
 }
 
+
+scaleOrNorthArrowUI <- function(id, label, sizeValue) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(column(
+      6,
+      selectInput(
+        ns("position"),
+        label = label,
+        choices = c("none", "topright", "bottomright", "bottomleft", "topleft"),
+        selected = "none"
+      )
+    ), column(
+      6,
+      conditionalPanel(
+        ns = ns,
+        condition = "input.position != 'none'",
+        numericInput(
+          ns("size"),
+          label = "Size",
+          value = sizeValue,
+          min = 1,
+          step = 10
+        )
+      )
+    ))
+  )
+}
 
 boundsLatLongNumericUI <- function(id, defaultBounds) {
   ns <- NS(id)
@@ -210,10 +214,10 @@ customizeLeafletMap <- function(leafletMap, leafletValues) {
   leafletMap %>%
     addProviderTiles(leafletValues$leafletType) %>%
     drawIcons(
-      scale = !is.na(leafletValues$scalePosition),
       scalePosition = leafletValues$scalePosition,
-      northArrow = !is.na(leafletValues$northArrowPosition),
-      northArrowPosition = leafletValues$northArrowPosition
+      scaleSize = leafletValues$scaleSize,
+      northArrowPosition = leafletValues$northArrowPosition,
+      northArrowSize = leafletValues$northArrowSize
     ) %>%
     drawFittedBounds(showBounds = leafletValues$showBounds,
                      bounds = leafletValues$bounds)

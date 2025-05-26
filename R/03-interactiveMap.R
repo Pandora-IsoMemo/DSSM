@@ -214,18 +214,14 @@ interactiveMap <- function(input, output, session, isoData) {
 
 
   # add icons to map
-  observeEvent(list(
-    leafletValues()$scalePosition,
-    leafletValues()$northArrowPosition
-  ),
-  {
+  observe({
     # not using direct input values but prepared values for positions
     leafletProxy("map") %>%
       drawIcons(
-        scale = !is.na(leafletValues()$scalePosition),
         scalePosition = leafletValues()$scalePosition,
-        northArrow = !is.na(leafletValues()$northArrowPosition),
-        northArrowPosition = leafletValues()$northArrowPosition
+        scaleSize = leafletValues()$scaleSize,
+        northArrowPosition = leafletValues()$northArrowPosition,
+        northArrowSize = leafletValues()$northArrowSize
       )
   })
 
@@ -403,9 +399,7 @@ shiftCenter <- function(center, centerType, isoData) {
 #' @param isoData isoData data
 #' @param zoom zoom
 #' @param type map type
-#' @param northArrow show north arrow?
 #' @param northArrowPosition position of north arrow
-#' @param scale show scale?
 #' @param scalePosition position of scale
 #' @param center where to center map (list of lat and lng)
 #' @param bounds map bounds (list of north, south, east, west)
@@ -414,18 +408,14 @@ shiftCenter <- function(center, centerType, isoData) {
 draw <- function(isoData,
                  zoom = 5,
                  type = "1",
-                 northArrow = FALSE,
-                 northArrowPosition = "bottomright",
-                 scale = FALSE,
-                 scalePosition = "topleft",
+                 northArrowPosition = "none",
+                 scalePosition = "none",
                  center = NULL,
                  bounds = NULL) {
   map <- leaflet() %>% drawType(type = type)
   map <-
     map %>% drawIcons(
-      northArrow = northArrow,
       northArrowPosition = northArrowPosition,
-      scale = scale,
       scalePosition = scalePosition
     )
 
@@ -484,6 +474,19 @@ drawType <- function(map, type = "1") {
   map
 }
 
+addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80) {
+  addControl(
+    map,
+    tags$img(
+      src = "https://isomemodb.com/NorthArrow.png",
+      width = as.character(width),
+      height = as.character(height)
+    ),
+    position = position,
+    layerId = layerId,
+    className = ""
+  )
+}
 
 #' Draw Icons on Interactive Map
 #' @param map leaflet map
@@ -492,57 +495,46 @@ drawType <- function(map, type = "1") {
 #' @param scale show scale?
 #' @param scalePosition position of scale
 drawIcons <- function(map,
-                      northArrow = FALSE,
-                      northArrowPosition = "bottomright",
-                      scale = FALSE,
-                      scalePosition = "topleft") {
-  if (northArrow &&
-      (northArrowPosition %in% c("bottomright", "bottomleft"))) {
-    if (scale) {
+                      northArrowPosition = "none",
+                      northArrowSize = 80,
+                      scalePosition = "none",
+                      scaleSize = 100) {
+  if (!is.null(northArrowPosition) && northArrowPosition %in% c("bottomright", "bottomleft")) {
+    if (!is.null(scalePosition) && scalePosition != "none") {
       map <- addScaleBar(map,
                          position = scalePosition,
-                         options = scaleBarOptions())
+                         options = scaleBarOptions(maxWidth = scaleSize))
     } else {
       map <- map %>%
         removeScaleBar()
     }
 
-    if (northArrow) {
-      map <- addControl(
-        map,
-        tags$img(
-          src = "https://isomemodb.com/NorthArrow.png",
-          width = "80",
-          height = "80"
-        ),
-        position = northArrowPosition,
-        layerId = "northArrowIcon",
-        className = ""
-      )
+    if (!is.null(northArrowPosition) && northArrowPosition != "none") {
+      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
+      map <- map %>%
+        addNorthArrow(position = northArrowPosition,
+                      layerId = "northArrowIcon",
+                      height = northArrowSize,
+                      width = northArrowSize)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }
   } else {
-    if (northArrow) {
-      map <- addControl(
-        map,
-        tags$img(
-          src = "https://isomemodb.com/NorthArrow.png",
-          width = "80",
-          height = "80"
-        ),
-        position = northArrowPosition,
-        layerId = "northArrowIcon",
-        className = ""
-      )
+    if (!is.null(northArrowPosition) && northArrowPosition %in% c("topright", "topleft")) {
+      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
+      map <- map %>%
+        addNorthArrow(position = northArrowPosition,
+                      layerId = "northArrowIcon",
+                      height = northArrowSize,
+                      width = northArrowSize)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }
 
-    if (scale) {
+    if (!is.null(scalePosition) && scalePosition != "none") {
       map <- addScaleBar(map,
                          position = scalePosition,
-                         options = scaleBarOptions())
+                         options = scaleBarOptions(maxWidth = scaleSize))
     } else {
       map <- map %>%
         removeScaleBar()
