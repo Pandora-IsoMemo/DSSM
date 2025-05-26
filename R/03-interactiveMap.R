@@ -439,9 +439,9 @@ draw <- function(isoData,
 }
 
 
-#' Draw Type of Interactive Map
-#' @param map leaflet map
-#' @param type map type
+# Draw Type of Interactive Map
+# @param map leaflet map
+# @param type map type
 drawType <- function(map, type = "1") {
   if (type == "1") {
     mType <- "CartoDB.Positron"
@@ -488,12 +488,10 @@ addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80
   )
 }
 
-#' Draw Icons on Interactive Map
-#' @param map leaflet map
-#' @param northArrow show north arrow?
-#' @param northArrowPosition position of north arrow
-#' @param scale show scale?
-#' @param scalePosition position of scale
+# Draw Icons on Interactive Map
+# @param map leaflet map
+# @param northArrowPosition position of north arrow
+# @param scalePosition position of scale
 drawIcons <- function(map,
                       northArrowPosition = "none",
                       northArrowSize = 80,
@@ -576,12 +574,12 @@ addCirclesRelativeToZoom <-
   }
 
 
-#' Show a popup at the given location
-#'
-#' @param dat dat contains data to show
-#' @param id id of what to show
-#' @param lat lat for popup
-#' @param lng lng for popup
+# Show a popup at the given location
+#
+# @param dat dat contains data to show
+# @param id id of what to show
+# @param lat lat for popup
+# @param lng lng for popup
 showIDPopup <- function(dat, id, lat, lng) {
   selectedId <- dat[which(dat$id == id), ]
 
