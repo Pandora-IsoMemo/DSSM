@@ -359,7 +359,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                     rPackageName = config()[["rPackageName"]],
   #                     subFolder = subFolder,
   #                     fileExtension = config()[["fileExtension"]],
-  #                     helpHTML = getHelp(id = "similarity"),
   #                     modelNotes = uploadedNotes,
   #                     triggerUpdate = reactive(TRUE),
   #                     compressionLevel = 1)
