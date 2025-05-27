@@ -131,11 +131,11 @@ exportWidgetSnapshot <- function(widget, filename, fileext, width, height) {
     # We cannot use image_write to write pdf, it is blocked by ImageMagick for shiny, docker, ...
     #magick::image_write(img, path = filename, format = "pdf")
 
-    bitmap <- grid::as.raster(img)
+    bitmap <- as.raster(img)
     dims <- image_info(img)
 
     pdf(filename, width = dims$width / 72, height = dims$height / 72)
-    grid::grid.raster(bitmap)
+    grid.raster(bitmap)
     dev.off()
 
     # Clean up temp PNG
