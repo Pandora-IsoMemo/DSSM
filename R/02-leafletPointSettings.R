@@ -7,7 +7,7 @@ leafletPointSettingsUI <- function(id) {
   tagList(
     radioButtons(ns("leafletCenter"),
                  "Map Centering",
-                 choices = c("Atlantic" = "atlantic", "Pacific" = "pacific"),
+                 choices = c("Atlantic" = "atlantic", "Pacific" = "pacific", "Data" = "data"),
                  selected = "atlantic",
                  inline = TRUE),
     checkboxInput(ns("clusterPoints"), "Cluster points"),

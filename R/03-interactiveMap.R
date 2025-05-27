@@ -192,7 +192,7 @@ interactiveMap <- function(input, output, session, isoData) {
   })
 
 
-  # adjust the view
+  # adjust the zoom
   observeEvent(leafletValues()$bounds, {
     req(leafletValues()$bounds)
     # not exact bounds, only fit to input$map_bounds
@@ -205,22 +205,6 @@ interactiveMap <- function(input, output, session, isoData) {
       )
   })
 
-  observe({
-    req(isoData()$longitude, isoData()$latitude)
-
-    leafletProxy("map") %>%
-      setView(lng = isoData()$longitude %>%
-                centerLongitudes(center = input[["mapPointSettings-leafletCenter"]]) %>%
-                range() %>%
-                mean(),
-              lat = isoData()$latitude %>%
-                range() %>%
-                mean(),
-              zoom = input$map_zoom)
-  }) %>%
-    bindEvent(input[["mapSettings-centerMapButton"]])
-
-
   # adjust map type
   observe({
     leafletProxy("map") %>%
@@ -230,18 +214,14 @@ interactiveMap <- function(input, output, session, isoData) {
 
 
   # add icons to map
-  observeEvent(list(
-    leafletValues()$scalePosition,
-    leafletValues()$northArrowPosition
-  ),
-  {
+  observe({
     # not using direct input values but prepared values for positions
     leafletProxy("map") %>%
       drawIcons(
-        scale = !is.na(leafletValues()$scalePosition),
         scalePosition = leafletValues()$scalePosition,
-        northArrow = !is.na(leafletValues()$northArrowPosition),
-        northArrowPosition = leafletValues()$northArrowPosition
+        scaleSize = leafletValues()$scaleSize,
+        northArrowPosition = leafletValues()$northArrowPosition,
+        northArrowSize = leafletValues()$northArrowSize
       )
   })
 
@@ -259,7 +239,9 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # adjust map center
   observe({
-    center <- defaultCenter(center = input[["mapPointSettings-leafletCenter"]])
+    center <- defaultCenter(centerType = input[["mapPointSettings-leafletCenter"]]) %>%
+      shiftCenter(centerType = input[["mapPointSettings-leafletCenter"]],
+                  isoData = isoData())
     leafletProxy("map") %>%
       setView(lng = center$lng,
               lat = center$lat,
@@ -398,13 +380,26 @@ interactiveMap <- function(input, output, session, isoData) {
 
 # helper functions ####
 
+shiftCenter <- function(center, centerType, isoData) {
+  if (length(isoData) == 0 || is.null(centerType) || centerType != "data") return(center)
+
+  center = list(
+    lng = isoData$longitude %>%
+      range() %>%
+      mean(),
+    lat = isoData$latitude %>%
+      range() %>%
+      mean()
+  )
+
+  return(center)
+}
+
 #'  draw Interactive Map
 #' @param isoData isoData data
 #' @param zoom zoom
 #' @param type map type
-#' @param northArrow show north arrow?
 #' @param northArrowPosition position of north arrow
-#' @param scale show scale?
 #' @param scalePosition position of scale
 #' @param center where to center map (list of lat and lng)
 #' @param bounds map bounds (list of north, south, east, west)
@@ -413,18 +408,14 @@ interactiveMap <- function(input, output, session, isoData) {
 draw <- function(isoData,
                  zoom = 5,
                  type = "1",
-                 northArrow = FALSE,
-                 northArrowPosition = "bottomright",
-                 scale = FALSE,
-                 scalePosition = "topleft",
+                 northArrowPosition = "none",
+                 scalePosition = "none",
                  center = NULL,
                  bounds = NULL) {
   map <- leaflet() %>% drawType(type = type)
   map <-
     map %>% drawIcons(
-      northArrow = northArrow,
       northArrowPosition = northArrowPosition,
-      scale = scale,
       scalePosition = scalePosition
     )
 
@@ -448,9 +439,9 @@ draw <- function(isoData,
 }
 
 
-#' Draw Type of Interactive Map
-#' @param map leaflet map
-#' @param type map type
+# Draw Type of Interactive Map
+# @param map leaflet map
+# @param type map type
 drawType <- function(map, type = "1") {
   if (type == "1") {
     mType <- "CartoDB.Positron"
@@ -483,65 +474,65 @@ drawType <- function(map, type = "1") {
   map
 }
 
+addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80) {
+  addControl(
+    map,
+    tags$img(
+      src = "https://isomemodb.com/NorthArrow.png",
+      width = as.character(width),
+      height = as.character(height)
+    ),
+    position = position,
+    layerId = layerId,
+    className = ""
+  )
+}
 
-#' Draw Icons on Interactive Map
-#' @param map leaflet map
-#' @param northArrow show north arrow?
-#' @param northArrowPosition position of north arrow
-#' @param scale show scale?
-#' @param scalePosition position of scale
+# Draw Icons on Interactive Map
+# @param map leaflet map
+# @param northArrowPosition position of north arrow
+# @param scalePosition position of scale
 drawIcons <- function(map,
-                      northArrow = FALSE,
-                      northArrowPosition = "bottomright",
-                      scale = FALSE,
-                      scalePosition = "topleft") {
-  if (northArrow &&
-      (northArrowPosition %in% c("bottomright", "bottomleft"))) {
-    if (scale) {
+                      northArrowPosition = "none",
+                      northArrowSize = 80,
+                      scalePosition = "none",
+                      scaleSize = 100) {
+  if (!is.null(northArrowPosition) && northArrowPosition %in% c("bottomright", "bottomleft")) {
+    if (!is.null(scalePosition) && scalePosition != "none") {
       map <- addScaleBar(map,
                          position = scalePosition,
-                         options = scaleBarOptions())
+                         options = scaleBarOptions(maxWidth = scaleSize))
     } else {
       map <- map %>%
         removeScaleBar()
     }
 
-    if (northArrow) {
-      map <- addControl(
-        map,
-        tags$img(
-          src = "https://isomemodb.com/NorthArrow.png",
-          width = "80",
-          height = "80"
-        ),
-        position = northArrowPosition,
-        layerId = "northArrowIcon",
-        className = ""
-      )
+    if (!is.null(northArrowPosition) && northArrowPosition != "none") {
+      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
+      map <- map %>%
+        addNorthArrow(position = northArrowPosition,
+                      layerId = "northArrowIcon",
+                      height = northArrowSize,
+                      width = northArrowSize)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }
   } else {
-    if (northArrow) {
-      map <- addControl(
-        map,
-        tags$img(
-          src = "https://isomemodb.com/NorthArrow.png",
-          width = "80",
-          height = "80"
-        ),
-        position = northArrowPosition,
-        layerId = "northArrowIcon",
-        className = ""
-      )
+    if (!is.null(northArrowPosition) && northArrowPosition %in% c("topright", "topleft")) {
+      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
+      map <- map %>%
+        addNorthArrow(position = northArrowPosition,
+                      layerId = "northArrowIcon",
+                      height = northArrowSize,
+                      width = northArrowSize)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }
 
-    if (scale) {
+    if (!is.null(scalePosition) && scalePosition != "none") {
       map <- addScaleBar(map,
                          position = scalePosition,
-                         options = scaleBarOptions())
+                         options = scaleBarOptions(maxWidth = scaleSize))
     } else {
       map <- map %>%
         removeScaleBar()
@@ -583,12 +574,12 @@ addCirclesRelativeToZoom <-
   }
 
 
-#' Show a popup at the given location
-#'
-#' @param dat dat contains data to show
-#' @param id id of what to show
-#' @param lat lat for popup
-#' @param lng lng for popup
+# Show a popup at the given location
+#
+# @param dat dat contains data to show
+# @param id id of what to show
+# @param lat lat for popup
+# @param lng lng for popup
 showIDPopup <- function(dat, id, lat, lng) {
   selectedId <- dat[which(dat$id == id), ]
 

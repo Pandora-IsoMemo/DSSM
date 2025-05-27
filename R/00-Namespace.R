@@ -16,8 +16,9 @@
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
 #' @importFrom graphics axis abline contour filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
-#' @importFrom grDevices cm.colors colorRampPalette col2rgb chull dev.off jpeg png pdf pdfFonts
-#'  recordPlot replayPlot rgb svg tiff
+#' @importFrom grDevices as.raster cm.colors colorRampPalette col2rgb chull dev.off jpeg png
+#'  pdf pdfFonts recordPlot replayPlot rgb svg tiff
+#' @importFrom grid grid.raster
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom IsoMemo getData getDatabaseList getFields getMappings
 #' @importFrom jsonlite fromJSON toJSON
