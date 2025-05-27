@@ -33,7 +33,8 @@ leafletSettingsUI <- function(id, title = "") {
         "NASAGIBS.ViirsEarthAtNight2012"
       )
     ),
-    options = list(create = TRUE)
+    options = list(create = TRUE,
+                   dropdownParent = 'body')
     ),
     helpText(HTML(paste0("Find more maps ",
                          tags$i(
