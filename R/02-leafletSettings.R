@@ -16,7 +16,6 @@ leafletSettingsUI <- function(id, title = "") {
         "OpenStreetMap.Mapnik",
         "OpenStreetMap.DE",
         "OpenTopoMap",
-        "Stamen.TonerLite",
         "Esri",
         "Esri.WorldTopoMap",
         "Esri.OceanBasemap"
@@ -31,10 +30,11 @@ leafletSettingsUI <- function(id, title = "") {
         "Esri.WorldPhysical"
       ),
       `custom maps` = list(
-        "Stamen.Watercolor"
+        "NASAGIBS.ViirsEarthAtNight2012"
       )
     ),
-    options = list(create = TRUE)
+    options = list(create = TRUE,
+                   dropdownParent = 'body')
     ),
     helpText(HTML(paste0("Find more maps ",
                          tags$i(
@@ -49,9 +49,8 @@ leafletSettingsUI <- function(id, title = "") {
                              " 3. Paste the name of the map into the field 'Map type'.",
                              " 4. Click 'Add...', and the custom map will be selected. ",
                              " ",
-                             "Some maps are not supported, e.g. those that are selectable via a checkbox, and",
-                             " not via a radion button. Please try maps from e.g. following providers",
-                             " 'OpenStreetMap', 'Stamen', 'Esri', 'CartoDB', 'NASAGIBS', 'GeoportailFrance'.",
+                             "Some maps are not supported, e.g. they require a sign in. Prefer open",
+                             " providers like: 'OpenStreetMap', 'Esri', 'CartoDB', 'NASAGIBS'.",
                              sep = "\n"
                            )),
                          ": <br>",
@@ -60,58 +59,16 @@ leafletSettingsUI <- function(id, title = "") {
                                 target = "_blank"),
                          " "
     ))),
-    fluidRow(column(6, checkboxInput(
-      ns("includeNorthArrow"), "North Arrow"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("northArrowPosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
-    fluidRow(column(6, checkboxInput(
-      ns("includeScale"), "Scale"
-    )),
-    column(
-      6,
-      selectInput(
-        ns("scalePosition"),
-        label = NULL,
-        choices = c("topright", "bottomright", "bottomleft", "topleft"),
-        selected = "bottomright"
-      )
-    )),
-    fluidRow(
-      column(width = 6,
-             checkboxInput(ns("fitBounds"), "Fit boundaries")),
-      column(width = 6,
-             align = "right",
-             actionButton(ns(
-               "centerMapButton"
-             ), "Data Center", width = "100%"))
-    ),
+    scaleOrNorthArrowUI(ns("northArrow"), label = "North Arrow", sizeValue = 80),
+    scaleOrNorthArrowUI(ns("scale"), label = "Scale", sizeValue = 100),
+    checkboxInput(ns("fitBounds"), "Zoom into boundaries"),
     conditionalPanel(
       condition = "input.fitBounds == true",
       tags$hr(),
-      sliderInput(
-        ns("boundsLat"),
-        "Latitude: South - North",
-        value = defaultBounds()$lat,
-        min = -90,
-        max = 90
-      ),
-      sliderInput(
-        ns("boundsLng"),
-        "Longitude: West - East",
-        value = defaultBounds()$lng,
-        min = -180,
-        max = 360
-      ),
+      boundsLatLongNumericUI(ns("bounds"), defaultBounds),
+      tags$br(),
       fluidRow(column(5, actionButton(
-        ns("applyBounds"), "Apply"
+        ns("applyBounds"), "Zoom"
       )),
       column(
         7, checkboxInput(ns("showBounds"), "Show boundaries", value = TRUE)
@@ -144,15 +101,13 @@ leafletSettings <- function(input, output, session) {
   })
 
   observe({
-    values$scalePosition <-
-      ifelse(input$includeScale, input$scalePosition, NA_character_)
+    values$scalePosition <- input$`scale-position`
+    values$scaleSize <- input$`scale-size`
   })
 
   observe({
-    values$northArrowPosition <-
-      ifelse(input$includeNorthArrow,
-             input$northArrowPosition,
-             NA_character_)
+    values$northArrowPosition <- input$`northArrow-position`
+    values$northArrowSize <- input$`northArrow-size`
   })
 
   observeEvent(input$applyBounds, {
@@ -160,15 +115,11 @@ leafletSettings <- function(input, output, session) {
 
     values$bounds <-
       reactiveValues(
-        north = input$boundsLat[[2]],
-        south = input$boundsLat[[1]],
-        east = input$boundsLng[[2]],
-        west = input$boundsLng[[1]]
+        north = input$`bounds-north`,
+        south = input$`bounds-south`,
+        east = input$`bounds-east`,
+        west = input$`bounds-west`,
       )
-  })
-
-  observeEvent(input$centerMapButton, {
-    values$centerMapButton <- input$centerMapButton
   })
 
   observeEvent({
@@ -183,6 +134,77 @@ leafletSettings <- function(input, output, session) {
 }
 
 
+scaleOrNorthArrowUI <- function(id, label, sizeValue) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(column(
+      6,
+      selectInput(
+        ns("position"),
+        label = label,
+        choices = c("none", "topright", "bottomright", "bottomleft", "topleft"),
+        selected = "none"
+      )
+    ), column(
+      6,
+      conditionalPanel(
+        ns = ns,
+        condition = "input.position != 'none'",
+        numericInput(
+          ns("size"),
+          label = "Size",
+          value = sizeValue,
+          min = 1,
+          step = 10
+        )
+      )
+    ))
+  )
+}
+
+boundsLatLongNumericUI <- function(id, defaultBounds) {
+  ns <- NS(id)
+  tagList(fluidRow(column(
+    6,
+    numericInput(
+      ns("south"),
+      "Latitude: South",
+      value = defaultBounds()$lat[1],
+      min = -90,
+      max = 90
+    )
+  ), column(
+    6,
+    numericInput(
+      ns("north"),
+      "Latitude: North",
+      value = defaultBounds()$lat[2],
+      min = -90,
+      max = 90
+    )
+  )), fluidRow(column(
+    6,
+    numericInput(
+      ns("west"),
+      "Longitude: West",
+      value = defaultBounds()$lng[1],
+      min = -180,
+      max = 360
+    )
+  ), column(
+    6,
+    numericInput(
+      ns("east"),
+      "Longitude: East",
+      value = defaultBounds()$lng[2],
+      min = -180,
+      max = 360
+    )
+  )))
+}
+
+
+
 #' Customize Leaflet Map
 #'
 #' Customize leaflet map for export
@@ -193,10 +215,10 @@ customizeLeafletMap <- function(leafletMap, leafletValues) {
   leafletMap %>%
     addProviderTiles(leafletValues$leafletType) %>%
     drawIcons(
-      scale = !is.na(leafletValues$scalePosition),
       scalePosition = leafletValues$scalePosition,
-      northArrow = !is.na(leafletValues$northArrowPosition),
-      northArrowPosition = leafletValues$northArrowPosition
+      scaleSize = leafletValues$scaleSize,
+      northArrowPosition = leafletValues$northArrowPosition,
+      northArrowSize = leafletValues$northArrowSize
     ) %>%
     drawFittedBounds(showBounds = leafletValues$showBounds,
                      bounds = leafletValues$bounds)
@@ -230,10 +252,10 @@ drawFittedBounds <- function(map, showBounds, bounds) {
   map
 }
 
-defaultCenter <- function(center = "atlantic") {
-  if (is.null(center)) return(list(lng = 0, lat = 30))
+defaultCenter <- function(centerType = "atlantic") {
+  if (is.null(centerType)) return(list(lng = 0, lat = 30))
 
-  switch(center,
+  switch(centerType,
          "atlantic" = list(lng = 0, lat = 30),
          "pacific" = list(lng = 180, lat = 0))
 }
@@ -251,6 +273,10 @@ centerLongitudes <- function(longitude, center) {
 
   if (center == "pacific") {
     longitude[longitude < 0] <- longitude[longitude < 0] + 360
+  }
+
+  if (center == "atlantic") {
+    longitude[longitude > 180] <- longitude[longitude > 180] - 360
   }
 
   longitude

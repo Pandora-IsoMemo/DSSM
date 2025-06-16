@@ -1,9 +1,11 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 24.10.1
+Version: 25.05.1
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
-            person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("aut"))
+            person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
+            person("Antonia", "Runge", email = "antonia.runge@inwt-statistics.de", role = c("ctb")),
+            person("Andreas", "Neudecker", email = "andreas.neudecker@inwt-statistics.de", role = c("ctb"))
             )
 Maintainer: INWT Statistics GmbH <antonia.runge@inwt-statistics.de>
 Description: Shiny App contains: a data explorer tab, an interactive map and a static map, which should present model results.
@@ -24,13 +26,12 @@ Imports:
     gdistance (>= 1.3-6),
     geometry (>= 0.4.0),
     ggplot2,
-    grDevices (>= 3.4.4),
+    htmlwidgets,
     IsoMemo (>= 23.10.1),
     ks (>= 1.0.0),
     leaflet (>= 1.1.0),
     magick,
     maps (>= 3.2.0),
-    mapview,
     markdown,
     MASS (>= 7.3.5),
     mclust,
@@ -48,12 +49,13 @@ Imports:
     shinyjs (>= 1.0),
     shinyMatrix (>= 0.2.1),
     shinythemes (>= 1.1.1),
+    shinyTools (>= 25.04.0),
     shinyWidgets (>= 0.4.1),
     sf,
     sp (>= 1.2.7),
     stringi (>= 1.1.7),
     tclust,
-    webshot,
+    webshot2,
     yaml,
     zip
 Suggests:

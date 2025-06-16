@@ -40,7 +40,6 @@ downloadDSSMModel <- function(input, output, session, dat, model, #savedMaps,
                       rPackageName = config()[["rPackageName"]],
                       subFolder = subFolder,
                       fileExtension = config()[["fileExtension"]],
-                      helpHTML = getHelp(id = tabId),
                       modelNotes = uploadedNotes,
                       triggerUpdate = reactive(TRUE),
                       compressionLevel = 1)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/03-mapSim.R
 \name{modelResultsSimUI}
 \alias{modelResultsSimUI}
-\title{ui function of modelResultsDiffSim module}
+\title{ui function of modelResultsDiffSim module (LocateR)}
 \usage{
 modelResultsSimUI(id, title = "")
 }
@@ -12,5 +12,5 @@ modelResultsSimUI(id, title = "")
 \item{title}{title in tab}
 }
 \description{
-ui function of modelResultsDiffSim module
+ui function of modelResultsDiffSim module (LocateR)
 }

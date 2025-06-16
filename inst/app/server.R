@@ -40,14 +40,6 @@ server <- function(input, output, session) {
     callModule(ReSources::fruitsTab, "fruits", isoMemoData = fruitsData)
   }
 
-  observeEvent(input$getHelp, {
-    showModal(modalDialog(
-      title = "Help",
-      easyClose = TRUE,
-      getHelp(input$tab)
-    ))
-  })
-
   observe({
     query <- session$clientData$url_search
     params <- shiny::parseQueryString(query)

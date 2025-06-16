@@ -1,5 +1,5 @@
 
-#' ui function of modelResultsDiffSim module
+#' ui function of modelResultsDiffSim module (OperateR)
 #'
 #' @param id namespace
 #' @param title title in tab
@@ -23,7 +23,8 @@ modelResultsDiffUI <- function(id, title = ""){
                     "Data source",
                     choices = c("Create new map from existing" = "create",
                                 "Create new map from scratch" = "createN",
-                                "Load OperatoR map" = "model"),
+                                "Load OperatoR map" = "model",
+                                "Geotiff file" = "geotiff"),
                     selected = "db"),
         conditionalPanel(
           condition = "input.dataSource == 'model'",
@@ -281,7 +282,7 @@ modelResultsDiffUI <- function(id, title = ""){
           style = "position:fixed; width:14%; max-width:220px; overflow-y:auto; height:88%",
           radioButtons(inputId = ns("Centering"),
                        label = "Map Centering",
-                       choices = c("0th meridian" = "Europe", "160th meridian" = "Pacific")),
+                       choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
           zScaleUI(ns("zScale")),
           selectInput(ns("contourType"),
                       label = "Contour type",
@@ -518,7 +519,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
         model <- createDifferenceMap(savedMaps()[[as.numeric(input$targetMap1)]]$predictions,
                                           savedMaps()[[as.numeric(input$targetMap2)]]$predictions,
                                           operation = input$operation) %>%
-          tryCatchWithWarningsAndErrors()
+          shinyTryCatch()
         MapDiff(model)
         },
         value = 0,
@@ -868,7 +869,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     moveButtons(ns = session$ns)
   })
 
-  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel)
+  mapSettings <- mapSectionServer("mapSection", zoomValue = zoomFromModel, mapCenter = reactive(input$Centering))
 
   observeEvent(input$up, {
     values$up <- values$up + values$zoom / 40
@@ -886,7 +887,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     values$right <- values$right + values$zoom / 40
   })
 
-  observeEvent(input$center, {
+  observeEvent(input$Centering, {
     values$upperLeftLatitude <- NA
     values$upperLeftLongitude <- NA
     values$up <- 0
@@ -1015,51 +1016,22 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
     if (input$fixCol == FALSE) {
       zoom <- values$zoom
 
-      rangey <- -diff(range(MapDiff()$Latitude, na.rm = TRUE)) / 2 +
-        max(MapDiff()$Latitude, na.rm = TRUE) + values$up
-      if (!is.na(values$upperLeftLatitude)) {
-        rangey <- values$upperLeftLatitude + c(-zoom / 2 , 0) + values$up
-      } else {
-        rangey <- rangey + c( -zoom / 4, zoom / 4)
-      }
-      if (input$Centering == "Europe") {
-        rangex <- -diff(range(MapDiff()$Longitude, na.rm = TRUE)) / 2 +
-          max(MapDiff()$Longitude, na.rm = TRUE) + values$right
-        if (!is.na(values$upperLeftLongitude)) {
-          rangex <- values$upperLeftLongitude + values$right
-          rangex <- rangex + c(0, zoom)
-        } else {
-          rangex <- rangex + c( -zoom / 2, zoom / 2)
-        }
-      } else {
-        dataPac <- MapDiff()[, c("Longitude", "Latitude")]
-        dataPac$Longitude[MapDiff()$Longitude < -20] <- dataPac$Longitude[MapDiff()$Longitude < -20] + 200
-        dataPac$Longitude[MapDiff()$Longitude >= -20] <- (-160 + dataPac$Longitude[MapDiff()$Longitude >= -20])
-        rangex <- -diff(range(dataPac$Longitude, na.rm = TRUE)) / 2 +
-          max(dataPac$Longitude, na.rm = TRUE) + values$right
-        if (!is.na(values$upperLeftLongitude)) {
-          rangex <- values$upperLeftLongitude + values$right
-          if (rangex < -20) rangex <- rangex + 200
-          if (rangex >= -20) rangex <- rangex - 160
-          rangex <- rangex + c(0, zoom)
-        } else {
-          rangex <- rangex + c( -zoom / 2, zoom / 2)
-        }
-        }
-      if (rangex[2] > 180){
-        rangex <- c(180 - zoom, 180)
-      }
-      if (rangex[1] < -180){
-        rangex <- c(-180, -180 + zoom)
-      }
-      if(rangey[2] > 90){
-        coordDiff <- rangey[2] - 90
-        rangey <- pmin(90, pmax(-90, rangey - coordDiff))
-      }
-      if(rangey[1] < -90){
-        coordDiff <- rangey[1] + 90
-        rangey <- pmin(90, pmax(-90, rangey - coordDiff))
-      }
+      rangey <- MapDiff() %>%
+        extractRangeFromData(column = "Latitude", move = values$up) %>%
+        zoomLatitudeRange(zoom = zoom,
+                          upperLeftLatitude = values$upperLeftLatitude,
+                          move = values$up) %>%
+        constrainLatitudeRange()
+
+      rangex <- MapDiff() %>%
+        shiftDataToCenter(centerMap = input$Centering) %>%
+        extractRangeFromData(column = "Longitude", move = values$right) %>%
+        zoomLongitudeRange(zoom = zoom,
+                           upperLeftLongitude = values$upperLeftLongitude,
+                           center = input$Centering,
+                           move = values$right) %>%
+          constrainLongitudeRange(zoom = zoom, center = input$Centering)
+
       values$rangex <- rangex
       values$rangey <- rangey
     }
@@ -1112,7 +1084,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              pointDat = pointDatOK,
              ...
       ) %>%
-        tryCatchWithWarningsAndErrors(errorTitle = "Plotting failed")
+        shinyTryCatch(errorTitle = "Plotting failed")
     }
   })
 

@@ -1,3 +1,72 @@
+# DSSM 25.05.1
+
+## Updates
+- _interactive Map_:
+  - added a preview to the export modal, allowing users to check the effect of width and height
+    settings before exporting the map (#267)
+  - option to set the _North Arrow_ and _Scale Bar_ size (#267)
+  - Renamed input "Fit boundaries" to "Zoom into boundaries" to more clearly indicate the option 
+    for zoom fine-tuning (#267)
+
+## Bug Fixes
+- _interactive Map_:
+  - removed maps from the dropdown that can no longer be accessed (#267)
+  - fixed issue with scrolling bar in the window list (#267)
+
+# DSSM 25.05.0
+
+## Updates
+- _interactive Map_: 
+  - _Map Settings_: separate checkbox for "Fixed" point aesthetics (#267)
+  - option to close and open the view of the _Map settings_ and _Statistics_ panels (#267)
+
+## Bug Fixes
+- _interactive Map export_:
+  - switch from deprecated phantomjs to chromium for webshot2 (#267)
+  - fix issue with PDF export of maps
+- _modelling tabs_:
+  - update all maps to fix an issues with the plotting of maps for different ranges (#270)
+
+# DSSM 25.04.0
+
+## Updates
+- use most recent shinyTools version with smaller header logos
+
+# DSSM 25.03.1
+
+## Updates
+- skip large data tests in CI and add large test data to the `.Rbuildignore`
+
+# DSSM 25.03.0
+
+## Updates
+- shift content of the help popup into a new vignette "How to use DSSM"
+- update links in ReadMe and in app header
+- reduce package size by optimizing test data and add example files to the `.Rbuildignore`
+
+# DSSM 25.01.0
+
+## Bug Fixes
+- remove `Cairo::CairoSVG` since it did not help
+- clip map layers to ranges xlim, ylim before adding them to the map (#259)
+- handle the case of the _ocean_ layer where geometries are added implicitly
+  - cannot use intersection of the map with a bounding box
+  - the layer must be subtracted from the bounding box
+  - for pacific centering xlim must be split into parts smaller and larger zero
+
+# DSSM 24.12.1
+
+## Bug Fixes
+- use `Cairo::CairoSVG` for export of `.svg` plots (#259)
+
+# DSSM 24.12.0
+
+## Updates
+- _Modeling tabs_: updated the process of map centering (#248)
+  - now the Pacific center is at 180° longitudes instead of 160° longitudes
+  - old maps for Pacific were replaced by new maps
+  - the code to create plots had to be refactored significantly
+
 # DSSM 24.10.1
 
 ## Bug Fixes

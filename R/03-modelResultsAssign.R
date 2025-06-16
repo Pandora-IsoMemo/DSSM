@@ -392,7 +392,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
       predictions <- normalizePredictions(predictions)
       names(predictions) <- cats
       } %>%
-       tryCatchWithWarningsAndErrors()
+       shinyTryCatch()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
     }

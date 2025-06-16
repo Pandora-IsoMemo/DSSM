@@ -97,18 +97,36 @@ test_that("Test extractZoomFromLongRange", {
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(13, 97), mapCentering = centering), 86)
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(3, 9), mapCentering = centering), 8)
   expect_equal(extractZoomFromLongRange(rangeLongitude = c(-10, 84), mapCentering = centering), 268)
-  expect_equal(extractZoomFromLongRange(rangeLongitude = c(-60, 50), mapCentering = centering), 112)
+  expect_equal(extractZoomFromLongRange(rangeLongitude = c(-60, 50), mapCentering = centering), 252)
   })
 
 
 test_that("Test getZvalues", {
-  testModel <- readRDS(testthat::test_path("averageR_testModel_numeric.rds"))
+  testModel <- list(model = list(range =
+                                   list(
+                                     mean = c(6.84823132750112, 14.0322064173745),
+                                     se = c(0.267713290127531, 1.35253926021341),
+                                     seTotal = c(2.07465656603779, 2.07465656603779)
+                                   )), IndependentType = "numeric")
 
   expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
                list(minInput = list(value = 6.1, min = 6.1, max = 15), maxInput = list(
                  value = 15, min = 6.1, max = 15)))
 
-  testModel <- readRDS(testthat::test_path("averageR_testModel_categorical.rds"))
+  testModel <- list(model = list(
+    range = list(
+      mean = c(0.00705933196811234, 0.998884818239983),
+      se = c(0.00167118789553051, 0.520753450779121),
+      seTotal = c(1.03670887844351, 1.03670887844351)
+    ),
+    expert = list(range = list(
+      mean = c(0.00705933196811234, 0.998884818239983),
+      se = c(0.00167118789553051, 0.520753450779121),
+      seTotal = c(1.03670887844351, 1.03670887844351)
+    ))
+
+  ),
+  IndependentType = "categorical")
 
   expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
                list(minInput = list(value = 0, min = 0, max = 1), maxInput = list(
