@@ -70,4 +70,25 @@ server <- function(input, output, session) {
 
     shinyWidgets::updatePickerInput(session, "dataExplorer-database", choices = databaseChoices)
   })
+
+  total_mem <- get_total_memory()
+
+  # Create a reactive timer that triggers every 5 seconds (5000 ms)
+  mem_timer <- reactiveTimer(5000)
+
+  observe({
+    req(!is.null(total_mem))
+    mem_timer()  # This line is required to make the observer run repeatedly
+    current_mem <- pryr::mem_used()
+    current_mem_msg <- sprintf("memory usage: %s / %s (%.1f%%)",
+                               format_bytes(current_mem),
+                               format_bytes(total_mem),
+                               100 * current_mem / total_mem)
+
+    if (0.85 * total_mem < current_mem && current_mem <= 0.95 * total_mem)
+      futile.logger::flog.info("High %s", current_mem_msg)
+
+    if (0.95 * total_mem < current_mem)
+      futile.logger::flog.warn("Critical %s", current_mem_msg)
+  })
 }

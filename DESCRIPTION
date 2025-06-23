@@ -39,6 +39,7 @@ Imports:
     mice,
     openxlsx (>= 4.0.17),
     pgdraw,
+    pryr,
     raster (>= 2.6.7),
     rcarbon (>= 1.4.0),
     RColorBrewer (>= 1.1.2),
@@ -64,6 +65,6 @@ Suggests:
     ReSources (>= 0.7.9),
     knitr,
     rmarkdown
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 URL: https://pandora-isomemo.github.io/DSSM/
