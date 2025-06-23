@@ -86,9 +86,9 @@ server <- function(input, output, session) {
                                100 * current_mem / total_mem)
 
     if (0.85 * total_mem < current_mem && current_mem <= 0.95 * total_mem)
-      futile.logger::flog.info("High %s", current_mem_msg)
+      futile.logger::flog.info("High %s.", current_mem_msg)
 
     if (0.95 * total_mem < current_mem)
-      futile.logger::flog.warn("Critical %s", current_mem_msg)
+      futile.logger::flog.warn("Critical %s — Calculation may fail due to insufficient RAM.", current_mem_msg)
   })
 }
