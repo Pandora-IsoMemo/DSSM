@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.05.1
+Version: 25.06.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
@@ -65,6 +65,6 @@ Suggests:
     ReSources (>= 0.7.9),
     knitr,
     rmarkdown
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.1
 VignetteBuilder: knitr
 URL: https://pandora-isomemo.github.io/DSSM/
