@@ -1260,6 +1260,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
     msg <- paste0("Calculating Local Average Model - ", independent)
   }
   for ( k in 1:10) {
+    log_memory_usage()
     j <- seq(1, iter, iter / 10)[k]
     showMessage(
       MCMC_LocalAvg,
@@ -1643,6 +1644,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
 
   for ( k in 1:10) {
     j <- seq(1, iter, iter / 10)[k]
+    log_memory_usage()
     showMessage(
       MCMC_LocalTempAvg,
       msg = msg,
@@ -1938,6 +1940,7 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
   }
   if(shinyApp){
     for ( k in 1:10) {
+      log_memory_usage()
       j <- seq(1, iter, iter / 10)[k]
       showMessage(
         MCMC_Spread,

@@ -2031,7 +2031,7 @@ filled.contour2 <- function(x = seq(0, 1, length.out = nrow(z)),
                             yaxs = "i", las = 1, axes = TRUE, frame.plot = axes, ...)
 {
   contourType <- match.arg(contourType)
-  message(sprintf("xlim: %s", paste(xlim, collapse = ", ")))
+  logDebug("xlim: %s", paste(xlim, collapse = ", "))
 
   if (missing(z)) {
     if (!missing(x)) {

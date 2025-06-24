@@ -6,6 +6,9 @@
 #' @export
 startApplication <- function(port = 4242,
                              launch.browser = getOption("shiny.launch.browser", interactive())) {
+  # Initialize logger
+  init_logging()
+
   runApp(
     system.file("app", package = "DSSM"),
     port = port,
