@@ -45,7 +45,7 @@ log_memory_usage <- function() {
                              format_bytes(current_mem),
                              format_bytes(total_mem),
                              100 * current_mem / total_mem)
-  mem_warning <- " — Calculation may fail due to insufficient RAM"
+  mem_warning <- "-- Calculation may fail due to insufficient RAM"
 
   if (current_mem <= 0.8 * total_mem)
     logging("Memory %s.", current_mem_msg)
