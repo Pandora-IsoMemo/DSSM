@@ -41,14 +41,18 @@ log_memory_usage <- function() {
   if (is.null(total_mem)) return()
 
   current_mem <- pryr::mem_used()
-  current_mem_msg <- sprintf("memory usage: %s / %s (%.1f%%) — Calculation may fail due to insufficient RAM.",
+  current_mem_msg <- sprintf("usage: %s / %s (%.1f%%)",
                              format_bytes(current_mem),
                              format_bytes(total_mem),
                              100 * current_mem / total_mem)
+  mem_warning <- " — Calculation may fail due to insufficient RAM"
 
-  if (0.1 * total_mem < current_mem && current_mem <= 0.9 * total_mem)
-    logging("High %s", current_mem_msg)
+  if (current_mem <= 0.8 * total_mem)
+    logging("Memory %s.", current_mem_msg)
+
+  if (0.8 * total_mem < current_mem && current_mem <= 0.9 * total_mem)
+    logging("High memory %s %s.", current_mem_msg, mem_warning)
 
   if (0.9 * total_mem < current_mem)
-    logWarn("Critical %s", current_mem_msg)
+    logWarn("Critical memory %s %s.", current_mem_msg, mem_warning)
 }
