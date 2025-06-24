@@ -23,7 +23,7 @@ init_logging <- function() {
 get_total_memory <- function() {
   if (Sys.info()["sysname"] != "Linux") return(NULL)
 
-  # Works on Linux
+  # on Linux
   meminfo <- readLines("/proc/meminfo")
   memtotal_kb <- as.numeric(sub(".*:\\s+([0-9]+)\\s+kB", "\\1", grep("MemTotal", meminfo, value = TRUE)))
   return(memtotal_kb * 1024)  # return in bytes
