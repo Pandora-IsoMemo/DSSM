@@ -10,6 +10,7 @@
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
+#' @importFrom futile.logger DEBUG flog.debug flog.info flog.threshold flog.warn INFO
 #' @importFrom gdistance transition transition accCost shortestPath geoCorrection
 #' @importFrom geometry convhulln inhulln
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
@@ -37,6 +38,7 @@
 #' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
+#' @importFrom pryr mem_used
 #' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom Rfast spdinv Crossprod rmvnorm
