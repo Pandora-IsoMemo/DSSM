@@ -1,3 +1,8 @@
+# DSSM 25.06.0
+
+## New Features
+- added logging of _high_ and _critical_ memory usage when running DSSM in a local Docker container (#206)
+
 # DSSM 25.05.1
 
 ## Updates

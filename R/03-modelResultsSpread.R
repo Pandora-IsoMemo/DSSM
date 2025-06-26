@@ -574,6 +574,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     params$coordType <- coordType()
 
     model <- estimateMapSpreadWrapper(data(), params) %>%
+      withProgress(value = 0.1, message = "Starting Calculation ...", detail = "This may take a while ...") %>%
       shinyTryCatch()
 
     Model(model)

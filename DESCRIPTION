@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.05.1
+Version: 25.06.1
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
@@ -17,7 +17,7 @@ Imports:
     animation,
     coda,
     colourpicker,
-    DataTools (>= 24.04.3),
+    DataTools (>= 25.06.3),
     dplyr,
     DT (>= 0.4),
     elevatr (>= 0.4.2),
@@ -39,6 +39,7 @@ Imports:
     mice,
     openxlsx (>= 4.0.17),
     pgdraw,
+    pryr,
     raster (>= 2.6.7),
     rcarbon (>= 1.4.0),
     RColorBrewer (>= 1.1.2),

@@ -627,6 +627,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params$coordType <- coordType()
 
     model <- estimateMap3DWrapper(data(), params) %>%
+      withProgress(value = 0.1, message = "Starting Calculation ...", detail = "This may take a while ...") %>%
       shinyTryCatch()
 
     Model(model)
