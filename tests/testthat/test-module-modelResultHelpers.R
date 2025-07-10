@@ -109,7 +109,7 @@ test_that("Test getZvalues", {
                                      seTotal = c(2.07465656603779, 2.07465656603779)
                                    )), IndependentType = "numeric")
 
-  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
+  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "", buffer = 0.1),
                list(minInput = list(value = 6.1, min = 6.1, max = 15), maxInput = list(
                  value = 15, min = 6.1, max = 15)))
 
@@ -132,19 +132,28 @@ test_that("Test getZvalues", {
                list(minInput = list(value = 0, min = 0, max = 1), maxInput = list(
                  value = 1, min = 0, max = 1)))
 
-  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "expert"),
-               list(minInput = list(value = -0.09, min = -0.09, max = 1.1),
-                    maxInput = list(value = 1.1, min = -0.09, max = 1.1)))
+  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "expert", buffer = 0.1),
+               list(minInput = list(value = -0.092, min = -0.092, max = 1.1),
+                    maxInput = list(value = 1.1, min = -0.092, max = 1.1)))
 })
 
-test_that("Test getDefaultZ", {
-  expect_equal(getDefaultZMin(c(4, 5)), 3.9)
-  expect_equal(getDefaultZMin(c(4, 50000)), -5000)
-  expect_equal(getDefaultZMin(c(4, 4.0001)), 3.99999)
-  expect_equal(getDefaultZMin(c(4, 4)), 3.9996)
+test_that("Test getDefaultZBound", {
+  expect_equal(getDefaultZBound(c(4, 5), buffer = 0.1, which = "min"), 3.9)
+  expect_equal(getDefaultZBound(c(4, 4.0001), buffer = 0.1, which = "min"), 3.99999)
+  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "min"), -5000)
+  expect_equal(getDefaultZBound(c(4, 4), buffer = 0.1, which = "min"), 3.9996)
+  expect_equal(getDefaultZBound(c(4, 5), buffer = 0.01, which = "min"), 4)
+  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "min"), -31)
+  expect_equal(getDefaultZBound(c(-26.29, 38.24), buffer = 0.001, which = "min"), -26)
+  expect_equal(getDefaultZBound(c(-29.17, 36.99), buffer = 0.01, which = "min"), -30)
 
-  expect_equal(getDefaultZMax(c(4, 5)), 5.1)
-  expect_equal(getDefaultZMax(c(4, 4.0001)), 4.00011)
-  expect_equal(getDefaultZMax(c(4, 50000)), 55000)
-  expect_equal(getDefaultZMax(c(4, 4)), 4.0004)
+  expect_equal(getDefaultZBound(c(4, 5), buffer = 0.1, which = "max"), 5.1)
+  expect_equal(getDefaultZBound(c(4, 4.0001), buffer = 0.1, which = "max"), 4.00011)
+  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "max"), 50000)
+  expect_equal(getDefaultZBound(c(4, 4), buffer = 0.1, which = "max"), 4.0004)
+  expect_equal(getDefaultZBound(c(4, 5), buffer = 0.01, which = "max"), 5)
+  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "max"), 42)
+  expect_equal(getDefaultZBound(c(-26.29, 38.24), buffer = 0.01, which = "max"), 39)
+  expect_equal(getDefaultZBound(c(-29.17, 36.99), buffer = 0.01, which = "max"), 38)
 })
+
