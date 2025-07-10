@@ -1468,7 +1468,6 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   YMean <- data$Y
   MCMC_LocalTempAvg <- function(start, iter){
     for (i in start:iter) {
-      print(i)
       if(!is.null(data$independentUncertainty)){
         sdmY <- 1 / (1 / sigma + 1 / (data$independentUncertainty ^ 2 + 1E-6))
         mY <- ((XX2 %*% beta + U %*% gamma) / sigma +
@@ -1856,7 +1855,7 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
   eta <- (1 - 2 * q) / (q * (1-q))
   sigma <- (2) / (q * (1 - q))
   XBeta <- XX %*% beta
-  print(nrow(data))
+  #print(nrow(data))
   if (MinMax == "Max" && (minValue == -Inf | is.na(minValue))){
     minValue <- Inf
   }
