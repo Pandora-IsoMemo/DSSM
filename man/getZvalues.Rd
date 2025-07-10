@@ -4,7 +4,14 @@
 \alias{getZvalues}
 \title{Get Z Values}
 \usage{
-getZvalues(estimationType, model, mapType, factor = 3, IndSelect = NULL)
+getZvalues(
+  estimationType,
+  model,
+  mapType,
+  factor = 3,
+  IndSelect = NULL,
+  buffer = 0.01
+)
 }
 \arguments{
 \item{estimationType}{(character) type of estimate}
@@ -16,6 +23,8 @@ getZvalues(estimationType, model, mapType, factor = 3, IndSelect = NULL)
 \item{factor}{(numeric) factor applied to estimates}
 
 \item{IndSelect}{(character) select category in case of categorical model}
+
+\item{buffer}{(numeric) buffer applied to the mean range, e.g. 0.01}
 }
 \description{
 Get Z Values
