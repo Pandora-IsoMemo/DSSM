@@ -109,7 +109,7 @@ test_that("Test getZvalues", {
                                      seTotal = c(2.07465656603779, 2.07465656603779)
                                    )), IndependentType = "numeric")
 
-  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = ""),
+  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "", buffer = 0.1),
                list(minInput = list(value = 6.1, min = 6.1, max = 15), maxInput = list(
                  value = 15, min = 6.1, max = 15)))
 
@@ -132,9 +132,9 @@ test_that("Test getZvalues", {
                list(minInput = list(value = 0, min = 0, max = 1), maxInput = list(
                  value = 1, min = 0, max = 1)))
 
-  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "expert"),
-               list(minInput = list(value = -0.09, min = -0.09, max = 1.1),
-                    maxInput = list(value = 1.1, min = -0.09, max = 1.1)))
+  expect_equal(getZvalues(estimationType = "Mean", model = testModel, mapType = "Map", IndSelect = "expert", buffer = 0.1),
+               list(minInput = list(value = -0.092, min = -0.092, max = 1.1),
+                    maxInput = list(value = 1.1, min = -0.092, max = 1.1)))
 })
 
 test_that("Test getDefaultZBound", {

@@ -963,12 +963,14 @@ getZValuesKernel <-
 #' @param mapType (character) type of map, either "Map" or "Time course"
 #' @param factor (numeric) factor applied to estimates
 #' @param IndSelect (character) select category in case of categorical model
+#' @param buffer (numeric) buffer applied to the mean range, e.g. 0.01
 getZvalues <-
   function(estimationType,
            model,
            mapType,
            factor = 3,
-           IndSelect = NULL) {
+           IndSelect = NULL,
+           buffer = 0.01) {
     zValues <-
       getZValuesInitial(IndependentType = model$IndependentType,
                         IndSelect = IndSelect)
@@ -999,8 +1001,8 @@ getZvalues <-
     if (mapType == "Time course" ||
         estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
       logging("Estimate range = [%.2f, %.2f]", model$range$mean[1], model$range$mean[2])
-      defaultMin <- getDefaultZBound(model$range$mean, which = "min")
-      defaultMax <- getDefaultZBound(model$range$mean, which = "max")
+      defaultMin <- getDefaultZBound(model$range$mean, buffer = buffer, which = "min")
+      defaultMax <- getDefaultZBound(model$range$mean, buffer = buffer, which = "max")
       zValues$minInput <-
         list(value = defaultMin,
              min = defaultMin,
