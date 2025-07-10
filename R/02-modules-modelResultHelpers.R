@@ -998,6 +998,7 @@ getZvalues <-
 
     if (mapType == "Time course" ||
         estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
+      logging("Estimate range = [%.2f, %.2f]", model$range$mean[1], model$range$mean[2])
       defaultMin <- getDefaultZBound(model$range$mean, which = "min")
       defaultMax <- getDefaultZBound(model$range$mean, which = "max")
       zValues$minInput <-
@@ -1095,11 +1096,18 @@ getDefaultZBound <- function(mean, buffer = 0.01, which = c("min", "max")) {
   idx <- if (which == "min") 1 else 2
   base <- mean[idx]
 
-  if (shift == 0) shift <- 0.0001 * abs(base)
+  if (shift == 0) {
+    shift <- 0.0001 * abs(base)
+    rounding <- FALSE
+  } else {
+    rounding <- TRUE
+  }
   bound <- if (which == "min") base - shift else base + shift
 
-  digits <- guessDigits(mean, ref = base)
-  if (!is.na(digits)) bound <- signif(bound, digits)
+  if (rounding) {
+    digits <- guessDigits(mean, ref = base)
+    if (!is.na(digits)) bound <- signif(bound, digits)
+  }
 
   bound
 }
@@ -1107,13 +1115,19 @@ getDefaultZBound <- function(mean, buffer = 0.01, which = c("min", "max")) {
 # Guess Number of Significant Digits Based on Range and Reference Value
 # @param range numeric vector of length 2 (min, max)
 # @param ref numeric, reference value (typically mean[1] or mean[2])
-# @param threshold numeric, minimum scaled difference considered "significant" (default = 1)
+# @param min_digits numeric, minimum scaled difference considered "significant" (default = 1)
 # @return integer number of significant digits, or NULL if not applicable
-guessDigits <- function(range, ref) {
-  rel_diff <- abs(diff(range)) / abs(ref)
+guessDigits <- function(range, ref, min_digits = 2) {
+  rel_diff <- abs(diff(range)) / max(abs(ref), .Machine$double.eps)
   candidates <- round(rel_diff * 10 ^ (0:10), 0)
-  index <- which(candidates > 1)[1]
-  return(index)
+  index <- which(candidates >= 1)[1]
+
+  # Return at least `min_digits` if value is small (e.g. < 100)
+  if (is.na(index)) {
+    return(min_digits)
+  } else {
+    return(max(index, if (abs(ref) < 100) min_digits else 1))
+  }
 }
 
 

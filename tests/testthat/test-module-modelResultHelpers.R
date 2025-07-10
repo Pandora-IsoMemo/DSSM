@@ -139,17 +139,21 @@ test_that("Test getZvalues", {
 
 test_that("Test getDefaultZBound", {
   expect_equal(getDefaultZBound(c(4, 5), buffer = 0.1, which = "min"), 3.9)
-  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "min"), -5000)
   expect_equal(getDefaultZBound(c(4, 4.0001), buffer = 0.1, which = "min"), 3.99999)
+  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "min"), -5000)
   expect_equal(getDefaultZBound(c(4, 4), buffer = 0.1, which = "min"), 3.9996)
   expect_equal(getDefaultZBound(c(4, 5), buffer = 0.01, which = "min"), 4)
-  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "min"), -30)
+  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "min"), -31)
+  expect_equal(getDefaultZBound(c(-26.29, 38.24), buffer = 0.001, which = "min"), -26)
+  expect_equal(getDefaultZBound(c(-29.17, 36.99), buffer = 0.01, which = "min"), -30)
 
   expect_equal(getDefaultZBound(c(4, 5), buffer = 0.1, which = "max"), 5.1)
   expect_equal(getDefaultZBound(c(4, 4.0001), buffer = 0.1, which = "max"), 4.00011)
-  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "max"), 55000)
+  expect_equal(getDefaultZBound(c(4, 50000), buffer = 0.1, which = "max"), 50000)
   expect_equal(getDefaultZBound(c(4, 4), buffer = 0.1, which = "max"), 4.0004)
   expect_equal(getDefaultZBound(c(4, 5), buffer = 0.01, which = "max"), 5)
-  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "max"), 40)
+  expect_equal(getDefaultZBound(c(-30.2, 41.38), buffer = 0.01, which = "max"), 42)
+  expect_equal(getDefaultZBound(c(-26.29, 38.24), buffer = 0.01, which = "max"), 39)
+  expect_equal(getDefaultZBound(c(-29.17, 36.99), buffer = 0.01, which = "max"), 38)
 })
 
