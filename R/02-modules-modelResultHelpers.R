@@ -998,7 +998,6 @@ getZvalues <-
 
     if (mapType == "Time course" ||
         estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
-
       defaultMin <- getDefaultZBound(model$range$mean, which = "min")
       defaultMax <- getDefaultZBound(model$range$mean, which = "max")
       zValues$minInput <-
