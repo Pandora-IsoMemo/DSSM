@@ -998,8 +998,9 @@ getZvalues <-
 
     if (mapType == "Time course" ||
         estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
-      defaultMin <- getDefaultZMin(model$range$mean)
-      defaultMax <- getDefaultZMax(model$range$mean)
+
+      defaultMin <- getDefaultZBound(model$range$mean, which = "min")
+      defaultMax <- getDefaultZBound(model$range$mean, which = "max")
       zValues$minInput <-
         list(value = defaultMin,
              min = defaultMin,
@@ -1074,43 +1075,46 @@ getModel <- function(model, IndSelect) {
   }
 }
 
-#' Get Default Z Error
-#'
-#' @param estType (character) type of estimate
-#' @param range (numeric) range from model output
+# Get Default Z Error
+#
+# @param estType (character) type of estimate
+# @param range (numeric) range from model output
 getDefaultZError <- function(estType, range) {
   sdVal <- ifelse(grepl("2", estType), 2, 1)
   3 * signif(1.1 * max(range) * sdVal, 2)
 }
 
-#' Get Default Z Min
-#'
-#' @param mean mean from model output
-getDefaultZMin <- function(mean) {
-  shift <- 0.1 * diff(mean)
-  if (shift == 0) shift <- 0.0001 * mean[1]
+# Compute padded and rounded boundary from mean range
+#
+# @param mean numeric vector of length 2 (min, max)
+# @param buffer numeric, proportion of padding to apply, e.g. 0.1
+# @param which character: "min" or "max" to select the bound
+# @return numeric boundary value
+getDefaultZBound <- function(mean, buffer = 0.01, which = c("min", "max")) {
+  which <- match.arg(which)
+  shift <- buffer * diff(mean)
+  idx <- if (which == "min") 1 else 2
+  base <- mean[idx]
 
-  defaultMin <- mean[1] - shift
+  if (shift == 0) shift <- 0.0001 * abs(base)
+  bound <- if (which == "min") base - shift else base + shift
 
-  digits <- which(round(abs(diff(mean) / mean[1] * 10 ^ (0:10)), 0) > 1)[1]
-  if (is.na(digits)) return(defaultMin)
+  digits <- guessDigits(mean, ref = base)
+  if (!is.na(digits)) bound <- signif(bound, digits)
 
-  signif(defaultMin, digits)
+  bound
 }
 
-#' Get Default Z Max
-#'
-#' @param mean mean from model output
-getDefaultZMax <- function(mean) {
-  shift <- 0.1 * diff(mean)
-  if (shift == 0) shift <- 0.0001 * mean[2]
-
-  defaultMax <- mean[2] + shift
-
-  digits <- which(round(abs(diff(mean) / mean[2] * 10 ^ (0:10)), 0) > 1)[1]
-  if (is.na(digits)) return(defaultMax)
-
-  signif(defaultMax, digits)
+# Guess Number of Significant Digits Based on Range and Reference Value
+# @param range numeric vector of length 2 (min, max)
+# @param ref numeric, reference value (typically mean[1] or mean[2])
+# @param threshold numeric, minimum scaled difference considered "significant" (default = 1)
+# @return integer number of significant digits, or NULL if not applicable
+guessDigits <- function(range, ref) {
+  rel_diff <- abs(diff(range)) / abs(ref)
+  candidates <- round(rel_diff * 10 ^ (0:10), 0)
+  index <- which(candidates > 1)[1]
+  return(index)
 }
 
 
