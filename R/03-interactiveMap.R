@@ -215,13 +215,14 @@ interactiveMap <- function(input, output, session, isoData) {
 
   # add icons to map
   observe({
-    # not using direct input values but prepared values for positions
     leafletProxy("map") %>%
       drawIcons(
         scalePosition = leafletValues()$scalePosition,
         scaleSize = leafletValues()$scaleSize,
         northArrowPosition = leafletValues()$northArrowPosition,
-        northArrowSize = leafletValues()$northArrowSize
+        northArrowSize = leafletValues()$northArrowSize,
+        northArrowLng = leafletValues()$northArrowLng,
+        northArrowLat = leafletValues()$northArrowLat
       )
   })
 
@@ -411,7 +412,8 @@ draw <- function(isoData,
                  northArrowPosition = "none",
                  scalePosition = "none",
                  center = NULL,
-                 bounds = NULL) {
+                 bounds = NULL,
+                 northArrowCoords = c()) {
   map <- leaflet() %>% drawType(type = type)
   map <-
     map %>% drawIcons(
@@ -474,18 +476,34 @@ drawType <- function(map, type = "1") {
   map
 }
 
-addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80) {
-  addControl(
-    map,
-    tags$img(
-      src = "https://isomemodb.com/NorthArrow.png",
-      width = as.character(width),
-      height = as.character(height)
-    ),
-    position = position,
-    layerId = layerId,
-    className = ""
-  )
+addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80, position_coords = c()) {
+  if ("lng" %in% names(position_coords) &&
+      "lat" %in% names(position_coords)) {
+    browser()
+    addMarkers(
+      map,
+      lng = position_coords[["lng"]],
+      lat = position_coords[["lat"]],
+      icon = icons(
+        iconUrl = "NorthArrow.png",
+        iconWidth = 30,
+        iconHeight = 30
+      )
+    )
+  } else{
+    addControl(
+      map,
+      tags$img(
+        src = "NorthArrow.png",
+        #src = "https://isomemodb.com/NorthArrow.png",
+        width = as.character(width),
+        height = as.character(height)
+      ),
+      position = position,
+      layerId = layerId,
+      className = ""
+    )
+  }
 }
 
 # Draw Icons on Interactive Map
@@ -496,7 +514,16 @@ drawIcons <- function(map,
                       northArrowPosition = "none",
                       northArrowSize = 80,
                       scalePosition = "none",
-                      scaleSize = 100) {
+                      scaleSize = 100,
+                      northArrowLng = NA,
+                      northArrowLat = NA) {
+  if (northArrowPosition == "custom" && !is.na(northArrowLng) && !is.na(northArrowLat)) {
+    northArrowCoords <- c(lng = northArrowLng,
+                          lat = northArrowLat)
+  } else {
+    northArrowCoords <- c()
+  }
+  browser()
   if (!is.null(northArrowPosition) && northArrowPosition %in% c("bottomright", "bottomleft")) {
     if (!is.null(scalePosition) && scalePosition != "none") {
       map <- addScaleBar(map,
@@ -513,7 +540,8 @@ drawIcons <- function(map,
         addNorthArrow(position = northArrowPosition,
                       layerId = "northArrowIcon",
                       height = northArrowSize,
-                      width = northArrowSize)
+                      width = northArrowSize,
+                      position_coords = northArrowCoords)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }
@@ -524,7 +552,8 @@ drawIcons <- function(map,
         addNorthArrow(position = northArrowPosition,
                       layerId = "northArrowIcon",
                       height = northArrowSize,
-                      width = northArrowSize)
+                      width = northArrowSize,
+                      position_coords = northArrowCoords)
     } else {
       map <- map %>% removeControl("northArrowIcon")
     }

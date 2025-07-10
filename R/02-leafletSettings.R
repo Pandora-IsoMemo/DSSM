@@ -108,6 +108,15 @@ leafletSettings <- function(input, output, session) {
   observe({
     values$northArrowPosition <- input$`northArrow-position`
     values$northArrowSize <- input$`northArrow-size`
+    values$northArrowLng <- input$`northArrow-lng`
+    values$northArrowLat <- input$`northArrow-lat`
+    # if (input$`northArrow-position` == "custom") {
+    #   values$northArrowCoords <- reactive(c(lng = input$`northArrow-lng`,
+    #                                         lat = input$`northArrow-lat`))
+    # } else {
+    #   values$northArrowCoords <- reactive(c())
+    # }
+
   })
 
   observeEvent(input$applyBounds, {
@@ -142,7 +151,7 @@ scaleOrNorthArrowUI <- function(id, label, sizeValue) {
       selectInput(
         ns("position"),
         label = label,
-        choices = c("none", "topright", "bottomright", "bottomleft", "topleft"),
+        choices = c("none", "topright", "bottomright", "bottomleft", "topleft", "custom"),
         selected = "none"
       )
     ), column(
@@ -158,7 +167,18 @@ scaleOrNorthArrowUI <- function(id, label, sizeValue) {
           step = 10
         )
       )
-    ))
+    )),
+    conditionalPanel(
+      ns = ns,
+      condition = "input.position == 'custom'",
+      fluidRow(column(
+        6,
+        numericInput(ns("lng"), "Longitude", value = numeric(0), min = -180, max = 360)
+      ), column(
+        6,
+        numericInput(ns("lat"), "Latitude", value = numeric(0), min = -90, max = 90)
+      ))
+    )
   )
 }
 
@@ -218,7 +238,9 @@ customizeLeafletMap <- function(leafletMap, leafletValues) {
       scalePosition = leafletValues$scalePosition,
       scaleSize = leafletValues$scaleSize,
       northArrowPosition = leafletValues$northArrowPosition,
-      northArrowSize = leafletValues$northArrowSize
+      northArrowSize = leafletValues$northArrowSize,
+      northArrowLng = leafletValues()$`northArrow-lng`,
+      northArrowLat = leafletValues()$`northArrow-lat`
     ) %>%
     drawFittedBounds(showBounds = leafletValues$showBounds,
                      bounds = leafletValues$bounds)
