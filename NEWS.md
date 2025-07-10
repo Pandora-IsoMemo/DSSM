@@ -1,6 +1,6 @@
 # DSSM 25.07.0
 
-## Bug Fixes
+## Bug Fixes 
 - reduced buffer that is added to the range of the default scale for the estimates (#276)
 
 # DSSM 25.06.0
