@@ -412,8 +412,7 @@ draw <- function(isoData,
                  northArrowPosition = "none",
                  scalePosition = "none",
                  center = NULL,
-                 bounds = NULL,
-                 northArrowCoords = c()) {
+                 bounds = NULL) {
   map <- leaflet() %>% drawType(type = type)
   map <-
     map %>% drawIcons(
@@ -476,34 +475,63 @@ drawType <- function(map, type = "1") {
   map
 }
 
-addNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80, position_coords = c()) {
-  if ("lng" %in% names(position_coords) &&
-      "lat" %in% names(position_coords)) {
-    browser()
-    addMarkers(
-      map,
-      lng = position_coords[["lng"]],
-      lat = position_coords[["lat"]],
-      icon = icons(
-        iconUrl = "NorthArrow.png",
-        iconWidth = 30,
-        iconHeight = 30
-      )
-    )
-  } else{
-    addControl(
-      map,
-      tags$img(
-        src = "NorthArrow.png",
-        #src = "https://isomemodb.com/NorthArrow.png",
-        width = as.character(width),
-        height = as.character(height)
-      ),
-      position = position,
-      layerId = layerId,
-      className = ""
-    )
+setScaleBar <- function(map, position = "none", size = 100) {
+  if (!is.null(position) && position != "none") {
+    addScaleBar(map,
+                position = position,
+                options = scaleBarOptions(maxWidth = size))
+  } else {
+    map %>% removeScaleBar()
   }
+}
+
+
+setNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80, positionCoords = c()) {
+  # reset layerId
+  map <- map %>%
+    removeControl("northArrowIcon") %>%
+    removeMarker("northArrowIcon")
+
+  if (is.null(position) ||
+      position == "none" ||
+      (position == "custom" &&
+       !("lng" %in% names(positionCoords) && "lat" %in% names(positionCoords)))
+      ) return(map)
+
+  if (position %in% c("topright", "topleft", "bottomright", "bottomleft")) {
+    map <- map %>%
+      addControl(
+        tags$img(
+          #src = "NorthArrow.png",
+          src = "https://isomemodb.com/NorthArrow.png",
+          width = as.character(width),
+          height = as.character(height)
+        ),
+        position = position,
+        layerId = layerId,
+        className = ""
+      )
+    return(map)
+  }
+
+  if (position == "custom" &&
+      "lng" %in% names(positionCoords) &&
+      "lat" %in% names(positionCoords)) {
+    map <- map %>%
+      addMarkers(
+        lng = positionCoords[["lng"]],
+        lat = positionCoords[["lat"]],
+        layerId = layerId,
+        icon = icons(
+          #iconUrl = "NorthArrow.png",
+          iconUrl = "https://isomemodb.com/NorthArrow.png",
+          iconWidth = width,
+          iconHeight = height
+        ))
+    return(map)
+  }
+
+  return(map)
 }
 
 # Draw Icons on Interactive Map
@@ -517,60 +545,39 @@ drawIcons <- function(map,
                       scaleSize = 100,
                       northArrowLng = NA,
                       northArrowLat = NA) {
+  # Check if north arrow position is valid
+  if (is.null(northArrowPosition)) {
+    return(map)
+  }
+
+  # Prepare north arrow coordinates if using custom positioning
   if (northArrowPosition == "custom" && !is.na(northArrowLng) && !is.na(northArrowLat)) {
     northArrowCoords <- c(lng = northArrowLng,
                           lat = northArrowLat)
   } else {
     northArrowCoords <- c()
   }
-  browser()
-  if (!is.null(northArrowPosition) && northArrowPosition %in% c("bottomright", "bottomleft")) {
-    if (!is.null(scalePosition) && scalePosition != "none") {
-      map <- addScaleBar(map,
-                         position = scalePosition,
-                         options = scaleBarOptions(maxWidth = scaleSize))
-    } else {
-      map <- map %>%
-        removeScaleBar()
-    }
 
-    if (!is.null(northArrowPosition) && northArrowPosition != "none") {
-      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
-      map <- map %>%
-        addNorthArrow(position = northArrowPosition,
-                      layerId = "northArrowIcon",
-                      height = northArrowSize,
-                      width = northArrowSize,
-                      position_coords = northArrowCoords)
-    } else {
-      map <- map %>% removeControl("northArrowIcon")
-    }
+  if (northArrowPosition %in% c("bottomright", "bottomleft")) {
+    map <- map %>%
+      setScaleBar(position = scalePosition, size = scaleSize) %>%
+      setNorthArrow(position = northArrowPosition,
+                    layerId = "northArrowIcon",
+                    height = northArrowSize,
+                    width = northArrowSize,
+                    positionCoords = northArrowCoords)
   } else {
-    if (!is.null(northArrowPosition) && northArrowPosition %in% c("topright", "topleft")) {
-      #map <- map %>% leaflet.extras2::addNorthArrow(layerId = "northArrowIcon", position = northArrowPosition, height = 50, width = 50)
-      map <- map %>%
-        addNorthArrow(position = northArrowPosition,
-                      layerId = "northArrowIcon",
-                      height = northArrowSize,
-                      width = northArrowSize,
-                      position_coords = northArrowCoords)
-    } else {
-      map <- map %>% removeControl("northArrowIcon")
-    }
-
-    if (!is.null(scalePosition) && scalePosition != "none") {
-      map <- addScaleBar(map,
-                         position = scalePosition,
-                         options = scaleBarOptions(maxWidth = scaleSize))
-    } else {
-      map <- map %>%
-        removeScaleBar()
-    }
+    map <- map %>%
+      setNorthArrow(position = northArrowPosition,
+                    layerId = "northArrowIcon",
+                    height = northArrowSize,
+                    width = northArrowSize,
+                    positionCoords = northArrowCoords) %>%
+      setScaleBar(position = scalePosition, size = scaleSize)
   }
 
   map
 }
-
 
 addCirclesRelativeToZoom <-
   function(map, isoData, newZoom, zoom = 5) {

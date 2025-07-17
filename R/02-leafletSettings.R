@@ -233,17 +233,17 @@ boundsLatLongNumericUI <- function(id, defaultBounds) {
 #' @param leafletValues map settings, e.g. scalePosition, show/hide bounds
 customizeLeafletMap <- function(leafletMap, leafletValues) {
   leafletMap %>%
-    addProviderTiles(leafletValues$leafletType) %>%
+    addProviderTiles(leafletValues()$leafletType) %>%
     drawIcons(
-      scalePosition = leafletValues$scalePosition,
-      scaleSize = leafletValues$scaleSize,
-      northArrowPosition = leafletValues$northArrowPosition,
-      northArrowSize = leafletValues$northArrowSize,
+      scalePosition = leafletValues()$scalePosition,
+      scaleSize = leafletValues()$scaleSize,
+      northArrowPosition = leafletValues()$northArrowPosition,
+      northArrowSize = leafletValues()$northArrowSize,
       northArrowLng = leafletValues()$`northArrow-lng`,
       northArrowLat = leafletValues()$`northArrow-lat`
     ) %>%
-    drawFittedBounds(showBounds = leafletValues$showBounds,
-                     bounds = leafletValues$bounds)
+    drawFittedBounds(showBounds = leafletValues()$showBounds,
+                     bounds = leafletValues()$bounds)
 
 }
 

@@ -28,7 +28,8 @@
 #'  addMarkers addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
 #'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
 #'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
-#'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
+#'  removeControl removeMarker removeScaleBar removeShape renderLeaflet scaleBarOptions
+#'  setMaxBounds setView
 #' @importFrom magick image_animate image_info image_join image_read image_read_pdf image_read_svg
 #'  image_write
 #' @importFrom maps map map.scale
