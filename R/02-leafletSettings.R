@@ -103,20 +103,15 @@ leafletSettings <- function(input, output, session) {
   observe({
     values$scalePosition <- input$`scale-position`
     values$scaleSize <- input$`scale-size`
+    values$`scale-lng` <- input$`scale-lng`
+    values$`scale-lat` <- input$`scale-lat`
   })
 
   observe({
     values$northArrowPosition <- input$`northArrow-position`
     values$northArrowSize <- input$`northArrow-size`
-    values$northArrowLng <- input$`northArrow-lng`
-    values$northArrowLat <- input$`northArrow-lat`
-    # if (input$`northArrow-position` == "custom") {
-    #   values$northArrowCoords <- reactive(c(lng = input$`northArrow-lng`,
-    #                                         lat = input$`northArrow-lat`))
-    # } else {
-    #   values$northArrowCoords <- reactive(c())
-    # }
-
+    values$`northArrow-lng` <- input$`northArrow-lng`
+    values$`northArrow-lat` <- input$`northArrow-lat`
   })
 
   observeEvent(input$applyBounds, {
@@ -231,12 +226,16 @@ boundsLatLongNumericUI <- function(id, defaultBounds) {
 #'
 #' @param leafletMap leaflet map
 #' @param leafletValues map settings, e.g. scalePosition, show/hide bounds
-customizeLeafletMap <- function(leafletMap, leafletValues) {
+#' @param zoom zoom level
+customizeLeafletMap <- function(leafletMap, leafletValues, zoom) {
   leafletMap %>%
     addProviderTiles(leafletValues()$leafletType) %>%
     drawIcons(
+      zoom = zoom,
       scalePosition = leafletValues()$scalePosition,
       scaleSize = leafletValues()$scaleSize,
+      scaleLng = leafletValues()$`scale-lng`,
+      scaleLat = leafletValues()$`scale-lat`,
       northArrowPosition = leafletValues()$northArrowPosition,
       northArrowSize = leafletValues()$northArrowSize,
       northArrowLng = leafletValues()$`northArrow-lng`,

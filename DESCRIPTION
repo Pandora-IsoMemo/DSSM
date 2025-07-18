@@ -25,6 +25,7 @@ Imports:
     jsonlite (>= 1.5),
     gdistance (>= 1.3-6),
     geometry (>= 0.4.0),
+    geosphere,
     ggplot2,
     htmlwidgets,
     IsoMemo (>= 23.10.1),
