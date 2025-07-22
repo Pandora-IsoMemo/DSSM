@@ -81,6 +81,22 @@ print.PlotSeriesExport <- function(x, ...) {
   invisible(x)
 }
 
+generate <- function(obj, ...) {
+  UseMethod("generate")
+}
+
+cleanup <- function(obj, ...) {
+  UseMethod("cleanup")
+}
+
+exportSeries <- function(obj, ...) {
+  UseMethod("exportSeries")
+}
+
+exportMapR <- function(obj, ...) {
+  UseMethod("exportMapR")
+}
+
 #' Generate the series of plots and save them to files
 #' This function iterates over the specified time points,
 #' calls the plotting function for each time point,
@@ -149,14 +165,6 @@ cleanup.PlotSeriesExport <- function(obj) {
   invisible(obj)
 }
 
-exportSeries <- function(obj, ...) {
-  UseMethod("exportSeries")
-}
-
-exportMapR <- function(obj, ...) {
-  UseMethod("exportMapR")
-}
-
 #' Export the series of plots to files or a GIF
 #'
 #' This function handles the export of the generated plots
@@ -197,6 +205,9 @@ exportSeries.PlotSeriesExport <- function(obj,
            zipr(zipfile = file, files = c(gifName, fileNames))
            unlink(gifName)
          })
+
+  # clean up? Better, keep files for different exports
+  #cleanup(obj)
 }
 
 #' Export the series of plots for MapR

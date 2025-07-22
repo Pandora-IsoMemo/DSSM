@@ -7,7 +7,7 @@ This function iterates over the specified time points,
 calls the plotting function for each time point,
 and saves the plots in the specified format.}
 \usage{
-generate.PlotSeriesExport(obj)
+\method{generate}{PlotSeriesExport}(obj)
 }
 \arguments{
 \item{obj}{A PlotSeriesExport object.}

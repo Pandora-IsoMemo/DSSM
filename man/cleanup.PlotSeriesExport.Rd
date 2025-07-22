@@ -4,7 +4,7 @@
 \alias{cleanup.PlotSeriesExport}
 \title{Clean up the PlotSeriesExport object}
 \usage{
-cleanup.PlotSeriesExport(obj)
+\method{cleanup}{PlotSeriesExport}(obj)
 }
 \arguments{
 \item{obj}{A PlotSeriesExport object.}
