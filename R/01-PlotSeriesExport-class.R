@@ -1,0 +1,213 @@
+new_PlotSeriesExport <- function(plotFun,
+                                 Model,
+                                 times,
+                                 exportType = "png",
+                                 modelType = "", # e.g. "local-average", "spread", ...
+                                 width = 1280,
+                                 height = 800) {
+
+  stopifnot(is.function(plotFun))
+  stopifnot(length(times) > 0)
+
+  tmpDir <- tempfile("plot_export_")
+  dir.create(tmpDir, recursive = TRUE)
+
+  # Define static subfolders
+  graphicFolder <- file.path(tmpDir, "graphic_export")
+  maprFolder <- file.path(tmpDir, "mapr_export")
+
+  dir.create(graphicFolder, showWarnings = FALSE, recursive = TRUE)
+  dir.create(maprFolder, showWarnings = FALSE, recursive = TRUE)
+
+  # Consistent filenames (no folder) → only the basename like "myplot_1000.png"
+  baseNames <- setNames(vapply(times, function(i) getFileName(modelType, TRUE, i), character(1)), times)
+
+  # Full paths
+  pngFileNames <- file.path(maprFolder, paste0(baseNames, ".png"))
+  names(pngFileNames) <- times
+
+  mainFileNames <- file.path(graphicFolder, paste0(baseNames, ".", exportType))
+  names(mainFileNames) <- times
+
+  structure(
+    list(
+      path = tmpDir,
+      times = times,
+      baseNames = baseNames,
+      pngFileNames = pngFileNames,
+      mainFileNames = mainFileNames,
+      plotFun = plotFun,
+      Model = Model,
+      exportType = exportType,
+      width = width,
+      height = height,
+      status = "initialized",
+      error = NULL
+    ),
+    class = "PlotSeriesExport"
+  )
+}
+
+print.PlotSeriesExport <- function(x, ...) {
+  cat("PlotSeriesExport object\n")
+  cat("Status: ", x$status, "\n")
+  cat("Path: ", x$path, "\n")
+  cat("Export type: ", x$exportType, "\n")
+  cat("Time points: ", paste(x$times, collapse = ", "), "\n")
+  if (x$status == "error") {
+    cat("Error: ", x$error, "\n")
+  }
+  invisible(x)
+}
+
+generate.PlotSeriesExport <- function(obj) {
+  stopifnot(inherits(obj, "PlotSeriesExport"))
+
+  obj$status <- "running"
+  #tryCatch({
+    n <- length(obj$times)
+    inShiny <- !is.null(shiny::getDefaultReactiveDomain())
+
+    for (i in seq_along(obj$times)) {
+      time <- obj$times[[i]]
+
+      # for debugging:
+      #obj$plotFun(model = obj$Model, time = time)
+
+      # Write both main and png versions
+      writePlotSeriesFilePair(
+        plotFun = obj$plotFun,
+        model = obj$Model,
+        time = time,
+        mainFile = obj$mainFileNames[[as.character(time)]],
+        pngFile = obj$pngFileNames[[as.character(time)]],
+        exportType = obj$exportType,
+        width = obj$width,
+        height = obj$height
+      )
+
+      if (inShiny) {
+        shiny::incProgress(1 / n, detail = paste("Time:", time))
+      }
+    }
+
+    obj$status <- "completed"
+  # }, error = function(e) {
+  #   obj$status <- "error"
+  #   obj$error <- conditionMessage(e)
+  # })
+
+  invisible(obj)
+}
+
+
+cleanup.PlotSeriesExport <- function(obj) {
+  stopifnot(inherits(obj, "PlotSeriesExport"))
+  if (dir.exists(obj$path)) {
+    unlink(obj$path, recursive = TRUE)
+    obj$status <- "cleaned"
+  } else {
+    obj$status <- "missing"
+  }
+  invisible(obj)
+}
+
+exportSeries <- function(obj, ...) {
+  UseMethod("exportSeries")
+}
+
+exportMapR <- function(obj, ...) {
+  UseMethod("exportMapR")
+}
+
+exportSeries.PlotSeriesExport <- function(obj,
+                                          file,
+                                          modelType,
+                                          typeOfSeries,
+                                          fpsGif = 1,
+                                          reverseGif = FALSE) {
+  times <- obj$times
+  exportType <- obj$exportType
+  fileNames <- obj$mainFileNames
+  gifInputFiles <- obj$pngFileNames  # Use PNG files for GIF
+
+  if (reverseGif && typeOfSeries != "onlyZip") {
+    times <- rev(times)
+    fileNames <- fileNames[as.character(times)]
+    gifInputFiles <- gifInputFiles[as.character(times)]
+  }
+
+  switch(typeOfSeries,
+         onlyZip = zipr(zipfile = file, files = fileNames),
+         onlyGif = generateGif(gifFile = file, files = gifInputFiles, fps = fpsGif),
+         gifAndZip = {
+           gifName <- paste0(modelType, ".gif")
+           generateGif(gifFile = gifName, files = gifInputFiles, fps = fpsGif)
+           zipr(zipfile = file, files = c(gifName, fileNames))
+           unlink(gifName)
+         })
+}
+
+exportMapR.PlotSeriesExport <- function(obj, file, input) {
+  times <- obj$times
+  fileNames <- obj$pngFileNames
+
+  finalPaths <- sapply(times, function(i) {
+    file.path("data",
+              gsub(" ", "", input$`mapr-group`),
+              gsub(" ", "", input$`mapr-variable`),
+              gsub(" ", "", input$`mapr-measure`),
+              paste0(i, ".png"))
+  })
+
+  # create sub directories
+  lapply(unique(dirname(finalPaths)), dir.create, recursive = TRUE, showWarnings = FALSE)
+
+  # copy files to final paths
+  mapply(file.copy, from = fileNames, to = finalPaths, overwrite = TRUE)
+
+  json_list <- create_image_list_json(input, finalPaths, times)
+  json_file <- "image_list.json"
+  jsonlite::write_json(json_list, json_file, pretty = TRUE)
+
+  # zip the files
+  zip(file, files = c(json_file, finalPaths))
+
+  file.remove(finalPaths)
+  file.remove(json_file)
+  unlink("data", recursive = TRUE)
+}
+
+
+writePlotSeriesFilePair <- function(plotFun, model, time,
+                                    mainFile, pngFile,
+                                    exportType, width, height) {
+  # Plot once into a temporary null device to record it <- NOT WORKING!!
+  # It's only working inside downloadHandler, not in an observer beforehand
+  #
+  # grDevices::png(tempfile(fileext = ".png"), width = width, height = height)
+  # plotFun(model = model, time = time) # execute the plotting function
+  # recorded <- grDevices::recordPlot()
+  # grDevices::dev.off()
+
+  # Save in main export format
+  switch(
+    exportType,
+    png  = grDevices::png(mainFile, width = width, height = height),
+    jpeg = grDevices::jpeg(mainFile, width = width, height = height),
+    pdf  = grDevices::pdf(mainFile, width = width / 72, height = height / 72),
+    tiff = grDevices::tiff(mainFile, width = width, height = height),
+    svg  = grDevices::svg(mainFile, width = width / 72, height = height / 72)
+  )
+  #replayPlot(recorded) # THIS WILL NOT WORK HERE!!!
+  plotFun(model = model, time = time)
+  grDevices::dev.off()
+  #print(paste("mainFile:", file.exists(mainFile)))  # Should be TRUE
+
+  # Save always as PNG too (for MapR/gif etc.)
+  grDevices::png(pngFile, width = width, height = height)
+  #replayPlot(recorded) # THIS WILL NOT WORK HERE!!!
+  plotFun(model = model, time = time)
+  grDevices::dev.off()
+  #print(paste("pngFile:", (file.exists(pngFile))))  # Should be TRUE
+}

@@ -17,6 +17,8 @@ plotExport <- function(input,
   width <- reactiveVal(1280)
   height <- reactiveVal(800)
 
+  exportObj <- reactiveVal(NULL)
+
   observeEvent(input$export, {
     withProgress(message = "Generating preview...", value = 0.7, {
       previewImagePath(createPlotPreview(replayPlot(plotObj()), width(), height()))
@@ -75,6 +77,7 @@ plotExport <- function(input,
             width = 4,
             numericInput(ns("intTime"), "Time interval length", value = 1000))
           ),
+          actionButton(ns("generateFiles"), "Generate Files"),
           fluidRow(
             column(width = 4,
                    selectInput(ns("typeOfSeries"), "Type of time series",
@@ -145,6 +148,66 @@ plotExport <- function(input,
     )
   }, deleteFile = TRUE)
 
+  # enable/disable generateFiles button
+  observe({
+    shinyjs::disable("generateFiles")
+
+    req(input$`preview-width`, input$`preview-height`,
+        input$exportType,
+        input$minTime, input$maxTime, input$intTime)
+    shinyjs::enable("generateFiles")
+  })
+
+  observe({
+    times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
+
+    obj <- new_PlotSeriesExport(plotFun = plotFun(),
+                                Model = Model(),
+                                times = times,
+                                exportType = input$exportType,
+                                modelType = modelType,
+                                width = input$`preview-width`,
+                                height = input$`preview-height`)
+
+    # Generate plots
+    withProgress(message = "Generating time series plots ...", value = 0, {
+      obj <- generate.PlotSeriesExport(obj)
+    })
+
+    exportObj(obj)  # Save it for later use
+  }) %>%
+    bindEvent(input$generateFiles)
+
+  observe({
+    shinyjs::disable("exportExecute")
+
+    isTimeSeries <- isTruthy(input$isTimeSeries)  # assumes you use checkboxInput
+    type <- input$typeOfSeries
+    obj <- exportObj()
+
+    # Only enforce for time series
+    if (isTimeSeries && type %in% c("onlyZip", "onlyGif", "gifAndZip", "mapr")) {
+      # Check that object exists, status is completed, and files exist
+      if (!is.null(obj) && obj$status == "completed") {
+        validFiles <- switch(type,
+                             mapr = all(file.exists(obj$pngFileNames)),
+                             onlyZip = all(file.exists(obj$mainFileNames)),
+                             onlyGif = all(file.exists(obj$mainFileNames)),  # still uses main for gif source now
+                             gifAndZip = all(file.exists(obj$mainFileNames)), # same here
+                             FALSE
+        )
+
+        if (validFiles) {
+          shinyjs::enable("exportExecute")
+        }
+      }
+    } else {
+      # For non-time-series, allow export always (assuming the plot is ready)
+      shinyjs::enable("exportExecute")
+    }
+  }) %>%
+    bindEvent(input$isTimeSeries, input$typeOfSeries, exportObj())
+
   observe({
   if(any(c(input$`mapr-group`,input$`mapr-variable`,input$`mapr-measure`,input$`mapr-measureunit`) == "") && input$typeOfSeries == "mapr"){
     shinyjs::disable("exportExecute")
@@ -182,28 +245,38 @@ plotExport <- function(input,
           suppressWarnings() %>%
           shinyTryCatch(errorTitle = "Export of graphic failed")
       } else {
+        obj <- exportObj()
+        req(!is.null(obj), obj$status == "completed")
+
         if (input$typeOfSeries == "mapr") {
-          exportMapRFiles(file = file,
-                          plotFun = plotFun(),
-                          Model = Model(),
-                          input = input) %>%
+          # exportMapRFiles(file = file,
+          #                 plotFun = plotFun(),
+          #                 Model = Model(),
+          #                 input = input) %>%
+          exportMapR(obj, file = file, input = input) %>%
             suppressWarnings() %>%
             shinyTryCatch(errorTitle = "Export of series of graphics failed")
         } else {
-        exportGraphicSeries(exportType = exportType(),
-                            file = file,
-                            width = input$`preview-width`,
-                            height = input$`preview-height`,
-                            plotFun = plotFun(),
-                            Model = Model(),
-                            predictions = predictions(),
-                            modelType = modelType,
-                            minTime = input$minTime,
-                            maxTime = input$maxTime,
-                            intTime = input$intTime,
-                            typeOfSeries = input$typeOfSeries,
-                            reverseGif = input$reverseGif,
-                            fpsGif = input$fpsGif) %>%
+        # exportGraphicSeries(exportType = exportType(),
+        #                     file = file,
+        #                     width = input$`preview-width`,
+        #                     height = input$`preview-height`,
+        #                     plotFun = plotFun(),
+        #                     Model = Model(),
+        #                     predictions = predictions(),
+        #                     modelType = modelType,
+        #                     minTime = input$minTime,
+        #                     maxTime = input$maxTime,
+        #                     intTime = input$intTime,
+        #                     typeOfSeries = input$typeOfSeries,
+        #                     reverseGif = input$reverseGif,
+        #                     fpsGif = input$fpsGif) %>%
+          exportSeries(obj,
+                       file = file,
+                       modelType = modelType,
+                       typeOfSeries = input$typeOfSeries,
+                       fpsGif = input$fpsGif,
+                       reverseGif = input$reverseGif) %>%
           suppressWarnings() %>%
           shinyTryCatch(errorTitle = "Export of series of graphics failed")
         }
@@ -410,10 +483,10 @@ exportGraphicSeries <- function(exportType, file,
     }
     if (typeOfSeries == "onlyGif") {
       # gif file to be downloaded:
-      generateGif(gifFile = file, files = gifFileNames, exportType = exportType, fps = fpsGif)
+      generateGif(gifFile = file, files = gifFileNames, fps = fpsGif)
     }
     if (typeOfSeries == "gifAndZip") {
-      generateGif(gifFile = paste0(modelType, ".gif"), files = gifFileNames, exportType = exportType, fps = fpsGif)
+      generateGif(gifFile = paste0(modelType, ".gif"), files = gifFileNames, fps = fpsGif)
       # zip file to be downloaded containing the gif file:
       zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
       unlink(paste0(modelType, ".gif"))
@@ -471,7 +544,9 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
     tiff = tiff(filename, width = width, height = height),
     svg = svg(filename, width = width / 72, height = height / 72)
   )
+
   plot
+
   dev.off()
 }
 
@@ -481,7 +556,7 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
 # @param files a list of files, url's, or raster objects or bitmap arrays
 # @param exportType (character) file type of exported plot
 # @param fps frames per second
-generateGif <- function(gifFile = "animated.gif", files, exportType, fps = 1) {
+generateGif <- function(gifFile = "animated.gif", files, fps = 1) {
   image_list <- lapply(files, image_read)
 
   image_list %>%
