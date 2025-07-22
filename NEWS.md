@@ -1,3 +1,9 @@
+# DSSM 25.07.1
+
+## New Features
+- _Interactive Map_: Added option to shift the _North Arrow_ or the _Scale_ to a _custom_ latitude
+  and longitude position (#275)
+
 # DSSM 25.07.0
 
 ## Bug Fixes 
