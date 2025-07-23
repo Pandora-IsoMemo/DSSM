@@ -1,8 +1,9 @@
 # DSSM 25.07.1
 
 ## Bug Fixes
-- _Calculation of estimates for the map_:
-  - fixed a sign-error in the Metropolis Hastings Algorithm for the date uncertainty (#276)
+- _Estimates for TimeR models_: Fixed a sign-error in the Metropolis Hastings 
+  Algorithm for the date uncertainty
+  - This bug could lead to overly wide estimate ranges (#276)
 
 # DSSM 25.07.0
 
