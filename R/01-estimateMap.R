@@ -1730,21 +1730,20 @@ cpostX <- function(XX,
                    dateUnc,
                    IndependentType) {
   pred <- XX %*% beta + U %*% gamma
-  if(IndependentType == "numeric"){
-    ret <- (y - pred) ^ 2 / (-2 * sigma.eps)
+  if (IndependentType == "numeric") {
+    ret <- -((y - pred)^2 / (-2 * sigma.eps))
   } else {
-    ret <- log(pred) * y * log(1-pred) * (1-y)
+    ret <- log(pred) * y * log(1 - pred) * (1 - y)
   }
 
-  if(dateUnc == "uniform"){
-    return(ret + log(dunif (
-                xtru,
-                min = xobs - 2 * sqrt(sigma.obs),
-                max = xobs + 2 * sqrt(sigma.obs)
-              ))
-    )
+  if (dateUnc == "uniform") {
+    return(ret + log(dunif(
+      xtru,
+      min = xobs - 2 * sqrt(sigma.obs),
+      max = xobs + 2 * sqrt(sigma.obs)
+    )))
   } else {
-    return(ret + (xobs - xtru) ^ 2 / (-2 * sigma.obs))
+    return(ret - ((xobs - xtru)^2 / (-2 * sigma.obs)))
   }
 }
 
