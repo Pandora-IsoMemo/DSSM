@@ -1,3 +1,9 @@
+# DSSM 25.07.1
+
+## Bug Fixes
+- _Calculation of estimates for the map_:
+  - fixed a sign-error in the Metropolis Hastings Algorithm for the date uncertainty (#276)
+
 # DSSM 25.07.0
 
 ## Bug Fixes 
