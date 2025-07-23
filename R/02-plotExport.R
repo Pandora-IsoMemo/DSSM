@@ -171,7 +171,7 @@ plotExport <- function(input,
 
     # Generate plots
     withProgress(message = "Generating time series plots ...", value = 0, {
-      obj <- generate.PlotSeriesExport(obj)
+      obj <- generate(obj)
     })
 
     exportObj(obj)  # Save it for later use
