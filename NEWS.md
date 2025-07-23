@@ -1,8 +1,15 @@
-# DSSM 25.07.1
+# DSSM 25.07.2
 
 ## Updates
 - export of time series plots: fixed bug (#268) by adding asynchronious creation of single plots for a
   time series. Now, users must press "Generate Plot Files" before the download of a series of plots.
+
+# DSSM 25.07.1
+
+## Bug Fixes
+- _Estimates for (Bayesian) TimeR models_: Fixed a sign-error in the Metropolis Hastings 
+  Algorithm for the date uncertainty
+  - This bug could lead to overly wide estimate ranges (#276)
 
 # DSSM 25.07.0
 
