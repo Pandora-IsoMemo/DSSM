@@ -10,7 +10,8 @@
   modelType,
   typeOfSeries,
   fpsGif = 1,
-  reverseGif = FALSE
+  reverseGif = FALSE,
+  ...
 )
 }
 \arguments{
@@ -25,6 +26,8 @@
 \item{fpsGif}{The frames per second for the GIF (default is 1).}
 
 \item{reverseGif}{A boolean indicating whether to reverse the order of the GIF frames (default is FALSE).}
+
+\item{...}{Additional arguments (not used).}
 }
 \value{
 The modified PlotSeriesExport object with updated status.

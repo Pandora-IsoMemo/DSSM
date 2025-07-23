@@ -105,10 +105,11 @@ exportMapR <- function(obj, ...) {
 #' calls the plotting function for each time point,
 #' and saves the plots in the specified format.
 #' @param obj A PlotSeriesExport object.
+#' @param ... Additional arguments (not used).
 #' @return The modified PlotSeriesExport object with updated status.
 #'
 #' @export
-generate.PlotSeriesExport <- function(obj) {
+generate.PlotSeriesExport <- function(obj, ...) {
   stopifnot(inherits(obj, "PlotSeriesExport"))
 
   obj$status <- "running"
@@ -154,10 +155,11 @@ generate.PlotSeriesExport <- function(obj) {
 #' and updates the status of the object.
 #'
 #' @param obj A PlotSeriesExport object.
+#' @param ... Additional arguments (not used).
 #' @return The modified PlotSeriesExport object with updated status.
 #'
 #' @export
-cleanup.PlotSeriesExport <- function(obj) {
+cleanup.PlotSeriesExport <- function(obj, ...) {
   stopifnot(inherits(obj, "PlotSeriesExport"))
   if (dir.exists(obj$path)) {
     unlink(obj$path, recursive = TRUE)
@@ -179,6 +181,7 @@ cleanup.PlotSeriesExport <- function(obj) {
 #' @param typeOfSeries A string indicating the type of series to export ("onlyZip", "onlyGif", or "gifAndZip").
 #' @param fpsGif The frames per second for the GIF (default is 1).
 #' @param reverseGif A boolean indicating whether to reverse the order of the GIF frames (default is FALSE).
+#' @param ... Additional arguments (not used).
 #' @return The modified PlotSeriesExport object with updated status.
 #'
 #' @export
@@ -187,7 +190,8 @@ exportSeries.PlotSeriesExport <- function(obj,
                                           modelType,
                                           typeOfSeries,
                                           fpsGif = 1,
-                                          reverseGif = FALSE) {
+                                          reverseGif = FALSE,
+                                          ...) {
   times <- obj$times
   exportType <- obj$exportType
   fileNames <- obj$mainFileNames
@@ -221,10 +225,11 @@ exportSeries.PlotSeriesExport <- function(obj,
 #' @param obj A PlotSeriesExport object.
 #' @param file The name of the output ZIP file.
 #' @param input A reactive input object containing the group, variable, and measure names.
+#' @param ... Additional arguments (not used).
 #' @return The modified PlotSeriesExport object with updated status.
 #'
 #' @export
-exportMapR.PlotSeriesExport <- function(obj, file, input) {
+exportMapR.PlotSeriesExport <- function(obj, file, input, ...) {
   times <- obj$times
   fileNames <- obj$pngFileNames
 

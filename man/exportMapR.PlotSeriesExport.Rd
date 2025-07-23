@@ -4,7 +4,7 @@
 \alias{exportMapR.PlotSeriesExport}
 \title{Export the series of plots for MapR}
 \usage{
-\method{exportMapR}{PlotSeriesExport}(obj, file, input)
+\method{exportMapR}{PlotSeriesExport}(obj, file, input, ...)
 }
 \arguments{
 \item{obj}{A PlotSeriesExport object.}
@@ -12,6 +12,8 @@
 \item{file}{The name of the output ZIP file.}
 
 \item{input}{A reactive input object containing the group, variable, and measure names.}
+
+\item{...}{Additional arguments (not used).}
 }
 \value{
 The modified PlotSeriesExport object with updated status.

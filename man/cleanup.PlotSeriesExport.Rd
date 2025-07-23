@@ -4,10 +4,12 @@
 \alias{cleanup.PlotSeriesExport}
 \title{Clean up the PlotSeriesExport object}
 \usage{
-\method{cleanup}{PlotSeriesExport}(obj)
+\method{cleanup}{PlotSeriesExport}(obj, ...)
 }
 \arguments{
 \item{obj}{A PlotSeriesExport object.}
+
+\item{...}{Additional arguments (not used).}
 }
 \value{
 The modified PlotSeriesExport object with updated status.
