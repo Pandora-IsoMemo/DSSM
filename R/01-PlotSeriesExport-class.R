@@ -35,7 +35,8 @@ new_PlotSeriesExport <- function(plotFun,
   dir.create(maprFolder, showWarnings = FALSE, recursive = TRUE)
 
   # Consistent filenames (no folder) → only the basename like "myplot_1000.png"
-  baseNames <- setNames(vapply(times, function(i) getFileName(modelType, TRUE, i), character(1)), times)
+  baseNames <- vapply(times, function(i) getFileName(modelType, TRUE, i), character(1))
+  names(baseNames) <- times
 
   # Full paths
   pngFileNames <- file.path(maprFolder, paste0(baseNames, ".png"))
@@ -75,6 +76,8 @@ print.PlotSeriesExport <- function(x, ...) {
   cat("Path: ", x$path, "\n")
   cat("Export type: ", x$exportType, "\n")
   cat("Time points: ", paste(x$times, collapse = ", "), "\n")
+  cat("graphicFolder: ", dirname(x$mainFileNames[[1]]), "\n")
+  cat("maprFolder: ", dirname(x$pngFileNames[[1]]), "\n")
   if (x$status == "error") {
     cat("Error: ", x$error, "\n")
   }
