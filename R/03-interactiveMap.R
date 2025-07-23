@@ -479,201 +479,6 @@ drawType <- function(map, type = "1") {
   map
 }
 
-getBestScaleValue <- function(max_km) {
-  nice_values <- c(10000, 5000, 2000, 1000, 500, 200, 100, 50, 25, 10, 5, 2, 1, 0.5)
-  max(nice_values[nice_values <= max_km])
-}
-
-addScaleBarAt <- function(map, lat, lng, zoom, size = 100, value = NULL, color = "black", weight = 1, opacity = 1, group = "customScaleBar") {
-  if (!is.null(size) && is.numeric(size) && size > 0) {
-    # Estimate meters per pixel at current zoom & latitude
-    m_per_px <- 156543.03392 * cos(lat * pi / 180) / (2 ^ zoom)
-    max_km <- size * m_per_px / 1000  # convert to km
-
-    value <- getBestScaleValue(max_km)
-  }
-
-  # Determine default numeric value from zoom level
-  if (is.null(value)) {
-    value <- switch(as.character(zoom),
-                    "1" = 1000, "2" = 1000, "3" = 750,
-                    "4" = 500, "5" = 200, "6" = 100, "7" = 50,
-                    "8" = 25, "9" = 10, "10" = 5, "11" = 2,
-                    "12" = 1, "13" = 1, "14" = 0.5, "15" = 0.2,
-                    "16" = 0.1, "17" = 0.1, "18" = 0.05,
-                    1
-    )
-  }
-
-  # Vertical spacing for ticks and labels
-  spacing <- switch(as.character(zoom),
-                    "1" = 1.5, "2" = 1, "3" = 0.6,
-                    "4" = 0.3, "5" = 0.2, "6" = 0.1, "7" = 0.08,
-                    "8" = 0.05, "9" = 0.03, "10" = 0.02, "11" = 0.01,
-                    "12" = 0.008, "13" = 0.005, "14" = 0.003,
-                    "15" = 0.002, "16" = 0.001, "17" = 0.0008,
-                    "18" = 0.0005, 0.002
-  )
-
-  # Convert scale lengths to degrees longitude
-  km_m <- value * 1000
-  mi_m <- value * 1609.344
-
-  # # approximation of meters per degree longitude at given latitude
-  # # this slightly diverges from Leaflets Mercator projection
-  # m_per_deg_long <- 111320 * cos(lat * pi / 180)
-  # delta_lng_km <- km_m / m_per_deg_long
-  # delta_lng_mi <- mi_m / m_per_deg_long
-
-  # Leaflet's projection uses Mercator, so we can use geosphere to calculate the destination point
-  delta_lng_km <- geosphere::destPoint(c(lng, lat), 90, value * 1000)[1] - lng
-  delta_lng_mi <- geosphere::destPoint(c(lng, lat), 90, value * 1609.344)[1] - lng
-
-  # Helper to draw background rectangle
-  drawBackground <- function(map, lng2, lat1, lat2) {
-    addPolygons(map,
-                lng = c(lng, lng2, lng2, lng),
-                lat = c(lat1, lat1, lat2, lat2),
-                fillColor = "white", fillOpacity = 0.5,
-                stroke = FALSE, smoothFactor = 0,
-                group = group
-    )
-  }
-
-  # Backgrounds
-  map <- map %>%
-    drawBackground(lng + delta_lng_mi, lat, lat - spacing * 4) %>%
-    drawBackground(lng + delta_lng_km, lat, lat + spacing * 4)
-
-  # Horizontal lines (both at lat)
-  map <- map %>%
-    addPolylines(lng = c(lng, lng + delta_lng_km), lat = c(lat, lat),
-                 color = color, weight = weight, opacity = opacity, group = group) %>%
-    addPolylines(lng = c(lng, lng + delta_lng_mi), lat = c(lat, lat),
-                 color = color, weight = weight, opacity = opacity, group = group)
-
-  # Vertical ticks
-  map <- map %>%
-    addPolylines(lng = c(lng, lng),
-                 lat = c(lat - spacing * 4, lat + spacing * 4),
-                 color = color, weight = weight, opacity = opacity, group = group) %>%
-    addPolylines(lng = rep(lng + delta_lng_km, 2),
-                 lat = c(lat, lat + spacing * 4),
-                 color = color, weight = weight, opacity = opacity, group = group) %>%
-    addPolylines(lng = rep(lng + delta_lng_mi, 2),
-                 lat = c(lat - spacing * 4, lat),
-                 color = color, weight = weight, opacity = opacity, group = group)
-
-  # Invisible icon for labels
-  emptyIcon <- icons(
-    iconUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AApMBgVQe57oAAAAASUVORK5CYII=",
-    iconWidth = 1, iconHeight = 1
-  )
-
-  # Labels (centered)
-  map <- map %>%
-    addMarkers(lng = lng + delta_lng_km / 2,
-               lat = lat + spacing * 2,
-               label = paste(value, "km"),
-               labelOptions = labelOptions(noHide = TRUE, direction = "center", textOnly = TRUE),
-               icon = emptyIcon, group = group) %>%
-    addMarkers(lng = lng + delta_lng_mi / 2,
-               lat = lat - spacing * 3,
-               label = paste(value, "mi"),
-               labelOptions = labelOptions(noHide = TRUE, direction = "center", textOnly = TRUE),
-               icon = emptyIcon, group = group)
-
-  return(map)
-}
-
-
-
-setScaleBar <- function(map, zoom, position = "none", size = 100, positionCoords = c()) {
-  # reset scale bar
-  map <- map %>%
-    removeScaleBar() %>%
-    clearGroup(group = "customScaleBar")
-
-  if (is.null(position) || position == "none") {
-    return(map)
-  }
-
-  if (position %in% c("topright", "topleft", "bottomright", "bottomleft")) {
-    map <- addScaleBar(map,
-                       position = position,
-                       options = scaleBarOptions(maxWidth = size))
-    return(map)
-  }
-
-  if (position == "custom" &&
-      "lng" %in% names(positionCoords) &&
-      "lat" %in% names(positionCoords)) {
-    map <- map %>%
-      addScaleBarAt(lat = positionCoords[["lat"]],
-                    lng = positionCoords[["lng"]],
-                    zoom = zoom,
-                    size = size)
-  }
-
-  return(map)
-}
-
-
-setNorthArrow <- function(map, position, layerId = NULL, height = 80, width = 80, positionCoords = c()) {
-  # reset layerId
-  map <- map %>%
-    removeControl("northArrowIcon") %>%
-    removeMarker("northArrowIcon")
-
-  if (is.null(position) ||
-      position == "none" ||
-      (position == "custom" &&
-       !("lng" %in% names(positionCoords) && "lat" %in% names(positionCoords)))
-      ) return(map)
-
-  if (position %in% c("topright", "topleft", "bottomright", "bottomleft")) {
-    map <- map %>%
-      addControl(
-        tags$img(
-          #src = "NorthArrow.png",
-          src = "https://isomemodb.com/NorthArrow.png",
-          width = as.character(width),
-          height = as.character(height)
-        ),
-        position = position,
-        layerId = layerId,
-        className = ""
-      )
-    return(map)
-  }
-
-  if (position == "custom" &&
-      "lng" %in% names(positionCoords) &&
-      "lat" %in% names(positionCoords)) {
-    map <- map %>%
-      addMarkers(
-        lng = positionCoords[["lng"]],
-        lat = positionCoords[["lat"]],
-        layerId = layerId,
-        icon = icons(
-          #iconUrl = "NorthArrow.png",
-          iconUrl = "https://isomemodb.com/NorthArrow.png",
-          iconWidth = width,
-          iconHeight = height
-        ))
-    return(map)
-  }
-
-  return(map)
-}
-
-getCoordsIfCustom <- function(position, lng = NA, lat = NA) {
-  if (position == "custom" && !is.na(lng) && !is.na(lat)) {
-    return(c(lng = lng, lat = lat))
-  }
-  return(c())
-}
-
 # Draw Icons on Interactive Map
 # @param map leaflet map
 # @param northArrowPosition position of north arrow
@@ -688,39 +493,27 @@ drawIcons <- function(map,
                       northArrowSize = 80,
                       northArrowLng = NA,
                       northArrowLat = NA) {
-  # Check if north arrow position is valid
-  if (is.null(northArrowPosition)) {
-    return(map)
-  }
+  scaleBar <- new_ScaleBar(position = scalePosition,
+                           zoom = zoom,
+                           size = scaleSize,
+                           lat = scaleLat,
+                           lng = scaleLng)
 
-  # Prepare coordinates if using custom positioning
-  northArrowCoords <- getCoordsIfCustom(northArrowPosition, northArrowLng, northArrowLat)
-  scaleCoords <- getCoordsIfCustom(scalePosition, scaleLng, scaleLat)
+  northArrow <- new_NorthArrow(position = northArrowPosition,
+                               width = northArrowSize,
+                               height = northArrowSize,
+                               lat = northArrowLat,
+                               lng = northArrowLng,
+                               layerId = "northArrowIcon")
 
   if (northArrowPosition %in% c("bottomright", "bottomleft")) {
     map <- map %>%
-      setScaleBar(zoom = zoom,
-                  position = scalePosition,
-                  size = scaleSize,
-                  positionCoords = scaleCoords
-                  ) %>%
-      setNorthArrow(position = northArrowPosition,
-                    layerId = "northArrowIcon",
-                    height = northArrowSize,
-                    width = northArrowSize,
-                    positionCoords = northArrowCoords)
+      set(obj = scaleBar) %>%
+      set(obj = northArrow)
   } else {
     map <- map %>%
-      setNorthArrow(position = northArrowPosition,
-                    layerId = "northArrowIcon",
-                    height = northArrowSize,
-                    width = northArrowSize,
-                    positionCoords = northArrowCoords) %>%
-      setScaleBar(zoom = zoom,
-                  position = scalePosition,
-                  size = scaleSize,
-                  positionCoords = scaleCoords
-                  )
+      set(obj = northArrow) %>%
+      set(obj = scaleBar)
   }
 
   map
