@@ -1,7 +1,7 @@
 # DSSM 25.07.1
 
 ## Bug Fixes
-- _Estimates for TimeR models_: Fixed a sign-error in the Metropolis Hastings 
+- _Estimates for (Bayesian) TimeR models_: Fixed a sign-error in the Metropolis Hastings 
   Algorithm for the date uncertainty
   - This bug could lead to overly wide estimate ranges (#276)
 
