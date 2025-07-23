@@ -15,29 +15,11 @@ longitude and latitude. <br><br>
 - Begin with a small number of basis functions. This prevents overfitting and allows you to model
   the overall trend without capturing too much noise.
 
-**2. Data Complexity**
-
-- **Smooth Data, Simple Relationship**: Fewer basis functions are needed.
-- **Complex Patterns**: If the data has non-linear relationships, many peaks, and troughs, more 
-  basis functions may be required.
-
-**3. Sample Size Consideration**
+**2. Sample Size Consideration**
 
 - The number of basis functions should generally be much smaller than the number of data points.
 - A typical range might be between 5% to 20% of the sample size, depending on the complexity of the data.
 - **Example**: With 100 data points, start with 5 to 20 basis functions.
-
-**4. Avoid Overfitting**
-
-- As you increase the number of basis functions, the risk of overfitting increases.
-- Keep the number low enough to avoid capturing noise in the data.
-
-**Example Guidelines**
-
-- **Low Complexity (e.g., Linear Trend)**: Start with 2-5 basis functions.
-- **Moderate Complexity (e.g., Quadratic or Cubic Trend)**: Consider 5-10 basis functions.
-- **High Complexity (e.g., Highly Non-linear Relationship)**: Explore 10-20 or more basis functions,
-  but monitor for overfitting closely.
 
 **Summary**
 
