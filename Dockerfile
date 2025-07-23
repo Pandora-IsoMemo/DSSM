@@ -13,6 +13,10 @@ RUN apt-get update \
     && rm /tmp/google-chrome.deb \
     && rm -rf /var/lib/apt/lists/*
 
+# Install nimble
+RUN Rscript -e "install.packages('nimble', repos = 'https://packagemanager.posit.co/cran/__linux__/jammy/2025-03-01', version = '1.3.0')"
+
+# Install DSSM & ReSources
 RUN installPackage ReSources \
     && installPackage
 
