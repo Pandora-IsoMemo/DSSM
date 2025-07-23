@@ -68,7 +68,7 @@ plotExport <- function(input,
           condition = "input.isTimeSeries",
           ns = ns,
           fluidRow(column(
-            width = 4,
+            width = 4, style = "margin-bottom: 1em;",
             numericInput(ns("minTime"), "Time begin of series", value = 0)),
           column(
             width = 4,
@@ -77,9 +77,9 @@ plotExport <- function(input,
             width = 4,
             numericInput(ns("intTime"), "Time interval length", value = 1000))
           ),
-          actionButton(ns("generateFiles"), "Generate Files"),
+          actionButton(ns("generateFiles"), "Generate Plot Files"),
           fluidRow(
-            column(width = 4,
+            column(width = 4, style = "margin-top: 1em; margin-bottom: 1em;",
                    selectInput(ns("typeOfSeries"), "Type of time series",
                                choices = c(
                                  "Gif + graphic files" = "gifAndZip",
@@ -92,7 +92,7 @@ plotExport <- function(input,
                      helpText("MapR only supports .png export. Ignoring 'Filetype' input.")
                    )
                    ),
-            column(width = 4,
+            column(width = 4, style = "margin-top: 1em;",
                    conditionalPanel(
                      condition = "input.typeOfSeries == 'gifAndZip' || input.typeOfSeries == 'onlyGif'",
                      ns = ns,
@@ -249,28 +249,10 @@ plotExport <- function(input,
         req(!is.null(obj), obj$status == "completed")
 
         if (input$typeOfSeries == "mapr") {
-          # exportMapRFiles(file = file,
-          #                 plotFun = plotFun(),
-          #                 Model = Model(),
-          #                 input = input) %>%
           exportMapR(obj, file = file, input = input) %>%
             suppressWarnings() %>%
             shinyTryCatch(errorTitle = "Export of series of graphics failed")
         } else {
-        # exportGraphicSeries(exportType = exportType(),
-        #                     file = file,
-        #                     width = input$`preview-width`,
-        #                     height = input$`preview-height`,
-        #                     plotFun = plotFun(),
-        #                     Model = Model(),
-        #                     predictions = predictions(),
-        #                     modelType = modelType,
-        #                     minTime = input$minTime,
-        #                     maxTime = input$maxTime,
-        #                     intTime = input$intTime,
-        #                     typeOfSeries = input$typeOfSeries,
-        #                     reverseGif = input$reverseGif,
-        #                     fpsGif = input$fpsGif) %>%
           exportSeries(obj,
                        file = file,
                        modelType = modelType,
@@ -293,25 +275,6 @@ createPlotPreview <- function(plot, width, height) {
 
   return(tmp_png)
 }
-
-# Name File
-#
-# @param plotType (character) plot specification
-# @param exportType (character) file type of exported plot
-# @param isTimeSeries (logical) if TRUE, set file names for a series of plots
-# @param typeOfSeries one of "gifAndZip", "onlyZip", "onlyGif"
-# @param i (numeric) number of i-th plot of a series of plots
-nameFile <- function(plotType, exportType, isTimeSeries, typeOfSeries, i = NULL) {
-  # set file name
-  fileName <- getFileName(plotType = plotType, isTimeSeries = isTimeSeries, i = i)
-
-  # set file extension
-  fileExt <- getExtension(exportType, isTimeSeries, typeOfSeries, i)
-
-  # return file name with extension
-  paste0(fileName, ".", fileExt)
-}
-
 
 # Get File Name
 #
@@ -342,159 +305,6 @@ getExtension <- function(exportType, isTimeSeries, typeOfSeries = "gifAndZip", i
                       onlyGif = "gif",
                       mapr = "zipm")
   }
-}
-
-exportMapRFiles <- function(file, plotFun, Model, input) {
-  withProgress(message = "Generating series ...", value = 0, {
-    times <- seq(input$minTime, input$maxTime, by = abs(input$intTime))
-
-    # create all file names to be put into a zip
-    figFileNames <- sapply(times,
-                           function(i) {
-                             paste0("data","/",
-                                    gsub(" ", "", input$`mapr-group`),"/",
-                                    gsub(" ", "", input$`mapr-variable`),"/",
-                                    gsub(" ", "", input$`mapr-measure`),"/",
-                                    i,".png")
-                           })
-
-    lapply(unique(dirname(figFileNames)), dir.create, recursive = TRUE, showWarnings = FALSE)
-
-    for (i in times) {
-      incProgress(1 / length(times), detail = paste("time: ", i))
-      figFilename <- figFileNames[[which(times == i)]]
-
-      # save desired file type
-      writeGraphics(exportType = "png",
-                    plot = plotFun(model = Model, time = i),
-                    filename = figFilename,
-                    width = input$`preview-width`,
-                    height = input$`preview-height`)
-    }
-
-    json_list <- create_image_list_json(input, figFileNames, times)
-
-    # Save JSON content to a temporary file
-    json_file <- file.path("image_list.json")
-    jsonlite::write_json(json_list, json_file, pretty = TRUE)
-
-    zip(file, files = c(json_file, figFileNames))
-
-    # Clean up the temporary files
-    file.remove(figFileNames)
-    file.remove(json_file)
-    unlink(file.path("data"), recursive = TRUE)
-  })
-}
-
-create_image_list_json <- function(input, figFileNames, times){
-  image_list <- list(
-    Selections = list(
-      list(
-        Group = input$`mapr-group`,
-        Group_DOI = 1,
-        Variable = list(
-          list(
-            Variable_name = input$`mapr-variable`,
-            Variable_DOI = 1,
-            Measure = list(
-              list(
-                Measure_name = input$`mapr-measure`,
-                Measure_unit = input$`mapr-measureunit`,
-                images = list(
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
-
-  for (image in figFileNames){
-
-    time <- as.character(times[[which(figFileNames == image)]])
-
-    single_image <- list(
-      x_display_value = time,
-      file_type = "png",
-      location_type = "local",
-      address = gsub("data/","",image)
-    )
-
-    # Add the images to the list
-    image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images <- append(image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images, list(single_image))
-  }
-
-  image_list
-}
-
-
-exportGraphicSeries <- function(exportType, file,
-                                width, height, plotFun, Model, predictions,
-                                modelType, minTime, maxTime, intTime,
-                                typeOfSeries, reverseGif, fpsGif) {
-  withProgress(message = "Generating series ...", value = 0, {
-    times <- seq(minTime, maxTime, by = abs(intTime))
-    if (reverseGif && typeOfSeries != "onlyZip") times <- rev(times)
-
-    # create all file names to be put into a zip
-    figFileNames <- sapply(times,
-                           function(i) {
-                             nameFile(plotType = modelType, exportType = exportType,
-                                      isTimeSeries = TRUE, typeOfSeries = typeOfSeries, i = i)
-                           })
-
-    # create all file names to be put into a gif, they have always .jpeg format
-    gifFileNames <- sapply(times,
-                           function(i) {
-                             paste0(getFileName(plotType = modelType, isTimeSeries = TRUE, i = i),
-                                    ".jpeg")
-                           })
-
-    for (i in times) {
-      incProgress(1 / length(times), detail = paste("time: ", i))
-      figFilename <- figFileNames[[which(times == i)]]
-
-      if (exportType == "geo-tiff") {
-        # filter for i ??? <- probably one needs to re-create the plot using: res <- plotFun(model = Model, time = i) and get the predictions from res$XPred
-        # LOGIC FOR TIME SERIES WILL BE ADDED SOON
-        NULL
-      } else {
-        # save desired file type
-        writeGraphics(exportType = exportType,
-                      plot = plotFun(model = Model, time = i),
-                      filename = figFilename,
-                      width = width,
-                      height = height)
-
-        # save jpeg for .gif if desired file type is not .jpeg (else we already stored that file)
-        if (typeOfSeries != "onlyZip" && exportType != "jpeg") {
-          jpeg(gifFileNames[[which(times == i)]], width = width, height = height)
-          plotFun(model = Model, time = i)
-          dev.off()
-        }
-      }
-    }
-
-    if (typeOfSeries == "onlyZip") {
-      # zip file to be downloaded:
-      zipr(zipfile = file, files = figFileNames)
-    }
-    if (typeOfSeries == "onlyGif") {
-      # gif file to be downloaded:
-      generateGif(gifFile = file, files = gifFileNames, fps = fpsGif)
-    }
-    if (typeOfSeries == "gifAndZip") {
-      generateGif(gifFile = paste0(modelType, ".gif"), files = gifFileNames, fps = fpsGif)
-      # zip file to be downloaded containing the gif file:
-      zipr(zipfile = file, files = c(paste0(modelType, ".gif"), figFileNames))
-      unlink(paste0(modelType, ".gif"))
-    }
-    # clean up all single files
-    unlink(figFileNames)
-    unlink(gifFileNames)
-  })
 }
 
 exportGraphicSingle <- function(exportType, file, width, height, plotObj, predictions) {
@@ -548,21 +358,6 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
   plot
 
   dev.off()
-}
-
-# Generate GIF
-#
-# @param gifFile The gif file to create
-# @param files a list of files, url's, or raster objects or bitmap arrays
-# @param exportType (character) file type of exported plot
-# @param fps frames per second
-generateGif <- function(gifFile = "animated.gif", files, fps = 1) {
-  image_list <- lapply(files, image_read)
-
-  image_list %>%
-    image_join() %>%
-    image_animate(fps = fps, loop = 0) %>%
-    image_write(path = gifFile)
 }
 
 # Add GIF

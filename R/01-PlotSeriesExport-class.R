@@ -251,6 +251,65 @@ exportMapR.PlotSeriesExport <- function(obj, file, input) {
   unlink("data", recursive = TRUE)
 }
 
+# HELPERS -----------
+
+create_image_list_json <- function(input, figFileNames, times){
+  image_list <- list(
+    Selections = list(
+      list(
+        Group = input$`mapr-group`,
+        Group_DOI = 1,
+        Variable = list(
+          list(
+            Variable_name = input$`mapr-variable`,
+            Variable_DOI = 1,
+            Measure = list(
+              list(
+                Measure_name = input$`mapr-measure`,
+                Measure_unit = input$`mapr-measureunit`,
+                images = list(
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+
+  for (image in figFileNames){
+
+    time <- as.character(times[[which(figFileNames == image)]])
+
+    single_image <- list(
+      x_display_value = time,
+      file_type = "png",
+      location_type = "local",
+      address = gsub("data/","",image)
+    )
+
+    # Add the images to the list
+    image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images <- append(image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images, list(single_image))
+  }
+
+  image_list
+}
+
+# Generate GIF
+#
+# @param gifFile The gif file to create
+# @param files a list of files, url's, or raster objects or bitmap arrays
+# @param exportType (character) file type of exported plot
+# @param fps frames per second
+generateGif <- function(gifFile = "animated.gif", files, fps = 1) {
+  image_list <- lapply(files, image_read)
+
+  image_list %>%
+    image_join() %>%
+    image_animate(fps = fps, loop = 0) %>%
+    image_write(path = gifFile)
+}
+
 
 writePlotSeriesFilePair <- function(plotFun, model, time,
                                     mainFile, pngFile,

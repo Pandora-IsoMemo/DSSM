@@ -1,3 +1,9 @@
+# DSSM 25.07.1
+
+## Updates
+- export of time series plots: fixed bug () by adding asynchronious creation of single plots for a
+  time series. Now, users must press "Generate Plot Files" before the download of a series of plots.
+
 # DSSM 25.07.0
 
 ## Bug Fixes 
