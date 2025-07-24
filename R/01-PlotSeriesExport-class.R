@@ -17,10 +17,10 @@ new_PlotSeriesExport <- function(plotFun,
                                  Model,
                                  times,
                                  exportType = "png",
-                                 modelType = "", # e.g. "local-average", "spread", ...
+                                 modelType = "",
+                                 # e.g. "local-average", "spread", ...
                                  width = 1280,
                                  height = 800) {
-
   stopifnot(is.function(plotFun))
   stopifnot(length(times) > 0)
 
@@ -31,11 +31,14 @@ new_PlotSeriesExport <- function(plotFun,
   graphicFolder <- file.path(tmpDir, "graphic_export")
   maprFolder <- file.path(tmpDir, "mapr_export")
 
-  dir.create(graphicFolder, showWarnings = FALSE, recursive = TRUE)
+  dir.create(graphicFolder,
+             showWarnings = FALSE,
+             recursive = TRUE)
   dir.create(maprFolder, showWarnings = FALSE, recursive = TRUE)
 
   # Consistent filenames (no folder) → only the basename like "myplot_1000.png"
-  baseNames <- vapply(times, function(i) getFileName(modelType, TRUE, i), character(1))
+  baseNames <- vapply(times, function(i)
+    getFileName(modelType, TRUE, i), character(1))
   names(baseNames) <- times
 
   # Full paths
@@ -113,38 +116,34 @@ generate.PlotSeriesExport <- function(obj, ...) {
   stopifnot(inherits(obj, "PlotSeriesExport"))
 
   obj$status <- "running"
-  #tryCatch({
-    n <- length(obj$times)
-    inShiny <- !is.null(shiny::getDefaultReactiveDomain())
 
-    for (i in seq_along(obj$times)) {
-      time <- obj$times[[i]]
+  n <- length(obj$times)
+  inShiny <- !is.null(shiny::getDefaultReactiveDomain())
 
-      # for debugging:
-      #obj$plotFun(model = obj$Model, time = time)
+  for (i in seq_along(obj$times)) {
+    time <- obj$times[[i]]
 
-      # Write both main and png versions
-      writePlotSeriesFilePair(
-        plotFun = obj$plotFun,
-        model = obj$Model,
-        time = time,
-        mainFile = obj$mainFileNames[[as.character(time)]],
-        pngFile = obj$pngFileNames[[as.character(time)]],
-        exportType = obj$exportType,
-        width = obj$width,
-        height = obj$height
-      )
+    # for debugging:
+    #obj$plotFun(model = obj$Model, time = time)
 
-      if (inShiny) {
-        shiny::incProgress(1 / n, detail = paste("Time:", time))
-      }
+    # Write both main and png versions
+    writePlotSeriesFilePair(
+      plotFun = obj$plotFun,
+      model = obj$Model,
+      time = time,
+      mainFile = obj$mainFileNames[[as.character(time)]],
+      pngFile = obj$pngFileNames[[as.character(time)]],
+      exportType = obj$exportType,
+      width = obj$width,
+      height = obj$height
+    )
+
+    if (inShiny) {
+      shiny::incProgress(1 / n, detail = paste("Time:", time))
     }
+  }
 
-    obj$status <- "completed"
-  # }, error = function(e) {
-  #   obj$status <- "error"
-  #   obj$error <- conditionMessage(e)
-  # })
+  obj$status <- "completed"
 
   invisible(obj)
 }
@@ -196,6 +195,8 @@ exportSeries.PlotSeriesExport <- function(obj,
   exportType <- obj$exportType
   fileNames <- obj$mainFileNames
   gifInputFiles <- obj$pngFileNames  # Use PNG files for GIF
+  width <- obj$width
+  height <- obj$height
 
   if (reverseGif && typeOfSeries != "onlyZip") {
     times <- rev(times)
@@ -203,15 +204,29 @@ exportSeries.PlotSeriesExport <- function(obj,
     gifInputFiles <- gifInputFiles[as.character(times)]
   }
 
-  switch(typeOfSeries,
-         onlyZip = zipr(zipfile = file, files = fileNames),
-         onlyGif = generateGif(gifFile = file, files = gifInputFiles, fps = fpsGif),
-         gifAndZip = {
-           gifName <- paste0(modelType, ".gif")
-           generateGif(gifFile = gifName, files = gifInputFiles, fps = fpsGif)
-           zipr(zipfile = file, files = c(gifName, fileNames))
-           unlink(gifName)
-         })
+  switch(
+    typeOfSeries,
+    onlyZip = zipr(zipfile = file, files = fileNames),
+    onlyGif = generateGif(
+      gifFile = file,
+      files = gifInputFiles,
+      fps = fpsGif,
+      width = width,
+      height = height
+    ),
+    gifAndZip = {
+      gifName <- paste0(modelType, ".gif")
+      generateGif(
+        gifFile = gifName,
+        files = gifInputFiles,
+        fps = fpsGif,
+        width = width,
+        height = height
+      )
+      zipr(zipfile = file, files = c(gifName, fileNames))
+      unlink(gifName)
+    }
+  )
 
   # clean up? Better, keep files for different exports
   #cleanup(obj)
@@ -234,18 +249,26 @@ exportMapR.PlotSeriesExport <- function(obj, file, input, ...) {
   fileNames <- obj$pngFileNames
 
   finalPaths <- sapply(times, function(i) {
-    file.path("data",
-              gsub(" ", "", input$`mapr-group`),
-              gsub(" ", "", input$`mapr-variable`),
-              gsub(" ", "", input$`mapr-measure`),
-              paste0(i, ".png"))
+    file.path(
+      "data",
+      gsub(" ", "", input$`mapr-group`),
+      gsub(" ", "", input$`mapr-variable`),
+      gsub(" ", "", input$`mapr-measure`),
+      paste0(i, ".png")
+    )
   })
 
   # create sub directories
-  lapply(unique(dirname(finalPaths)), dir.create, recursive = TRUE, showWarnings = FALSE)
+  lapply(unique(dirname(finalPaths)),
+         dir.create,
+         recursive = TRUE,
+         showWarnings = FALSE)
 
   # copy files to final paths
-  mapply(file.copy, from = fileNames, to = finalPaths, overwrite = TRUE)
+  mapply(file.copy,
+         from = fileNames,
+         to = finalPaths,
+         overwrite = TRUE)
 
   json_list <- create_image_list_json(input, finalPaths, times)
   json_file <- "image_list.json"
@@ -261,43 +284,40 @@ exportMapR.PlotSeriesExport <- function(obj, file, input, ...) {
 
 # HELPERS -----------
 
-create_image_list_json <- function(input, figFileNames, times){
-  image_list <- list(
-    Selections = list(
-      list(
-        Group = input$`mapr-group`,
-        Group_DOI = 1,
-        Variable = list(
-          list(
-            Variable_name = input$`mapr-variable`,
-            Variable_DOI = 1,
-            Measure = list(
-              list(
-                Measure_name = input$`mapr-measure`,
-                Measure_unit = input$`mapr-measureunit`,
-                images = list(
-                )
-              )
+create_image_list_json <- function(input, figFileNames, times) {
+  image_list <- list(Selections = list(
+    list(
+      Group = input$`mapr-group`,
+      Group_DOI = 1,
+      Variable = list(
+        list(
+          Variable_name = input$`mapr-variable`,
+          Variable_DOI = 1,
+          Measure = list(
+            list(
+              Measure_name = input$`mapr-measure`,
+              Measure_unit = input$`mapr-measureunit`,
+              images = list()
             )
           )
         )
       )
     )
-  )
+  ))
 
-  for (image in figFileNames){
-
+  for (image in figFileNames) {
     time <- as.character(times[[which(figFileNames == image)]])
 
     single_image <- list(
       x_display_value = time,
       file_type = "png",
       location_type = "local",
-      address = gsub("data/","",image)
+      address = gsub("data/", "", image)
     )
 
     # Add the images to the list
-    image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images <- append(image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images, list(single_image))
+    image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images <- append(image_list$Selections[[1]]$Variable[[1]]$Measure[[1]]$images,
+                                                                           list(single_image))
   }
 
   image_list
@@ -309,19 +329,32 @@ create_image_list_json <- function(input, figFileNames, times){
 # @param files a list of files, url's, or raster objects or bitmap arrays
 # @param exportType (character) file type of exported plot
 # @param fps frames per second
-generateGif <- function(gifFile = "animated.gif", files, fps = 1) {
-  image_list <- lapply(files, image_read)
-
-  image_list %>%
-    image_join() %>%
-    image_animate(fps = fps, loop = 0) %>%
-    image_write(path = gifFile)
+# @param width Width of the GIF in pixels
+# @param height Height of the GIF in pixels
+generateGif <- function(gifFile = "animated.gif",
+                        files,
+                        fps = 1,
+                        width = 1280,
+                        height = 800) {
+  # Create the GIF from a vector of image paths
+  gifski(
+    png_files = files,
+    gif_file = gifFile,
+    width = width,
+    height = height,
+    delay = 1 / fps
+  )
 }
 
 
-writePlotSeriesFilePair <- function(plotFun, model, time,
-                                    mainFile, pngFile,
-                                    exportType, width, height) {
+writePlotSeriesFilePair <- function(plotFun,
+                                    model,
+                                    time,
+                                    mainFile,
+                                    pngFile,
+                                    exportType,
+                                    width,
+                                    height) {
   # Plot once into a temporary null device to record it <- NOT WORKING!!
   # It's only working inside downloadHandler, not in an observer beforehand
   #

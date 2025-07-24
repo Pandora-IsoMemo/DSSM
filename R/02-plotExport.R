@@ -171,7 +171,8 @@ plotExport <- function(input,
 
     # Generate plots
     withProgress(message = "Generating time series plots ...", value = 0, {
-      obj <- generate(obj)
+      obj <- generate(obj) %>%
+        shinyTryCatch(errorTitle = "Plot generation failed")
     })
 
     exportObj(obj)  # Save it for later use
@@ -359,21 +360,3 @@ writeGraphics <- function(exportType, plot, filename, width, height) {
 
   dev.off()
 }
-
-# Add GIF
-#
-# @param gifFile The gif file to add a slide to
-# @param file the file, url, or raster object or bitmap array to be added to gifFileSource
-# addGif <- function(gifFile, file) {
-#   #Create image object for new slide
-#   new_slide <- image_read(file)
-#
-#   #Read an existing gif
-#   existing_gif <- image_read(gifFile)
-#
-#   #Append new slide to existing gif
-#   final_gif <- c(existing_gif, new_slide)
-#
-#   #Write new gif
-#   image_write(final_gif, path = gifFile)
-# }

@@ -26,6 +26,7 @@ Imports:
     gdistance (>= 1.3-6),
     geometry (>= 0.4.0),
     ggplot2,
+    gifski,
     htmlwidgets,
     IsoMemo (>= 23.10.1),
     ks (>= 1.0.0),
@@ -65,6 +66,6 @@ Suggests:
     ReSources (>= 0.7.9),
     knitr,
     rmarkdown
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.1
 VignetteBuilder: knitr
 URL: https://pandora-isomemo.github.io/DSSM/
