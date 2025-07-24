@@ -16,6 +16,7 @@
 #' @importFrom geosphere destPoint
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
+#' @importFrom gifski gifski
 #' @importFrom graphics axis abline contour filled.contour hist plot points title boxplot par image lines
 #'  polygon text .filled.contour Axis box layout lcm plot.new plot.window rect legend strwidth text
 #' @importFrom grDevices as.raster cm.colors colorRampPalette col2rgb chull dev.off jpeg png
@@ -31,8 +32,7 @@
 #'  fitBounds icons labelOptions layersControlOptions leaflet leafletProxy leafletOutput
 #'  markerClusterOptions popupOptions removeControl removeMarker removeScaleBar removeShape
 #'  renderLeaflet scaleBarOptions setMaxBounds setView
-#' @importFrom magick image_animate image_info image_join image_read image_read_pdf image_read_svg
-#'  image_write
+#' @importFrom magick image_info image_read
 #' @importFrom maps map map.scale
 #' @importFrom markdown markdownToHTML
 #' @importFrom MASS mvrnorm kde2d

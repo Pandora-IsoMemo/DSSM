@@ -1,8 +1,17 @@
-# DSSM 25.07.2
+# DSSM 25.07.3
 
 ## New Features
 - _Interactive Map_: Added option to shift the _North Arrow_ or the _Scale_ to a _custom_ latitude
   and longitude position (#275)
+
+# DSSM 25.07.2
+
+## Updates
+- export of time series plots: fixed bug (#268) 
+  - Added asynchronous creation of single plots for a time series. Now, users must press
+    "Generate Plot Files" before the download of a series of plots.
+  - Switched to using the **`gifski`** package for animated GIF creation, replacing the `magick` package,
+    which crashed when handling a large number of input images.
 
 # DSSM 25.07.1
 
