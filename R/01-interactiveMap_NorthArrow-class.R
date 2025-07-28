@@ -57,8 +57,9 @@ set.NorthArrow <- function(obj, map, ...) {
   if (obj$position %in% c("topright", "topleft", "bottomright", "bottomleft")) {
     return(
       map %>% leaflet::addControl(
-        htmltools::tags$img(
-          src = "https://isomemodb.com/NorthArrow.png",
+        tags$img(
+          #src = "https://isomemodb.com/NorthArrow.png",
+          src = "NorthArrow.png", # from www folder
           width = obj$width,
           height = obj$height
         ),
