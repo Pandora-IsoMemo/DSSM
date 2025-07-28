@@ -13,6 +13,7 @@
 #' @importFrom futile.logger DEBUG flog.debug flog.info flog.threshold flog.warn INFO
 #' @importFrom gdistance transition transition accCost shortestPath geoCorrection
 #' @importFrom geometry convhulln inhulln
+#' @importFrom geosphere destPoint
 #' @importFrom ggplot2 ggplot theme theme_light coord_cartesian geom_point theme_light theme labs
 #'  geom_errorbar aes_ element_blank element_text position_dodge aes geom_boxplot xlab ylab
 #' @importFrom gifski gifski
@@ -26,10 +27,11 @@
 #' @importFrom jsonlite fromJSON toJSON
 #' @importFrom ks kde Hpi.diag Hpi
 #' @importFrom leaflet addAwesomeMarkers addCircleMarkers addControl addLayersControl addLegend
-#'  addMarkers addPopups addProviderTiles addRectangles addScaleBar addTiles awesomeIcons
-#'  clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric fitBounds icons
-#'  layersControlOptions leaflet leafletProxy leafletOutput markerClusterOptions popupOptions
-#'  removeControl removeScaleBar removeShape renderLeaflet scaleBarOptions setMaxBounds setView
+#'  addMarkers addPolygons addPolylines addPopups addProviderTiles addRectangles addScaleBar addTiles
+#'  awesomeIcons clearGroup clearMarkerClusters clearGroup clearPopups colorFactor colorNumeric
+#'  fitBounds icons labelOptions layersControlOptions leaflet leafletProxy leafletOutput
+#'  markerClusterOptions popupOptions removeControl removeMarker removeScaleBar removeShape
+#'  renderLeaflet scaleBarOptions setMaxBounds setView
 #' @importFrom magick image_info image_read
 #' @importFrom maps map map.scale
 #' @importFrom markdown markdownToHTML

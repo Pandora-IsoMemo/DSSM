@@ -931,7 +931,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   output$n2D <- reactive(nrow(pointDat2D()))
   outputOptions(output, "n2D", suspendWhenHidden = FALSE)
 
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
   callModule(plotExport, "export", reactive(values$plot), "local-average",
              reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData, Model = Model)

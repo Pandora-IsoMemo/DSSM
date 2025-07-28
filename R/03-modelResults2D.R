@@ -989,7 +989,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   outputOptions(output, "n2D", suspendWhenHidden = FALSE)
 
   callModule(modelDiagnostics, "modelDiag", model = Model)
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
 
   callModule(plotExport, "export", reactive(values$plot), "local-average",
              reactive(values$predictions))

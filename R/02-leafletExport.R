@@ -37,7 +37,7 @@ leafletExport <- function(input,
   finalLeafletMap <- reactive({
     leafletMap() %>%
       setView(lng = center()$lng, lat = center()$lat, zoom = zoom()) %>%
-      customizeLeafletMap(leafletValues()) %>%
+      customizeLeafletMap(leafletValues(), zoom = zoom()) %>%
       updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
   })
 

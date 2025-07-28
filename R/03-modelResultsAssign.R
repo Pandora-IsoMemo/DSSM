@@ -587,7 +587,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
   importedData <- importDataServer("localData")
 
   callModule(modelDiagnostics, "modelDiag", model = Model, choice = TRUE)
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
 
   observe(priority = 75, {
     allVars <- names(data())

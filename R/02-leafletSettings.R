@@ -103,11 +103,15 @@ leafletSettings <- function(input, output, session) {
   observe({
     values$scalePosition <- input$`scale-position`
     values$scaleSize <- input$`scale-size`
+    values$`scale-lng` <- input$`scale-lng`
+    values$`scale-lat` <- input$`scale-lat`
   })
 
   observe({
     values$northArrowPosition <- input$`northArrow-position`
     values$northArrowSize <- input$`northArrow-size`
+    values$`northArrow-lng` <- input$`northArrow-lng`
+    values$`northArrow-lat` <- input$`northArrow-lat`
   })
 
   observeEvent(input$applyBounds, {
@@ -142,7 +146,7 @@ scaleOrNorthArrowUI <- function(id, label, sizeValue) {
       selectInput(
         ns("position"),
         label = label,
-        choices = c("none", "topright", "bottomright", "bottomleft", "topleft"),
+        choices = c("none", "topright", "bottomright", "bottomleft", "topleft", "custom"),
         selected = "none"
       )
     ), column(
@@ -158,7 +162,18 @@ scaleOrNorthArrowUI <- function(id, label, sizeValue) {
           step = 10
         )
       )
-    ))
+    )),
+    conditionalPanel(
+      ns = ns,
+      condition = "input.position == 'custom'",
+      fluidRow(column(
+        6,
+        numericInput(ns("lng"), "Longitude", value = numeric(0), min = -180, max = 360)
+      ), column(
+        6,
+        numericInput(ns("lat"), "Latitude", value = numeric(0), min = -90, max = 90)
+      ))
+    )
   )
 }
 
@@ -211,17 +226,23 @@ boundsLatLongNumericUI <- function(id, defaultBounds) {
 #'
 #' @param leafletMap leaflet map
 #' @param leafletValues map settings, e.g. scalePosition, show/hide bounds
-customizeLeafletMap <- function(leafletMap, leafletValues) {
+#' @param zoom zoom level
+customizeLeafletMap <- function(leafletMap, leafletValues, zoom) {
   leafletMap %>%
-    addProviderTiles(leafletValues$leafletType) %>%
+    addProviderTiles(leafletValues()$leafletType) %>%
     drawIcons(
-      scalePosition = leafletValues$scalePosition,
-      scaleSize = leafletValues$scaleSize,
-      northArrowPosition = leafletValues$northArrowPosition,
-      northArrowSize = leafletValues$northArrowSize
+      zoom = zoom,
+      scalePosition = leafletValues()$scalePosition,
+      scaleSize = leafletValues()$scaleSize,
+      scaleLng = leafletValues()$`scale-lng`,
+      scaleLat = leafletValues()$`scale-lat`,
+      northArrowPosition = leafletValues()$northArrowPosition,
+      northArrowSize = leafletValues()$northArrowSize,
+      northArrowLng = leafletValues()$`northArrow-lng`,
+      northArrowLat = leafletValues()$`northArrow-lat`
     ) %>%
-    drawFittedBounds(showBounds = leafletValues$showBounds,
-                     bounds = leafletValues$bounds)
+    drawFittedBounds(showBounds = leafletValues()$showBounds,
+                     bounds = leafletValues()$bounds)
 
 }
 

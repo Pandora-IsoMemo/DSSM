@@ -1345,9 +1345,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   output$n2D <- reactive(nrow(pointDat2D()))
   outputOptions(output, "n2D", suspendWhenHidden = FALSE)
 
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
-  callModule(dataExport, "exportDataTimeCourse", data = dataTimeCourse, filename = "timeCourseData")
-  callModule(dataExport, "exportDataTimeCoursePred", data = dataTimeCoursePred, filename = "timeCourseData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
+  callModule(dataExport, "exportDataTimeCourse", dataFun = dataTimeCourse, filename = "timeCourseData")
+  callModule(dataExport, "exportDataTimeCoursePred", dataFun = dataTimeCoursePred, filename = "timeCourseData")
 
   callModule(plotExport, "export", reactive(values$plot), "spatio-temporal-average",
              predictions = reactive(values$predictions),
