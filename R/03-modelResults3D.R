@@ -1302,9 +1302,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   ###
   callModule(modelDiagnostics, "modelDiag", model = Model)
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
-  callModule(dataExport, "exportDataTimeCourse", data = dataTimeCourse, filename = "timeCourseData")
-  callModule(dataExport, "exportDataTimeCoursePred", data = dataTimeCoursePred, filename = "timeCourseDataPred")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
+  callModule(dataExport, "exportDataTimeCourse", dataFun = dataTimeCourse, filename = "timeCourseData")
+  callModule(dataExport, "exportDataTimeCoursePred", dataFun = dataTimeCoursePred, filename = "timeCourseDataPred")
 
   callModule(plotExport, "export", reactive(values$plot), "spatio-temporal-average",
              predictions = reactive(values$predictions),

@@ -3,7 +3,7 @@ dataExportButton <- function(id, title = "Export Data") {
   actionButton(ns("export"), title)
 }
 
-dataExport <- function(input, output, session, data, filename = "data") {
+dataExport <- function(input, output, session, dataFun, filename = "data") {
   observeEvent(input$export, {
     showModal(modalDialog(
       "Export Data",
@@ -34,9 +34,9 @@ dataExport <- function(input, output, session, data, filename = "data") {
     content = function(file){
       switch(
         input$exportType,
-        csv = exportCSV(file, data()(), input$colseparator, input$decseparator),
-        xlsx = exportXLSX(file, data()()),
-        json = exportJSON(file, data()())
+        csv = exportCSV(file, dataFun()(), input$colseparator, input$decseparator),
+        xlsx = exportXLSX(file, dataFun()()),
+        json = exportJSON(file, dataFun()())
       )
     }
   )

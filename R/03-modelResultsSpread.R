@@ -1016,7 +1016,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   outputOptions(output, "n2D", suspendWhenHidden = FALSE)
 
   callModule(modelDiagnostics, "modelDiag", model = Model)
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
   callModule(plotExport, "export", reactive(values$plot), "spread", reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData, Model = Model)
 
