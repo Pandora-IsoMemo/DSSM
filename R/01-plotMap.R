@@ -9,6 +9,7 @@
 #' @param resolution spatial grid resolution of displayed (higher is slower but better quality)
 #' @param interior show only convex hull TRUE/FALSE
 #' @param grid show coordinate grid TRUE/FALSE
+#' @param showBorders show country borders TRUE/FALSE
 #' @param ncol number of colors for estimates
 #' @param colors color scheme of estimates from RColorBrewer. defaults to "RdYlGn"
 #' @param reverseColors inverse colour scheme
@@ -979,6 +980,7 @@ plotMap <- function(model,
 #' @param interior show only convex hull 0 "none", 1 "3D", 2 "time sliced 2D"
 #' @param addU numeric: years of added uncertainty for time sliced 2D-convex hull
 #' @param grid show coordinate grid TRUE/FALSE
+#' @param showBorders show country borders TRUE/FALSE
 #' @param ncol number of colors for estimates
 #' @param pColor color of location marks drawn
 #' @param colorsP color scale of location marks
@@ -1722,6 +1724,7 @@ plotMap3D <- function(model,
 #' @param scale display scale TRUE/FALSE
 #' @param terrestrial show only estimates on land masses (1), oceans (-1) or all (0)
 #' @param grid show coordinate grid TRUE/FALSE
+#' @param showBorders show country borders TRUE/FALSE
 #' @param ncol number of colors for estimates
 #' @param colors color scheme of estimates from RColorBrewer. defaults to "RdYlGn"
 #' @param reverseColors inverse colour scheme

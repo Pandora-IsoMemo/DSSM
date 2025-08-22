@@ -143,6 +143,8 @@ plotMap3D(
 
 \item{grid}{show coordinate grid TRUE/FALSE}
 
+\item{showBorders}{show country borders TRUE/FALSE}
+
 \item{arrow}{display north arrow TRUE/FALSE}
 
 \item{scale}{display scale TRUE/FALSE}
