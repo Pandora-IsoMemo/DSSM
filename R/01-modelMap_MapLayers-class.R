@@ -56,8 +56,9 @@ new_MapLayers <- function(Maps,
     terrestrial <- as.numeric(terrestrial)
   }
 
-  if (!is.numeric(terrestrial) || !(as.integer(terrestrial) %in% c(1L, -1L))) {
-    stop("'terrestrial' must be 1 (ocean) or -1 (land).")
+  if (!is.numeric(terrestrial) || length(terrestrial) != 1L ||
+      !is.finite(terrestrial) || terrestrial %% 1 != 0L) {
+    stop("'terrestrial' must be 1 (show land, fill ocean), -1 (show ocean, fill land) or any other integer (show all, fill none).")
   }
   if (!is.character(centerMap) || length(centerMap) != 1L) {
     stop("'centerMap' must be a single character string (e.g., 'Europe' or 'Pacific').")
