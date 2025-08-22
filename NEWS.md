@@ -1,3 +1,11 @@
+# DSSM 25.08.0
+
+## New Features
+- _Modeling tabs_: Added a "Show borders" toggle in the right sidebar, below "Show map grid". (#281)
+
+## Updates
+- _Map layers_: refactored to S3 (MapLayers class + per-layer methods); replace addMapLayers() with plot(new_MapLayers(...)).
+
 # DSSM 25.07.3
 
 ## New Features

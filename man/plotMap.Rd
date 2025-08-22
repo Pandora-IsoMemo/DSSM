@@ -40,6 +40,7 @@ plotMap(
   RadiusBatch = NULL,
   terrestrial = 1,
   grid = TRUE,
+  showBorders = TRUE,
   arrow = TRUE,
   scale = TRUE,
   mapType = "Map",
@@ -143,6 +144,8 @@ of a series of spatial points}
 \item{terrestrial}{show only estimates on land masses (1), oceans (-1) or all (0)}
 
 \item{grid}{show coordinate grid TRUE/FALSE}
+
+\item{showBorders}{show country borders TRUE/FALSE}
 
 \item{arrow}{display north arrow TRUE/FALSE}
 
