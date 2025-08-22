@@ -2,12 +2,12 @@
 
 ## Formatting of decimal places ----
 
-#' Center Estimate UI
-#'
-#' UI function of center estimate module
-#'
-#' @param id namespace
-#' @param title title in tab
+# Center Estimate UI
+#
+# UI function of center estimate module
+#
+# @param id namespace
+# @param title title in tab
 centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
@@ -58,14 +58,14 @@ centerEstimateUI <- function(id, title = "") {
 }
 
 
-#' Center Estimate Server
-#'
-#' Backend for center estimate module
-#'
-#' @param id namespace id
-#' @param predictions (reactive) all predictions
-#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
-#'  "Spread", "Speed", "Minima/Maxima"
+# Center Estimate Server
+#
+# Backend for center estimate module
+#
+# @param id namespace id
+# @param predictions (reactive) all predictions
+# @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
+#  "Spread", "Speed", "Minima/Maxima"
 centerEstimateServer <-
   function(id, predictions, mapType = reactiveVal("Map")) {
     moduleServer(id,
@@ -270,12 +270,12 @@ extractCenterEstimates <-
   }
 
 
-#' Format Time Course UI
-#'
-#' UI function for formatting of the time course plot
-#'
-#' @param id namespace
-#' @param title title in tab
+# Format Time Course UI
+#
+# UI function for formatting of the time course plot
+#
+# @param id namespace
+# @param title title in tab
 formatTimeCourseUI <- function(id, title = "") {
   ns <- NS(id)
 
@@ -319,11 +319,11 @@ formatTimeCourseUI <- function(id, title = "") {
 }
 
 
-#' Format Time Course Server
-#'
-#' Backend for formatting of the time course plot
-#'
-#' @param id namespace id
+# Format Time Course Server
+#
+# Backend for formatting of the time course plot
+#
+# @param id namespace id
 formatTimeCourseServer <-
   function(id) {
     moduleServer(id,
@@ -1133,7 +1133,6 @@ guessDigits <- function(range, ref, min_digits = 2) {
 }
 
 # Map Layer settings ----
-
 mapLayerSettingsUI <- function(id) {
   ns <- NS(id)
   tagList(
@@ -1151,10 +1150,10 @@ mapLayerSettingsUI <- function(id) {
 
 # Helper functions for the modelling tabs ----
 
-#' Extract Zoom From Long Range
-#'
-#' @param rangeLongitude (numeric) range of longitude vector
-#' @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
+# Extract Zoom From Long Range
+#
+# @param rangeLongitude (numeric) range of longitude vector
+# @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
 extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   if (mapCentering == "Europe") {
     rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))
