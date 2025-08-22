@@ -1132,6 +1132,22 @@ guessDigits <- function(range, ref, min_digits = 2) {
   }
 }
 
+# Map Layer settings ----
+
+mapLayerSettingsUI <- function(id) {
+  ns <- NS(id)
+  tagList(
+    radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
+                 choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
+                 selected = 1),
+    checkboxInput(inputId = ns("grid"),
+                  label = "Show map grid",
+                  value = TRUE, width = "100%"),
+    checkboxInput(inputId = ns("showBorders"),
+                  label = "Show country borders",
+                  value = TRUE, width = "100%")
+  )
+}
 
 # Helper functions for the modelling tabs ----
 
