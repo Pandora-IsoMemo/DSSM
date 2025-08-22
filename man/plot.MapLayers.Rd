@@ -4,7 +4,7 @@
 \alias{plot.MapLayers}
 \title{Draw all map layers}
 \usage{
-plot.MapLayers(x, ...)
+\method{plot}{MapLayers}(x, ...)
 }
 \arguments{
 \item{x}{A \code{MapLayers} object.}

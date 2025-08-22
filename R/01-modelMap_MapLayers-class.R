@@ -218,6 +218,7 @@ add_center_line.MapLayers <- function(x, ...) {
 #' @param x A \code{MapLayers} object.
 #' @param ... Unused.
 #' @export
+#' @method plot MapLayers
 plot.MapLayers <- function(x, ...) {
   .validate_MapLayers(x)
 
