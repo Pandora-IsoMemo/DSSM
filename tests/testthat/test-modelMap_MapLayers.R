@@ -194,7 +194,7 @@ test_that("new_MapLayers handles invalid inputs gracefully", {
     "'Maps' cannot be NULL. Please provide a valid 'Maps' object."
   )
   expect_error(
-    new_MapLayers(Maps, terrestrial = 0, centerMap = "Europe"),
-    "'terrestrial' must be 1 \\(ocean\\) or -1 \\(land\\)\\."
+    new_MapLayers(Maps, terrestrial = 0.5, centerMap = "Europe"),
+    "'terrestrial' must be 1 \\(show land, fill ocean\\), -1 \\(show ocean, fill land\\) or any other integer \\(show all, fill none\\)\\."
   )
 })
