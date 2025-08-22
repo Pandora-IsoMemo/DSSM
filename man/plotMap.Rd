@@ -40,6 +40,7 @@ plotMap(
   RadiusBatch = NULL,
   terrestrial = 1,
   grid = TRUE,
+  showBorders = TRUE,
   arrow = TRUE,
   scale = TRUE,
   mapType = "Map",

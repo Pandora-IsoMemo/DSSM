@@ -42,6 +42,7 @@ plotMap3D(
   RadiusBatch = 100,
   terrestrial = 1,
   grid = TRUE,
+  showBorders = TRUE,
   arrow = TRUE,
   scale = TRUE,
   titleMain = TRUE,

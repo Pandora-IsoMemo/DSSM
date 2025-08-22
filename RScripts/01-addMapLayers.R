@@ -1,3 +1,7 @@
+# new_MapLayers
+# separate methods for each layer
+# combining method for all layers "plot"
+
 # Add map layers to a plot
 #
 # This function adds map layers to a plot. It is designed to be used in conjunction with the `plot` function.
@@ -6,9 +10,10 @@
 # @param Maps A list of spatial objects containing map layers.
 # @param terrestrial An integer specifying the type of map layer to add. Possible values are 1 (ocean) and -1 (land).
 # @param centerMap A character string specifying the center of the map. Possible values are "Europe" and "Pacific".
+# @param showBorders A logical indicating whether to add country borders to the plot.
 # @param grid A logical indicating whether to add grid lines to the plot.
 # @param centerLine A logical indicating whether to add a vertical line at the center longitude.
-addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine = FALSE, xlim = NULL, ylim = NULL) {
+addMapLayers <- function(Maps, terrestrial, centerMap, showBorders = TRUE, grid = FALSE, centerLine = FALSE, xlim = NULL, ylim = NULL) {
   # Validate input
   if (is.null(Maps)) {
     stop("'Maps' cannot be NULL. Please provide a valid 'Maps' object.")
@@ -64,11 +69,13 @@ addMapLayers <- function(Maps, terrestrial, centerMap, grid = FALSE, centerLine 
   }
 
   # Add borders
-  if (centerMap != "Europe") {
-    sp::plot(Maps$`borders-180` %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
-    sp::plot(Maps$`borders+180` %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
-  } else {
-    sp::plot(Maps$borders %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
+  if (showBorders) {
+    if (centerMap != "Europe") {
+      sp::plot(Maps$`borders-180` %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
+      sp::plot(Maps$`borders+180` %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
+    } else {
+      sp::plot(Maps$borders %>% clipMap(layer = "borders", xlim = xlim, ylim = ylim), add = TRUE, col = "darkgrey", lwd = 1)
+    }
   }
 
   if (centerLine) {

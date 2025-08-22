@@ -94,8 +94,9 @@ plotMap <- function(model,
                     mask = FALSE,
                     maskRadius = 100,
                     pColor = "#000000",
-                    dataCenter = NULL, RadiusBatch = NULL, terrestrial = 1,
-                    grid = TRUE, arrow = TRUE, scale = TRUE, mapType = "Map",
+                    dataCenter = NULL, RadiusBatch = NULL,
+                    terrestrial = 1, grid = TRUE, showBorders = TRUE,
+                    arrow = TRUE, scale = TRUE, mapType = "Map",
                     titleMain = TRUE,
                     titleScale = TRUE,
                     setAxisLabels = FALSE,
@@ -156,7 +157,6 @@ plotMap <- function(model,
     independent <- "Density"
   }
 
-  Maps <- loadMaps()
   data <- model$data
 
   if(!is.null(textLabels)){
@@ -560,6 +560,18 @@ plotMap <- function(model,
     } else {
       XPredPlot <- XPred
     }
+
+    # init map layers ----
+    mapLayers <- new_MapLayers(
+      Maps = loadMaps(),
+      terrestrial = terrestrial,
+      centerMap = centerMap,
+      showBorders = showBorders,
+      grid = grid,
+      xlim = rangex,
+      ylim = rangey
+    )
+
     z = matrix(XPredPlot$Est, ncol = resolution)
     test.rast <- raster(ncol= nrow(z), nrow = nrow(z), xmn = 0, xmx = 1,  ymn = 0, ymx = 1)
     test.rast[] <- as.vector(z)
@@ -637,7 +649,7 @@ plotMap <- function(model,
                     plot.axes = {
                       par(fg = "black", col = "black");
                       # draw map layers ----
-                      addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
+                      plot(mapLayers)
                       if (points == TRUE){
                         if(!is.null(pointLabels)){
                           pointLabels <- as.numeric(pointLabels)
@@ -759,6 +771,18 @@ plotMap <- function(model,
   } else {
     XPredPlot <- XPred
   }
+
+  # init map layers ----
+  mapLayers <- new_MapLayers(
+    Maps = loadMaps(),
+    terrestrial = terrestrial,
+    centerMap = centerMap,
+    showBorders = showBorders,
+    grid = grid,
+    xlim = rangex,
+    ylim = rangey
+  )
+
   if(!showModel){
     XPredPlot$Est <- rep(NA, length(XPredPlot$Est))
   }
@@ -813,7 +837,7 @@ plotMap <- function(model,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
+                    plot(mapLayers)
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
                         pointLabels <- as.numeric(pointLabels)
@@ -1034,8 +1058,9 @@ plotMap3D <- function(model,
                       resolution = 100, interior = TRUE,
                       ncol = 10, colors = "RdYlGn", reverseColors = FALSE,
                       dataCenter = NULL,
-                      RadiusBatch = 100, terrestrial = 1,
-                      grid = TRUE, arrow = TRUE, scale = TRUE,
+                      RadiusBatch = 100,
+                      terrestrial = 1, grid = TRUE, showBorders = TRUE,
+                      arrow = TRUE, scale = TRUE,
                       titleMain = TRUE,
                       titleScale = TRUE,
                       setAxisLabels = FALSE,
@@ -1093,7 +1118,6 @@ plotMap3D <- function(model,
     independent = "Density"
   }
 
-  Maps <- loadMaps()
   data <- model$data
   sc <- model$sc
 
@@ -1484,6 +1508,17 @@ plotMap3D <- function(model,
     XPredPlot <- XPred
   }
 
+  # init map layers ----
+  mapLayers <- new_MapLayers(
+    Maps = loadMaps(),
+    terrestrial = terrestrial,
+    centerMap = centerMap,
+    showBorders = showBorders,
+    grid = grid,
+    xlim = rangex,
+    ylim = rangey
+  )
+
   if(!showModel){
     XPredPlot$Est <- rep(NA, length(XPredPlot$Est))
   }
@@ -1530,7 +1565,7 @@ plotMap3D <- function(model,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
+                    plot(mapLayers)
                     # add points and/or centroids ----
                     if (points == TRUE){
                       if(!is.null(pointLabels)){
@@ -1731,7 +1766,8 @@ plotDS <- function(XPred,
                    showScale = TRUE,
                    ncol = 10, colors = "RdYlGn",
                    centerMap = "Europe",
-                   reverseColors = FALSE, terrestrial = 1, grid = TRUE,
+                   reverseColors = FALSE,
+                   terrestrial = 1, grid = TRUE, showBorders = TRUE,
                    arrow = TRUE, scale = TRUE,
                    simValues = NULL,
                    showValues = FALSE,
@@ -1765,6 +1801,17 @@ plotDS <- function(XPred,
     rangey[1] <- max(-90, mean(rangey) - minRangeFactor / 2 * diff(rangex))
     rangey[2] <- min(90, mean(rangey) + minRangeFactor / 2 * diff(rangex))
   }
+
+  # init map layers ----
+  mapLayers <- new_MapLayers(
+    Maps = loadMaps(),
+    terrestrial = terrestrial,
+    centerMap = centerMap,
+    showBorders = showBorders,
+    grid = grid,
+    xlim = rangex,
+    ylim = rangey
+  )
 
   if (!is.null(dataCenter)){
     # this is batch mode
@@ -1842,7 +1889,6 @@ plotDS <- function(XPred,
     z <- matrix(XPred$Est, ncol = length(unique(XPred$Latitude)))
   }
 
-  Maps <- loadMaps()
   if(estType == "Significance (Overlap)"){
     levels <- pretty(c(0, 1), n = 2)
     colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)
@@ -1934,7 +1980,7 @@ plotDS <- function(XPred,
                   plot.axes = {
                     par(fg = "black", col = "black");
                     # draw map layers ----
-                    addMapLayers(Maps, terrestrial = terrestrial, centerMap = centerMap, xlim = rangex, ylim = rangey, grid = grid)
+                    plot(mapLayers)
                     if(centerMap != "Europe"){
                       lab <- pretty(rangex) %>% shiftLongitudesToPacific()
                       axis(1, at = pretty(rangex), labels = lab, cex.axis = AxisLSize);
