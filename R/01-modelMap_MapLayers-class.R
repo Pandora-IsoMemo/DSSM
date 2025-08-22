@@ -268,10 +268,6 @@ plot.MapLayers <- function(x, ...) {
 }
 
 # ---- Geometry helpers (sf/sp pipeline) --------------------------------------
-#' @importFrom sf st_bbox st_as_sfc st_crs st_union st_intersects st_difference st_intersection st_sfc st_sf
-#' @importFrom sp plot
-#' @importFrom methods is
-#' @importFrom magrittr %>%
 
 splitXlim <- function(xlim) {
   if (is.null(xlim) || length(xlim) != 2 || xlim[1] >= xlim[2]) {
