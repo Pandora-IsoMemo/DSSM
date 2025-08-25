@@ -1,5 +1,5 @@
 # DSSM 25.08.0
-
+ 
 ## New Features
 - _Modeling tabs_: Added a "Show borders" toggle in the right sidebar, below "Show map grid". (#281)
 
