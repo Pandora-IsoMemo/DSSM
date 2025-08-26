@@ -16,7 +16,6 @@ permissions: read-all
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    container: ghcr.io/pandora-isomemo/base-image:latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -29,10 +28,12 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      # R is already installed in the base-image
-      # - uses: r-lib/actions/setup-r@v2
-      #   with:
-      #     use-public-rspm: true
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          extra-repositories: |
+            Pandora = https://Pandora-IsoMemo.github.io/drat/
+            PPM =https://packagemanager.posit.co/cran/__linux__/jammy/2025-03-01
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
