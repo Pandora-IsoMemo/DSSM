@@ -11,8 +11,6 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
-    # We use the base-image of complex dependencies
-    container: ghcr.io/pandora-isomemo/base-image:latest
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -21,8 +19,8 @@ jobs:
       matrix:
         config:
           # We only test only a subset of os & r combination for non CRAN packages
-          
-          # We can't test on mac-os, because Docker in Mac images aren't 
+
+          # We can't test on mac-os, because Docker in Mac images aren't
           # available due to licensing issues
           # - {os: macos-latest,   r: 'release'}
           # - {os: windows-latest, r: 'release'}
@@ -39,15 +37,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
-      
-      # R is already installed in the base-image
-      # - uses: r-lib/actions/setup-r@v2
-      #   with:
-      #     r-version: ${{ matrix.config.r }}
-      #     http-user-agent: ${{ matrix.config.http-user-agent }}
-      #     use-public-rspm: true
-      #     extra-repositories: https://Pandora-IsoMemo.github.io/drat/
-      
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+          extra-repositories: |
+            Pandora = https://Pandora-IsoMemo.github.io/drat/
+            PPM =https://packagemanager.posit.co/cran/__linux__/jammy/2025-03-01
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
