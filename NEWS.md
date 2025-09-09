@@ -1,3 +1,8 @@
+# DSSM 25.09.0
+
+## Bug Fixes
+- _Interactive Map_: fixed brackets in export module (#284)
+
 # DSSM 25.08.0
  
 ## New Features
