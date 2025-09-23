@@ -310,7 +310,7 @@ getExtension <- function(exportType, isTimeSeries, typeOfSeries = "gifAndZip", i
 
 exportGraphicSingle <- function(exportType, file, width, height, plotObj, predictions) {
   if (exportType == "geo-tiff"){
-    writeGeoTiff(predictions, file)
+    writeGeoTiff(predictions, filename = file)
     return()
   }
 
@@ -321,8 +321,9 @@ exportGraphicSingle <- function(exportType, file, width, height, plotObj, predic
                 height = height)
 }
 
-writeGeoTiff <- function(XPred, file){
-  if(is.null(XPred)) return()
+writeGeoTiff <- function(XPred, filename) {
+  if (is.null(XPred) || nrow(XPred) == 0) return()
+
   longLength <- length(unique((XPred$Longitude)))
   latLength <- length(unique((XPred$Latitude)))
 
@@ -336,9 +337,8 @@ writeGeoTiff <- function(XPred, file){
               xmx = max(XPred$Longitude),
               ymx = max(XPred$Latitude),
               vals  = vals)
-  writeRaster(r, filename = "out.tif", format="GTiff",
-              options = c('TFW=YES'), overwrite = TRUE)
-  file.rename("out.tif", file)
+  writeRaster(r, filename = filename, format = "GTiff",
+              options = c("TFW=YES"), overwrite = TRUE)
 }
 
 # Write Graphics
@@ -349,11 +349,11 @@ writeGeoTiff <- function(XPred, file){
 writeGraphics <- function(exportType, plot, filename, width, height) {
   switch(
     exportType,
-    png = png(filename, width = width, height = height),
-    jpeg = jpeg(filename, width = width, height = height),
-    pdf = pdf(filename, width = width / 72, height = height / 72),
-    tiff = tiff(filename, width = width, height = height),
-    svg = svg(filename, width = width / 72, height = height / 72)
+    png  = grDevices::png(filename, width = width, height = height),
+    jpeg = grDevices::jpeg(filename, width = width, height = height),
+    pdf  = grDevices::pdf(filename, width = width / 72, height = height / 72),
+    tiff = grDevices::tiff(filename, width = width, height = height),
+    svg  = grDevices::svg(filename, width = width / 72, height = height / 72)
   )
 
   plot
