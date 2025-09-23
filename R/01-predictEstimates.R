@@ -5,7 +5,9 @@
 #' @param time Time slice
 #' @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
 #' @param estQuantile Quantile value (if applicable)
-#' @param is_time_course Logical, if TRUE, returns time course predictions
+#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
+#' @param minVal Minimum value for predictions (for truncation)
+#' @param maxVal Maximum value for predictions (for truncation)
 #' @return Data frame with predictions and uncertainties
 predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     sc <- model$sc
@@ -108,6 +110,9 @@ predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuanti
 #' @param time Time slice
 #' @param estType Estimate type
 #' @param estQuantile Quantile value
+#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
+#' @param minVal Minimum value for predictions (for truncation)
+#' @param maxVal Maximum value for predictions (for truncation)
 #' @return Data frame with predictions and uncertainties
 predict_gamm <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     if (is.null(time)) {
@@ -183,6 +188,7 @@ predict_gamm <- function(model, XPred, time = NULL, estType = "Mean", estQuantil
 #' @param time Time slice
 #' @param estType Estimate type
 #' @param estQuantile Quantile value
+#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
 #' @return Data frame with predictions and uncertainties
 predict_gam <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
     data_for_prediction <- XPred[, c("Longitude", "Latitude")]
