@@ -217,10 +217,11 @@ predict_gam <- function(model, XPred, time = NULL, estType = "Mean", estQuantile
     }
 
     if (!is.null(sdValue)) {
-        qs <- apply(Predictions, 1, quantile, c(1 - pnorm(sdValue), pnorm(sdValue)), names = FALSE)
+        probs <- c(1 - pnorm(sdValue), pnorm(sdValue))
     } else {
-        qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
+        probs <- c(0.025, 0.975)
     }
+    qs <- apply(Predictions, 1, quantile, probs, names = FALSE)
 
     if (is.null(time)) {
         IntLower <- pmax(0, qs[1,])
