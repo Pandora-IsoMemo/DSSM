@@ -1,0 +1,235 @@
+#' Predict estimates for Bayesian spatio-temporal model
+#'
+#' @param model Model object
+#' @param XPred Prediction grid (data.frame)
+#' @param time Time slice
+#' @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
+#' @param estQuantile Quantile value (if applicable)
+#' @param is_time_course Logical, if TRUE, returns time course predictions
+#' @return Data frame with predictions and uncertainties
+predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+    sc <- model$sc
+    betas <- model$model$beta
+    betaSigma <- model$model$betaSigma
+
+    if (is.null(time)) {
+        data_for_prediction <- XPred
+    } else {
+        data_for_prediction <- data.frame(
+            XPred,
+            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
+        )
+    }
+
+    PredMatr <- Predict.matrix(sc, data = data_for_prediction)
+
+    Predictions <- sapply(1:nrow(betas), function(x) {
+        PredMatr %*% betas[x, ] * model$sRe + model$mRe
+    })
+
+    if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
+        Predictions <- invLogit(Predictions)
+    }
+    if (!is.null(betaSigma)) {
+        PredMatrV <- Predict.matrix(model$scV, data = data_for_prediction)
+        PredictionsSigma <- rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x) {
+            exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]
+        }) * model$sRe^2))
+    } else {
+        if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
+            PredictionsSigma <- sqrt(Predictions * (1 - Predictions))
+        } else {
+            PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
+        }
+    }
+
+    if (!is.null(sdValue)) {
+        Est <- rowMeans(Predictions)
+    } else {
+        Est <- switch(estType,
+            "Mean" = rowMeans(Predictions),
+            "1 SE" = apply(Predictions, 1, sd),
+            "2 SE" = apply(Predictions, 1, sd) * 2,
+            "1 SETOTAL" = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
+            "2 SETOTAL" = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2) * 2,
+            "1 SD Population" = PredictionsSigma * 1,
+            "2 SD Population" = PredictionsSigma * 2,
+            "Quantile" = apply(Predictions, 1, quantile, estQuantile, names = FALSE),
+            "QuantileTOTAL" = rowMeans(Predictions + qnorm(estQuantile) * sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2)),
+            rowMeans(Predictions)
+        )
+    }
+
+    if (!is.null(sdValue)) {
+        IntLower <- pmax(minVal, pmin(maxVal, rowMeans(Predictions) - sdValue * apply(Predictions, 1, sd)))
+        IntUpper <- pmax(minVal, pmin(maxVal, rowMeans(Predictions) + sdValue * apply(Predictions, 1, sd)))
+    } else {
+        #precomputing quantiles for faster execution
+        qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
+        qs2 <- apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1,
+            quantile, c(0.025, 0.975),
+            names = FALSE
+        )
+        IntLower <- qs[1, ]
+        IntUpper <- qs[2, ]
+    }
+
+    # add estimates and uncertainties
+    if (!is.null(sdValue)) {
+        XPred <- data.frame(XPred,
+            Est = Est,
+            Sd = apply(Predictions, 1, sd),
+            SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
+            PredictionsSigma = PredictionsSigma,
+            IntLower = IntLower,
+            IntUpper = IntUpper
+        )
+    } else {
+        XPred <- data.frame(XPred,
+            Est = Est,
+            Sd = apply(Predictions, 1, sd),
+            SDPop = PredictionsSigma,
+            SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
+            IntLower = IntLower,
+            IntUpper = IntUpper,
+            IntLowerTotal = qs2[1, ],
+            IntUpperTotal = qs2[2, ],
+            resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2)
+        )
+    }
+
+    return(XPred)
+}
+
+#' Predict estimates for frequentist spatio-temporal model (GAMM)
+#'
+#' @param model Model object
+#' @param XPred Prediction grid (data.frame)
+#' @param time Time slice
+#' @param estType Estimate type
+#' @param estQuantile Quantile value
+#' @return Data frame with predictions and uncertainties
+predict_gamm <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+    if (is.null(time)) {
+        data_for_prediction <- XPred
+    } else {
+        data_for_prediction <- data.frame(
+            XPred,
+            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
+        )
+    }
+
+    Est <- predict(model$model$gam,
+        newdata = data_for_prediction,
+        se.fit = TRUE, type = "response", newdata.guaranteed = TRUE
+    )
+
+    if (!is.null(sdValue)) {
+        Est$fit <- Est$fit
+    } else {
+        if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
+            varM <- Est$fit * (1 - Est$fit)
+        } else {
+            varM <- var(residuals(model$model$gam))
+        }
+
+        Est$fit <- switch(estType,
+            "1 SE"           = Est$se.fit,
+            "2 SE"           = Est$se.fit * 2,
+            "1 SETOTAL"      = sqrt(Est$se.fit^2 + varM),
+            "2 SETOTAL"      = sqrt(Est$se.fit^2 + varM) * 2,
+            "1 SD Population"= sqrt(varM) * 1,
+            "2 SD Population"= sqrt(varM) * 2,
+            "Quantile"       = Est$fit + qnorm(estQuantile) * Est$se.fit,
+            "QuantileTOTAL"  = Est$fit + qnorm(estQuantile) * sqrt(Est$se.fit^2 + varM),
+            Est$fit # default
+        )
+    }
+
+    if (!is.null(sdValue)) {
+        data.frame(XPred,
+            Est = Est$fit,
+            Sd = Est$se.fit,
+            SdTotal = sqrt(Est$se.fit^2 +  mean(residuals(model$model$gam)^2)),
+            PredictionsSigma = sd(residuals(model$model$gam)),
+            IntLower = pmax(minVal, pmin(maxVal, Est$fit - sdValue * Est$se.fit)),
+            IntUpper = pmax(minVal, pmin(maxVal, Est$fit + sdValue * Est$se.fit))
+            # IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
+            # IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2))
+        )
+    } else {
+        fitted_values <- model$model$gam$fitted.values
+        if (model$model$gam$family$family == "binomial") {
+            fitted_values <- 1 / (1 + exp(-fitted_values))
+        }
+        data.frame(XPred,
+            Est = Est$fit,
+            Sd = Est$se.fit,
+            SDPop = sqrt(varM),
+            SdTotal = sqrt(Est$se.fit^2 + varM),
+            IntLower = Est$fit - 1.96 * Est$se.fit,
+            IntUpper = Est$fit + 1.96 * Est$se.fit,
+            IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + varM),
+            IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + varM),
+            resError = sqrt(mean((fitted_values - model$model$gam$y)^2))
+        )
+    }
+}
+
+#' Predict estimates for KDE spatio-temporal model (GAM)
+#'
+#' @param model Model object
+#' @param XPred Prediction grid (data.frame)
+#' @param time Time slice
+#' @param estType Estimate type
+#' @param estQuantile Quantile value
+#' @return Data frame with predictions and uncertainties
+predict_gam <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
+    data_for_prediction <- XPred[, c("Longitude", "Latitude")]
+
+    if (!is.null(time)) {
+        data_for_prediction <- data.frame(
+            XPred,
+            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
+        )
+    }
+
+    Predictions <- sapply(1:length(model$model), function(x) {
+        predict(model$model[[x]], x = data_for_prediction)
+    })
+
+    if (!is.null(sdValue)) {
+        Est <- rowMeans(Predictions)
+    } else {
+        Est <- switch(estType,
+            "Mean" = rowMeans(Predictions),
+            "1 SE" = apply(Predictions, 1, sd),
+            "2 SE" = apply(Predictions, 1, sd) * 2,
+            "Quantile" = apply(Predictions, 1, quantile, estQuantile, names = FALSE),
+            rowMeans(Predictions)
+        )
+    }
+
+    if (!is.null(sdValue)) {
+        qs <- apply(Predictions, 1, quantile, c(1 - pnorm(sdValue), pnorm(sdValue)), names = FALSE)
+    } else {
+        qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
+    }
+
+    if (is.null(time)) {
+        IntLower <- pmax(0, qs[1,])
+        IntUpper <- qs[2, ]
+    } else if (!is.null(sdValue)) {
+        IntLower <- pmax(0, qs[1,])
+        IntUpper <- pmax(0, qs[2,])
+    } else {
+        IntLower <- qs[1, ]
+        IntUpper <- qs[2, ]
+    }
+    data.frame(XPred,
+        Est = Est,
+        Sd = apply(Predictions, 1, sd),
+        IntLower = IntLower,
+        IntUpper = IntUpper
+    )
+}

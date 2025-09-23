@@ -228,151 +228,18 @@ plotMap <- function(model,
   }
 
   XPred <- centerData(XPred, center = centerMap)
-  if (Bayes == TRUE & GAM == FALSE){
-    # predict estimates: Bayes == TRUE & GAM == FALSE ----
-    PredMatr <- Predict.matrix(sc, data = XPred)
 
-    betas <- model$model$beta
-    betaSigma <- model$model$betaSigma
-
-    Predictions <-
-      sapply(1:nrow(betas), function(x)
-        (PredMatr %*% betas[x, ]) * model$sRe + model$mRe)
-
-    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-      Predictions <- invLogit(Predictions)
-    }
-
-    if(!is.null(betaSigma)){
-      # predict sigma: !is.null(betaSigma) ----
-      PredMatrV <- Predict.matrix(model$scV, data = XPred)
-      PredictionsSigma <-
-        rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
-          exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
-    } else {
-      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
-      } else {
-        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
-      }
-    }
-    if(estType == "Mean"){
-      Est <- rowMeans(Predictions)
-    }
-    if(estType == "1 SE"){
-      Est <- apply(Predictions, 1, sd)
-    }
-    if(estType == "2 SE"){
-      Est <- apply(Predictions, 1, sd) * 2
-    }
-    if(estType == "1 SETOTAL"){
-      Est <- sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2)
-    }
-    if(estType == "2 SETOTAL"){
-      Est <- sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2) * 2
-    }
-    if(estType == "1 SD Population"){
-      Est <- PredictionsSigma * 1
-    }
-    if(estType == "2 SD Population"){
-      Est <- PredictionsSigma * 2
-    }
-
-    if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
-    }
-    if(estType == "QuantileTOTAL"){
-      Est <- rowMeans(Predictions + qnorm(estQuantile) * sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2))
-    }
-    #precomputing quantiles for faster execution
-    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975),
-                names = FALSE)
-    qs2 <- apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1,
-                 quantile, c(0.025, 0.975), names = FALSE)
-    XPred <- data.frame(XPred,
-                    Est = Est,
-                    Sd = apply(Predictions, 1, sd),
-                    SDPop = PredictionsSigma,
-                    SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                    IntLower = qs[1,],
-                    IntUpper = qs[2,],
-                    IntLowerTotal = qs2[1,],
-                    IntUpperTotal = qs2[2,],
-                    resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2)
-    )
-    }
-  if (Bayes == FALSE & GAM == FALSE){
-    # predict estimates: Bayes == FALSE & GAM == FALSE ----
-    Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
-    if(estType == "1 SE"){
-      Est$fit <- Est$se.fit
-    }
-    if(estType == "2 SE"){
-      Est$fit <- Est$se.fit * 2
-    }
-    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-      varM = Est$fit * (1-Est$fit)
-    }  else {
-      varM = var(residuals(model$model$gam))
-    }
-    if(estType == "1 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + varM)
-    }
-    if(estType == "2 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + varM) * 2
-    }
-    if(estType == "1 SD Population"){
-      Est$fit <- sqrt(varM) * 1
-    }
-    if(estType == "2 SD Population"){
-      Est$fit <- sqrt(varM) * 2
-    }
-    if(estType == "Quantile"){
-      Est$fit <- Est$fit + qnorm(estQuantile) * Est$se.fit
-    }
-    if(estType == "QuantileTOTAL"){
-      Est$fit <- Est$fit + qnorm(estQuantile) *
-        sqrt(Est$se.fit^2 + varM)
-    }
-    fitted_values <- model$model$gam$fitted.values
-    if(model$model$gam$family$family == "binomial"){
-      fitted_values <- 1 / (1+exp(-fitted_values))
-    }
-    XPred <- data.frame(XPred,
-                        Est = Est$fit,
-                        Sd = Est$se.fit,
-                        SDPop = sqrt(varM),
-                        SdTotal = sqrt(Est$se.fit^2 + varM),
-                        IntLower = Est$fit - 1.96 * Est$se.fit,
-                        IntUpper = Est$fit + 1.96 * Est$se.fit,
-                        IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + varM),
-                        IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + varM),
-                        resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
+  # predict estimates ----
+  if (Bayes == TRUE & GAM == FALSE) {
+    XPred <- predict_bayes(model, XPred, estType = estType, estQuantile = estQuantile)
   }
-  if(GAM == TRUE){
-    # predict estimates: GAM == TRUE ----
-    Predictions <- sapply(1:length(model$model), function(x) predict(model$model[[x]], x = XPred[, 1:2]))
-    if(estType == "Mean"){
-      Est <- rowMeans(Predictions)
-    }
-    if(estType == "1 SE"){
-      Est <- apply(Predictions, 1, sd)
-    }
-    if(estType == "2 SE"){
-      Est <- apply(Predictions, 1, sd) * 2
-    }
-
-    if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
-    }
-    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
-
-    XPred <- data.frame(XPred,
-                        Est = Est,
-                        Sd = apply(Predictions, 1, sd),
-                        IntLower = pmax(0, qs[1,]),
-                        IntUpper = qs[2,])
+  if (Bayes == FALSE & GAM == FALSE) {
+    XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
   }
+  if (GAM == TRUE) {
+    XPred <- predict_gam(model, XPred, estType = estType, estQuantile = estQuantile)
+  }
+
   if (estType != "1 SE" && estType != "2 SE" &&
       estType != "1 SETOTAL" &&
       estType != "2 SETOTAL" &&
@@ -1240,162 +1107,17 @@ plotMap3D <- function(model,
     }))
   }
 
+  # predict estimates ----
   if (Bayes == TRUE & GAM == FALSE){
-    # predict estimates: Bayes == TRUE & GAM == FALSE ----
-    PredMatr <- Predict.matrix(sc,
-                               data = data.frame(XPred,
-                                                 Date2 = (time - mean(data$Date)) /
-                                                   sd(data$Date)))
-
-    betas <- model$model$beta
-    betaSigma <- model$model$betaSigma
-
-    Predictions <-
-      sapply(1:nrow(betas), function(x)
-        PredMatr %*% betas[x, ] * model$sRe + model$mRe)
-
-    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-      Predictions <- invLogit(Predictions)
-    }
-
-    if(!is.null(betaSigma)){
-      # predict sigma: !is.null(betaSigma) ----
-      PredMatrV <- Predict.matrix(model$scV,
-                                  data = data.frame(XPred,
-                                                    Date2 = (time - mean(data$Date)) /
-                                                      sd(data$Date)))
-      PredictionsSigma <-
-        rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
-          exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
-    } else {
-      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
-      } else {
-        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
-      }
-    }
-    if(estType == "Mean"){
-      Est <- rowMeans(Predictions)
-    }
-    if(estType == "1 SE"){
-      Est <- apply(Predictions, 1, sd)
-    }
-    if(estType == "2 SE"){
-      Est <- apply(Predictions, 1, sd) * 2
-    }
-    if(estType == "1 SETOTAL"){
-      Est <- sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2)
-    }
-    if(estType == "2 SETOTAL"){
-      Est <- sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2) * 2
-    }
-    if(estType == "1 SD Population"){
-      Est <- PredictionsSigma * 1
-    }
-    if(estType == "2 SD Population"){
-      Est <- PredictionsSigma * 2
-    }
-    if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
-    }
-    if(estType == "QuantileTOTAL"){
-      Est <- rowMeans(Predictions +  qnorm(estQuantile) * sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2))
-    }
-    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
-    qs2 <- apply(Predictions + sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2), 1,
-                 quantile, c(0.025, 0.975), names = FALSE)
-
-    XPred <- data.frame(XPred,
-                 Est = Est,
-                 Sd = apply(Predictions, 1, sd),
-                 SDPop = PredictionsSigma,
-                 SdTotal = sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2),
-                 IntLower = qs[1,],
-                 IntUpper = qs[2,],
-                 IntLowerTotal = qs2[1,],
-                 IntUpperTotal = qs2[2,],
-                 resError = sqrt(mean(model$model$sigma + model$model$tau) * model$sRe^2))
+    XPred <- predict_bayes(model, XPred, time, estType = estType, estQuantile = estQuantile)
   }
-  if (Bayes == FALSE & GAM == FALSE){
-    # predict estimates: Bayes == FALSE & GAM == FALSE ----
-    Est <- predict(model$model$gam,
-                   newdata = data.frame(XPred,
-                              Date2 = (time - mean(data$Date)) /
-                                sd(data$Date)), se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
-    if(estType == "1 SE"){
-      Est$fit <- Est$se.fit
-    }
-    if(estType == "2 SE"){
-      Est$fit <- Est$se.fit * 2
-    }
-    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-      varM = Est$fit * (1-Est$fit)
-    }  else {
-      varM = var(residuals(model$model$gam))
-    }
-    if(estType == "1 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + varM)
-    }
-    if(estType == "2 SETOTAL"){
-      Est$fit <- sqrt(Est$se.fit^2 + varM) * 2
-    }
-    if(estType == "1 SD Population"){
-      Est$fit <- sqrt(varM) * 1
-    }
-    if(estType == "2 SD Population"){
-      Est$fit <- sqrt(varM) * 2
-    }
-    if(estType == "Quantile"){
-      Est$fit <- Est$fit + qnorm(estQuantile) * Est$se.fit
-    }
-    if(estType == "QuantileTOTAL"){
-      Est$fit <- Est$fit + qnorm(estQuantile) *
-        sqrt(Est$se.fit^2 + varM)
-    }
-    fitted_values <- model$model$gam$fitted.values
-    if(model$model$gam$family$family == "binomial"){
-      fitted_values <- 1 / (1+exp(-fitted_values))
-    }
-
-    XPred <- data.frame(XPred,
-                        Est = Est$fit, Sd = Est$se.fit,
-                        SDPop = sqrt(varM),
-                        SdTotal = sqrt(Est$se.fit^2 + varM),
-                        IntLower = Est$fit - 1.96 * Est$se.fit,
-                        IntUpper = Est$fit + 1.96 * Est$se.fit,
-                        IntLowerTotal = Est$fit - 1.96 *
-                          sqrt(Est$se.fit^2 + varM),
-                        IntUpperTotal = Est$fit + 1.96 *
-                          sqrt(Est$se.fit^2 + varM),
-                        resError = sqrt(mean((fitted_values - model$model$gam$y)^2)))
+  if (Bayes == FALSE & GAM == FALSE) {
+    XPred <- predict_gamm(model, XPred, time, estType = estType, estQuantile = estQuantile)
   }
-  if(GAM == TRUE){
-    # predict estimates: GAM == TRUE ----
-    Predictions <- sapply(1:length(model$model),
-                          function(x) predict(model$model[[x]],
-                                              x = cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude,
-                                                         Date2 = (time - mean(data$Date)) / sd(data$Date))))
-
-    if(estType == "Mean"){
-      Est <- rowMeans(Predictions)
-    }
-    if(estType == "1 SE"){
-      Est <- apply(Predictions, 1, sd)
-    }
-    if(estType == "2 SE"){
-      Est <- apply(Predictions, 1, sd) * 2
-    }
-
-    if(estType == "Quantile"){
-      Est <- apply(Predictions, 1, quantile, estQuantile, names = FALSE)
-    }
-    qs <- apply(Predictions, 1, quantile, c(0.025, 0.975), names = FALSE)
-    XPred <- data.frame(XPred,
-                        Est = Est,
-                        Sd = apply(Predictions, 1, sd),
-                        IntLower = qs[1,],
-                        IntUpper = qs[2,])
+  if (GAM == TRUE) {
+    XPred <- predict_gam(model, XPred, time, estType = estType, estQuantile = estQuantile)
   }
+  
   if (estType != "1 SE" && estType != "1 SETOTAL" && estType != "2 SE" &&
       estType != "2 SETOTAL" &&
       !is.null(limitz) && !missing(limitz)){
@@ -1458,7 +1180,7 @@ plotMap3D <- function(model,
       }
     return(dataCenter)
   }
-
+  
   # keep $Est for later calculation of mean and sd for center
   XPred$EstForCenter <- XPred$Est
 
@@ -2289,87 +2011,46 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   time <- seq(trange[1], trange[2], length.out = resolution)
 
   XPred <- data.frame(time,
-                      Date2 = (time - mean(data$Date)) /
-                        sd(data$Date),
                       Longitude2 = (centerX - mean(data$Longitude)) / sd(data$Longitude),
                       Latitude2 = (centerY - mean(data$Latitude)) / sd(data$Latitude),
                       Longitude = centerX,
                       Latitude = centerY)
 
-  if (Bayes == TRUE & GAM == FALSE){
-    # predict estimates: Bayes == TRUE & GAM == FALSE ----
-    sc <- model$sc
-    PredMatr <- Predict.matrix(sc, data = XPred)
+  # predict estimates ----
+  if (Bayes == TRUE & GAM == FALSE) {
+    XPred <- predict_bayes(
+      model,
+      XPred, 
+      time, 
+      sdValue = sdValue, 
+      minVal = minVal, 
+      maxVal = maxVal
+    )
 
-    betas <- model$model$beta
-    betaSigma <- model$model$betaSigma
-
-    Predictions <-
-      sapply(1:nrow(betas), function(x)
-        PredMatr %*% betas[x, ] * model$sRe + model$mRe)
-
-    if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-      Predictions <- invLogit(Predictions)
-    }
-
-    if(!is.null(betaSigma)){
-      # predict sigma: !is.null(betaSigma) ----
-      PredMatrV <- Predict.matrix(model$scV, data = XPred)
-      PredictionsSigma <-
-        rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x)
-          exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]) * model$sRe^2))
-    } else {
-      if(!is.null(model$IndependentType) && model$IndependentType != "numeric"){
-        PredictionsSigma <- sqrt(Predictions * (1-Predictions))
-      } else {
-        PredictionsSigma <- sqrt(mean(model$model$sigma) * model$sRe^2)
-      }
-    }
-
-    if(!is.null(betaSigma)){
-      SdTotal <- sqrt((PredictionsSigma)^2 + apply(Predictions, 1, sd)^2)
-    } else {
-      SdTotal <- sqrt(PredictionsSigma^2 + apply(Predictions, 1, sd)^2)
-    }
-
-    XPred <-
-      data.frame(XPred,
-                 Est = rowMeans(Predictions),
-                 Sd = apply(Predictions, 1, sd),
-                 SdTotal = SdTotal,
-                 PredictionsSigma = PredictionsSigma,
-                 IntLower = pmax(minVal, pmin(maxVal, rowMeans(Predictions) - sdValue * apply(Predictions, 1, sd))),
-                 IntUpper = pmax(minVal, pmin(maxVal, rowMeans(Predictions) + sdValue * apply(Predictions, 1, sd))))
     mainlab <- paste0("Estimate of ", independent, " in time course at coordinates ",
                       "(", centerY,",", centerX,")" ," with credible intervals")
   }
-  if (Bayes == FALSE & GAM == FALSE){
-    # predict estimates: Bayes == FALSE & GAM == FALSE ----
-    Est <- predict(model$model$gam, newdata = XPred, se.fit = TRUE, type = "response", newdata.guaranteed=TRUE)
-    XPred <- data.frame(XPred, Est = Est$fit, Sd = Est$se.fit,
-                        SdTotal = sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
-                        PredictionsSigma = sd(residuals(model$model$gam)),
-                        IntLower = pmax(minVal, pmin(maxVal, Est$fit - sdValue * Est$se.fit)),
-                        IntUpper = pmax(minVal, pmin(maxVal, Est$fit + sdValue * Est$se.fit))
-                        # IntLowerTotal = Est$fit - 1.96 * sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2)),
-                        # IntUpperTotal = Est$fit + 1.96 * sqrt(Est$se.fit^2 + mean(residuals(model$model$gam)^2))
+  if (Bayes == FALSE & GAM == FALSE) {
+    XPred <- predict_gamm(
+      model,
+      XPred,
+      time,
+      sdValue = sdValue,
+      minVal = minVal,
+      maxVal = maxVal
     )
+
     mainlab <- paste0("Estimate of ", independent, " in time course at coordinates ",
                       "(", centerY,",", centerX,")" ," with confidence intervals")
   }
-  if (GAM == TRUE){
-    # predict estimates: GAM == TRUE ----
-    EstTemp <- sapply(1:length(model$model), function(x) predict(model$model[[x]],
-                                                                 x =  cbind(Longitude = XPred$Longitude, Latitude = XPred$Latitude, Date2 = XPred$Date2)))
+  if (GAM == TRUE) {
+    XPred <- predict_gam(
+      model,
+      XPred,
+      time,
+      sdValue = sdValue
+    )
 
-    qs <- apply(EstTemp, 1, quantile, c(1 - pnorm(sdValue), pnorm(sdValue)), names = FALSE)
-
-    estQuantile <-
-    XPred <- data.frame(XPred,
-                        Est = rowMeans(EstTemp),
-                        Sd = apply(EstTemp, 1, sd),
-                        IntLower = pmax(0, qs[1,]),
-                        IntUpper = pmax(0, qs[2,]))
     mainlab <- paste0("Density estimate in time course at coordinates ",
                       "(", centerY,",", centerX,").")
 
