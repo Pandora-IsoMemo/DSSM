@@ -36,6 +36,7 @@ summarize_bayes_predictions <- function(
     sdValue = NULL,
     minVal = NULL, maxVal = NULL) {
     betaSigma <- model$model$betaSigma
+    is_plot_time_course <- !is.null(sdValue)
 
     if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
         Predictions <- invLogit(Predictions)
@@ -53,7 +54,7 @@ summarize_bayes_predictions <- function(
         }
     }
 
-    if (!is.null(sdValue)) {
+    if (is_plot_time_course) {
         Est <- rowMeans(Predictions)
     } else {
         Est <- switch(estType,
@@ -70,7 +71,7 @@ summarize_bayes_predictions <- function(
         )
     }
 
-    if (!is.null(sdValue)) {
+    if (is_plot_time_course) {
         IntLower <- pmax(minVal, pmin(maxVal, rowMeans(Predictions) - sdValue * apply(Predictions, 1, sd)))
         IntUpper <- pmax(minVal, pmin(maxVal, rowMeans(Predictions) + sdValue * apply(Predictions, 1, sd)))
     } else {
@@ -85,7 +86,7 @@ summarize_bayes_predictions <- function(
     }
 
     # add estimates and uncertainties
-    if (!is.null(sdValue)) {
+    if (is_plot_time_course) {
         XPred <- data.frame(XPred,
             Est = Est,
             Sd = apply(Predictions, 1, sd),
@@ -145,7 +146,9 @@ summarize_gamm_predictions <- function(
     minVal = NULL,
     maxVal = NULL
 ) {
-    if (!is.null(sdValue)) {
+    is_plot_time_course <- !is.null(sdValue)
+
+    if (is_plot_time_course) {
         Est$fit <- Est$fit
     } else {
         if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
@@ -167,7 +170,7 @@ summarize_gamm_predictions <- function(
         )
     }
 
-    if (!is.null(sdValue)) {
+    if (is_plot_time_course) {
         data.frame(XPred,
             Est = Est$fit,
             Sd = Est$se.fit,
@@ -226,7 +229,10 @@ summarize_gam_predictions <- function(
     estQuantile = 0.9,
     sdValue = NULL
 ) {
-    if (!is.null(sdValue)) {
+    is_plot_time_course <- !is.null(sdValue)
+    is_plot_map_2d <- is.null(XPred[["Date2"]])
+
+    if (is_plot_time_course) {
         Est <- rowMeans(Predictions)
     } else {
         Est <- switch(estType,
@@ -238,20 +244,20 @@ summarize_gam_predictions <- function(
         )
     }
 
-    if (!is.null(sdValue)) {
+    if (is_plot_time_course) {
         probs <- c(1 - pnorm(sdValue), pnorm(sdValue))
     } else {
         probs <- c(0.025, 0.975)
     }
     qs <- apply(Predictions, 1, quantile, probs, names = FALSE)
 
-    if (is.null(time)) {
-        IntLower <- pmax(0, qs[1,])
-        IntUpper <- qs[2, ]
-    } else if (!is.null(sdValue)) {
+    if (is_plot_map_2d) {
         IntLower <- pmax(0, qs[1,])
         IntUpper <- pmax(0, qs[2,])
-    } else {
+    } else if (is_plot_time_course) {
+        IntLower <- pmax(0, qs[1,])
+        IntUpper <- pmax(0, qs[2,])
+    } else { # is_plot_map_3d
         IntLower <- qs[1, ]
         IntUpper <- qs[2, ]
     }

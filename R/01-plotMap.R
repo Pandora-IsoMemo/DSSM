@@ -255,7 +255,7 @@ plotMap <- function(model,
     XPred <- Predictions %>%
       summarize_gam_predictions(
         model = model,
-        XPred = XPred,
+        XPred = XPred[, c("Longitude", "Latitude")],
         estType = estType,
         estQuantile = estQuantile
       )
@@ -1146,7 +1146,12 @@ plotMap3D <- function(model,
   if (GAM == TRUE) {
     Predictions <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")])
     XPred <- Predictions %>%
-      summarize_gam_predictions(model = model, XPred = XPred, estType = estType, estQuantile = estQuantile)
+      summarize_gam_predictions(
+        model = model,
+        XPred = XPred[, c("Longitude", "Latitude", "Date2")],
+        estType = estType,
+        estQuantile = estQuantile
+      )
   }
   
   if (estType != "1 SE" && estType != "1 SETOTAL" && estType != "2 SE" &&
@@ -2080,7 +2085,11 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   if (GAM == TRUE) {
     Predictions <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")])
     XPred <- Predictions %>%
-      summarize_gam_predictions(model = model, XPred = XPred, sdValue = sdValue)
+      summarize_gam_predictions(
+        model = model,
+        XPred = XPred[, c("Longitude", "Latitude", "Date2")],
+        sdValue = sdValue
+      )
 
     mainlab <- paste0("Density estimate in time course at coordinates ",
                       "(", centerY,",", centerX,").")
