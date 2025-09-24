@@ -2,12 +2,12 @@
 
 ## Formatting of decimal places ----
 
-#' Center Estimate UI
-#'
-#' UI function of center estimate module
-#'
-#' @param id namespace
-#' @param title title in tab
+# Center Estimate UI
+#
+# UI function of center estimate module
+#
+# @param id namespace
+# @param title title in tab
 centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
@@ -58,14 +58,14 @@ centerEstimateUI <- function(id, title = "") {
 }
 
 
-#' Center Estimate Server
-#'
-#' Backend for center estimate module
-#'
-#' @param id namespace id
-#' @param predictions (reactive) all predictions
-#' @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
-#'  "Spread", "Speed", "Minima/Maxima"
+# Center Estimate Server
+#
+# Backend for center estimate module
+#
+# @param id namespace id
+# @param predictions (reactive) all predictions
+# @param mapType (reactive) type of plot, either "Map", "Time course", "Time intervals by temporal group or cluster",
+#  "Spread", "Speed", "Minima/Maxima"
 centerEstimateServer <-
   function(id, predictions, mapType = reactiveVal("Map")) {
     moduleServer(id,
@@ -175,11 +175,11 @@ centerEstimateServer <-
                  })
   }
 
-#' Extract Grid Length
-#'
-#' @param latitude (numeric) latitude
-#' @param longitude (numeric) longitude
-#' @param digits (numeric) significant digits
+# Extract Grid Length
+#
+# @param latitude (numeric) latitude
+# @param longitude (numeric) longitude
+# @param digits (numeric) significant digits
 extractGridLength <- function(latitude, longitude, digits = 5) {
   getGridLength <- function(x) {
     x[order(x)] %>%
@@ -270,12 +270,12 @@ extractCenterEstimates <-
   }
 
 
-#' Format Time Course UI
-#'
-#' UI function for formatting of the time course plot
-#'
-#' @param id namespace
-#' @param title title in tab
+# Format Time Course UI
+#
+# UI function for formatting of the time course plot
+#
+# @param id namespace
+# @param title title in tab
 formatTimeCourseUI <- function(id, title = "") {
   ns <- NS(id)
 
@@ -319,11 +319,11 @@ formatTimeCourseUI <- function(id, title = "") {
 }
 
 
-#' Format Time Course Server
-#'
-#' Backend for formatting of the time course plot
-#'
-#' @param id namespace id
+# Format Time Course Server
+#
+# Backend for formatting of the time course plot
+#
+# @param id namespace id
 formatTimeCourseServer <-
   function(id) {
     moduleServer(id,
@@ -549,11 +549,11 @@ mapSectionServer <- function(id,
 
 ## Z-scale settings ----
 
-#' Z Scale UI
-#'
-#' UI of the module
-#'
-#' @param id id of module
+# Z Scale UI
+#
+# UI of the module
+#
+# @param id id of module
 zScaleUI <-
   function(id) {
     ns <- NS(id)
@@ -611,21 +611,21 @@ zScaleUI <-
     )
   }
 
-#' Z Scale Server
-#'
-#' Server function of the module
-#' @param id id of module
-#' @param Model (reactive) model output
-#' @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
-#' @param estimationTypeChoices (reactive) named characters of choices of estimation types
-#' @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
-#' restrict the z scale.
-#' @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
-#' @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
-#'  "Minima/Maxima"
-#' @param zValuesFactor (numeric) factor applied to zValues
-#' @param mapType (character)
-#' @param IndSelect (character) select category in case of categorical model
+# Z Scale Server
+#
+# Server function of the module
+# @param id id of module
+# @param Model (reactive) model output
+# @param fixCol (reactive) user input if columns should be fixed, TRUE or FALSE
+# @param estimationTypeChoices (reactive) named characters of choices of estimation types
+# @param restrictOption (reactive) either "hide" or "show". If "show" than add user input to
+# restrict the z scale.
+# @param zValuesFun (reactive) function to extract zValues, either getZValues or getZValuesKernel
+# @param mapType (reactive) type of map, either "Map" or "Time course"; "Spread", "Speed" or
+#  "Minima/Maxima"
+# @param zValuesFactor (numeric) factor applied to zValues
+# @param mapType (character)
+# @param IndSelect (character) select category in case of categorical model
 zScaleServer <- function(id,
                          Model,
                          fixCol,
@@ -788,9 +788,9 @@ zScaleServer <- function(id,
                })
 }
 
-#' Get Z Values Map Sim
-#'
-#' @inheritParams getZvalues
+# Get Z Values Map Sim
+#
+# @inheritParams getZvalues
 getZValuesMapSim <-
   function(estimationType,
            model,
@@ -839,9 +839,9 @@ getZValuesMapSim <-
   }
 
 
-#' Get Z Values Map Diff
-#'
-#' @inheritParams getZvalues
+# Get Z Values Map Diff
+#
+# @inheritParams getZvalues
 getZValuesMapDiff <-
   function(estimationType,
            model,
@@ -917,9 +917,9 @@ getZValuesMapDiff <-
   }
 
 
-#' Get Z Values Kernel
-#'
-#' @inheritParams getZvalues
+# Get Z Values Kernel
+#
+# @inheritParams getZvalues
 getZValuesKernel <-
   function(estimationType,
            model,
@@ -956,19 +956,21 @@ getZValuesKernel <-
   }
 
 
-#' Get Z Values
-#'
-#' @param estimationType (character) type of estimate
-#' @param model (list) model output
-#' @param mapType (character) type of map, either "Map" or "Time course"
-#' @param factor (numeric) factor applied to estimates
-#' @param IndSelect (character) select category in case of categorical model
+# Get Z Values
+#
+# @param estimationType (character) type of estimate
+# @param model (list) model output
+# @param mapType (character) type of map, either "Map" or "Time course"
+# @param factor (numeric) factor applied to estimates
+# @param IndSelect (character) select category in case of categorical model
+# @param buffer (numeric) buffer applied to the mean range, e.g. 0.01
 getZvalues <-
   function(estimationType,
            model,
            mapType,
            factor = 3,
-           IndSelect = NULL) {
+           IndSelect = NULL,
+           buffer = 0.01) {
     zValues <-
       getZValuesInitial(IndependentType = model$IndependentType,
                         IndSelect = IndSelect)
@@ -998,8 +1000,9 @@ getZvalues <-
 
     if (mapType == "Time course" ||
         estimationType %in% c("Mean", "Quantile", "QuantileTOTAL")) {
-      defaultMin <- getDefaultZMin(model$range$mean)
-      defaultMax <- getDefaultZMax(model$range$mean)
+      logging("Estimate range = [%.2f, %.2f]", model$range$mean[1], model$range$mean[2])
+      defaultMin <- getDefaultZBound(model$range$mean, buffer = buffer, which = "min")
+      defaultMax <- getDefaultZBound(model$range$mean, buffer = buffer, which = "max")
       zValues$minInput <-
         list(value = defaultMin,
              min = defaultMin,
@@ -1074,52 +1077,83 @@ getModel <- function(model, IndSelect) {
   }
 }
 
-#' Get Default Z Error
-#'
-#' @param estType (character) type of estimate
-#' @param range (numeric) range from model output
+# Get Default Z Error
+#
+# @param estType (character) type of estimate
+# @param range (numeric) range from model output
 getDefaultZError <- function(estType, range) {
   sdVal <- ifelse(grepl("2", estType), 2, 1)
   3 * signif(1.1 * max(range) * sdVal, 2)
 }
 
-#' Get Default Z Min
-#'
-#' @param mean mean from model output
-getDefaultZMin <- function(mean) {
-  shift <- 0.1 * diff(mean)
-  if (shift == 0) shift <- 0.0001 * mean[1]
+# Compute padded and rounded boundary from mean range
+#
+# @param mean numeric vector of length 2 (min, max)
+# @param buffer numeric, proportion of padding to apply, e.g. 0.1
+# @param which character: "min" or "max" to select the bound
+# @return numeric boundary value
+getDefaultZBound <- function(mean, buffer = 0.01, which = c("min", "max")) {
+  which <- match.arg(which)
+  shift <- buffer * diff(mean)
+  idx <- if (which == "min") 1 else 2
+  base <- mean[idx]
 
-  defaultMin <- mean[1] - shift
+  if (shift == 0) {
+    shift <- 0.0001 * abs(base)
+    rounding <- FALSE
+  } else {
+    rounding <- TRUE
+  }
+  bound <- if (which == "min") base - shift else base + shift
 
-  digits <- which(round(abs(diff(mean) / mean[1] * 10 ^ (0:10)), 0) > 1)[1]
-  if (is.na(digits)) return(defaultMin)
+  if (rounding) {
+    digits <- guessDigits(mean, ref = base)
+    if (!is.na(digits)) bound <- signif(bound, digits)
+  }
 
-  signif(defaultMin, digits)
+  bound
 }
 
-#' Get Default Z Max
-#'
-#' @param mean mean from model output
-getDefaultZMax <- function(mean) {
-  shift <- 0.1 * diff(mean)
-  if (shift == 0) shift <- 0.0001 * mean[2]
+# Guess Number of Significant Digits Based on Range and Reference Value
+# @param range numeric vector of length 2 (min, max)
+# @param ref numeric, reference value (typically mean[1] or mean[2])
+# @param min_digits numeric, minimum scaled difference considered "significant" (default = 1)
+# @return integer number of significant digits, or NULL if not applicable
+guessDigits <- function(range, ref, min_digits = 2) {
+  rel_diff <- abs(diff(range)) / max(abs(ref), .Machine$double.eps)
+  candidates <- round(rel_diff * 10 ^ (0:10), 0)
+  index <- which(candidates >= 1)[1]
 
-  defaultMax <- mean[2] + shift
-
-  digits <- which(round(abs(diff(mean) / mean[2] * 10 ^ (0:10)), 0) > 1)[1]
-  if (is.na(digits)) return(defaultMax)
-
-  signif(defaultMax, digits)
+  # Return at least `min_digits` if value is small (e.g. < 100)
+  if (is.na(index)) {
+    return(min_digits)
+  } else {
+    return(max(index, if (abs(ref) < 100) min_digits else 1))
+  }
 }
 
+# Map Layer settings ----
+mapLayerSettingsUI <- function(id) {
+  ns <- NS(id)
+  tagList(
+    radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
+                 choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
+                 selected = 1),
+    checkboxInput(inputId = ns("grid"),
+                  label = "Show map grid",
+                  value = TRUE, width = "100%"),
+    checkboxInput(inputId = ns("showBorders"),
+                  label = "Show country borders",
+                  value = TRUE, width = "100%")
+  )
+}
 
 # Helper functions for the modelling tabs ----
 
-#' Extract Zoom From Long Range
-#'
-#' @param rangeLongitude (numeric) range of longitude vector
-#' @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
+# Extract Zoom From Long Range
+#
+# @param rangeLongitude (numeric) range of longitude vector
+# @param mapCentering (character) centering of the map, either "Europe" or "Pacific"
 extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   if (mapCentering == "Europe") {
     rangeLong <- diff(range(rangeLongitude, na.rm = TRUE) + c(-1, 1))

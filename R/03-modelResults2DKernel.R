@@ -173,14 +173,9 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                        choices = c("0th meridian" = "Europe", "180th meridian" = "Pacific")),
           helpTextCenteringUI(ns),
           zScaleUI(ns("zScale")),
-          radioButtons(inputId = ns("terrestrial"), label = "", inline = TRUE,
-                       choices = list("Terrestrial " = 1, "All" = 3, "Aquatic" = -1),
-                       selected = 1),
+          mapLayerSettingsUI(ns("mapLayerSettings")),
           checkboxInput(inputId = ns("points"),
                         label = "Show locations on map",
-                        value = TRUE, width = "100%"),
-          checkboxInput(inputId = ns("grid"),
-                        label = "Show map grid",
                         value = TRUE, width = "100%"),
           checkboxInput(inputId = ns("scale"),
                         label = "Show map scale",
@@ -780,11 +775,12 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         fontType = input$fontType,
         fontCol = input$fontCol,
         centerMap = input$Centering,
-        terrestrial = input$terrestrial,
+        terrestrial = input[["mapLayerSettings-terrestrial"]],
+        grid = input[["mapLayerSettings-grid"]],
+        showBorders = input[["mapLayerSettings-showBorders"]],
         colors = input$Colours,
         reverseColors = input$reverseCols,
         arrow = input$arrow,
-        grid = input$grid,
         scale = input$scale,
         titleMain = !input$titleMain,
         titleScale = !input$titleScale,
@@ -931,7 +927,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   output$n2D <- reactive(nrow(pointDat2D()))
   outputOptions(output, "n2D", suspendWhenHidden = FALSE)
 
-  callModule(dataExport, "exportData", data = dataFun, filename = "modelData")
+  callModule(dataExport, "exportData", dataFun = dataFun, filename = "modelData")
   callModule(plotExport, "export", reactive(values$plot), "local-average",
              reactive(values$predictions))
   callModule(batchPointEstimates, "batch", plotFun, fruitsData = fruitsData, Model = Model)

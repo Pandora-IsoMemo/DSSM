@@ -4,12 +4,14 @@
 \alias{customizeLeafletMap}
 \title{Customize Leaflet Map}
 \usage{
-customizeLeafletMap(leafletMap, leafletValues)
+customizeLeafletMap(leafletMap, leafletValues, zoom)
 }
 \arguments{
 \item{leafletMap}{leaflet map}
 
 \item{leafletValues}{map settings, e.g. scalePosition, show/hide bounds}
+
+\item{zoom}{zoom level}
 }
 \description{
 Customize leaflet map for export

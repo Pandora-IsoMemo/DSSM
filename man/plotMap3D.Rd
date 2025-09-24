@@ -42,6 +42,7 @@ plotMap3D(
   RadiusBatch = 100,
   terrestrial = 1,
   grid = TRUE,
+  showBorders = TRUE,
   arrow = TRUE,
   scale = TRUE,
   titleMain = TRUE,
@@ -141,6 +142,8 @@ plotMap3D(
 \item{terrestrial}{show only estimates on land masses (1), oceans (-1) or all (0)}
 
 \item{grid}{show coordinate grid TRUE/FALSE}
+
+\item{showBorders}{show country borders TRUE/FALSE}
 
 \item{arrow}{display north arrow TRUE/FALSE}
 

@@ -1,3 +1,43 @@
+# DSSM 25.09.0
+
+## Bug Fixes
+- _Interactive Map_: fixed brackets in export module (#284)
+
+# DSSM 25.08.0
+ 
+## New Features
+- _Modeling tabs_: Added a "Show borders" toggle in the right sidebar, below "Show map grid". (#281)
+
+## Updates
+- _Map layers_: refactored to S3 (MapLayers class + per-layer methods); replace addMapLayers() with plot(new_MapLayers(...)).
+
+# DSSM 25.07.3
+
+## New Features
+- _Interactive Map_: Added option to shift the _North Arrow_ or the _Scale_ to a _custom_ latitude
+  and longitude position (#275)
+
+# DSSM 25.07.2
+
+## Updates
+- export of time series plots: fixed bug (#268) 
+  - Added asynchronous creation of single plots for a time series. Now, users must press
+    "Generate Plot Files" before the download of a series of plots.
+  - Switched to using the **`gifski`** package for animated GIF creation, replacing the `magick` package,
+    which crashed when handling a large number of input images.
+
+# DSSM 25.07.1
+
+## Bug Fixes
+- _Estimates for (Bayesian) TimeR models_: Fixed a sign-error in the Metropolis Hastings 
+  Algorithm for the date uncertainty
+  - This bug could lead to overly wide estimate ranges (#276)
+
+# DSSM 25.07.0
+
+## Bug Fixes 
+- reduced buffer that is added to the range of the default scale for the estimates (#276)
+
 # DSSM 25.06.0
 
 ## New Features

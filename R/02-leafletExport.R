@@ -37,7 +37,7 @@ leafletExport <- function(input,
   finalLeafletMap <- reactive({
     leafletMap() %>%
       setView(lng = center()$lng, lat = center()$lat, zoom = zoom()) %>%
-      customizeLeafletMap(leafletValues()) %>%
+      customizeLeafletMap(leafletValues, zoom = zoom()) %>%
       updateDataOnLeafletMap(isoData = isoData(), leafletPointValues = leafletPointValues)
   })
 
@@ -122,17 +122,21 @@ exportWidgetSnapshot <- function(widget, filename, fileext, width, height) {
   saveWidget(widget, file = temp_file, selfcontained = FALSE)
 
   if (fileext == "pdf") {
+    # Direct export to pdf: here the format is not correctly and possibly needs better "options" settings
+    #pagedown::chrome_print(temp_file, output = filename)
+
+    # convert to PNG and then to PDF using magick
     # Save temporary PNG file
     temp_png <- tempfile(fileext = ".png")
     webshot(temp_file, file = temp_png, vwidth = width, vheight = height)
 
     # Use magick to read PNG and convert to raster for PDF export
-    img <- image_read(temp_png)
+    img <- magick::image_read(temp_png)
     # We cannot use image_write to write pdf, it is blocked by ImageMagick for shiny, docker, ...
     #magick::image_write(img, path = filename, format = "pdf")
 
     bitmap <- as.raster(img)
-    dims <- image_info(img)
+    dims <- magick::image_info(img)
 
     pdf(filename, width = dims$width / 72, height = dims$height / 72)
     grid.raster(bitmap)
