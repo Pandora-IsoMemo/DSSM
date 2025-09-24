@@ -4,21 +4,12 @@
 \alias{predict_gam}
 \title{Predict estimates for KDE spatio-temporal model (GAM)}
 \usage{
-predict_gam(
-  model,
-  XPred,
-  time = NULL,
-  estType = "Mean",
-  estQuantile = 0.9,
-  sdValue = NULL
-)
+predict_gam(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL)
 }
 \arguments{
 \item{model}{Model object}
 
 \item{XPred}{Prediction grid (data.frame)}
-
-\item{time}{Time slice}
 
 \item{estType}{Estimate type}
 

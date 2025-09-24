@@ -7,7 +7,6 @@
 predict_gamm(
   model,
   XPred,
-  time = NULL,
   estType = "Mean",
   estQuantile = 0.9,
   sdValue = NULL,
@@ -19,8 +18,6 @@ predict_gamm(
 \item{model}{Model object}
 
 \item{XPred}{Prediction grid (data.frame)}
-
-\item{time}{Time slice}
 
 \item{estType}{Estimate type}
 

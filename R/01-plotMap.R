@@ -237,7 +237,7 @@ plotMap <- function(model,
     XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
   }
   if (GAM == TRUE) {
-    XPred <- predict_gam(model, XPred, estType = estType, estQuantile = estQuantile)
+    XPred <- predict_gam(model, XPred[, c("Longitude", "Latitude")], estType = estType, estQuantile = estQuantile)
   }
 
   if (estType != "1 SE" && estType != "2 SE" &&
@@ -1108,14 +1108,18 @@ plotMap3D <- function(model,
   }
 
   # predict estimates ----
+  XPred <- data.frame(
+            XPred,
+            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
+        )
   if (Bayes == TRUE & GAM == FALSE){
-    XPred <- predict_bayes(model, XPred, time, estType = estType, estQuantile = estQuantile)
+    XPred <- predict_bayes(model, XPred, estType = estType, estQuantile = estQuantile)
   }
   if (Bayes == FALSE & GAM == FALSE) {
-    XPred <- predict_gamm(model, XPred, time, estType = estType, estQuantile = estQuantile)
+    XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
   }
   if (GAM == TRUE) {
-    XPred <- predict_gam(model, XPred, time, estType = estType, estQuantile = estQuantile)
+    XPred <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")], estType = estType, estQuantile = estQuantile)
   }
   
   if (estType != "1 SE" && estType != "1 SETOTAL" && estType != "2 SE" &&
@@ -2011,6 +2015,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   time <- seq(trange[1], trange[2], length.out = resolution)
 
   XPred <- data.frame(time,
+                      Date2 = (time - mean(model$data$Date)) / sd(model$data$Date),
                       Longitude2 = (centerX - mean(data$Longitude)) / sd(data$Longitude),
                       Latitude2 = (centerY - mean(data$Latitude)) / sd(data$Latitude),
                       Longitude = centerX,
@@ -2021,7 +2026,6 @@ plotTimeCourse <- function(model, IndSelect = NULL,
     XPred <- predict_bayes(
       model,
       XPred, 
-      time, 
       sdValue = sdValue, 
       minVal = minVal, 
       maxVal = maxVal
@@ -2034,7 +2038,6 @@ plotTimeCourse <- function(model, IndSelect = NULL,
     XPred <- predict_gamm(
       model,
       XPred,
-      time,
       sdValue = sdValue,
       minVal = minVal,
       maxVal = maxVal
@@ -2046,8 +2049,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   if (GAM == TRUE) {
     XPred <- predict_gam(
       model,
-      XPred,
-      time,
+      XPred[, c("Longitude", "Latitude", "Date2")],
       sdValue = sdValue
     )
 

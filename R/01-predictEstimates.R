@@ -2,28 +2,18 @@
 #'
 #' @param model Model object
 #' @param XPred Prediction grid (data.frame)
-#' @param time Time slice
 #' @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
 #' @param estQuantile Quantile value (if applicable)
 #' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
 #' @param minVal Minimum value for predictions (for truncation)
 #' @param maxVal Maximum value for predictions (for truncation)
 #' @return Data frame with predictions and uncertainties
-predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+predict_bayes <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     sc <- model$sc
     betas <- model$model$beta
     betaSigma <- model$model$betaSigma
 
-    if (is.null(time)) {
-        data_for_prediction <- XPred
-    } else {
-        data_for_prediction <- data.frame(
-            XPred,
-            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
-        )
-    }
-
-    PredMatr <- Predict.matrix(sc, data = data_for_prediction)
+    PredMatr <- Predict.matrix(sc, data = XPred)
 
     Predictions <- sapply(1:nrow(betas), function(x) {
         PredMatr %*% betas[x, ] * model$sRe + model$mRe
@@ -33,7 +23,7 @@ predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuanti
         Predictions <- invLogit(Predictions)
     }
     if (!is.null(betaSigma)) {
-        PredMatrV <- Predict.matrix(model$scV, data = data_for_prediction)
+        PredMatrV <- Predict.matrix(model$scV, data = XPred)
         PredictionsSigma <- rowMeans(sqrt(sapply(1:nrow(betaSigma), function(x) {
             exp((PredMatrV %*% betaSigma[x, ])) / model$model$sigma[x]
         }) * model$sRe^2))
@@ -107,25 +97,15 @@ predict_bayes <- function(model, XPred, time = NULL, estType = "Mean", estQuanti
 #'
 #' @param model Model object
 #' @param XPred Prediction grid (data.frame)
-#' @param time Time slice
 #' @param estType Estimate type
 #' @param estQuantile Quantile value
 #' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
 #' @param minVal Minimum value for predictions (for truncation)
 #' @param maxVal Maximum value for predictions (for truncation)
 #' @return Data frame with predictions and uncertainties
-predict_gamm <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
-    if (is.null(time)) {
-        data_for_prediction <- XPred
-    } else {
-        data_for_prediction <- data.frame(
-            XPred,
-            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
-        )
-    }
-
+predict_gamm <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     Est <- predict(model$model$gam,
-        newdata = data_for_prediction,
+        newdata = XPred,
         se.fit = TRUE, type = "response", newdata.guaranteed = TRUE
     )
 
@@ -185,23 +165,13 @@ predict_gamm <- function(model, XPred, time = NULL, estType = "Mean", estQuantil
 #'
 #' @param model Model object
 #' @param XPred Prediction grid (data.frame)
-#' @param time Time slice
 #' @param estType Estimate type
 #' @param estQuantile Quantile value
 #' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
 #' @return Data frame with predictions and uncertainties
-predict_gam <- function(model, XPred, time = NULL, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
-    data_for_prediction <- XPred[, c("Longitude", "Latitude")]
-
-    if (!is.null(time)) {
-        data_for_prediction <- data.frame(
-            XPred,
-            Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
-        )
-    }
-
+predict_gam <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
     Predictions <- sapply(1:length(model$model), function(x) {
-        predict(model$model[[x]], x = data_for_prediction)
+        predict(model$model[[x]], x = XPred)
     })
 
     if (!is.null(sdValue)) {
