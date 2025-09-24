@@ -1,411 +1,144 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/404.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/articles/how-to-use-DSSM.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/articles/process_coordinate_data.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/index.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/addCentroids.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/addFormattedAxis.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/augmentData.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/centerData.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/centerEstimateServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/centerEstimateUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/clusterMethodUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/config.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/convertLatLongWrapper.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/createDuplicateModal.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/createPchPoints.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/createPchPointsVec.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/customizeLeafletMap.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/datTable.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/dataExplorerServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/dataExplorerUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/detectDuplicatesServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/detectDuplicatesUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/downloadDSSMModelUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/draw.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/drawFittedBounds.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap3D.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap3DKernel.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMapKernel.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMapSpread.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/exportCSV.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/exportFilename.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/exportJSON.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/exportXLSX.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractCenterEstimates.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractChoicesFromIsomemoApi.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractGridLength.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractMaskDraw.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractXPredCenter.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/extractZoomFromLongRange.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/filled.contour2.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordCircle.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordRectangle.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordSquare.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/filterT.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/findDuplicates.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/formatTimeCourseServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/formatTimeCourseUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getAppTitle.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getCoordCenter.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getCostSpeed.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultCoordColumn.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultZError.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultZMax.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultZMin.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getFullCoordGrid.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getHTMLFromPath.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getHrefTag.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getPColor.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getPointSize.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getPointSymbols.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getZValuesKernel.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getZValuesMapDiff.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getZValuesMapSim.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/getZvalues.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/interactiveMap.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/interactiveMapUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/isOnlyDataSearchMode.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/jitter_latlong.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/joinCentroidData.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletExport.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletExportButton.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletPointSettingsServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletPointSettingsUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletSettings.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/leafletSettingsUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/length_of_degree.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/loadMaps.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/locationFieldsServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/locationFieldsUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/makeClusterIdsContinuous.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/mapDiff.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/mapSim.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelLinkUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2D.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DKernel.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DKernelUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3D.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DKernel.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DKernelUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsAssign.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsAssignUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsDiffUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSimUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSpread.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSpreadUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/numericInputLatAndLongServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/numericInputLatAndLongUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/plotDS.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/plotMap.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/plotMap3D.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/plotTimeCourse.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointColourServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointColourUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointSizeServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointSizeUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointSymbolServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/pointSymbolUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/prepareDate.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/putNewLatLongToBegin.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/reSourcesInstalled.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/removeDataOutsideRestriction.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/removeOldIcons.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsExportButton.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsExportServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsTab.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsTabUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/selectClusterGrouping.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/setColorLegend.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/shiftDataToDefaultRestriction.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/skin.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/sliderAndNumericInputServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/sliderAndNumericInputUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingUI.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/startApplication.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/updateDataOnLeafletMap.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/zScaleServer.html</loc>
-  </url>
-  <url>
-    <loc>https://pandora-isomemo.github.io/DSSM/reference/zScaleUI.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://pandora-isomemo.github.io/DSSM/404.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/LICENSE.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/articles/how-to-use-DSSM.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/articles/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/articles/process_coordinate_data.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/authors.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/news/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/addCentroids.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/addFormattedAxis.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_borders.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_center_line.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_coast.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_grids.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_land.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/add_ocean.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/augmentData.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/centerData.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/cleanup.PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/clipMap.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/clusterMethodUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/config.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/convertLatLongWrapper.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/createDuplicateModal.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/createPchPoints.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/createPchPointsVec.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/customizeLeafletMap.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/datTable.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/dataExplorerServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/dataExplorerUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/detectDuplicatesServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/detectDuplicatesUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/downloadDSSMModelUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/draw.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/drawFittedBounds.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap3D.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMap3DKernel.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMapKernel.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/estimateMapSpread.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportCSV.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportFilename.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportJSON.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportMapR.PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportSeries.PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/exportXLSX.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/extractCenterEstimates.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/extractChoicesFromIsomemoApi.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/extractMaskDraw.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/extractXPredCenter.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/filled.contour2.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordCircle.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordRectangle.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/filterCoordSquare.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/filterT.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/findDuplicates.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/generate.PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getAppTitle.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getCoordCenter.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getCostSpeed.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getDefaultCoordColumn.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getFullCoordGrid.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getHTMLFromPath.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getHrefTag.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getPColor.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getPointSize.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/getPointSymbols.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/index.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/interactiveMap.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/interactiveMapUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/isOnlyDataSearchMode.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/jitter_latlong.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/joinCentroidData.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletExportButton.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletPointSettingsServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletPointSettingsUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletSettings.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/leafletSettingsUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/length_of_degree.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/loadMaps.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/locationFieldsServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/locationFieldsUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/makeClusterIdsContinuous.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/mapDiff.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/mapSim.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelLinkUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2D.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DKernel.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DKernelUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults2DUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3D.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DKernel.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DKernelUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResults3DUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsAssign.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsAssignUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsDiffUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSimUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSpread.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/modelResultsSpreadUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/new_MapLayers.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/new_NorthArrow.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/new_PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/new_ScaleBar.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/numericInputLatAndLongServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/numericInputLatAndLongUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/plot.MapLayers.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/plotDS.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/plotMap.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/plotMap3D.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/plotTimeCourse.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointColourServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointColourUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointSizeServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointSizeUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointSymbolServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/pointSymbolUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/prepareDate.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/print.PlotSeriesExport.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/putNewLatLongToBegin.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/reSourcesInstalled.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/removeDataOutsideRestriction.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/removeOldIcons.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsExportButton.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsExportServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsTab.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/savedMapsTabUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/selectClusterGrouping.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/set.NorthArrow.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/set.ScaleBar.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/set.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/setColorLegend.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/shiftDataToDefaultRestriction.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/skin.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/sliderAndNumericInputServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/sliderAndNumericInputUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingServer.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/smoothingUI.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/startApplication.html</loc></url>
+<url><loc>https://pandora-isomemo.github.io/DSSM/reference/updateDataOnLeafletMap.html</loc></url>
 </urlset>
+
