@@ -1,3 +1,8 @@
+# DSSM 25.09.1
+
+## New Features
+- _Modeling tabs - TimeR_: option to export a series of geotiff files for each selected time slice (#286)
+
 # DSSM 25.09.0
 
 ## Bug Fixes
