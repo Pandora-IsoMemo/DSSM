@@ -1,23 +1,33 @@
-#' Predict estimates for Bayesian spatio-temporal model
-#'
-#' @param model Model object
-#' @param XPred Prediction grid (data.frame)
-#' @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
-#' @param estQuantile Quantile value (if applicable)
-#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
-#' @param minVal Minimum value for predictions (for truncation)
-#' @param maxVal Maximum value for predictions (for truncation)
-#' @return Data frame with predictions and uncertainties
-predict_bayes <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+# Predict estimates for Bayesian spatio-temporal model
+#
+# @param model Model object
+# @param XPred Prediction grid (data.frame)
+# @return Data frame with predictions and uncertainties
+predict_bayes <- function(model, XPred) {
     sc <- model$sc
     betas <- model$model$beta
-    betaSigma <- model$model$betaSigma
+    
 
     PredMatr <- Predict.matrix(sc, data = XPred)
 
-    Predictions <- sapply(1:nrow(betas), function(x) {
+    sapply(1:nrow(betas), function(x) {
         PredMatr %*% betas[x, ] * model$sRe + model$mRe
     })
+}
+
+# Summarize Bayesian predictions with uncertainties
+#
+# @param Predictions Matrix of predictions from the model
+# @param Xpred Data frame of predictor variables
+# @param model Model object
+# @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
+# @param estQuantile Quantile value (if applicable)
+# @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
+# @param minVal Minimum value for predictions (for truncation)
+# @param maxVal Maximum value for predictions (for truncation)
+# @return Data frame with predictions and uncertainties
+summarize_bayes_predictions <- function(Predictions, Xpred, model, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+    betaSigma <- model$model$betaSigma
 
     if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
         Predictions <- invLogit(Predictions)

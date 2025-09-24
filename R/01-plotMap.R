@@ -231,7 +231,9 @@ plotMap <- function(model,
 
   # predict estimates ----
   if (Bayes == TRUE & GAM == FALSE) {
-    XPred <- predict_bayes(model, XPred, estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_bayes(model, XPred)
+    XPred <- Predictions %>%
+      summarize_bayes_predictions(Xpred = Xpred, model, estType = estType, estQuantile = estQuantile)
   }
   if (Bayes == FALSE & GAM == FALSE) {
     XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
@@ -1113,7 +1115,9 @@ plotMap3D <- function(model,
             Date2 = (time - mean(model$data$Date)) / sd(model$data$Date)
         )
   if (Bayes == TRUE & GAM == FALSE){
-    XPred <- predict_bayes(model, XPred, estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_bayes(model, XPred)
+    XPred <- Predictions %>%
+      summarize_bayes_predictions(Xpred = Xpred, model, estType = estType, estQuantile = estQuantile)
   }
   if (Bayes == FALSE & GAM == FALSE) {
     XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
@@ -2023,13 +2027,13 @@ plotTimeCourse <- function(model, IndSelect = NULL,
 
   # predict estimates ----
   if (Bayes == TRUE & GAM == FALSE) {
-    XPred <- predict_bayes(
-      model,
-      XPred, 
-      sdValue = sdValue, 
-      minVal = minVal, 
-      maxVal = maxVal
-    )
+    Predictions <- predict_bayes(model, XPred)
+    XPred <- Predictions %>%
+      summarize_bayes_predictions(Xpred = XPred,
+        model, 
+        sdValue = sdValue, 
+        minVal = minVal, 
+        maxVal = maxVal)
 
     mainlab <- paste0("Estimate of ", independent, " in time course at coordinates ",
                       "(", centerY,",", centerX,")" ," with credible intervals")
