@@ -233,13 +233,32 @@ plotMap <- function(model,
   if (Bayes == TRUE & GAM == FALSE) {
     Predictions <- predict_bayes(model, XPred)
     XPred <- Predictions %>%
-      summarize_bayes_predictions(Xpred = Xpred, model, estType = estType, estQuantile = estQuantile)
+      summarize_bayes_predictions(
+        model = model,
+        XPred = XPred,
+        estType = estType,
+        estQuantile = estQuantile
+      )
   }
   if (Bayes == FALSE & GAM == FALSE) {
-    XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_gamm(model, XPred)
+    XPred <- Predictions %>%
+      summarize_gamm_predictions(
+        model = model,
+        XPred = XPred,
+        estType = estType,
+        estQuantile = estQuantile
+      )
   }
   if (GAM == TRUE) {
-    XPred <- predict_gam(model, XPred[, c("Longitude", "Latitude")], estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_gam(model, XPred[, c("Longitude", "Latitude")])
+    XPred <- Predictions %>%
+      summarize_gam_predictions(
+        model = model,
+        XPred = XPred,
+        estType = estType,
+        estQuantile = estQuantile
+      )
   }
 
   if (estType != "1 SE" && estType != "2 SE" &&
@@ -1117,13 +1136,17 @@ plotMap3D <- function(model,
   if (Bayes == TRUE & GAM == FALSE){
     Predictions <- predict_bayes(model, XPred)
     XPred <- Predictions %>%
-      summarize_bayes_predictions(Xpred = Xpred, model, estType = estType, estQuantile = estQuantile)
+      summarize_bayes_predictions(model = model, XPred = XPred, estType = estType, estQuantile = estQuantile)
   }
   if (Bayes == FALSE & GAM == FALSE) {
-    XPred <- predict_gamm(model, XPred, estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_gamm(model, XPred)
+    XPred <- Predictions %>%
+      summarize_gamm_predictions(model = model, XPred = XPred, estType = estType, estQuantile = estQuantile)
   }
   if (GAM == TRUE) {
-    XPred <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")], estType = estType, estQuantile = estQuantile)
+    Predictions <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")])
+    XPred <- Predictions %>%
+      summarize_gam_predictions(model = model, XPred = XPred, estType = estType, estQuantile = estQuantile)
   }
   
   if (estType != "1 SE" && estType != "1 SETOTAL" && estType != "2 SE" &&
@@ -2029,33 +2052,35 @@ plotTimeCourse <- function(model, IndSelect = NULL,
   if (Bayes == TRUE & GAM == FALSE) {
     Predictions <- predict_bayes(model, XPred)
     XPred <- Predictions %>%
-      summarize_bayes_predictions(Xpred = XPred,
-        model, 
-        sdValue = sdValue, 
-        minVal = minVal, 
-        maxVal = maxVal)
+      summarize_bayes_predictions(
+        model = model,
+        XPred = XPred,
+        sdValue = sdValue,
+        minVal = minVal,
+        maxVal = maxVal
+      )
 
     mainlab <- paste0("Estimate of ", independent, " in time course at coordinates ",
                       "(", centerY,",", centerX,")" ," with credible intervals")
   }
   if (Bayes == FALSE & GAM == FALSE) {
-    XPred <- predict_gamm(
-      model,
-      XPred,
-      sdValue = sdValue,
-      minVal = minVal,
-      maxVal = maxVal
-    )
+    Predictions <- predict_gamm(model, XPred)
+    XPred <- Predictions %>%
+      summarize_gamm_predictions(
+        model = model,
+        XPred = XPred, 
+        sdValue = sdValue,
+        minVal = minVal,
+        maxVal = maxVal
+      )
 
     mainlab <- paste0("Estimate of ", independent, " in time course at coordinates ",
                       "(", centerY,",", centerX,")" ," with confidence intervals")
   }
   if (GAM == TRUE) {
-    XPred <- predict_gam(
-      model,
-      XPred[, c("Longitude", "Latitude", "Date2")],
-      sdValue = sdValue
-    )
+    Predictions <- predict_gam(model, XPred[, c("Longitude", "Latitude", "Date2")])
+    XPred <- Predictions %>%
+      summarize_gam_predictions(model = model, XPred = XPred, sdValue = sdValue)
 
     mainlab <- paste0("Density estimate in time course at coordinates ",
                       "(", centerY,",", centerX,").")

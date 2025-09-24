@@ -18,7 +18,7 @@ predict_bayes <- function(model, XPred) {
 # Summarize Bayesian predictions with uncertainties
 #
 # @param Predictions Matrix of predictions from the model
-# @param Xpred Data frame of predictor variables
+# @param XPred Data frame of predictor variables
 # @param model Model object
 # @param estType Estimate type (e.g. "Mean", "1 SE", "Quantile", etc.)
 # @param estQuantile Quantile value (if applicable)
@@ -26,7 +26,7 @@ predict_bayes <- function(model, XPred) {
 # @param minVal Minimum value for predictions (for truncation)
 # @param maxVal Maximum value for predictions (for truncation)
 # @return Data frame with predictions and uncertainties
-summarize_bayes_predictions <- function(Predictions, Xpred, model, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
+summarize_bayes_predictions <- function(Predictions, model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     betaSigma <- model$model$betaSigma
 
     if (!is.null(model$IndependentType) && model$IndependentType != "numeric") {
@@ -103,22 +103,30 @@ summarize_bayes_predictions <- function(Predictions, Xpred, model, estType = "Me
     return(XPred)
 }
 
-#' Predict estimates for frequentist spatio-temporal model (GAMM)
-#'
-#' @param model Model object
-#' @param XPred Prediction grid (data.frame)
-#' @param estType Estimate type
-#' @param estQuantile Quantile value
-#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
-#' @param minVal Minimum value for predictions (for truncation)
-#' @param maxVal Maximum value for predictions (for truncation)
-#' @return Data frame with predictions and uncertainties
-predict_gamm <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
-    Est <- predict(model$model$gam,
+# Predict estimates for frequentist spatio-temporal model (GAMM)
+#
+# @param model Model object
+# @param XPred Prediction grid (data.frame)
+# @return Data frame with predictions and uncertainties
+predict_gamm <- function(model, XPred) {
+    predict(model$model$gam,
         newdata = XPred,
         se.fit = TRUE, type = "response", newdata.guaranteed = TRUE
     )
+}
 
+# Summarize GAMM predictions with uncertainties
+# 
+# @param Est Predictions from the GAMM model (list with fit and se.fit)
+# @param XPred Prediction grid (data.frame)
+# @param model Model object
+# @param estType Estimate type
+# @param estQuantile Quantile value
+# @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
+# @param minVal Minimum value for predictions (for truncation)
+# @param maxVal Maximum value for predictions (for truncation)
+# @return Data frame with predictions and uncertainties
+summarize_gamm_predictions <- function(Est, model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL, minVal = NULL, maxVal = NULL) {
     if (!is.null(sdValue)) {
         Est$fit <- Est$fit
     } else {
@@ -171,19 +179,27 @@ predict_gamm <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdVa
     }
 }
 
-#' Predict estimates for KDE spatio-temporal model (GAM)
-#'
-#' @param model Model object
-#' @param XPred Prediction grid (data.frame)
-#' @param estType Estimate type
-#' @param estQuantile Quantile value
-#' @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
-#' @return Data frame with predictions and uncertainties
-predict_gam <- function(model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
-    Predictions <- sapply(1:length(model$model), function(x) {
+# Predict estimates for KDE spatio-temporal model (GAM)
+#
+# @param model Model object
+# @param XPred Prediction grid (data.frame)
+# @return Data frame with predictions and uncertainties
+predict_gam <- function(model, XPred) {
+    sapply(1:length(model$model), function(x) {
         predict(model$model[[x]], x = XPred)
     })
+}
 
+# Summarize GAM predictions with uncertainties
+# 
+# @param Predictions Matrix of predictions from the model
+# @param model Model object
+# @param XPred Prediction grid (data.frame)
+# @param estType Estimate type
+# @param estQuantile Quantile value
+# @param sdValue Standard deviation value for uncertainty intervals (if NULL, credible intervals are computed)
+# @return Data frame with predictions and uncertainties
+summarize_gam_predictions <- function(Predictions, model, XPred, estType = "Mean", estQuantile = 0.9, sdValue = NULL) {
     if (!is.null(sdValue)) {
         Est <- rowMeans(Predictions)
     } else {
