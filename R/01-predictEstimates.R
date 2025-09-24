@@ -251,10 +251,7 @@ summarize_gam_predictions <- function(
     }
     qs <- apply(Predictions, 1, quantile, probs, names = FALSE)
 
-    if (is_plot_map_2d) {
-        IntLower <- pmax(0, qs[1,])
-        IntUpper <- pmax(0, qs[2,])
-    } else if (is_plot_time_course) {
+    if (is_plot_map_2d || is_plot_time_course) {
         IntLower <- pmax(0, qs[1,])
         IntUpper <- pmax(0, qs[2,])
     } else { # is_plot_map_3d
