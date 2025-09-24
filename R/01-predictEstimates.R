@@ -6,7 +6,6 @@
 predict_bayes <- function(model, XPred) {
     sc <- model$sc
     betas <- model$model$beta
-    
 
     PredMatr <- Predict.matrix(sc, data = XPred)
 
@@ -158,14 +157,14 @@ summarize_gamm_predictions <- function(
         }
 
         Est$fit <- switch(estType,
-            "1 SE"           = Est$se.fit,
-            "2 SE"           = Est$se.fit * 2,
-            "1 SETOTAL"      = sqrt(Est$se.fit^2 + varM),
-            "2 SETOTAL"      = sqrt(Est$se.fit^2 + varM) * 2,
-            "1 SD Population"= sqrt(varM) * 1,
-            "2 SD Population"= sqrt(varM) * 2,
-            "Quantile"       = Est$fit + qnorm(estQuantile) * Est$se.fit,
-            "QuantileTOTAL"  = Est$fit + qnorm(estQuantile) * sqrt(Est$se.fit^2 + varM),
+            "1 SE"            = Est$se.fit,
+            "2 SE"            = Est$se.fit * 2,
+            "1 SETOTAL"       = sqrt(Est$se.fit^2 + varM),
+            "2 SETOTAL"       = sqrt(Est$se.fit^2 + varM) * 2,
+            "1 SD Population" = sqrt(varM) * 1,
+            "2 SD Population" = sqrt(varM) * 2,
+            "Quantile"        = Est$fit + qnorm(estQuantile) * Est$se.fit,
+            "QuantileTOTAL"   = Est$fit + qnorm(estQuantile) * sqrt(Est$se.fit^2 + varM),
             Est$fit # default
         )
     }
@@ -206,7 +205,7 @@ summarize_gamm_predictions <- function(
 # @param XPred Prediction grid (data.frame)
 # @return Data frame with predictions and uncertainties
 predict_gam <- function(model, XPred) {
-    sapply(1:length(model$model), function(x) {
+    sapply(seq_along(model$model), function(x) {
         predict(model$model[[x]], x = XPred)
     })
 }
