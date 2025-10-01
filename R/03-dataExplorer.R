@@ -21,27 +21,32 @@ dataExplorerUI <- function(id, title = "") {
           ## no namespace to make it easier to use it across tabs
           "Skin",
           choices = c("Pandora" = "pandora", "Data networks" = "isomemo"),
-          selected = "pandora"
+          selected = "pandora",
+          inline = TRUE
         ),
         tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          selectInput(ns("mappingId"), "Select data network", choices = c("IsoMemo - Humans" = "IsoMemo")),
+          selectInput(
+            ns("mappingId"),
+            "Select data network",
+            choices = c("IsoMemo - Humans" = "IsoMemo")
+          ),
           pickerInput(
             inputId = ns("database"),
-            label = "Database selection",
+            label = "Select Database",
             choices = character(0),
             options = list(
-              `actions-box` = FALSE,
+              `actions-box` = TRUE,
               size = 10,
               `none-selected-text` = "No database selected",
               `selected-text-format` = "count > 8"
             ),
             multiple = TRUE
           ),
+          tags$br(),
           actionButton(ns("load"), "Load data"),
           tags$br(),
-          tags$hr(),
           tags$h4("Select categories"),
           uiOutput(ns("categorySelection"))
         ),
@@ -62,11 +67,7 @@ dataExplorerUI <- function(id, title = "") {
           conditionalPanel(
             condition = "input.calibrationDatingType == 'Mean + 1SD uncertainty'",
             selectInput(ns("calibrationDateMean"), "Date Mean", choices = NULL),
-            selectInput(
-              ns("calibrationDateUncertainty"),
-              "Date Uncertainty",
-              choices = NULL
-            ),
+            selectInput(ns("calibrationDateUncertainty"), "Date Uncertainty", choices = NULL),
             ns = ns
           ),
           conditionalPanel(
@@ -111,10 +112,12 @@ dataExplorerUI <- function(id, title = "") {
           ),
           tags$hr()
         ),
-        detectDuplicatesUI(id = ns("detectDuplicates")),
-        tags$hr(),
-        actionButton(ns("export"), "Export Data"),
-        tags$hr(),
+        fluidRow(
+          column(6, detectDuplicatesUI(id = ns("detectDuplicates"))),
+          column(6, align = "right", actionButton(ns("export"), "Export Data"))
+        ),
+        tags$br(),
+        tags$h4("Citation"),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           selectInput(
@@ -124,17 +127,25 @@ dataExplorerUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
-        selectInput(
-          ns("citationType"),
-          "Citation Type",
-          selected = "txt",
-          choices = c("txt", "xml", "json")
+        fluidRow(
+          column(4,
+            selectInput(
+              ns("citationType"),
+              "Type",
+              selected = "txt",
+              choices = c("txt", "xml", "json")
+            )
+          ),
+          column(8,
+            align = "right",
+            style = "margin-top: 1em",
+            downloadButton(ns("exportCitation"), "Export Citation")
+          )
         ),
-        downloadButton(ns("exportCitation"), "Export Citation"),
-        hr(),
+        tags$br(),
         numericInput(
           inputId = ns("maxCharLength"),
-          label = "Maximum Length Character Columns",
+          label = "Max. Display Length for Character Columns",
           value = NA,
           min = 1,
           max = NA,
@@ -144,9 +155,10 @@ dataExplorerUI <- function(id, title = "") {
       mainPanel(
         div(class = "last-updated",
             textOutput(ns("lastUpdate"))),
-        shinyjs::hidden(
-          div(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"), id = ns("previewText"))
-        ),
+        shinyjs::hidden(div(
+          HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"),
+          id = ns("previewText")
+        )),
         DT::dataTableOutput(ns("dataTable")) %>% withSpinner(color = "#20c997")
       )
     )
@@ -269,11 +281,23 @@ dataExplorerServer <- function(id) {
                                                        colnamesAPI = TRUE)) %>%
                        handleDescription(maxChar = 20) %>%
                        suppressWarnings()
-                     isoDataRaw(d)
                    },
                    value = 0.75,
-                   message = 'Get remote data from database ...'
+                   message = "Get remote data from database ..."
                    )
+
+                  #  withProgress({
+                  #   # add doi citation
+                  #   d <- add_DOI_columns(d,
+                  #                   citationformat = "bibtex",
+                  #                   citationstyle = "APA")
+
+                  #  },
+                  #  value = 0.75,
+                  #  message = "Add citation information ..."
+                  #  )
+
+                   isoDataRaw(d)
                  })
 
                  # show preview text when maxCharLength is selected
@@ -620,10 +644,13 @@ dataExplorerServer <- function(id) {
                        citationColumns <- c(
                          "databaseReference",
                          "databaseDOI",
+                         #"databaseBibtex",
                          "compilationReference",
                          "compilationDOI",
+                         #"compilationBibtex",
                          "originalDataReference",
-                         "originalDataDOI"
+                         "originalDataDOI",
+                         #"originalDataBibtex"
                        )
                      } else{
                        citationColumns <- input$citationColumns
