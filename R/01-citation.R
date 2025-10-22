@@ -1,6 +1,34 @@
-generateCitation <- function(data, type, file) {
-  stopifnot(ncol(data) == 6)
+get_citation_columns <- function() {
+  c(
+    "databaseReference",
+    "databaseDOI",
+    "databaseBibtex",
+    "compilationReference",
+    "compilationDOI",
+    "compilationBibtex",
+    "originalDataReference",
+    "originalDataDOI",
+    "originalDataBibtex"
+  )
+}
+
+generateCitation <- function(data, type, style, format, file) {
+  stopifnot(ncol(data) == 9)
+  
   data <- data[!duplicated(data), ]
+
+  withProgress(message = "Generating citation...", value = 0, {
+    # apply format to all three bibtex columns
+    bibtex_cols <- c("databaseBibtex", "compilationBibtex", "originalDataBibtex")
+    for (col in bibtex_cols) {
+      new_name <- gsub("Bibtex", "Citation", col)
+      logDebug("generateCitation(): Update %s", new_name)
+      data[[new_name]] <- format_bibtex_citations(data[[col]], format = format, style = style)
+      # inc progress
+      incProgress(1 / length(bibtex_cols))
+    }
+  })
+  
   citations <- citationList(data)
   switch(
     type,
@@ -38,13 +66,13 @@ citationList <- function(data) {
 
 citationLine <- function(row) {
   paste(
-    citationElement(row[1], row[2]),
-    citationElement(row[3], row[4]),
-    citationElement(row[5], row[6]),
+    citationElement(row[1], row[2], row[3]),
+    citationElement(row[4], row[5], row[6]),
+    citationElement(row[7], row[8], row[9]),
     sep = "\n\n"
   )
 }
 
-citationElement <- function(ref, doi) {
-  paste0(ref, "\nDOI: ", doi)
+citationElement <- function(ref, doi, formatted_citation) {
+  paste0(ref, "\nDOI: ", doi, "\nCitation: ", formatted_citation)
 }

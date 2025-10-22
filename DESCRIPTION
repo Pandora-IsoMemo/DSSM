@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.09.1
+Version: 25.10.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
@@ -45,6 +45,7 @@ Imports:
     raster (>= 2.6.7),
     rcarbon (>= 1.4.0),
     RColorBrewer (>= 1.1.2),
+    RefManageR,
     Rfast (>= 2.0.0),
     rlang,
     shiny (>= 1.0.5),

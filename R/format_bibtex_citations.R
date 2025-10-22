@@ -1,0 +1,172 @@
+# Map CSL-like style ids to RefManageR .opts lists
+refmanager_style_opts <- function(
+  style = c("apa", "chicago", "harvard"), # "chicago-author-year", "harvard-cite-them-right"
+  format = c(
+    "text",
+    "Bibtex",
+    "Biblatex",
+    "citation",
+    "html",
+    "latex",
+    "markdown",
+    "yaml",
+    "R"
+  )
+) {
+  style <- match.arg(style)
+  format <- match.arg(format)
+  switch(tolower(style),
+    # APA 7-ish
+    "apa" = list(
+      bib.style       = "authoryear",
+      max.names       = 100,
+      first.inits     = TRUE,
+      dashed          = FALSE,
+      sorting         = "nyt",  # sort by name, year, title
+      no.print.fields = c("ISSN", "publisher", "month", "doi"),
+      style = format
+    ),
+    # Chicago Manual of Style 17e (author-date) -ish
+    "chicago" = list(
+      bib.style       = "authoryear",
+      max.names       = 10,
+      first.inits     = FALSE,
+      dashed          = TRUE,   # 3-em dash for repeated authors in bib
+      sorting         = "nyt",  # sort by name, year, title
+      no.print.fields = c("ISSN", "publisher", "doi"),
+      style = format
+    ),
+    # Harvard (Cite Them Right) -ish
+    "harvard" = list(
+      bib.style       = "authoryear",
+      max.names       = 1,
+      first.inits     = TRUE,
+      dashed          = FALSE,
+      sorting         = "nyt",  # sort by name, year, title
+      no.print.fields = c("ISSN", "publisher", "month", "doi"),
+      style = format
+    ),
+    # default if unknown style id
+    list()
+  )
+}
+
+convert_bibentry_format <- function(
+  bib,
+  style  = c("apa", "chicago", "harvard"),
+  format = c(
+    "text",
+    "Bibtex",
+    "Biblatex",
+    "citation",
+    "html",
+    "latex",
+    "markdown",
+    "yaml",
+    "R"
+  )
+) {
+  style <- match.arg(style)
+  format <- match.arg(format)
+
+  # get RefManageR .opts for the requested style
+  style_opts <- refmanager_style_opts(style, format)
+
+  # convert single bibentry to desired format
+  out <- paste(capture.output(print(bib, .opts = style_opts)), collapse = " ")
+  out <- gsub("\\s+", " ", out) # collapse multiple spaces
+  out
+}
+
+read_bib_from_text <- function(bibtex_vec) {
+  bib_str <- paste(bibtex_vec, collapse = "\n")
+  tf <- tempfile(fileext = ".bib")
+  on.exit(unlink(tf), add = TRUE)
+  writeLines(bib_str, tf)
+  RefManageR::ReadBib(tf)
+}
+
+get_supported_citation_formats <- function() {
+  c(
+    "text",
+    "Bibtex",
+    "Biblatex",
+    "citation",
+    "html",
+    "latex",
+    "markdown",
+    "yaml",
+    "R"
+  )
+}
+
+get_supported_citation_styles <- function() {
+  c("apa", "chicago", "harvard")
+}
+
+# formats from crossref:
+#   "rdf-xml", "turtle", "citeproc-json", "citeproc-json-ish", "text", "ris", "bibtex" (default),
+#   "crossref-xml", "datacite-xml","bibentry", or "crossref-tdm".
+format_bibtex_citations <- function(
+  bibtex_vec,
+  format = get_supported_citation_formats(),
+  style = get_supported_citation_styles()
+) {
+  format <- match.arg(format)
+  style  <- match.arg(style)
+
+  # get unique bibtex entries
+  bibtex_unique <- unique(bibtex_vec)
+  # get rid of NA and empty entries
+  bibtex_unique <- bibtex_unique[!is.na(bibtex_unique) & bibtex_unique != ""]
+
+  # if no valid entries, return NA vector
+  if (length(bibtex_unique) == 0) {
+    return(rep(NA_character_, length(bibtex_vec)))
+  }
+
+  # read bibtex entries
+  bib_list <- read_bib_from_text(bibtex_unique)
+
+  # format each entry
+  bib <- lapply(bib_list, function(entry) {
+    convert_bibentry_format(entry, format = format, style = style)
+  })
+
+  # create citation vector
+  citation <- vapply(bib, paste, collapse = "\n", character(1), USE.NAMES = TRUE)
+
+  # merge back to original order
+  orig <- data.frame(
+    bibtex = bibtex_vec,
+    stringsAsFactors = FALSE
+  )
+
+  df <- data.frame(
+    bibtex = bibtex_unique,
+    citation = citation,
+    stringsAsFactors = FALSE
+  )
+
+  merged <- merge(
+    orig,
+    df,
+    by = "bibtex",
+    all.x = TRUE,
+    sort = FALSE
+  )
+
+  # return citation vector
+  return(merged$citation)
+}
+
+
+# To-Dos:
+# - align inputs in UI
+# - apply only on unique, merge back to original data frame
+# - do formats other than text only make sense for export not for table display?
+#   - we could display always text but offer different formats for export?
+#   - don't even show other formats, only bibtex but export others
+# - check how result looks like. are many entries missing or not?
+# - warning if input is longer than the output and count how many outputs are missing
+# - add checks if author and title fields are there? Or maybe in iso-data package?

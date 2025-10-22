@@ -46,14 +46,23 @@ dataExplorerUI <- function(id, title = "") {
           ),
           tags$br(),
           actionButton(ns("load"), "Load data"),
-          tags$br(),
+          tags$br(), tags$br(),
           tags$h4("Select categories"),
           uiOutput(ns("categorySelection"))
         ),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields")
+          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
+          tags$br()
+        ),
+        numericInput(
+          inputId = ns("maxCharLength"),
+          label = "Max. Display Length for Character Columns",
+          value = NA,
+          min = 1,
+          max = NA,
+          step = 1
         ),
         tags$hr(),
         tags$h4("Radiocarbon Calibration Fields"),
@@ -112,11 +121,10 @@ dataExplorerUI <- function(id, title = "") {
           ),
           tags$hr()
         ),
-        fluidRow(
-          column(6, detectDuplicatesUI(id = ns("detectDuplicates"))),
-          column(6, align = "right", actionButton(ns("export"), "Export Data"))
-        ),
-        tags$br(),
+        detectDuplicatesUI(id = ns("detectDuplicates")),
+        tags$br(), tags$br(),
+        actionButton(ns("export"), "Export Data"),
+        tags$hr(),
         tags$h4("Citation"),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
@@ -127,11 +135,33 @@ dataExplorerUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
+        # checkboxInput("withCitationTemplate", "Use citation template", value = TRUE),
+        # conditionalPanel(
+        #   condition = "input.withCitationTemplate == true",
+          selectInput(
+            ns("citationStyle"),
+            "Citation style",
+            choices = get_supported_citation_styles()
+          ),
+        #),
+        # conditionalPanel(
+        #   condition = "input.withCitationTemplate == false",
+        #   selectInput(
+        #     ns("citation-bibStyle"),
+        #     "Citation style",
+        #     choices = c("authoryear")
+        #   )
+        # ),
+        selectInput(
+          ns("citationFormat"),
+          "Citation format",
+          choices = get_supported_citation_formats()
+        ),
         fluidRow(
           column(4,
             selectInput(
               ns("citationType"),
-              "Type",
+              "Export type",
               selected = "txt",
               choices = c("txt", "xml", "json")
             )
@@ -142,15 +172,7 @@ dataExplorerUI <- function(id, title = "") {
             downloadButton(ns("exportCitation"), "Export Citation")
           )
         ),
-        tags$br(),
-        numericInput(
-          inputId = ns("maxCharLength"),
-          label = "Max. Display Length for Character Columns",
-          value = NA,
-          min = 1,
-          max = NA,
-          step = 1
-        )
+        tags$br()
       ),
       mainPanel(
         div(class = "last-updated",
@@ -641,18 +663,8 @@ dataExplorerServer <- function(id) {
                    },
                    content = function(filename) {
                      if (getSkin() == "isomemo") {
-                       citationColumns <- c(
-                         "databaseReference",
-                         "databaseDOI",
-                         #"databaseBibtex",
-                         "compilationReference",
-                         "compilationDOI",
-                         #"compilationBibtex",
-                         "originalDataReference",
-                         "originalDataDOI",
-                         #"originalDataBibtex"
-                       )
-                     } else{
+                       citationColumns <- get_citation_columns()
+                     } else {
                        citationColumns <- input$citationColumns
                      }
 
@@ -661,13 +673,19 @@ dataExplorerServer <- function(id) {
                        return()
                      }
 
-                     if (length(citationColumns) != 6) {
-                       alert("You need to choose exactly 6 columns for exporting citations.")
+                     if (length(citationColumns) != 9) {
+                       alert("You need to choose exactly 9 columns for exporting citations.")
                        return()
                      }
-
+                     
                      data <- isoDataFull()[citationColumns]
-                     generateCitation(data, input$citationType, file = filename)
+                     generateCitation(
+                      data,
+                      type = input$citationType,
+                      style = input$citationStyle,
+                      format = input$citationFormat,
+                      file = filename
+                     )
                    }
                  )
 
