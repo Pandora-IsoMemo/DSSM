@@ -136,8 +136,13 @@ dataExplorerUI <- function(id, title = "") {
           )
         ),
         citationColumnsUI(ns("citation_columns")),
-        tags$h5("Format Bibtex Citations"),
-        citationStyleUI(ns("citation_style")),
+        conditionalPanel(
+          ns = ns,
+          condition =
+            "input['citation_columns-bibtex_cols'] && input['citation_columns-bibtex_cols'].length > 0",
+          tags$h5("Format Bibtex Citations"),
+          citationStyleUI(ns("citation_style"))
+        ),
         fluidRow(
           column(4,
             selectInput(

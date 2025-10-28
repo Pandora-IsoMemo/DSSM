@@ -14,7 +14,7 @@ get_citation_columns <- function() {
 
 generateCitation <- function(data, type, file, citation_columns, style_opts) {
   data <- data[, unlist(citation_columns), drop = FALSE]
-  data <- data[!duplicated(data), ]
+  data <- data[!duplicated(data), seq_len(ncol(data)), drop = FALSE]
   
   bibtex_cols <- citation_columns$bibtex_cols
   # format bibtex columns if set
@@ -23,8 +23,9 @@ generateCitation <- function(data, type, file, citation_columns, style_opts) {
       # apply format to all three bibtex columns
       for (col in bibtex_cols) {
         logDebug("generateCitation(): Updating %s", col)
+        bibtex_vec <- data[[col]]
         updated_col <- format_bibtex_citations(
-          data[[col]],
+          bibtex_vec,
           style_opts = style_opts,
           colname = col
         )
