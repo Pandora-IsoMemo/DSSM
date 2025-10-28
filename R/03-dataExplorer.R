@@ -135,28 +135,7 @@ dataExplorerUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
-        # checkboxInput("withCitationTemplate", "Use citation template", value = TRUE),
-        # conditionalPanel(
-        #   condition = "input.withCitationTemplate == true",
-          selectInput(
-            ns("citationStyle"),
-            "Citation style",
-            choices = get_supported_citation_styles()
-          ),
-        #),
-        # conditionalPanel(
-        #   condition = "input.withCitationTemplate == false",
-        #   selectInput(
-        #     ns("citation-bibStyle"),
-        #     "Citation style",
-        #     choices = c("authoryear")
-        #   )
-        # ),
-        selectInput(
-          ns("citationFormat"),
-          "Citation format",
-          choices = get_supported_citation_formats()
-        ),
+        citationUI(ns("citation")),
         fluidRow(
           column(4,
             selectInput(
@@ -307,17 +286,6 @@ dataExplorerServer <- function(id) {
                    value = 0.75,
                    message = "Get remote data from database ..."
                    )
-
-                  #  withProgress({
-                  #   # add doi citation
-                  #   d <- add_DOI_columns(d,
-                  #                   citationformat = "bibtex",
-                  #                   citationstyle = "APA")
-
-                  #  },
-                  #  value = 0.75,
-                  #  message = "Add citation information ..."
-                  #  )
 
                    isoDataRaw(d)
                  })
@@ -655,7 +623,7 @@ dataExplorerServer <- function(id) {
                    updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
                  })
 
-
+                 citation_style_opts <- citationServer("citation")
 
                  output$exportCitation <- downloadHandler(
                    filename = function() {
@@ -682,9 +650,8 @@ dataExplorerServer <- function(id) {
                      generateCitation(
                       data,
                       type = input$citationType,
-                      style = input$citationStyle,
-                      format = input$citationFormat,
-                      file = filename
+                      file = filename,
+                      style_opts = citation_style_opts()
                      )
                    }
                  )

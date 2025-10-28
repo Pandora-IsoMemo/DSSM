@@ -51,27 +51,7 @@ refmanager_style_opts <- function(
   )
 }
 
-convert_bibentry_format <- function(
-  bib,
-  style  = c("apa", "chicago", "harvard"),
-  format = c(
-    "text",
-    "Bibtex",
-    "Biblatex",
-    "citation",
-    "html",
-    "latex",
-    "markdown",
-    "yaml",
-    "R"
-  )
-) {
-  style <- match.arg(style)
-  format <- match.arg(format)
-
-  # get RefManageR .opts for the requested style
-  style_opts <- refmanager_style_opts(style, format)
-
+convert_bibentry_format <- function(bib, style_opts) {
   # convert single bibentry to desired format
   out <- paste(capture.output(print(bib, .opts = style_opts)), collapse = " ")
   out <- gsub("\\s+", " ", out) # collapse multiple spaces
@@ -109,12 +89,9 @@ get_supported_citation_styles <- function() {
 #   "crossref-xml", "datacite-xml","bibentry", or "crossref-tdm".
 format_bibtex_citations <- function(
   bibtex_vec,
-  format = get_supported_citation_formats(),
-  style = get_supported_citation_styles()
+  style_opts,
+  colname = ""
 ) {
-  format <- match.arg(format)
-  style  <- match.arg(style)
-
   # get unique bibtex entries
   bibtex_unique <- unique(bibtex_vec)
   # get rid of NA and empty entries
@@ -126,11 +103,37 @@ format_bibtex_citations <- function(
   }
 
   # read bibtex entries
-  bib_list <- read_bib_from_text(bibtex_unique)
+  tryCatch(
+    {
+      bib_list <- read_bib_from_text(bibtex_unique)
+    },
+    error = function(cond) {
+      if (colname != "") colname <- sprintf(" '%s'", colname)
+      logWarn("Could not read bibtex column%s. Error:", colname, cond$message)
+      # Choose a return value in case of error
+      rep(NA_character_, length(bibtex_vec))
+    },
+    finally = rep(NA_character_, length(bibtex_vec))
+  )
+
+  # break if all values are NA
+  if (all(is.na(bib_list))) {
+    return(rep(NA_character_, length(bibtex_vec)))
+  }
 
   # format each entry
   bib <- lapply(bib_list, function(entry) {
-    convert_bibentry_format(entry, format = format, style = style)
+    tryCatch(
+      {
+        convert_bibentry_format(entry, style_opts = style_opts)
+      },
+      error = function(cond) {
+        logWarn("Could not convert from bibtex entry! Error: %s", cond$message)
+        # Choose a return value in case of error
+        NA_character_
+      },
+      finally = NA_character_
+    )
   })
 
   # create citation vector

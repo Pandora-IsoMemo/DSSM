@@ -12,7 +12,7 @@ get_citation_columns <- function() {
   )
 }
 
-generateCitation <- function(data, type, style, format, file) {
+generateCitation <- function(data, type, file, style_opts) {
   stopifnot(ncol(data) == 9)
   
   data <- data[!duplicated(data), ]
@@ -23,7 +23,11 @@ generateCitation <- function(data, type, style, format, file) {
     for (col in bibtex_cols) {
       new_name <- gsub("Bibtex", "Citation", col)
       logDebug("generateCitation(): Update %s", new_name)
-      data[[new_name]] <- format_bibtex_citations(data[[col]], format = format, style = style)
+      data[[new_name]] <- format_bibtex_citations(
+        data[[col]],
+        style_opts = style_opts,
+        colname = col
+      )
       # inc progress
       incProgress(1 / length(bibtex_cols))
     }
