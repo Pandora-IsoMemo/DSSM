@@ -163,13 +163,3 @@ format_bibtex_citations <- function(
   return(merged$citation)
 }
 
-
-# To-Dos:
-# - align inputs in UI
-# - apply only on unique, merge back to original data frame
-# - do formats other than text only make sense for export not for table display?
-#   - we could display always text but offer different formats for export?
-#   - don't even show other formats, only bibtex but export others
-# - check how result looks like. are many entries missing or not?
-# - warning if input is longer than the output and count how many outputs are missing
-# - add checks if author and title fields are there? Or maybe in iso-data package?
