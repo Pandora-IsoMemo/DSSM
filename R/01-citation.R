@@ -24,7 +24,7 @@ get_citation_column_choices <- function(col_names) {
 
 generateCitation <- function(data, type, file, citation_columns, style_opts) {
   data <- data[, unlist(citation_columns), drop = FALSE]
-  data <- data[!duplicated(data), seq_len(ncol(data)), drop = FALSE]
+  data <- data[!duplicated(data), , drop = FALSE]
   
   bibtex_cols <- citation_columns$bibtex_cols
   # format bibtex columns if set
