@@ -109,19 +109,19 @@ citationColumnsUI <- function(ns) {
     selectInput(
       ns("reference_cols"),
       "Reference columns (in order):",
-      choices = get_citation_columns(),
+      choices = NULL,
       multiple = TRUE
     ),
     selectInput(
       ns("doi_cols"),
       "DOI columns (in order):",
-      choices = get_citation_columns(),
+      choices = NULL,
       multiple = TRUE
     ),
     selectInput(
       ns("bibtex_cols"),
       "Bibtex columns (in order):",
-      choices = get_citation_columns(),
+      choices = NULL,
       multiple = TRUE
     ),
     # warning goes right below the last input
@@ -135,23 +135,35 @@ citationColumnsServer <- function(id, column_choices) {
   moduleServer(id, function(input, output, session) {
     # update choices based on citation columns
     observe({
-      updateSelectInput(session, "reference_cols", choices = column_choices())
-      updateSelectInput(session, "doi_cols", choices = column_choices())
-      updateSelectInput(session, "bibtex_cols", choices = column_choices())
+      # select all columns by default if column_choices are different
+      if (!identical(column_choices()$ref_cols, column_choices()$doi_cols)) {
+        selected_ref <- column_choices()$ref_cols
+        selected_doi <- column_choices()$doi_cols
+        selected_bib <- column_choices()$bib_cols
+      } else {
+        selected_ref <- character()
+        selected_doi <- character()
+        selected_bib <- character()
+      }
+      updateSelectInput(
+        session,
+        "reference_cols",
+        choices = column_choices()$ref_cols,
+        selected = selected_ref
+      )
+      updateSelectInput(
+        session,
+        "doi_cols",
+        choices = column_choices()$doi_cols,
+        selected = selected_doi
+      )
+      updateSelectInput(
+        session,
+        "bibtex_cols",
+        choices = column_choices()$bib_cols,
+        selected = selected_bib
+      )
     }) %>% bindEvent(column_choices())
-
-    # remove selected Reference columns from DOI and Citation choices
-    observe({
-      doi_choices <- column_choices()[!column_choices() %in% input$reference_cols]
-      updateSelectInput(session, "doi_cols", choices = doi_choices)
-    }) %>% bindEvent(input$reference_cols)
-
-    observe({
-      cit_choices <-
-        column_choices()[!column_choices() %in% c(input$reference_cols, input$doi_cols)]
-      updateSelectInput(session, "bibtex_cols", choices = cit_choices)
-    }) %>% bindEvent(c(input$reference_cols, input$doi_cols))
-
 
     # --- validation: equal lengths across non-empty inputs ---------------------
     valid_lengths <- reactiveVal(TRUE)

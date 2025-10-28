@@ -1,14 +1,20 @@
-get_citation_columns <- function() {
-  c(
-    "databaseReference",
-    "databaseDOI",
-    "databaseBibtex",
-    "compilationReference",
-    "compilationDOI",
-    "compilationBibtex",
-    "originalDataReference",
-    "originalDataDOI",
-    "originalDataBibtex"
+get_citation_column_choices <- function() {
+  list(
+    ref_cols = c(
+      "databaseReference",
+      "compilationReference",
+      "originalDataReference"
+    ),
+    doi_cols = c(
+      "databaseDOI",
+      "compilationDOI",
+      "originalDataDOI"
+    ),
+    bib_cols = c(
+      "databaseBibtex",
+      "compilationBibtex",
+      "originalDataBibtex"
+    )
   )
 }
 

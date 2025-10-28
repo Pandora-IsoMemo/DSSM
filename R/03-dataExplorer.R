@@ -126,15 +126,6 @@ dataExplorerUI <- function(id, title = "") {
         actionButton(ns("export"), "Export Data"),
         tags$hr(),
         tags$h4("Citation"),
-        conditionalPanel(
-          condition = "input.skin == 'pandora'",
-          selectInput(
-            ns("citationColumns"),
-            "Citation columns",
-            choices = NULL,
-            multiple = TRUE
-          )
-        ),
         citationColumnsUI(ns("citation_columns")),
         conditionalPanel(
           ns = ns,
@@ -629,18 +620,17 @@ dataExplorerServer <- function(id) {
                      shinyjs::enable("exportCitation")
                  })
 
-                 observe({
-                   req(isoDataFull())
-                   updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
-                 })
-
                  citation_columns <- citationColumnsServer(
                    "citation_columns",
                    column_choices = reactive({
                      if (getSkin() == "isomemo") {
-                       get_citation_columns()
+                       get_citation_column_choices()
                      } else {
-                       names(isoDataFull())
+                       list(
+                         ref_cols = names(isoDataFull()),
+                         doi_cols = names(isoDataFull()),
+                         bib_cols = names(isoDataFull())
+                       )
                      }
                    })
                  )
@@ -652,24 +642,8 @@ dataExplorerServer <- function(id) {
                      paste0("isoMemoCitation.", input$citationType)
                    },
                    content = function(filename) {
-                     if (getSkin() == "isomemo") {
-                       citationColumns <- get_citation_columns()
-                     } else {
-                       citationColumns <- input$citationColumns
-                     }
-
-                     if (!all(citationColumns %in% colnames(isoDataFull()))) {
-                       alert("You need to select all citation columns from 'References' first")
-                       return()
-                     }
-
-                     if (length(citationColumns) != 9) {
-                       alert("You need to choose exactly 9 columns for exporting citations.")
-                       return()
-                     }
-
                      generateCitation(
-                       isoDataFull(),
+                       data = isoDataFull(),
                        type = input$citationType,
                        file = filename,
                        citation_columns = citation_columns(),
