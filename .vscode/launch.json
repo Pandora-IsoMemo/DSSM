@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Shiny App",
+            "type": "R-Debugger",
+            "request": "launch",
+            "file": "${workspaceFolder}/inst/main.R",
+            "env": {}
+        },
+        {
+            "name": "Debug Active R Script",
+            "type": "R-Debugger",
+            "request": "launch",
+            "env": {}
+        }
+    ]
+}
