@@ -47,7 +47,7 @@ dataExplorerUI <- function(id, title = "") {
           tags$br(),
           actionButton(ns("load"), "Load data"),
           tags$br(), tags$br(),
-          tags$h4("Select categories"),
+          tags$h4("Display categories"),
           uiOutput(ns("categorySelection"))
         ),
         conditionalPanel(
@@ -624,7 +624,7 @@ dataExplorerServer <- function(id) {
                    "citation_columns",
                    column_choices = reactive({
                      if (getSkin() == "isomemo") {
-                       get_citation_column_choices()
+                       get_citation_column_choices(col_names = names(isoDataFull()))
                      } else {
                        list(
                          ref_cols = names(isoDataFull()),
