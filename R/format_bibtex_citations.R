@@ -63,30 +63,9 @@ read_bib_from_text <- function(bibtex_vec) {
   tf <- tempfile(fileext = ".bib")
   on.exit(unlink(tf), add = TRUE)
   writeLines(bib_str, tf)
-  RefManageR::ReadBib(tf)
+  RefManageR::ReadBib(tf, check = "warn", .Encoding = "UTF-8")
 }
 
-get_supported_citation_formats <- function() {
-  c(
-    "text",
-    "Bibtex",
-    "Biblatex",
-    "citation",
-    "html",
-    "latex",
-    "markdown",
-    "yaml",
-    "R"
-  )
-}
-
-get_supported_citation_styles <- function() {
-  c("apa", "chicago", "harvard")
-}
-
-# formats from crossref:
-#   "rdf-xml", "turtle", "citeproc-json", "citeproc-json-ish", "text", "ris", "bibtex" (default),
-#   "crossref-xml", "datacite-xml","bibentry", or "crossref-tdm".
 format_bibtex_citations <- function(
   bibtex_vec,
   style_opts,
@@ -112,8 +91,7 @@ format_bibtex_citations <- function(
       logWarn("Could not read bibtex column%s. Error:", colname, cond$message)
       # Choose a return value in case of error
       rep(NA_character_, length(bibtex_vec))
-    },
-    finally = rep(NA_character_, length(bibtex_vec))
+    }
   )
 
   # break if all values are NA
@@ -122,7 +100,7 @@ format_bibtex_citations <- function(
   }
 
   # format each entry
-  bib <- lapply(bib_list, function(entry) {
+  bib <- sapply(bib_list, function(entry) {
     tryCatch(
       {
         convert_bibentry_format(entry, style_opts = style_opts)
@@ -131,8 +109,7 @@ format_bibtex_citations <- function(
         logWarn("Could not convert from bibtex entry! Error: %s", cond$message)
         # Choose a return value in case of error
         NA_character_
-      },
-      finally = NA_character_
+      }
     )
   })
 
