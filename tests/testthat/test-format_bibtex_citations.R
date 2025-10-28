@@ -1,5 +1,10 @@
 context("format_bibtex_citations")
 
+normalize_quotes <- function(x) {
+  x <- gsub("[“”]", "\"", x)
+  x
+}
+
 bib_db <- "@article{Salesse_2018, title={IsoArcH.eu: An open-access and collaborative isotope database for bioarchaeological samples from the Graeco-Roman world and its margins}, volume={19}, ISSN={2352-409X}, url={http://dx.doi.org/10.1016/j.jasrep.2017.07.030}, DOI={10.1016/j.jasrep.2017.07.030}, journal={Journal of Archaeological Science: Reports}, publisher={Elsevier BV}, author={Salesse, Kevin and Fernandes, Ricardo and de Rochefort, Xavier and Brůžek, Jaroslav and Castex, Dominique and Dufour, Élise}, year={2018}, month=jun, pages={1050–1055} }"
 
 # get bibtex for crossref example
@@ -77,8 +82,8 @@ test_that("text format, harvard style", {
   # ))
   # print(res[[3]])
   expect_equal(
-    substr(res[[3]], 1, 80),
-    "Salesse, K. et al. (2018). “IsoArcH.eu: An open-access and collaborative isotope"
+    substr(res[[3]], 1, 80) |> normalize_quotes(),
+    "Salesse, K. et al. (2018). \"IsoArcH.eu: An open-access and collaborative isotope"
   )
 })
 
@@ -120,13 +125,13 @@ test_that("citation format, all styles", {
   exp_res <- c(
     "apa" = " Salesse, K., R. Fernandes, X. de Rochefort, J. Brůžek, D. Castex, and É. Dufour",
     "chicago" = " Salesse, Kevin, Ricardo Fernandes, Xavier de Rochefort, Jaroslav Brůžek, Domini",
-    "harvard" = " Salesse, K. et al. (2018). “IsoArcH.eu: An open-access and collaborative isotop"
+    "harvard" = " Salesse, K. et al. (2018). \"IsoArcH.eu: An open-access and collaborative isotop"
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "citation")
     res <- format_bibtex_citations(bibs, style_opts = style_opts)
     expect_equal(
-      substr(res[[3]], 1, 80),
+      substr(res[[3]], 1, 80) |> normalize_quotes(),
       exp_res[[style]]
     )
   }
@@ -168,13 +173,13 @@ test_that("markdown format, all styles", {
   exp_res <- c(
     "apa" = "Salesse, K., R. Fernandes, X. de Rochefort, J. Brůžek, D. Castex, and É. Dufour ",
     "chicago" = "Salesse, Kevin, Ricardo Fernandes, Xavier de Rochefort, Jaroslav Brůžek, Dominiq",
-    "harvard" = "Salesse, K. et al. (2018). “IsoArcH.eu: An open-access and collaborative isotope"
+    "harvard" = "Salesse, K. et al. (2018). \"IsoArcH.eu: An open-access and collaborative isotope"
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "markdown")
     res <- format_bibtex_citations(bibs, style_opts = style_opts)
     expect_equal(
-      substr(res[[3]], 1, 80),
+      substr(res[[3]], 1, 80) |> normalize_quotes(),
       exp_res[[style]]
     )
   }
@@ -185,7 +190,7 @@ test_that("yaml format, all styles", {
     style_opts <- refmanager_style_opts(style = style, format = "yaml")
     res <- format_bibtex_citations(bibs, style_opts = style_opts)
     expect_equal(
-      substr(res[[3]], 1, 80),
+      substr(res[[3]], 1, 80) |> normalize_quotes(),
       "- type: \"Article\" id: \"Salesse_2018\" title: \"IsoArcH.eu: An open-access and coll"
     )
   }
@@ -196,7 +201,7 @@ test_that("R format, all styles", {
     style_opts <- refmanager_style_opts(style = style, format = "R")
     res <- format_bibtex_citations(bibs, style_opts = style_opts)
     expect_equal(
-      substr(res[[3]], 1, 80),
+      substr(res[[3]], 1, 80) |> normalize_quotes(),
       "bibentry(bibtype = \"Article\", key = \"Salesse_2018\", title = \"IsoArcH.eu: An open"
     )
   }
