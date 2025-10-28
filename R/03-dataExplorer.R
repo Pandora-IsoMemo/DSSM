@@ -135,7 +135,9 @@ dataExplorerUI <- function(id, title = "") {
             multiple = TRUE
           )
         ),
-        citationUI(ns("citation")),
+        citationColumnsUI(ns("citation_columns")),
+        tags$h5("Format Bibtex Citations"),
+        citationStyleUI(ns("citation_style")),
         fluidRow(
           column(4,
             selectInput(
@@ -612,7 +614,11 @@ dataExplorerServer <- function(id) {
 
                  # Citation export ----
                  observe({
-                   if (is.null(isoDataFull()))
+                   if (
+                    is.null(isoDataFull()) ||
+                    nrow(isoDataFull()) == 0 ||
+                    attr(citation_columns(), "is_valid") == FALSE
+                   )
                      shinyjs::disable("exportCitation")
                    else
                      shinyjs::enable("exportCitation")
@@ -623,7 +629,18 @@ dataExplorerServer <- function(id) {
                    updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
                  })
 
-                 citation_style_opts <- citationServer("citation")
+                 citation_columns <- citationColumnsServer(
+                   "citation_columns",
+                   column_choices = reactive({
+                     if (getSkin() == "isomemo") {
+                       get_citation_columns()
+                     } else {
+                       names(isoDataFull())
+                     }
+                   })
+                 )
+
+                 citation_style_opts <- citationStyleServer("citation_style")
 
                  output$exportCitation <- downloadHandler(
                    filename = function() {
@@ -645,13 +662,13 @@ dataExplorerServer <- function(id) {
                        alert("You need to choose exactly 9 columns for exporting citations.")
                        return()
                      }
-                     
-                     data <- isoDataFull()[citationColumns]
+
                      generateCitation(
-                      data,
-                      type = input$citationType,
-                      file = filename,
-                      style_opts = citation_style_opts()
+                       isoDataFull(),
+                       type = input$citationType,
+                       file = filename,
+                       citation_columns = citation_columns(),
+                       style_opts = citation_style_opts()
                      )
                    }
                  )

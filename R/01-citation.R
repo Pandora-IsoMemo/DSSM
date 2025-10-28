@@ -12,28 +12,30 @@ get_citation_columns <- function() {
   )
 }
 
-generateCitation <- function(data, type, file, style_opts) {
-  stopifnot(ncol(data) == 9)
-  
+generateCitation <- function(data, type, file, citation_columns, style_opts) {
+  data <- data[, unlist(citation_columns), drop = FALSE]
   data <- data[!duplicated(data), ]
-
-  withProgress(message = "Generating citation...", value = 0, {
-    # apply format to all three bibtex columns
-    bibtex_cols <- c("databaseBibtex", "compilationBibtex", "originalDataBibtex")
-    for (col in bibtex_cols) {
-      new_name <- gsub("Bibtex", "Citation", col)
-      logDebug("generateCitation(): Update %s", new_name)
-      data[[new_name]] <- format_bibtex_citations(
-        data[[col]],
-        style_opts = style_opts,
-        colname = col
-      )
-      # inc progress
-      incProgress(1 / length(bibtex_cols))
-    }
-  })
   
-  citations <- citationList(data)
+  bibtex_cols <- citation_columns$bibtex_cols
+  # format bibtex columns if set
+  if (length(bibtex_cols) > 0) {
+    withProgress(message = "Formatting citation...", value = 0, {
+      # apply format to all three bibtex columns
+      for (col in bibtex_cols) {
+        logDebug("generateCitation(): Updating %s", col)
+        updated_col <- format_bibtex_citations(
+          data[[col]],
+          style_opts = style_opts,
+          colname = col
+        )
+        data[[col]] <- updated_col
+        # inc progress
+        incProgress(1 / length(bibtex_cols))
+      }
+    })
+  }
+  
+  citations <- citationList(data, citation_columns = citation_columns)
   switch(
     type,
     txt = generateCitationTxt(citations, file),
@@ -64,19 +66,37 @@ generateCitationJson <- function(citations, file) {
   write(content, file)
 }
 
-citationList <- function(data) {
-  apply(data, 1, citationLine)
+citationList <- function(data, citation_columns) {
+  apply(data, 1, citationLine, citation_columns = citation_columns)
 }
 
-citationLine <- function(row) {
-  paste(
-    citationElement(row[1], row[2], row[3]),
-    citationElement(row[4], row[5], row[6]),
-    citationElement(row[7], row[8], row[9]),
-    sep = "\n\n"
-  )
+citationLine <- function(row, citation_columns) {
+  ref_cols <- citation_columns$reference_cols
+  doi_cols <- citation_columns$doi_cols
+  bib_cols <- citation_columns$bibtex_cols
+
+  n_elements <- max(length(ref_cols), length(doi_cols), length(bib_cols))
+  with_ref <- length(ref_cols) > 0
+  with_doi <- length(doi_cols) > 0
+  with_cite <- length(bib_cols) > 0
+
+  citation_elements <- sapply(seq_len(n_elements), function(i) {
+    if (with_ref) ref <- row[ref_cols[i]] else ref <- NULL
+    if (with_doi) doi <- row[doi_cols[i]] else doi <- NULL
+    if (with_cite) bib <- row[bib_cols[i]] else bib <- NULL
+    citationElement(ref, doi, bib, with_ref = with_ref, with_doi = with_doi, with_cite = with_cite)
+  })
+  paste(citation_elements, collapse = "\n\n")
 }
 
-citationElement <- function(ref, doi, formatted_citation) {
-  paste0(ref, "\nDOI: ", doi, "\nCitation: ", formatted_citation)
+citationElement <- function(ref, doi, cite, with_ref = TRUE, with_doi = TRUE, with_cite = TRUE) {
+  if (is.null(ref) || is.na(ref) || ref == "") ref <- "NA"
+  if (is.null(doi) || is.na(doi) || doi == "") doi <- "NA"
+  if (is.null(cite) || is.na(cite) || cite == "") cite <- "NA"
+
+  ref_str <- if (with_ref) ref else NULL
+  doi_str <- if (with_doi) paste0("DOI: ", doi) else NULL
+  cite_str <- if (with_cite) paste0("Citation: ", cite) else NULL
+
+  paste(c(ref_str, doi_str, cite_str), collapse = "\n")
 }

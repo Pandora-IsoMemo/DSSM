@@ -1,4 +1,4 @@
-citationUI <- function(ns) {
+citationStyleUI <- function(ns) {
   ns <- NS(ns)
   tagList(
     radioButtons(
@@ -58,7 +58,7 @@ citationUI <- function(ns) {
   )
 }
 
-citationServer <- function(id) {
+citationStyleServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     # use default styles
     observe({
@@ -75,7 +75,7 @@ citationServer <- function(id) {
     }) %>% bindEvent(input$citationTemplate)
 
     # pass user set styles
-    citation_options <- reactive({
+    reactive({
       list(
         bib.style       = input$bib.style,
         max.names       = input$max.names,
@@ -86,8 +86,6 @@ citationServer <- function(id) {
         style = input$style
       )
     })
-
-    citation_options
   })
 }
 
@@ -103,4 +101,96 @@ get_supported_citation_formats <- function() {
     "yaml",
     "R"
   )
+}
+
+citationColumnsUI <- function(ns) {
+  ns <- NS(ns)
+  tagList(
+    selectInput(
+      ns("reference_cols"),
+      "Reference columns (in order):",
+      choices = get_citation_columns(),
+      multiple = TRUE
+    ),
+    selectInput(
+      ns("doi_cols"),
+      "DOI columns (in order):",
+      choices = get_citation_columns(),
+      multiple = TRUE
+    ),
+    selectInput(
+      ns("bibtex_cols"),
+      "Bibtex columns (in order):",
+      choices = get_citation_columns(),
+      multiple = TRUE
+    ),
+    # warning goes right below the last input
+    uiOutput(ns("cols_warning"))
+  )
+}
+
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
+citationColumnsServer <- function(id, column_choices) {
+  moduleServer(id, function(input, output, session) {
+    # update choices based on citation columns
+    observe({
+      updateSelectInput(session, "reference_cols", choices = column_choices())
+      updateSelectInput(session, "doi_cols", choices = column_choices())
+      updateSelectInput(session, "bibtex_cols", choices = column_choices())
+    }) %>% bindEvent(column_choices())
+
+    # remove selected Reference columns from DOI and Citation choices
+    observe({
+      doi_choices <- column_choices()[!column_choices() %in% input$reference_cols]
+      updateSelectInput(session, "doi_cols", choices = doi_choices)
+    }) %>% bindEvent(input$reference_cols)
+
+    observe({
+      cit_choices <-
+        column_choices()[!column_choices() %in% c(input$reference_cols, input$doi_cols)]
+      updateSelectInput(session, "bibtex_cols", choices = cit_choices)
+    }) %>% bindEvent(c(input$reference_cols, input$doi_cols))
+
+
+    # --- validation: equal lengths across non-empty inputs ---------------------
+    valid_lengths <- reactiveVal(TRUE)
+    output$cols_warning <- renderUI({
+      ref <- input$reference_cols
+      doi <- input$doi_cols
+      cit <- input$bibtex_cols
+
+      lens <- c(
+        Reference = length(ref %||% character()),
+        DOI       = length(doi %||% character()),
+        Citation  = length(cit %||% character())
+      )
+      nonzero <- lens > 0
+      if (sum(nonzero) <= 1 || length(unique(lens[nonzero])) == 1) {
+        valid_lengths(TRUE)
+        return(NULL)
+      }
+
+      valid_lengths(FALSE)
+      tags$div(
+        style = "margin-top: .25rem;",
+        tags$small(
+          class = "text-danger",
+          "Selections must have equal lengths across the non-empty inputs."
+        )
+      )
+    })
+
+    reactive({
+      res <- list(
+        reference_cols = input$reference_cols,
+        doi_cols       = input$doi_cols,
+        bibtex_cols    = input$bibtex_cols
+      )
+
+      # pass is_valid as attribute
+      attr(res, "is_valid") <- valid_lengths()
+      return(res)
+    })
+  })
 }
