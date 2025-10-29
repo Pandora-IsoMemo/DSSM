@@ -47,7 +47,10 @@ dataExplorerUI <- function(id, title = "") {
           tags$br(),
           actionButton(ns("load"), "Load data"),
           tags$br(), tags$br(),
-          tags$h4("Display categories"),
+          tags$h4("Select categories"),
+          helpText(
+            "Select the data categories to include in the data table, modelling and export."
+          ),
           uiOutput(ns("categorySelection"))
         ),
         conditionalPanel(
@@ -149,7 +152,7 @@ dataExplorerUI <- function(id, title = "") {
             downloadButton(ns("exportCitation"), "Export Citation")
           )
         ),
-        tags$br()
+        tags$br(), tags$br(), tags$br()
       ),
       mainPanel(
         div(class = "last-updated",
