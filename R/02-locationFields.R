@@ -10,7 +10,6 @@ locationFieldsUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
-    tags$hr(),
     tags$h4(title),
     # DISABLE CONDITION on dataSource as long as this module is not used in the
     # modelling tabs
@@ -33,8 +32,14 @@ locationFieldsUI <- function(id, title = "") {
         selected = "decimal degrees"
       ),
     #),
-    selectInput(ns("longitude"), "Longitude", choices = NULL),
-    selectInput(ns("latitude"), "Latitude", choices = NULL)
+    fluidRow(
+      column(6,
+        selectInput(ns("longitude"), "Longitude", choices = NULL)
+      ),
+      column(6,
+        selectInput(ns("latitude"), "Latitude", choices = NULL)
+      )
+    )
   )
 }
 

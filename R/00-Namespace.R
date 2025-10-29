@@ -43,6 +43,7 @@
 #' @importFrom pryr mem_used
 #' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom RefManageR ReadBib
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
 #' @importFrom sf as_Spatial st_as_sf st_as_sfc st_bbox st_centroid st_combine st_coordinates

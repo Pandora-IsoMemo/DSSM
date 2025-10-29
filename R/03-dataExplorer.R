@@ -21,52 +21,65 @@ dataExplorerUI <- function(id, title = "") {
           ## no namespace to make it easier to use it across tabs
           "Skin",
           choices = c("Pandora" = "pandora", "Data networks" = "isomemo"),
-          selected = "pandora"
+          selected = "pandora",
+          inline = TRUE
         ),
         tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          selectInput(ns("mappingId"), "Select data network", choices = c("IsoMemo - Humans" = "IsoMemo")),
+          selectInput(
+            ns("mappingId"),
+            "Select data network",
+            choices = c("IsoMemo - Humans" = "IsoMemo")
+          ),
           pickerInput(
             inputId = ns("database"),
-            label = "Database selection",
+            label = "Select database",
             choices = character(0),
             options = list(
-              `actions-box` = FALSE,
+              `actions-box` = TRUE,
               size = 10,
               `none-selected-text` = "No database selected",
               `selected-text-format` = "count > 8"
             ),
             multiple = TRUE
           ),
-          actionButton(ns("load"), "Load data"),
           tags$br(),
-          tags$hr(),
+          actionButton(ns("load"), "Load Data"),
+          tags$br(), tags$br(),
           tags$h4("Select categories"),
+          helpText(
+            "Select the data categories to include in the data table, modelling and export."
+          ),
           uiOutput(ns("categorySelection"))
         ),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields")
+          locationFieldsUI(ns("locationFieldsId"), title = "Location fields"),
+          tags$br()
+        ),
+        numericInput(
+          inputId = ns("maxCharLength"),
+          label = "Max. display length for character columns",
+          value = NA,
+          min = 1,
+          max = NA,
+          step = 1
         ),
         tags$hr(),
-        tags$h4("Radiocarbon Calibration Fields"),
+        tags$h4("Radiocarbon calibration fields"),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           selectInput(
             ns("calibrationDatingType"),
-            "Date Type",
+            "Date type",
             choices = c("Mean + 1SD uncertainty")
           ),
           conditionalPanel(
             condition = "input.calibrationDatingType == 'Mean + 1SD uncertainty'",
-            selectInput(ns("calibrationDateMean"), "Date Mean", choices = NULL),
-            selectInput(
-              ns("calibrationDateUncertainty"),
-              "Date Uncertainty",
-              choices = NULL
-            ),
+            selectInput(ns("calibrationDateMean"), "Date mean", choices = NULL),
+            selectInput(ns("calibrationDateUncertainty"), "Date uncertainty", choices = NULL),
             ns = ns
           ),
           conditionalPanel(
@@ -103,50 +116,51 @@ dataExplorerUI <- function(id, title = "") {
         tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          downloadButton(ns("saveOptions"), "Save data selection"),
+          downloadButton(ns("saveOptions"), "Save Data Selection"),
           fileInput(
             ns("optionsFile"),
             label = "",
-            buttonLabel = "Load data selection"
+            buttonLabel = "Load Data Selection"
           ),
           tags$hr()
         ),
         detectDuplicatesUI(id = ns("detectDuplicates")),
-        tags$hr(),
+        tags$br(), tags$br(),
         actionButton(ns("export"), "Export Data"),
         tags$hr(),
+        tags$h4("Citation"),
+        citationColumnsUI(ns("citation_columns")),
         conditionalPanel(
-          condition = "input.skin == 'pandora'",
-          selectInput(
-            ns("citationColumns"),
-            "Citation columns",
-            choices = NULL,
-            multiple = TRUE
+          ns = ns,
+          condition =
+            "input['citation_columns-bibtex_cols'] && input['citation_columns-bibtex_cols'].length > 0",
+          tags$h5("Format bibtex citations"),
+          citationStyleUI(ns("citation_style"))
+        ),
+        fluidRow(
+          column(4,
+            selectInput(
+              ns("citationType"),
+              "Export type",
+              selected = "txt",
+              choices = c("txt", "xml", "json")
+            )
+          ),
+          column(8,
+            align = "right",
+            style = "margin-top: 1em",
+            downloadButton(ns("exportCitation"), "Export Citation")
           )
         ),
-        selectInput(
-          ns("citationType"),
-          "Citation Type",
-          selected = "txt",
-          choices = c("txt", "xml", "json")
-        ),
-        downloadButton(ns("exportCitation"), "Export Citation"),
-        hr(),
-        numericInput(
-          inputId = ns("maxCharLength"),
-          label = "Maximum Length Character Columns",
-          value = NA,
-          min = 1,
-          max = NA,
-          step = 1
-        )
+        tags$br(), tags$br(), tags$br()
       ),
       mainPanel(
         div(class = "last-updated",
             textOutput(ns("lastUpdate"))),
-        shinyjs::hidden(
-          div(HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"), id = ns("previewText"))
-        ),
+        shinyjs::hidden(div(
+          HTML("<b>Preview</b> &nbsp;&nbsp; (Long characters are cutted in the preview)<br><br>"),
+          id = ns("previewText")
+        )),
         DT::dataTableOutput(ns("dataTable")) %>% withSpinner(color = "#20c997")
       )
     )
@@ -269,11 +283,12 @@ dataExplorerServer <- function(id) {
                                                        colnamesAPI = TRUE)) %>%
                        handleDescription(maxChar = 20) %>%
                        suppressWarnings()
-                     isoDataRaw(d)
                    },
                    value = 0.75,
-                   message = 'Get remote data from database ...'
+                   message = "Get remote data from database ..."
                    )
+
+                   isoDataRaw(d)
                  })
 
                  # show preview text when maxCharLength is selected
@@ -598,49 +613,45 @@ dataExplorerServer <- function(id) {
 
                  # Citation export ----
                  observe({
-                   if (is.null(isoDataFull()))
+                   if (
+                    is.null(isoDataFull()) ||
+                    nrow(isoDataFull()) == 0 ||
+                    attr(citation_columns(), "is_valid") == FALSE
+                   )
                      shinyjs::disable("exportCitation")
                    else
                      shinyjs::enable("exportCitation")
                  })
 
-                 observe({
-                   req(isoDataFull())
-                   updateSelectInput(session, "citationColumns", choices = names(isoDataFull()))
-                 })
+                 citation_columns <- citationColumnsServer(
+                   "citation_columns",
+                   column_choices = reactive({
+                     if (getSkin() == "isomemo") {
+                       get_citation_column_choices(col_names = names(isoDataFull()))
+                     } else {
+                       list(
+                         ref_cols = names(isoDataFull()),
+                         doi_cols = names(isoDataFull()),
+                         bib_cols = names(isoDataFull())
+                       )
+                     }
+                   })
+                 )
 
-
+                 citation_style_opts <- citationStyleServer("citation_style")
 
                  output$exportCitation <- downloadHandler(
                    filename = function() {
                      paste0("isoMemoCitation.", input$citationType)
                    },
                    content = function(filename) {
-                     if (getSkin() == "isomemo") {
-                       citationColumns <- c(
-                         "databaseReference",
-                         "databaseDOI",
-                         "compilationReference",
-                         "compilationDOI",
-                         "originalDataReference",
-                         "originalDataDOI"
-                       )
-                     } else{
-                       citationColumns <- input$citationColumns
-                     }
-
-                     if (!all(citationColumns %in% colnames(isoDataFull()))) {
-                       alert("You need to select all citation columns from 'References' first")
-                       return()
-                     }
-
-                     if (length(citationColumns) != 6) {
-                       alert("You need to choose exactly 6 columns for exporting citations.")
-                       return()
-                     }
-
-                     data <- isoDataFull()[citationColumns]
-                     generateCitation(data, input$citationType, file = filename)
+                     generateCitation(
+                       data = isoDataFull(),
+                       type = input$citationType,
+                       file = filename,
+                       citation_columns = citation_columns(),
+                       style_opts = citation_style_opts()
+                     )
                    }
                  )
 

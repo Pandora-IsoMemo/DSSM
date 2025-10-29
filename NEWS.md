@@ -1,3 +1,9 @@
+# DSSM 25.10.0
+
+## New Features
+- BibTeX Citation Formatting:
+  Added support for formatting and exporting BibTeX citations. Users can now select citation styles (APA, Chicago, Harvard) and output formats (text, HTML, LaTeX, etc.) for BibTeX entries. New UI modules allow configuration of citation styles and columns, and citation export supports user-selected formatting.
+
 # DSSM 25.09.1
 
 ## New Features
