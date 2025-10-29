@@ -1,4 +1,4 @@
-context("format_bibtex_citations")
+context("format_bibtex_column")
 
 normalize_quotes <- function(x) {
   x <- gsub("[“”]", "\"", x)
@@ -20,7 +20,7 @@ bibs <- c(bib_test1, bib_test2, bib_db)
 # Vector input
 test_that("vector input", {
   style_opts <- refmanager_style_opts(style = "chicago", format = "html")
-  res <- format_bibtex_citations(bibs, style_opts = style_opts)
+  res <- format_bibtex_column(bibs, style_opts = style_opts)
   expect_equal(
     length(res),
     3
@@ -30,7 +30,7 @@ test_that("vector input", {
 # single NA vector input
 test_that("NA vector input", {
   style_opts <- refmanager_style_opts(style = "chicago", format = "html")
-  res <- format_bibtex_citations(c(NA, bib_test1), style_opts = style_opts)
+  res <- format_bibtex_column(c(NA, bib_test1), style_opts = style_opts)
   expect_equal(
     length(res),
     2
@@ -40,7 +40,7 @@ test_that("NA vector input", {
 # all NA vector input
 test_that("NA vector input", {
   style_opts <- refmanager_style_opts(style = "chicago", format = "html")
-  res <- format_bibtex_citations(c(NA, NA), style_opts = style_opts)
+  res <- format_bibtex_column(c(NA, NA), style_opts = style_opts)
   expect_equal(
     res,
     c(NA_character_, NA_character_)
@@ -50,7 +50,7 @@ test_that("NA vector input", {
 # TEXT format
 test_that("text format, apa style", {
   style_opts <- refmanager_style_opts(style = "apa", format = "text")
-  res <- format_bibtex_citations(bibs, style_opts = style_opts)
+  res <- format_bibtex_column(bibs, style_opts = style_opts)
   # print(rcrossref::cr_cn(test_doi, format = "text", style = "apa"))
   # print(res[[3]])
   expect_equal(
@@ -62,7 +62,7 @@ test_that("text format, apa style", {
 
 test_that("text format, chicago style", {
   style_opts <- refmanager_style_opts(style = "chicago", format = "text")
-  res <- format_bibtex_citations(bibs, style_opts = style_opts)
+  res <- format_bibtex_column(bibs, style_opts = style_opts)
   # print(rcrossref::cr_cn(test_doi, format = "text", style = "chicago-author-date"))
   # print(res[[3]])
   expect_equal(
@@ -74,7 +74,7 @@ test_that("text format, chicago style", {
 
 test_that("text format, harvard style", {
   style_opts <- refmanager_style_opts(style = "harvard", format = "text")
-  res <- format_bibtex_citations(bibs, style_opts = style_opts)
+  res <- format_bibtex_column(bibs, style_opts = style_opts)
   # print(rcrossref::cr_cn(
   #   test_doi,
   #   format = "text",
@@ -91,7 +91,7 @@ test_that("text format, harvard style", {
 # BIBTEX format
 test_that("Bibtex format, all styles", {
   style_opts <- refmanager_style_opts(style = "chicago", format = "Bibtex")
-  res <- format_bibtex_citations(bibs, style_opts = style_opts)
+  res <- format_bibtex_column(bibs, style_opts = style_opts)
   expect_equal(
     substr(res[[3]], 410, 496),
     "que Castex and {\\a'E}lise Dufour}, year = {2018}, month = {jun}, pages = {1050–1055}, }"
@@ -99,7 +99,7 @@ test_that("Bibtex format, all styles", {
 
   for (style in c("apa", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "Bibtex")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 410, 481),
       "que Castex and {\\a'E}lise Dufour}, year = {2018}, pages = {1050–1055}, }"
@@ -112,7 +112,7 @@ test_that("Bibtex format, all styles", {
 test_that("Biblatex format, all styles", {
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "Biblatex")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80),
       "@Article{Salesse_2018, title = {IsoArcH.eu: An open-access and collaborative iso"
@@ -129,7 +129,7 @@ test_that("citation format, all styles", {
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "citation")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80) |> normalize_quotes(),
       exp_res[[style]]
@@ -145,7 +145,7 @@ test_that("html format, all styles", {
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "html")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80),
       exp_res[[style]]
@@ -161,7 +161,7 @@ test_that("latex format, all styles", {
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "latex")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80),
       exp_res[[style]]
@@ -177,7 +177,7 @@ test_that("markdown format, all styles", {
   )
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "markdown")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80) |> normalize_quotes(),
       exp_res[[style]]
@@ -188,7 +188,7 @@ test_that("markdown format, all styles", {
 test_that("yaml format, all styles", {
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "yaml")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80) |> normalize_quotes(),
       "- type: \"Article\" id: \"Salesse_2018\" title: \"IsoArcH.eu: An open-access and coll"
@@ -199,7 +199,7 @@ test_that("yaml format, all styles", {
 test_that("R format, all styles", {
   for (style in c("apa", "chicago", "harvard")) {
     style_opts <- refmanager_style_opts(style = style, format = "R")
-    res <- format_bibtex_citations(bibs, style_opts = style_opts)
+    res <- format_bibtex_column(bibs, style_opts = style_opts)
     expect_equal(
       substr(res[[3]], 1, 80) |> normalize_quotes(),
       "bibentry(bibtype = \"Article\", key = \"Salesse_2018\", title = \"IsoArcH.eu: An open"

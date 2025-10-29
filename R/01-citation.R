@@ -25,27 +25,13 @@ get_citation_column_choices <- function(col_names) {
 generateCitation <- function(data, type, file, citation_columns, style_opts) {
   data <- data[, unlist(citation_columns), drop = FALSE]
   data <- data[!duplicated(data), , drop = FALSE]
-  
-  bibtex_cols <- citation_columns$bibtex_cols
-  # format bibtex columns if set
-  if (length(bibtex_cols) > 0) {
-    withProgress(message = "Formatting citation...", value = 0, {
-      # apply format to all three bibtex columns
-      for (col in bibtex_cols) {
-        logDebug("generateCitation(): Updating %s", col)
-        bibtex_vec <- data[[col]]
-        updated_col <- format_bibtex_citations(
-          bibtex_vec,
-          style_opts = style_opts,
-          colname = col
-        )
-        data[[col]] <- updated_col
-        # inc progress
-        incProgress(1 / length(bibtex_cols))
-      }
-    })
-  }
-  
+
+  data <- format_bibtex_citations(
+    data,
+    bibtex_cols = citation_columns$bibtex_cols,
+    style_opts = style_opts
+  )
+
   citations <- citationList(data, citation_columns = citation_columns)
   switch(
     type,

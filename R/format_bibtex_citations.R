@@ -66,7 +66,7 @@ read_bib_from_text <- function(bibtex_vec) {
   RefManageR::ReadBib(tf, check = "warn", .Encoding = "UTF-8")
 }
 
-format_bibtex_citations <- function(
+format_bibtex_column <- function(
   bibtex_vec,
   style_opts,
   colname = ""
@@ -138,5 +138,26 @@ format_bibtex_citations <- function(
 
   # return citation vector
   return(merged$citation)
+}
+
+format_bibtex_citations <- function(data, bibtex_cols, style_opts) {
+  if (length(bibtex_cols) > 0) {
+    withProgress(message = "Formatting citation...", value = 0, {
+      # apply format to all bibtex columns
+      for (bib_col in bibtex_cols) {
+        logDebug("generateCitation(): Updating %s", bib_col)
+        bibtex_vec <- data[[bib_col]]
+        updated_col <- format_bibtex_column(
+          bibtex_vec,
+          style_opts = style_opts,
+          colname = bib_col
+        )
+        data[[bib_col]] <- updated_col
+        incProgress(1 / length(bibtex_cols))
+      }
+    })
+  }
+
+  data
 }
 
