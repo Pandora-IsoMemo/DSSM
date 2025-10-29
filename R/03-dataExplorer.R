@@ -34,7 +34,7 @@ dataExplorerUI <- function(id, title = "") {
           ),
           pickerInput(
             inputId = ns("database"),
-            label = "Select Database",
+            label = "Select database",
             choices = character(0),
             options = list(
               `actions-box` = TRUE,
@@ -45,7 +45,7 @@ dataExplorerUI <- function(id, title = "") {
             multiple = TRUE
           ),
           tags$br(),
-          actionButton(ns("load"), "Load data"),
+          actionButton(ns("load"), "Load Data"),
           tags$br(), tags$br(),
           tags$h4("Select categories"),
           helpText(
@@ -56,30 +56,30 @@ dataExplorerUI <- function(id, title = "") {
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           importDataUI(ns("localData"), "Import Data"),
-          locationFieldsUI(ns("locationFieldsId"), title = "Location Fields"),
+          locationFieldsUI(ns("locationFieldsId"), title = "Location fields"),
           tags$br()
         ),
         numericInput(
           inputId = ns("maxCharLength"),
-          label = "Max. Display Length for Character Columns",
+          label = "Max. display length for character columns",
           value = NA,
           min = 1,
           max = NA,
           step = 1
         ),
         tags$hr(),
-        tags$h4("Radiocarbon Calibration Fields"),
+        tags$h4("Radiocarbon calibration fields"),
         conditionalPanel(
           condition = "input.skin == 'pandora'",
           selectInput(
             ns("calibrationDatingType"),
-            "Date Type",
+            "Date type",
             choices = c("Mean + 1SD uncertainty")
           ),
           conditionalPanel(
             condition = "input.calibrationDatingType == 'Mean + 1SD uncertainty'",
-            selectInput(ns("calibrationDateMean"), "Date Mean", choices = NULL),
-            selectInput(ns("calibrationDateUncertainty"), "Date Uncertainty", choices = NULL),
+            selectInput(ns("calibrationDateMean"), "Date mean", choices = NULL),
+            selectInput(ns("calibrationDateUncertainty"), "Date uncertainty", choices = NULL),
             ns = ns
           ),
           conditionalPanel(
@@ -116,11 +116,11 @@ dataExplorerUI <- function(id, title = "") {
         tags$hr(),
         conditionalPanel(
           condition = "input.skin == 'isomemo'",
-          downloadButton(ns("saveOptions"), "Save data selection"),
+          downloadButton(ns("saveOptions"), "Save Data Selection"),
           fileInput(
             ns("optionsFile"),
             label = "",
-            buttonLabel = "Load data selection"
+            buttonLabel = "Load Data Selection"
           ),
           tags$hr()
         ),
@@ -134,7 +134,7 @@ dataExplorerUI <- function(id, title = "") {
           ns = ns,
           condition =
             "input['citation_columns-bibtex_cols'] && input['citation_columns-bibtex_cols'].length > 0",
-          tags$h5("Format Bibtex Citations"),
+          tags$h5("Format bibtex citations"),
           citationStyleUI(ns("citation_style"))
         ),
         fluidRow(
