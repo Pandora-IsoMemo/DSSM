@@ -1,27 +1,3 @@
-get_citation_column_choices <- function(col_names) {
-  ref_cols <- c(
-    "databaseReference",
-    "compilationReference",
-    "originalDataReference"
-  )
-  doi_cols <- c(
-    "databaseDOI",
-    "compilationDOI",
-    "originalDataDOI"
-  )
-  bib_cols <- c(
-    "databaseBibtex",
-    "compilationBibtex",
-    "originalDataBibtex"
-  )
-
-  list(
-    ref_cols = ref_cols[ref_cols %in% col_names],
-    doi_cols = doi_cols[doi_cols %in% col_names],
-    bib_cols = bib_cols[bib_cols %in% col_names]
-  )
-}
-
 generateCitation <- function(data, type, file, citation_columns, style_opts) {
   data <- data[, unlist(citation_columns), drop = FALSE]
   data <- data[!duplicated(data), , drop = FALSE]
