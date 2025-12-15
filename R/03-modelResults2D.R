@@ -530,6 +530,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -542,6 +543,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
       return()
     }
 
@@ -559,6 +561,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       shinyTryCatch()
 
     Model(model)
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -976,6 +979,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      logDebug(sprintf("Size of allData: %s", pryr::object_size(allData) |> format(units = "auto")))
       return(allData)
     }
   })
@@ -996,6 +1000,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observeEvent(batchModel(), {
     Model(batchModel())
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
   })
 
 }

@@ -512,6 +512,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     # reset model
     Model(NULL)
     data(activeData)
+    logDebug(sprintf("Size of data(): %s", pryr::object_size(data()) |> format(units = "auto")))
+    log_memory_usage()
   })
 
   coordType <- reactive({
@@ -566,6 +568,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    logDebug(sprintf("Size of data(): %s", pryr::object_size(data()) |> format(units = "auto")))
+    log_memory_usage()
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -594,6 +598,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     logDebug("modelResults3D: Update model after model import")
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_memory_usage()
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -607,6 +613,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+      log_memory_usage()
       return()
     }
     values$set <- 0
@@ -622,10 +630,13 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params$coordType <- coordType()
 
     showNotification("Starting Calculation. This may take a while ...", type = "message")
+    log_memory_usage()
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()
 
     Model(model)
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_memory_usage()
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -644,6 +655,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       } else {
         val <- 0.5
       }
+      browser()
       updateSliderInput(session, "StdErr", value = signif(5 * val, 2),
                         min = 0, max = signif(5 * val, 2),
                         step = signif(roundUpNice(val, nice = c(1,10)) / 1000, 1))
@@ -783,6 +795,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
     if(exists("d")){
       d <- na.omit(d)
+      browser()
       dateExtent$mean <- signif(mean(d), digits = 1)
       dateExtent$range <- signif(range(d), digits = 1)
       dateExtent$step <- signif(roundUpNice(diff(range(d)),
@@ -1046,7 +1059,10 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    logDebug(sprintf("Size of values$predictions: %s", pryr::object_size(values$predictions) |> format(units = "auto")))
     values$plot <- recordPlot()
+    logDebug(sprintf("Size of values$plot: %s", pryr::object_size(values$plot) |> format(units = "auto")))
+    log_memory_usage()
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,
@@ -1176,6 +1192,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      logDebug(sprintf("Size of allData: %s", pryr::object_size(allData) |> format(units = "auto")))
+      log_memory_usage()
       return(allData)
     }
   })
@@ -1321,5 +1339,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observeEvent(batchModel(), {
     Model(batchModel())
+    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_memory_usage()
   })
 }
