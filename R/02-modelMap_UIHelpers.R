@@ -443,6 +443,47 @@ timeAndMapSectionServer <- function(id,
 }
 
 
+update_date_extent <- function(input_data, model_data, input) {
+  if (input$dataSource != "model") {
+    try({
+      if (input$DateType == "Interval") {
+        d <- c(input_data[, isolate(input$DateOne)], input_data[, isolate(input$DateTwo)])
+      }
+      if (input$DateType == "Mean + 1 SD uncertainty") {
+        d <- c(input_data[, isolate(input$DateOne)] + 2 * input_data[, isolate(input$DateTwo)],
+                input_data[, isolate(input$DateOne)] - 2 * input_data[, isolate(input$DateTwo)])
+      }
+      if (input$DateType == "Single point") {
+        d <- input_data[, isolate(input$DateOne)]
+      }
+    }, silent = TRUE)
+  } else {
+    try({
+      d <- model_data[, "Date"]
+    }, silent = TRUE)
+  }
+
+  if (!exists("d")) return(list())
+
+  d <- suppressWarnings(as.numeric(d))
+  d <- na.omit(d)
+
+  if (length(d) == 0) return(list())
+
+  mean <- signif(mean(d), digits = 1)
+  range <- signif(range(d), digits = 1)
+  step <- signif(roundUpNice(diff(range(d)), nice = c(1, 10)) / 10000, digits = 2)
+  min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
+  max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+
+  list(mean = mean,
+       range = range,
+       step = step,
+       min = min,
+       max = max)
+}
+
+
 # Map Section UI
 #
 # UI of the module

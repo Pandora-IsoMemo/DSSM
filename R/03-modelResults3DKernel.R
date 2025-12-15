@@ -808,49 +808,33 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe({
     validate(validInput(Model()))
 
-    if(input$dataSource != "model"){
-      try({
-        if(input$DateType == "Interval"){
-        d <- c(data()[, isolate(input$DateOne)],
-               data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Mean + 1 SD uncertainty"){
-          d <- c(data()[, isolate(input$DateOne)] + 2 *
-                 data()[, isolate(input$DateTwo)],
-                 data()[, isolate(input$DateOne)] - 2 *
-                     data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Single point"){
-          d <- data()[, isolate(input$DateOne)]
-        }
-        }, silent = TRUE)
-    } else {
-      try({d <- Model()$data[, "Date"]}, silent = TRUE)
-    }
+    dateExtentValues <- update_date_extent(
+      input_data = data(),
+      model_data = Model()$data,
+      input = input
+    )
 
-    if(exists("d")){
-      d <- na.omit(d)
+    if (length(dateExtentValues) == 0) return()
 
-      dateExtent$mean <- signif(mean(d), digits = 1)
-      dateExtent$range <- signif(range(d), digits = 1)
-      dateExtent$step <- signif(roundUpNice(diff(range(d)),
-                                            nice = c(1,10)) / 10000, digits = 2)
-      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
-      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+    # update date extent reactive values
+    dateExtent$mean <- dateExtentValues$mean
+    dateExtent$range <- dateExtentValues$range
+    dateExtent$step <- dateExtentValues$step
+    dateExtent$min <- dateExtentValues$min
+    dateExtent$max <- dateExtentValues$max
 
-      # update plot time
-      values$time <- dateExtent$mean
+    # update plot time
+    values$time <- dateExtent$mean
 
-      # time range update ----
-      updateSliderInput(
-        session,
-        "trange",
-        value = dateExtent$range,
-        min = dateExtent$min,
-        max = dateExtent$max,
-        step = dateExtent$step
-      )
-    }
+    # time range update ----
+    updateSliderInput(
+      session,
+      "trange",
+      value = dateExtent$range,
+      min = dateExtent$min,
+      max = dateExtent$max,
+      step = dateExtent$step
+    )
   })
 
   ### Add Points
@@ -1123,8 +1107,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe(priority = 75, {
     numVars <- unlist(lapply(names(data()), function(x){
       if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
+        (
+          is.integer(data()[[x]]) |
+            is.numeric(data()[[x]]) |
+            sum(!is.na(suppressWarnings(as.numeric((data()[[x]]))))) > 2
+        ) #& !(x %in% c("Latitude", "Longitude"))
       )
         x
       else
