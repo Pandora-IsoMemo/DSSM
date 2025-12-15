@@ -565,10 +565,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
     model <- estimateMapSpreadWrapper(data(), params) %>%
       shinyTryCatch()
 

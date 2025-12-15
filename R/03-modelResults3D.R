@@ -626,10 +626,10 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
     log_memory_usage()
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()

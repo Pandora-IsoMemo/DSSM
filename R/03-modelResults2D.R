@@ -552,11 +552,10 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
-
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
     model <- estimateMapWrapper(data(), params) %>%
       shinyTryCatch()
 
