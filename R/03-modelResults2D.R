@@ -530,6 +530,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -542,6 +543,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
 
@@ -550,15 +552,15 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
-
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
     model <- estimateMapWrapper(data(), params) %>%
       shinyTryCatch()
 
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -878,39 +880,15 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   })
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
 
-    selectedIndependent <- NULL
-    if (input$dataSource == "db" & ("mean" %in% names(data()))){
-      selectedIndependent <- "mean"
-    }
+    selectedIndependent <- select_if_db_and_exists(input, data(), "mean")
+    selectedIndependentUnc  <- select_if_db_and_exists(input, data(), "sd")
 
-    selectedIndependentUnc <- NULL
-    if (input$dataSource == "db" & ("sd" %in% names(data()))){
-      selectedIndependentUnc <- "sd"
-    }
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
-    selectedSite <- NULL
-    if (input$dataSource == "db" & ("site" %in% names(data()))){
-      selectedSite <- "site"
-    }
-    selectedTextLabel <- NULL
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
+    selectedSite      <- select_if_db_and_exists(input, data(), "site")
 
     updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
@@ -923,11 +901,11 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateSelectInput(session, "Site", choices = c("", names(data())),
                       selected = selectedSite)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
   }) %>%
     bindEvent(data())
 
@@ -976,6 +954,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      log_object_size(allData)
       return(allData)
     }
   })
@@ -996,6 +975,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observeEvent(batchModel(), {
     Model(batchModel())
+    log_object_size(Model())
   })
 
 }

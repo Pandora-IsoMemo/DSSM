@@ -565,10 +565,10 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
     model <- estimateMapSpreadWrapper(data(), params) %>%
       shinyTryCatch()
 
@@ -922,43 +922,23 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   })
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 3) #&
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data(), min_values = 4)
+    #timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),
                       selected = selectedLongitude)
     updateSelectInput(session, "Latitude", choices = c("", names(data())),
                       selected = selectedLatitude)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     # if (input$dataSource == "db"){
     #   updateSelectInput(session, "DateOne", choices = c("", timeVars))

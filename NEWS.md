@@ -1,3 +1,11 @@
+# DSSM 25.12.0
+
+## Bug Fixes
+- Fixed an issue where date columns were parsed as character instead of numeric, causing errors when 
+  calculating date ranges and means in the UI (#289).
+- Added logging of object sizes for easier debugging of memory issues. (#289)
+- Extracted common code into helper functions to reduce code duplication.
+
 # DSSM 25.10.0
 
 ## New Features

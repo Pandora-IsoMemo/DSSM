@@ -40,7 +40,7 @@
 #' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
-#' @importFrom pryr mem_used
+#' @importFrom pryr mem_used object_size
 #' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom RefManageR ReadBib

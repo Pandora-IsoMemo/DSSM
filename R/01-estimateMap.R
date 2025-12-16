@@ -1270,6 +1270,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
         start = j, iter = j + iter / 10 - 1
       )
   }
+  log_memory_usage()
   # burnin <- round(burnInProp * iter)
   # every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   # #Vektor der tatsaechlich benutzten Beobachtungen

@@ -512,6 +512,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
+    log_memory_usage()
   })
 
   coordType <- reactive({
@@ -566,6 +568,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
+    log_memory_usage()
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -594,6 +598,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     logDebug("modelResults3D: Update model after model import")
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
+    log_memory_usage()
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -607,6 +613,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
+      log_memory_usage()
       return()
     }
     values$set <- 0
@@ -618,14 +626,17 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    showNotification("Starting Calculation. This may take a while ...", type = "message")
+    log_memory_usage()
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()
 
     Model(model)
+    log_object_size(Model())
+    log_memory_usage()
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -761,49 +772,33 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observe({
     validate(validInput(Model()))
 
-    if(input$dataSource != "model"){
-      try({
-        if(input$DateType == "Interval"){
-          d <- c(data()[, isolate(input$DateOne)],
-                 data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Mean + 1 SD uncertainty"){
-          d <- c(data()[, isolate(input$DateOne)] + 2 *
-                   data()[, isolate(input$DateTwo)],
-                 data()[, isolate(input$DateOne)] - 2 *
-                   data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Single point"){
-          d <- data()[, isolate(input$DateOne)]
-        }
-      }, silent = TRUE)
-    } else {
-      try({d <- Model()$data[, "Date"]}, silent = TRUE)
-    }
+    dateExtentValues <- update_date_extent(
+      input_data = data(),
+      model_data = Model()$data,
+      input = input
+    )
 
-    if(exists("d")){
-      d <- na.omit(d)
-      dateExtent$mean <- signif(mean(d), digits = 1)
-      dateExtent$range <- signif(range(d), digits = 1)
-      dateExtent$step <- signif(roundUpNice(diff(range(d)),
-                                            nice = c(1,10)) / 10000,
-                                digits = 2)
-      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
-      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+    if (length(dateExtentValues) == 0) return()
 
-      # update plot time
-      values$time <- dateExtent$mean
+    # update date extent reactive values
+    dateExtent$mean <- dateExtentValues$mean
+    dateExtent$range <- dateExtentValues$range
+    dateExtent$step <- dateExtentValues$step
+    dateExtent$min <- dateExtentValues$min
+    dateExtent$max <- dateExtentValues$max
 
-      # time range update ----
-      updateSliderInput(
-        session,
-        "trange",
-        value = dateExtent$range,
-        min = dateExtent$min,
-        max = dateExtent$max,
-        step = dateExtent$step
-      )
-    }
+    # update plot time
+    values$time <- dateExtent$mean
+
+    # time range update ----
+    updateSliderInput(
+      session,
+      "trange",
+      value = dateExtent$range,
+      min = dateExtent$min,
+      max = dateExtent$max,
+      step = dateExtent$step
+    )
   })
 
   ### Add Points
@@ -1046,7 +1041,10 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
+    log_memory_usage()
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,
@@ -1056,37 +1054,14 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                            zoom = 50)
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
+    timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
+    selectedSite      <- select_if_db_and_exists(input, data(), "site")
 
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
-    selectedSite <- NULL
-    if (input$dataSource == "db" & ("site" %in% names(data()))){
-      selectedSite <- "site"
-    }
     updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
     updateSelectInput(session, "IndependentUnc", choices = c("", setdiff(numVars, timeVars)))
 
@@ -1097,11 +1072,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateSelectInput(session, "Site", choices = c("", names(data())),
                       selected = selectedSite)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     # if (input$dataSource == "db"){
     #   updateSelectInput(session, "DateOne", choices = c("", timeVars))
@@ -1176,6 +1151,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      log_object_size(allData)
+      log_memory_usage()
       return(allData)
     }
   })
@@ -1321,5 +1298,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observeEvent(batchModel(), {
     Model(batchModel())
+    log_object_size(Model())
+    log_memory_usage()
   })
 }

@@ -808,49 +808,33 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   observe({
     validate(validInput(Model()))
 
-    if(input$dataSource != "model"){
-      try({
-        if(input$DateType == "Interval"){
-        d <- c(data()[, isolate(input$DateOne)],
-               data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Mean + 1 SD uncertainty"){
-          d <- c(data()[, isolate(input$DateOne)] + 2 *
-                 data()[, isolate(input$DateTwo)],
-                 data()[, isolate(input$DateOne)] - 2 *
-                     data()[, isolate(input$DateTwo)])
-        }
-        if(input$DateType == "Single point"){
-          d <- data()[, isolate(input$DateOne)]
-        }
-        }, silent = TRUE)
-    } else {
-      try({d <- Model()$data[, "Date"]}, silent = TRUE)
-    }
+    dateExtentValues <- update_date_extent(
+      input_data = data(),
+      model_data = Model()$data,
+      input = input
+    )
 
-    if(exists("d")){
-      d <- na.omit(d)
+    if (length(dateExtentValues) == 0) return()
 
-      dateExtent$mean <- signif(mean(d), digits = 1)
-      dateExtent$range <- signif(range(d), digits = 1)
-      dateExtent$step <- signif(roundUpNice(diff(range(d)),
-                                            nice = c(1,10)) / 10000, digits = 2)
-      dateExtent$min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
-      dateExtent$max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+    # update date extent reactive values
+    dateExtent$mean <- dateExtentValues$mean
+    dateExtent$range <- dateExtentValues$range
+    dateExtent$step <- dateExtentValues$step
+    dateExtent$min <- dateExtentValues$min
+    dateExtent$max <- dateExtentValues$max
 
-      # update plot time
-      values$time <- dateExtent$mean
+    # update plot time
+    values$time <- dateExtent$mean
 
-      # time range update ----
-      updateSliderInput(
-        session,
-        "trange",
-        value = dateExtent$range,
-        min = dateExtent$min,
-        max = dateExtent$max,
-        step = dateExtent$step
-      )
-    }
+    # time range update ----
+    updateSliderInput(
+      session,
+      "trange",
+      value = dateExtent$range,
+      min = dateExtent$min,
+      max = dateExtent$max,
+      step = dateExtent$step
+    )
   })
 
   ### Add Points
@@ -1121,33 +1105,12 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                            zoom = 50)
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
+    timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
 
@@ -1157,11 +1120,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       selected = selectedLatitude)
     updateSelectInput(session, "Weighting", choices = c("", numVars))
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     if (input$dataSource == "db"){
       updateSelectInput(session, "DateOne", choices = c("", numVars))
