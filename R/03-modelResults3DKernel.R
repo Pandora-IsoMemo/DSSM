@@ -1105,36 +1105,12 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                            zoom = 50)
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (
-          is.integer(data()[[x]]) |
-            is.numeric(data()[[x]]) |
-            sum(!is.na(suppressWarnings(as.numeric((data()[[x]]))))) > 2
-        ) #& !(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
+    timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
 
@@ -1144,11 +1120,11 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                       selected = selectedLatitude)
     updateSelectInput(session, "Weighting", choices = c("", numVars))
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     if (input$dataSource == "db"){
       updateSelectInput(session, "DateOne", choices = c("", numVars))

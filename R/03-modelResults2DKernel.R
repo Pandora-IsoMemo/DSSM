@@ -833,35 +833,13 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
 
-    selectedIndependent <- NULL
-    if (input$dataSource == "db" & ("mean" %in% names(data()))){
-      selectedIndependent <- "mean"
-    }
-
-    selectedIndependentUnc <- NULL
-    if (input$dataSource == "db" & ("sd" %in% names(data()))){
-      selectedIndependentUnc <- "sd"
-    }
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedIndependent <- select_if_db_and_exists(input, data(), "mean")
+    #selectedIndependentUnc  <- select_if_db_and_exists(input, data(), "sd")
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
@@ -871,11 +849,11 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     updateSelectInput(session, "Latitude", choices = c("", names(data())),
                       selected = selectedLatitude)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
   }) %>%
     bindEvent(data())
 

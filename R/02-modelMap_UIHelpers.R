@@ -1208,3 +1208,32 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
 
   pmin(360, pmax(0, rangeLong, na.rm = TRUE)) %>% round()
 }
+
+get_num_vars <- function(input_data, min_values = 3) {
+  unlist(lapply(names(input_data), function(x) {
+    if (
+      (
+        is.integer(input_data[[x]]) |
+          is.numeric(input_data[[x]]) |
+          sum(!is.na(suppressWarnings(as.numeric((input_data[[x]]))))) >= min_values
+      ) #& !(x %in% c("Latitude", "Longitude"))
+    )
+      x
+    else
+      NULL
+  }))
+}
+
+get_time_vars <- function(input_data) {
+  unlist(lapply(names(input_data), function(x) {
+    if (grepl("date", x, ignore.case = TRUE)) x else NULL
+  }))
+}
+
+select_if_db_and_exists <- function(input, dat, col) {
+  if (input$dataSource == "db" && col %in% names(dat)) {
+    col
+  } else {
+    character(0)
+  }
+}

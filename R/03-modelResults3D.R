@@ -512,7 +512,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     # reset model
     Model(NULL)
     data(activeData)
-    logDebug(sprintf("Size of data(): %s", pryr::object_size(data()) |> format(units = "auto")))
+    log_object_size(data())
     log_memory_usage()
   })
 
@@ -568,7 +568,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
-    logDebug(sprintf("Size of data(): %s", pryr::object_size(data()) |> format(units = "auto")))
+    log_object_size(data())
     log_memory_usage()
 
     # update notes in tab "Estimates" model download ----
@@ -598,7 +598,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     logDebug("modelResults3D: Update model after model import")
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
-    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_object_size(Model())
     log_memory_usage()
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
@@ -613,7 +613,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
-      logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+      log_object_size(Model())
       log_memory_usage()
       return()
     }
@@ -635,7 +635,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       shinyTryCatch()
 
     Model(model)
-    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_object_size(Model())
     log_memory_usage()
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
@@ -1041,9 +1041,9 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
-    logDebug(sprintf("Size of values$predictions: %s", pryr::object_size(values$predictions) |> format(units = "auto")))
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
-    logDebug(sprintf("Size of values$plot: %s", pryr::object_size(values$plot) |> format(units = "auto")))
+    log_object_size(values$plot)
     log_memory_usage()
   })
 
@@ -1054,40 +1054,14 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                            zoom = 50)
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (
-          is.integer(data()[[x]]) |
-            is.numeric(data()[[x]]) |
-            sum(!is.na(suppressWarnings(as.numeric((data()[[x]]))))) > 2
-        ) #& !(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
+    timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
+    selectedSite      <- select_if_db_and_exists(input, data(), "site")
 
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
-    selectedSite <- NULL
-    if (input$dataSource == "db" & ("site" %in% names(data()))){
-      selectedSite <- "site"
-    }
     updateSelectInput(session, "IndependentX",  choices = c("", setdiff(numVars, timeVars)))
     updateSelectInput(session, "IndependentUnc", choices = c("", setdiff(numVars, timeVars)))
 
@@ -1098,11 +1072,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     updateSelectInput(session, "Site", choices = c("", names(data())),
                       selected = selectedSite)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     # if (input$dataSource == "db"){
     #   updateSelectInput(session, "DateOne", choices = c("", timeVars))
@@ -1177,7 +1151,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
-      logDebug(sprintf("Size of allData: %s", pryr::object_size(allData) |> format(units = "auto")))
+      log_object_size(allData)
       log_memory_usage()
       return(allData)
     }
@@ -1324,7 +1298,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   observeEvent(batchModel(), {
     Model(batchModel())
-    logDebug(sprintf("Size of Model(): %s", pryr::object_size(Model()) |> format(units = "auto")))
+    log_object_size(Model())
     log_memory_usage()
   })
 }
