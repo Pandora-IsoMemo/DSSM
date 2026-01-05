@@ -543,6 +543,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -555,6 +556,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
 
@@ -573,6 +575,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       shinyTryCatch()
 
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 

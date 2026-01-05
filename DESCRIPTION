@@ -1,6 +1,6 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 25.12.0
+Version: 26.01.0
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),

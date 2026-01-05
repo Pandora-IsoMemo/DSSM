@@ -279,6 +279,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(uploadedValues()[[1]][["model"]])
+    log_object_size(Model())
   }) %>%
     bindEvent(uploadedValues())
 
@@ -395,6 +396,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
        shinyTryCatch()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
+      log_object_size(Model())
     }
   })
 

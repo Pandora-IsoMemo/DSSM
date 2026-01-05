@@ -1,3 +1,8 @@
+# DSSM 26.01.0
+
+## Updates
+- Added logging of object sizes also to the modelling tabs _KernelR, KernelTimeR, SpreadR AssignR_ (#206)
+
 # DSSM 25.12.0
 
 ## Bug Fixes
