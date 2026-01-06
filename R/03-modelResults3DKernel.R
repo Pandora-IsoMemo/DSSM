@@ -507,6 +507,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -551,6 +552,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -1098,6 +1100,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
   })
 

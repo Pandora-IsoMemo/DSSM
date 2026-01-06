@@ -57,9 +57,14 @@ log_memory_usage <- function() {
     logWarn("Critical memory %s %s.", current_mem_msg, mem_warning)
 }
 
-log_object_size <- function(object, object_name = deparse(substitute(object))) {
+log_object_size <- function(object, object_name = deparse(substitute(object)), log_memory = TRUE) {
   # Only compute object size if debug logging is enabled
   if (futile.logger::flog.threshold() <= futile.logger::DEBUG) {
-    logDebug(sprintf("Size of %s: %s", object_name, pryr::object_size(object) |> format(units = "auto")))
+    logDebug(sprintf(
+      "Size of %s: %s", object_name, pryr::object_size(object) |>
+        format(units = "auto")
+    ))
+    # if logging object size then also log memory usage
+    if (log_memory) log_memory_usage()
   }
 }

@@ -470,6 +470,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -517,6 +518,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -910,6 +912,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert(res)
     } else{
       values$predictions <- res$XPred
+      log_object_size(values$predictions)
       values$plot <- recordPlot()
     }
   })
@@ -986,6 +989,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      log_object_size(allData)
       return(allData)
     }
   })

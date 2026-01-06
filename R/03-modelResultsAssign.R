@@ -223,6 +223,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   # MODEL DOWN- / UPLOAD ----
@@ -255,6 +256,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])

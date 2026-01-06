@@ -454,6 +454,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -504,6 +505,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -872,6 +874,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
 
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
   })
 

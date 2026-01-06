@@ -652,6 +652,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       alert(res)
     } else {
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
     }
   })
