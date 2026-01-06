@@ -626,7 +626,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    log_memory_usage()
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()
 

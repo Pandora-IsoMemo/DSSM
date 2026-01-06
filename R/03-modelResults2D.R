@@ -876,6 +876,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
     values$predictions <- res$XPred
     log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   output$centerEstimate <- renderUI({

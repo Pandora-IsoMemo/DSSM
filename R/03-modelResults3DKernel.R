@@ -1102,6 +1102,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     values$predictions <- res$XPred
     log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,
