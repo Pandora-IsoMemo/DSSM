@@ -59,7 +59,7 @@ log_memory_usage <- function() {
 
 log_object_size <- function(object, object_name = deparse(substitute(object)), log_memory = TRUE) {
   # Only compute object size if debug logging is enabled
-  if (futile.logger::flog.threshold() <= futile.logger::DEBUG) {
+  if (identical(futile.logger::flog.threshold(), "DEBUG")) {
     logDebug(sprintf(
       "Size of %s: %s", object_name, pryr::object_size(object) |>
         format(units = "auto")
