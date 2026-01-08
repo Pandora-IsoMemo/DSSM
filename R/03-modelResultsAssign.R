@@ -583,6 +583,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
       if (input$showData & input$aggType == "single") {
         estimate <- cbind(estimate, data)
       }
+      log_object_size(estimate)
+      log_memory_usage()
       return(estimate)
     }
   })

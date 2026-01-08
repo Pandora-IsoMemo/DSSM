@@ -1145,6 +1145,7 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
       log_object_size(allData)
+      log_memory_usage()
       return(allData)
     }
   })

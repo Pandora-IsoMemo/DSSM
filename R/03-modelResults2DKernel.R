@@ -895,6 +895,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       } else {
         allData <- data()
@@ -903,6 +905,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       }
     }

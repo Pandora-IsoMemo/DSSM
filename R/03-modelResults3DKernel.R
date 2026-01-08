@@ -1182,6 +1182,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
         modelData <- modelData[!is.na(modelData$long_centroid_spatial_cluster),]
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       } else {
         allData <- data()
@@ -1190,6 +1192,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       }
     }
