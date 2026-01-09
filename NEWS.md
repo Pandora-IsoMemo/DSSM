@@ -1,3 +1,12 @@
+# DSSM 26.01.0
+
+## Updates
+- Added logging of object sizes also to the modelling tabs _KernelR, KernelTimeR, SpreadR AssignR_ (#206)
+
+## Bug Fixes
+- Fixed hidden UI for setting the center estimates in _KernelTimeR_ time course plots (#292)
+- Fixed decimal-place settings for axis labels: x and y axes now have separate inputs, with an improved default for the y axis (1 decimal place) to prevent rounding issues (#292)
+
 # DSSM 25.12.0
 
 ## Bug Fixes

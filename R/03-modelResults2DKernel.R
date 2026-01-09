@@ -397,6 +397,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -446,6 +447,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -472,6 +474,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -484,6 +487,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
     if (input$Latitude == "" | input$Longitude == "") {
@@ -521,6 +525,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       message = "Generating local kernel density model"
     )
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -814,7 +819,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   values <- reactiveValues(
@@ -888,6 +895,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       } else {
         allData <- data()
@@ -896,6 +905,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       }
     }

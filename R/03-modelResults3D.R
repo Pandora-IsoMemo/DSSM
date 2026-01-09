@@ -513,7 +513,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     Model(NULL)
     data(activeData)
     log_object_size(data())
-    log_memory_usage()
   })
 
   coordType <- reactive({
@@ -569,7 +568,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
     log_object_size(data())
-    log_memory_usage()
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -599,7 +597,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
     log_object_size(Model())
-    log_memory_usage()
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -614,7 +611,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
       log_object_size(Model())
-      log_memory_usage()
       return()
     }
     values$set <- 0
@@ -630,13 +626,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
-    log_memory_usage()
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()
 
     Model(model)
     log_object_size(Model())
-    log_memory_usage()
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -1044,7 +1038,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     log_object_size(values$predictions)
     values$plot <- recordPlot()
     log_object_size(values$plot)
-    log_memory_usage()
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,
@@ -1299,6 +1292,5 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
   observeEvent(batchModel(), {
     Model(batchModel())
     log_object_size(Model())
-    log_memory_usage()
   })
 }

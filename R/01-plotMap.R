@@ -2119,7 +2119,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
       min = min(time),
       max = max(time),
       nLabels = formatTimeCourse$nLabelsX,
-      decPlace = formatTimeCourse$axesDecPlace
+      decPlace = formatTimeCourse$decPlacesX
     )
 
     addFormattedAxis(
@@ -2127,7 +2127,7 @@ plotTimeCourse <- function(model, IndSelect = NULL,
       min = ylims[1],
       max = ylims[2],
       nLabels = formatTimeCourse$nLabelsY,
-      decPlace = formatTimeCourse$axesDecPlace
+      decPlace = formatTimeCourse$decPlacesY
     )
   }
 

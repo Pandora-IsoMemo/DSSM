@@ -223,6 +223,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   # MODEL DOWN- / UPLOAD ----
@@ -255,6 +256,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -279,6 +281,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(uploadedValues()[[1]][["model"]])
+    log_object_size(Model())
   }) %>%
     bindEvent(uploadedValues())
 
@@ -395,6 +398,7 @@ modelResultsAssign <- function(input, output, session, isoData) {
        shinyTryCatch()
 
       Model(list(models = models, predictions = predictions, data = dataAssignR, X = X))
+      log_object_size(Model())
     }
   })
 
@@ -579,6 +583,8 @@ modelResultsAssign <- function(input, output, session, isoData) {
       if (input$showData & input$aggType == "single") {
         estimate <- cbind(estimate, data)
       }
+      log_object_size(estimate)
+      log_memory_usage()
       return(estimate)
     }
   })

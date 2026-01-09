@@ -1090,7 +1090,9 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       res <- plotFun()()
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   output$centerEstimate <- renderUI({

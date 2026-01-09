@@ -470,6 +470,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -517,6 +518,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -543,6 +545,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -555,6 +558,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
 
@@ -573,6 +577,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       shinyTryCatch()
 
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -907,7 +912,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert(res)
     } else{
       values$predictions <- res$XPred
+      log_object_size(values$predictions)
       values$plot <- recordPlot()
+      log_object_size(values$plot)
     }
   })
 
@@ -983,6 +990,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      log_object_size(allData)
+      log_memory_usage()
       return(allData)
     }
   })

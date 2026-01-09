@@ -400,7 +400,6 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("ncol"),
                         label = "Approximate number of colour levels",
                         min = 4, max = 50, value = 50, step = 2, width = "100%"),
-            centerEstimateUI(ns("centerEstimateParams")),
             tags$hr()
             ),
           checkboxInput(inputId = ns("smoothCols"),
@@ -442,7 +441,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
-
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
     )
@@ -507,6 +506,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -551,6 +551,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -577,6 +578,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -589,6 +591,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
 
@@ -634,6 +637,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         message = "Generating spatio-temporal kernel density"
       )
       Model(model)
+      log_object_size(Model())
       updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -666,6 +670,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   zSettings <- zScaleServer("zScale",
+                            mapType = reactive(input$mapType),
                             Model = Model,
                             fixCol = reactive(input$fixCol),
                             estimationTypeChoices =
@@ -1095,7 +1100,9 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   values <- reactiveValues(plot = NULL, predictions = NULL,
@@ -1175,6 +1182,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- NULL
         # filter data that was filtered out for clustering
         modelData <- modelData[!is.na(modelData$long_centroid_spatial_cluster),]
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       } else {
         allData <- data()
@@ -1183,6 +1192,8 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       }
     }

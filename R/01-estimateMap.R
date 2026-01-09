@@ -1270,7 +1270,6 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
         start = j, iter = j + iter / 10 - 1
       )
   }
-  log_memory_usage()
   # burnin <- round(burnInProp * iter)
   # every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   # #Vektor der tatsaechlich benutzten Beobachtungen
@@ -1291,6 +1290,7 @@ modelLocalAvg <- function(data, K, iter, burnin, independent, smoothConst,
     pred_probs <- sapply(1:length(usedsamples), function(x) invLogit(XX %*% betamc[x, ]) * sRe + mRe)
     seTotal = range(sqrt(apply(pred_probs, 1, var) + pred_probs * (1-pred_probs)))
   }
+  log_memory_usage()
   return(list(beta = betamc, betaSigma = betamcSigma, sc = s, scV = sV, sigma = smc,
               tau = taumc, mRe = mRe, sRe = sRe,
               range = list(mean = range(rowMeans(sapply(1:length(usedsamples), function(x)
@@ -1674,6 +1674,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
     pred_probs <- sapply(1:length(usedsamples), function(x) invLogit(XX2 %*% betamc[x, ]) * sRe + mRe)
     seTotal = range(sqrt(apply(pred_probs, 1, var) + pred_probs * (1-pred_probs)))
   }
+  log_memory_usage()
   return(list(beta = betamc, betaSigma = betamcSigma, sc = s, scV = sV, sigma = smc,
               tau = taumc, mRe = mRe, sRe = sRe,
               range = list(mean = range(rowMeans(sapply(1:length(usedsamples), function(x)
@@ -1956,7 +1957,7 @@ modelSpread <- function(data, K, iter, burnin, MinMax, smoothConst, penalty,
   every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   #Vektor der tatsaechlich benutzten Beobachtungen
   usedsamples <- seq(from = burnin, to = iter, by = every)
-
+  log_memory_usage()
   return(list(beta = betamc[usedsamples, ], sc = s, sigma = 0, tau = 0,
               pred = XX %*% colMeans(betamc[usedsamples, ]),
               mRe = mRe, sRe = sRe,

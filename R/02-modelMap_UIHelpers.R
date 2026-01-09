@@ -12,6 +12,7 @@ centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
+    tags$br(),
     tags$strong("Center estimates:"),
     numericInput(
       inputId = ns("centerY"),
@@ -53,7 +54,8 @@ centerEstimateUI <- function(id, title = "") {
         step = 10,
         width = "100%"
       )
-    )
+    ),
+    tags$br()
   )
 }
 
@@ -280,38 +282,47 @@ formatTimeCourseUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
-    numericInput(
-      inputId = ns("axesDecPlace"),
-      label = "Decimal places for axes",
-      min = 0,
-      max = 10,
-      value = 0,
-      step = 1,
-      width = "100%"
-    ),
-    fluidRow(
-      column(
-        width = 6,
-        numericInput(
-          inputId = ns("nLabelsX"),
-          label = "N labels of x axis",
-          min = 0,
-          max = 20,
-          value = 7,
-          step = 1,
-          width = "100%"
+    tags$br(),
+    tags$fieldset(
+      tags$strong("Decimal places"),
+      fluidRow(
+        column(
+          6,
+          numericInput(
+            ns("decPlacesX"),
+            label = "X axis",
+            min = 0, max = 10, value = 0, step = 1
+          )
+        ),
+        column(
+          6,
+          numericInput(
+            ns("decPlacesY"),
+            label = "Y axis",
+            min = 0, max = 10, value = 1, step = 1
+          )
         )
-      ),
-      column(
-        width = 6,
-        numericInput(
-          inputId = ns("nLabelsY"),
-          label = "N labels of y axis",
-          min = 0,
-          max = 20,
-          value = 7,
-          step = 1,
-          width = "100%"
+      )
+    ),
+    tags$br(),
+    tags$fieldset(
+      tags$strong("Number of labels"),
+      fluidRow(
+        column(
+          6,
+          numericInput(
+            ns("nLabelsX"),
+            label = "X axis",
+            min = 0, max = 20, value = 7, step = 1
+          )
+        ),
+        column(
+          6,
+          numericInput(
+            ns("nLabelsY"),
+            label = "Y axis",
+            min = 0, max = 20, value = 7, step = 1
+          )
         )
       )
     )
@@ -330,7 +341,8 @@ formatTimeCourseServer <-
                  function(input, output, session) {
                    reactive(
                      list(
-                       axesDecPlace = input$axesDecPlace,
+                       decPlacesX = input$decPlacesX,
+                       decPlacesY = input$decPlacesY,
                        nLabelsX = input$nLabelsX,
                        nLabelsY = input$nLabelsY
                      )
@@ -634,7 +646,7 @@ zScaleUI <-
           inputId = ns("min"),
           label = "Min range",
           value = 0
-        ),
+        )
       ),
       conditionalPanel(
         ns = ns,
@@ -648,7 +660,8 @@ zScaleUI <-
             "0-100" = "0-100"
           )
         )
-      )
+      ),
+      tags$br()
     )
   }
 
@@ -691,9 +704,10 @@ zScaleServer <- function(id,
                  output$titleScaleInput <- renderText({
                    switch(
                      mapType(),
-                     "Time course" = "Range of y axis:",
-                     "Minima/Maxima" = "Range of y axis:",
-                     "Range of estimates:"
+                     "Time course" = "Range of y axis",
+                     "Minima/Maxima" = "Range of y axis",
+                     "Time intervals by temporal group or cluster" = "Range of y axis",
+                     "Range of estimates"
                    )
                  })
 
