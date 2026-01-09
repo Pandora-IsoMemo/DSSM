@@ -3,6 +3,9 @@
 ## Updates
 - Added logging of object sizes also to the modelling tabs _KernelR, KernelTimeR, SpreadR AssignR_ (#206)
 
+## Bug Fixes
+- Fixed issue with hidden UI for setting the center estimates in _KernelTimeR_ for _Time course_ plots (#292)
+
 # DSSM 25.12.0
 
 ## Bug Fixes

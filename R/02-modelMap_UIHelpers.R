@@ -12,6 +12,7 @@ centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
+    tags$br(),
     tags$strong("Center estimates:"),
     numericInput(
       inputId = ns("centerY"),
@@ -53,7 +54,8 @@ centerEstimateUI <- function(id, title = "") {
         step = 10,
         width = "100%"
       )
-    )
+    ),
+    tags$br()
   )
 }
 

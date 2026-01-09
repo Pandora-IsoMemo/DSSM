@@ -400,7 +400,6 @@ modelResults3DKernelUI <- function(id, title = ""){
             sliderInput(inputId = ns("ncol"),
                         label = "Approximate number of colour levels",
                         min = 4, max = 50, value = 50, step = 2, width = "100%"),
-            centerEstimateUI(ns("centerEstimateParams")),
             tags$hr()
             ),
           checkboxInput(inputId = ns("smoothCols"),
@@ -442,7 +441,7 @@ modelResults3DKernelUI <- function(id, title = ""){
           sliderInput(inputId = ns("AxisLSize"),
                       label = "Axis label font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
-
+          centerEstimateUI(ns("centerEstimateParams")),
           batchPointEstimatesUI(ns("batch"))
         )
     )
