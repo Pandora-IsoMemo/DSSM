@@ -670,6 +670,7 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   zSettings <- zScaleServer("zScale",
+                            mapType = reactive(input$mapType),
                             Model = Model,
                             fixCol = reactive(input$fixCol),
                             estimationTypeChoices =
