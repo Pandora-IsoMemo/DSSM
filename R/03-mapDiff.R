@@ -1033,13 +1033,13 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       values$rangex <- rangex
       values$rangey <- rangey
     }
-    if(input$smoothCols){
-      values$ncol <- 200
-    } else {
-      if(input$fixCol == FALSE){
-        values$ncol <- colour_pal()$n # input$ncol
-      }
-    }
+    # if(input$smoothCols){
+    #   values$ncol <- 200
+    # } else {
+    #   if(input$fixCol == FALSE){
+    #     values$ncol <- colour_pal()$n # input$ncol
+    #   }
+    # }
 
     req(zSettings$estType)
 
@@ -1056,7 +1056,7 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              showModel = zSettings$showModel,
              contourType = input$contourType,
              colors = colour_pal()$colours, # input$Colours,
-             ncol = values$ncol,
+             ncol = colour_pal()$n, # values$ncol,
              centerMap = input$Centering,
              reverseColors = colour_pal()$reverse, # input$reverseCols,
              terrestrial = input[["mapLayerSettings-terrestrial"]],

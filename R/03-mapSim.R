@@ -569,13 +569,13 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       values$rangex <- rangex
       values$rangey <- rangey
     }
-    if(input$smoothCols){
-      values$ncol <- 200
-    } else {
-      if(input$fixCol == FALSE){
-        values$ncol <- colour_pal()$n # input$ncol
-      }
-    }
+    # if(input$smoothCols){
+    #   values$ncol <- 200
+    # } else {
+    #   if(input$fixCol == FALSE){
+    #     values$ncol <- colour_pal()$n # input$ncol
+    #   }
+    # }
 
     req(zSettings$estType)
 
@@ -591,7 +591,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              rangez = zSettings$range,
              showModel = zSettings$showModel,
              colors = colour_pal()$colours, # input$Colours,
-             ncol = values$ncol,
+             ncol = colour_pal()$n, # values$ncol,
              reverseColors = colour_pal()$reverse, # input$reverseCols,
              terrestrial = input[["mapLayerSettings-terrestrial"]],
              grid = input[["mapLayerSettings-grid"]],

@@ -54,13 +54,21 @@ colour_palette_server <- function(id, fixCol) {
   moduleServer(
     id,
     function(input, output, session) {
-      return(
-        reactive(
-          list(
-            colours     = input$Colours,
-            reverse     = input$reverseCols,
-            n           = ifelse(input$smoothCols, 200, input$ncol)
-          )
+      n_val <- reactive({
+        if (input$smoothCols) {
+          200
+        } else if (isFALSE(fixCol())) {
+          input$ncol
+        } else {
+          isolate(input$ncol)
+        }
+      })
+
+      reactive(
+        list(
+          colours     = input$Colours,
+          reverse     = input$reverseCols,
+          n           = n_val()
         )
       )
     }

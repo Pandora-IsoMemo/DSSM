@@ -725,13 +725,13 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         values$rangey <- rangey
       }
 
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-          values$ncol <- colour_pal()$n # input$ncol
-        }
-      }
+      # if(input$smoothCols){
+      #   values$ncol <- 200
+      # } else {
+      #   if(input$fixCol == FALSE){
+      #     values$ncol <- colour_pal()$n # input$ncol
+      #   }
+      # }
       textLabels <- NULL
       if(input$textLabels & !is.null(input$textLabelsVar) & input$textLabelsVar != ""){
         textLabels <- (data())[, input$textLabelsVar, drop = FALSE]
@@ -772,7 +772,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
-        ncol = values$ncol,
+        ncol = colour_pal()$n, # values$ncol,
         pColor = input$pointCol,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,

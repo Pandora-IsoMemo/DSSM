@@ -776,14 +776,13 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         values$rangex <- rangex
         values$rangey <- rangey
       }
-
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-        values$ncol <- colour_pal()$n # input$ncol
-        }
-      }
+      # if(input$smoothCols){
+      #   values$ncol <- 200
+      # } else {
+      #   if(input$fixCol == FALSE){
+      #   values$ncol <- colour_pal()$n # input$ncol
+      #   }
+      # }
 
       textLabels <- NULL
       if(input$textLabels & !is.null(input$textLabelsVar) & input$textLabelsVar != ""){
@@ -829,7 +828,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         maskRadius = input$maskRadius,
         resolution = input$resolution,
         interior = input$interior,
-        ncol = values$ncol,
+        ncol = colour_pal()$n, # values$ncol,
         pColor = input$pointCol,
         textLabels = textLabels,
         pointLabels = pointLabels,
