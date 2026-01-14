@@ -33,13 +33,13 @@ colour_palette_ui <- function(id, selected) {
           "White-Purple-Blue"  = "WhPuBu"
         ),
         "Diverging" = list(
-          "Red-Yellow-Green" = "RdYlGn",
-          "Red-Yellow-Blue"  = "RdYlBu",
-          "Red-Blue"         = "RdBu",
-          "Purple-Green"     = "PRGn",
-          "Pink-Green"       = "PiYG",
-          "Brown-Green"      = "BrBG",
-          "Purple-Orange"    = "PuOr"
+          "Red-Yellow-Green"  = "RdYlGn",
+          "Red-Yellow-Blue"   = "RdYlBu",
+          "Red-Blue"          = "RdBu",
+          "Purple-Green"      = "PRGn",
+          "Pink-Yellow-Green" = "PiYG",
+          "Brown-Green"       = "BrBG",
+          "Purple-Orange"     = "PuOr"
         )
       ),
       selected = selected, width = "100%"
@@ -112,7 +112,7 @@ extract_palette <- function(pal_id, ncolors, reverse = FALSE) {
   } else if (pal_id %in% .single_hue_palettes) {
     # take only the darker end of the Brewer palette for single colours
     base_pal <- brewer.pal(9, pal_id)[-1]
-    pal <- colorRampPalette(c("white", base_pal))(ncolors)
+    pal <- colorRampPalette(c("#FFFFFF", base_pal))(ncolors)
   } else if (pal_id %in% .diverging_palettes) {
     # ensure odd number of colors for diverging palettes
     ncolors <- if (ncolors %% 2 == 0) ncolors + 1 else ncolors
