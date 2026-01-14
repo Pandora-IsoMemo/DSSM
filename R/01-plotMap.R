@@ -478,10 +478,9 @@ plotMap <- function(model,
     # if(length(unique(z2levels)) < 4){
     #   z2levels <- signif(pretty(c((1)^0.05, (1000)^0.05), n = ncol)^20, 2)
     # }
-    colors <- colorRampPalette(brewer.pal(9, colors))(length(z2levels) - 1)
-    if(reverseColors){
-      colors <- rev(colors)
-    }
+
+    colors <- extract_palette(colors, ncolors = length(z2levels) - 1, reverse = reverseColors)
+
     levelsLegend <- z2levels
 
     if(!showModel){
@@ -630,14 +629,7 @@ plotMap <- function(model,
     return(list(XPred = XPred))
   }
 
-  if(GAM == TRUE){
-    colors <- c("#FFFFFF", colorRampPalette(brewer.pal(9, colors))(length(levels) - 2))
-  } else{
-    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
-  }
-  if(reverseColors){
-    colors <- rev(colors)
-  }
+  colors <- extract_palette(colors, ncolors = length(levels) - 1, reverse = reverseColors)
 
   levelsLegend <- levels
   if(length(levels) > 25){
@@ -1235,15 +1227,7 @@ plotMap3D <- function(model,
   #if (!all(is.na(XPred$Est))){
   levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
 
-  if(GAM == TRUE){
-    colors <- c("#FFFFFF", colorRampPalette(brewer.pal(9, colors))(length(levels) - 2))
-  } else{
-    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
-  }
-
-  if(reverseColors){
-    colors <- rev(colors)
-  }
+  colors <- extract_palette(colors, ncolors = length(levels) - 1, reverse = reverseColors)
 
   levelsLegend <- levels
   if(length(levels) > 25){
@@ -1652,15 +1636,11 @@ plotDS <- function(XPred,
 
   if(estType == "Significance (Overlap)"){
     levels <- pretty(c(0, 1), n = 2)
-    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels)-1)
   } else {
     levels <- pretty(c(rangez[1], rangez[2]), n = ncol)
-    colors <- colorRampPalette(brewer.pal(9, colors))(length(levels) - 1)
   }
 
-  if(reverseColors){
-    colors <- rev(colors)
-  }
+  colors <- extract_palette(colors, ncolors = length(levels) - 1, reverse = reverseColors)
 
   levelsLegend <- levels
   if(length(levels) > 25){

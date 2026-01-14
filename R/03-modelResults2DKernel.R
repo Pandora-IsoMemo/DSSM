@@ -280,7 +280,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Mask radius in km",
                         min = 10, max = 2500, value = 500, width = "100%",
                         step = 10), ns = ns),
-          colour_palette_ui(ns("colourPalette")),
+          colour_palette_ui(ns("colourPalette"), selected = "WhYlRd"),
           sliderInput(inputId = ns("resolution"),
                       label = "Plot resolution (px)",
                       min = 20, max = 500, value = 100, width = "100%",

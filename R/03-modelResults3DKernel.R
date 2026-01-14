@@ -377,7 +377,7 @@ modelResults3DKernelUI <- function(id, title = ""){
                           label = "Mask radius in km",
                           min = 10, max = 2500, value = 500, width = "100%",
                           step = 10), ns = ns),
-            colour_palette_ui(ns("colourPalette")),
+            colour_palette_ui(ns("colourPalette"), selected = "WhYlRd"),
             tags$hr()
             ),
           sliderInput(inputId = ns("resolution"),

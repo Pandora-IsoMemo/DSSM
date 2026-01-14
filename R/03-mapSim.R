@@ -196,7 +196,7 @@ modelResultsSimUI <- function(id, title = ""){
             sliderInput(ns("NorthY"), "North arrow y orientation", min = 0, max = 1, value = 0.925),
             ns = ns
           ),
-          colour_palette_ui(ns("colourPalette")),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           checkboxInput(inputId = ns("showValues"),
                         label = "Show data values in plot",
                         value = TRUE, width = "100%"),

@@ -327,7 +327,7 @@ modelResultsDiffUI <- function(id, title = ""){
             sliderInput(ns("NorthY"), "North arrow y orientation", min = 0, max = 1, value = 0.925),
             ns = ns
           ),
-          colour_palette_ui(ns("colourPalette")),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),

@@ -359,7 +359,7 @@ modelResultsSpreadUI <- function(id, title = ""){
           sliderInput(inputId = ns("StdErr"),
                       label = "Display up to max standard error",
                       min = 0, max = 10000, value = 10000, width = "100%"),
-          colour_palette_ui(ns("colourPalette")),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           sliderInput(inputId = ns("resolution"),
                       label = "Plot resolution (px)",
                       min = 20, max = 500, value = 100, width = "100%",
