@@ -197,27 +197,9 @@ modelResultsSimUI <- function(id, title = ""){
             ns = ns
           ),
           colour_palette_ui(ns("colourPalette")),
-          # selectInput(inputId = ns("Colours"), label = "Colour palette",
-          #             choices = list("Red-Yellow-Green" = "RdYlGn",
-          #                            "Yellow-Green-Blue" = "YlGnBu",
-          #                            "Purple-Orange" = "PuOr",
-          #                            "Pink-Yellow-Green" = "PiYG",
-          #                            "Red-Yellow-Blue" = "RdYlBu",
-          #                            "Yellow-Brown" = "YlOrBr",
-          #                            "Brown-Turquoise" = "BrBG"),
-          #             selected = "RdYlGn"),
           checkboxInput(inputId = ns("showValues"),
                         label = "Show data values in plot",
                         value = TRUE, width = "100%"),
-          # checkboxInput(inputId = ns("reverseCols"),
-          #               label = "Reverse colors",
-          #               value = FALSE, width = "100%"),
-          # checkboxInput(inputId = ns("smoothCols"),
-          #               label = "Smooth color transition",
-          #               value = FALSE, width = "100%"),
-          # sliderInput(inputId = ns("ncol"),
-          #             label = "Approximate number of colour levels",
-          #             min = 4, max = 50, value = 20, step = 2, width = "100%"),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -569,13 +551,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       values$rangex <- rangex
       values$rangey <- rangey
     }
-    # if(input$smoothCols){
-    #   values$ncol <- 200
-    # } else {
-    #   if(input$fixCol == FALSE){
-    #     values$ncol <- colour_pal()$n # input$ncol
-    #   }
-    # }
 
     req(zSettings$estType)
 
@@ -590,9 +565,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              estQuantile = zSettings$Quantile,
              rangez = zSettings$range,
              showModel = zSettings$showModel,
-             colors = colour_pal()$colours, # input$Colours,
-             ncol = colour_pal()$n, # values$ncol,
-             reverseColors = colour_pal()$reverse, # input$reverseCols,
+             colors = colour_pal()$colours,
+             ncol = colour_pal()$n,
+             reverseColors = colour_pal()$reverse,
              terrestrial = input[["mapLayerSettings-terrestrial"]],
              grid = input[["mapLayerSettings-grid"]],
              showBorders = input[["mapLayerSettings-showBorders"]],
