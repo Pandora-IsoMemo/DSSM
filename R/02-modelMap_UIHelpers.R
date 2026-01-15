@@ -635,7 +635,7 @@ zScaleUI <-
       ),
       conditionalPanel(
         ns = ns,
-        condition = "input.estType != 'Significance (Overlap)'",
+        condition = "input.estType != 'Significance (Overlap)' && input.showModel == true",
         htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
         numericInput(
           inputId = ns("max"),
@@ -650,7 +650,7 @@ zScaleUI <-
       ),
       conditionalPanel(
         ns = ns,
-        condition = "output.restrictOption == 'show'",
+        condition = "output.restrictOption == 'show' && input.showModel == true",
         selectInput(
           inputId = ns("limit"),
           label = "Range restriction",
