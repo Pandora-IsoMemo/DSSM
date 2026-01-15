@@ -327,24 +327,7 @@ modelResultsDiffUI <- function(id, title = ""){
             sliderInput(ns("NorthY"), "North arrow y orientation", min = 0, max = 1, value = 0.925),
             ns = ns
           ),
-          selectInput(inputId = ns("Colours"), label = "Colour palette",
-                      choices = list("Red-Yellow-Green" = "RdYlGn",
-                                     "Yellow-Green-Blue" = "YlGnBu",
-                                     "Purple-Orange" = "PuOr",
-                                     "Pink-Yellow-Green" = "PiYG",
-                                     "Red-Yellow-Blue" = "RdYlBu",
-                                     "Yellow-Brown" = "YlOrBr",
-                                     "Brown-Turquoise" = "BrBG"),
-                      selected = "RdYlGn"),
-          checkboxInput(inputId = ns("reverseCols"),
-                        label = "Reverse colors",
-                        value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("smoothCols"),
-                        label = "Smooth color transition",
-                        value = FALSE, width = "100%"),
-          sliderInput(inputId = ns("ncol"),
-                      label = "Approximate number of colour levels",
-                      min = 4, max = 50, value = 20, step = 2, width = "100%"),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -1004,6 +987,8 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          predictions = reactive(values$predictions))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <-  reactive({
     validate(validInput(MapDiff()))
     pointDatOK = pointDatOK()
@@ -1030,13 +1015,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
       values$rangex <- rangex
       values$rangey <- rangey
     }
-    if(input$smoothCols){
-      values$ncol <- 200
-    } else {
-      if(input$fixCol == FALSE){
-        values$ncol <- input$ncol
-      }
-    }
 
     req(zSettings$estType)
 
@@ -1052,10 +1030,10 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
              rangez = zSettings$range,
              showModel = zSettings$showModel,
              contourType = input$contourType,
-             colors = input$Colours,
-             ncol = values$ncol,
+             colors = colour_pal()$colours,
+             ncol = colour_pal()$n,
              centerMap = input$Centering,
-             reverseColors = input$reverseCols,
+             reverseColors = colour_pal()$reverse,
              terrestrial = input[["mapLayerSettings-terrestrial"]],
              grid = input[["mapLayerSettings-grid"]],
              showBorders = input[["mapLayerSettings-showBorders"]],

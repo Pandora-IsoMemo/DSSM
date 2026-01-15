@@ -319,25 +319,8 @@ modelResults2DUI <- function(id, title = "", asFruitsTab = FALSE){
         sliderInput(inputId = ns("StdErr"),
                     label = "Display up to max standard error",
                     min = 0, max = 10000, value = 10000, width = "100%"),
-        selectInput(inputId = ns("Colours"), label = "Colour palette",
-                      choices = list("Red-Yellow-Green" = "RdYlGn",
-                                    "Yellow-Green-Blue" = "YlGnBu",
-                                    "Purple-Orange" = "PuOr",
-                                    "Pink-Yellow-Green" = "PiYG",
-                                    "Red-Yellow-Blue" = "RdYlBu",
-                                    "Yellow-Brown" = "YlOrBr",
-                                    "Brown-Turquoise" = "BrBG"),
-                      selected = "RdYlGn"),
-        checkboxInput(inputId = ns("reverseCols"),
-                      label = "Reverse colors",
-                      value = FALSE, width = "100%"),
-        sliderInput(inputId = ns("ncol"),
-                    label = "Approximate number of colour levels",
-                    min = 4, max = 50, value = 20, step = 2, width = "100%"),
-        checkboxInput(inputId = ns("smoothCols"),
-                      label = "Smooth color transition",
-                      value = FALSE, width = "100%"),
-                  sliderInput(inputId = ns("resolution"),
+        colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
+        sliderInput(inputId = ns("resolution"),
                     label = "Plot resolution (px)",
                     min = 20, max = 500, value = 100, width = "100%",
                     step = 20),
@@ -748,6 +731,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          predictions = reactive(values$predictions))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
@@ -772,14 +757,6 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
         values$rangex <- rangex
         values$rangey <- rangey
-      }
-
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-        values$ncol <- input$ncol
-        }
       }
 
       textLabels <- NULL
@@ -826,7 +803,7 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         maskRadius = input$maskRadius,
         resolution = input$resolution,
         interior = input$interior,
-        ncol = values$ncol,
+        ncol = colour_pal()$n,
         pColor = input$pointCol,
         textLabels = textLabels,
         pointLabels = pointLabels,
@@ -840,8 +817,8 @@ modelResults2D <- function(input, output, session, isoData, savedMaps, fruitsDat
         terrestrial = input[["mapLayerSettings-terrestrial"]],
         grid = input[["mapLayerSettings-grid"]],
         showBorders = input[["mapLayerSettings-showBorders"]],
-        colors = input$Colours,
-        reverseColors = input$reverseCols,
+        colors = colour_pal()$colours,
+        reverseColors = colour_pal()$reverse,
         arrow = input$arrow,
         scale = input$scale,
         titleMain = !input$titleMain,

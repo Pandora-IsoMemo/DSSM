@@ -1,3 +1,11 @@
+# DSSM 26.01.1
+
+## Updates
+- Refactored colour palette handling by introducing a centralized, reusable colour palette module (#293).
+  - Replaced duplicated UI and server logic across multiple visualisation modules.
+  - Added support for single-colour, multi-colour, white-start, and diverging palettes.
+  - Updated map plotting functions to use the new palette infrastructure.
+
 # DSSM 26.01.0
 
 ## Updates

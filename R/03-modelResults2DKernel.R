@@ -280,31 +280,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Mask radius in km",
                         min = 10, max = 2500, value = 500, width = "100%",
                         step = 10), ns = ns),
-          selectInput(inputId = ns("Colours"), label = "Colour palette",
-                      choices = list("Yellow-Red" = "YlOrRd",
-                                     "Purple-Red" = "PuRd",
-                                     "Red" = "Reds",
-                                     "Purple" = "Purples",
-                                     "Orange" = "Oranges",
-                                     "Grey" = "Greys",
-                                     "Blue" = "Blues",
-                                     "Green" = "Greens",
-                                     "Yellow-Green" = "YlGn",
-                                     "Red-Purple" = "RdPu",
-                                     "Orange-Red" = "OrRd",
-                                     "Green-Blue" = "GnBu",
-                                     "Blue-Green" = "BuGn",
-                                     "Purple-Blue" = "PuBu"),
-                      selected = "RdYlGn"),
-          checkboxInput(inputId = ns("reverseCols"),
-                        label = "Reverse colors",
-                        value = FALSE, width = "100%"),
-          sliderInput(inputId = ns("ncol"),
-                      label = "Approximate number of colour levels",
-                      min = 4, max = 50, value = 50, step = 2, width = "100%"),
-          checkboxInput(inputId = ns("smoothCols"),
-                        label = "Smooth color transition",
-                        value = FALSE, width = "100%"),
+          colour_palette_ui(ns("colourPalette"), selected = "WhYlRd"),
           sliderInput(inputId = ns("resolution"),
                       label = "Plot resolution (px)",
                       min = 20, max = 500, value = 100, width = "100%",
@@ -695,6 +671,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          predictions = reactive(values$predictions))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -722,13 +700,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         values$rangey <- rangey
       }
 
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-          values$ncol <- input$ncol
-        }
-      }
       textLabels <- NULL
       if(input$textLabels & !is.null(input$textLabelsVar) & input$textLabelsVar != ""){
         textLabels <- (data())[, input$textLabelsVar, drop = FALSE]
@@ -769,7 +740,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
-        ncol = values$ncol,
+        ncol = colour_pal()$n,
         pColor = input$pointCol,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
@@ -783,8 +754,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         terrestrial = input[["mapLayerSettings-terrestrial"]],
         grid = input[["mapLayerSettings-grid"]],
         showBorders = input[["mapLayerSettings-showBorders"]],
-        colors = input$Colours,
-        reverseColors = input$reverseCols,
+        colors = colour_pal()$colours,
+        reverseColors = colour_pal()$reverse,
         arrow = input$arrow,
         scale = input$scale,
         titleMain = !input$titleMain,

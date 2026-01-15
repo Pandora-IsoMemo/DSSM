@@ -389,25 +389,7 @@ modelResults3DUI <- function(id, title = ""){
                       label = "Mask radius in km",
                       min = 10, max = 2500, value = 500, width = "100%",
                       step = 10), ns = ns),
-
-        selectInput(inputId = ns("Colours"), label = "Colour palette",
-                    choices = list("Red-Yellow-Green" = "RdYlGn",
-                                   "Yellow-Green-Blue" = "YlGnBu",
-                                   "Purple-Orange" = "PuOr",
-                                   "Pink-Yellow-Green" = "PiYG",
-                                   "Red-Yellow-Blue" = "RdYlBu",
-                                   "Yellow-Brown" = "YlOrBr",
-                                   "Brown-Turquoise" = "BrBG"),
-                    selected = "RdYlGn"),
-        checkboxInput(inputId = ns("reverseCols"),
-                      label = "Reverse colors",
-                      value = FALSE, width = "100%"),
-        sliderInput(inputId = ns("ncol"),
-                    label = "Approximate number of colour levels",
-                    min = 4, max = 50, value = 20, step = 2, width = "100%"),
-        checkboxInput(inputId = ns("smoothCols"),
-                      label = "Smooth color transition",
-                      value = FALSE, width = "100%"),
+        colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
         sliderInput(inputId = ns("resolution"),
                     label = "Plot resolution (px)",
                     min = 20, max = 500, value = 100, width = "100%",
@@ -888,6 +870,8 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
 
   formatTimeCourse <- formatTimeCourseServer("timeCourseFormat")
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <- reactive({
     function(model, time = values$time, returnPred = FALSE,...){
       pointDat = pointDat()
@@ -914,13 +898,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
         values$rangex <- rangex
         values$rangey <- rangey
 
-      }
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-          values$ncol <- input$ncol
-        }
       }
 
       textLabels <- NULL
@@ -997,12 +974,12 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
           centerMap = input$Centering,
           resolution = input$resolution,
           interior = as.numeric(input$interior),
-          ncol = values$ncol,
+          ncol = colour_pal()$n,
           terrestrial = input[["mapLayerSettings-terrestrial"]],
           grid = input[["mapLayerSettings-grid"]],
           showBorders = input[["mapLayerSettings-showBorders"]],
-          colors = input$Colours,
-          reverseColors = input$reverseCols,
+          colors = colour_pal()$colours,
+          reverseColors = colour_pal()$reverse,
           arrow = input$arrow,
           scale = input$scale,
           titleMain = !input$titleMain,
