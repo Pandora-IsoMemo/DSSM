@@ -516,7 +516,6 @@ modelResults3DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {

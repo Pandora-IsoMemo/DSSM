@@ -245,7 +245,6 @@ modelResultsAssign <- function(input, output, session, isoData) {
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
