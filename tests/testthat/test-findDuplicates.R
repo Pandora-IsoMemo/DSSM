@@ -91,4 +91,9 @@ test_that("findDuplicates", {
 
   expect_true(nchar(findDuplicatesResult$inputData$duplicateRows[1]) > 0)
   expect_true(grepl("1", findDuplicatesResult$inputData$duplicateRows[1]))
+
+  # rows 8 and 11 both have id4=1.234 which rounds to 1.2 — they must be grouped
+  # correctly because the join is now done on row identifiers, not on preprocessed (rounded) values
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[8], "8,11")
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[11], "8,11")
 })
