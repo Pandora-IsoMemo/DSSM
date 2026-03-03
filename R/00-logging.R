@@ -37,9 +37,16 @@ format_bytes <- function(bytes) {
 }
 
 mem_used_bytes <- function() {
-  g <- gc()
-  # gc() reports used memory in MB in column 2
-  used_mb <- sum(g[, 2], na.rm = TRUE)
+  # Use a lighter-weight GC and select the "used (Mb)" column by name where possible
+  g <- gc(full = FALSE)
+
+  colname_used_mb <- "used (Mb)"
+  if (colname_used_mb %in% colnames(g)) {
+    used_mb <- sum(g[, colname_used_mb, drop = TRUE], na.rm = TRUE)
+  } else {
+    # Fallback for R versions where column 2 corresponds to used memory in MB
+    used_mb <- sum(g[, 2], na.rm = TRUE)
+  }
   used_mb * 1024^2
 }
 
