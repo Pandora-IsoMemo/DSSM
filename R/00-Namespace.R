@@ -40,7 +40,6 @@
 #' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
-#' @importFrom pryr mem_used object_size
 #' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom RefManageR ReadBib
@@ -59,8 +58,8 @@
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom tclust tclust
-#' @importFrom utils available.packages compareVersion install.packages head zip
-#'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom utils available.packages capture.output compareVersion install.packages head
+#'  packageVersion read.csv read.csv2 write.table installed.packages object.size zip
 #' @importFrom webshot2 webshot
 #' @importFrom yaml read_yaml
 #' @importFrom zip zipr
