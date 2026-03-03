@@ -684,6 +684,7 @@ estimateMap3D <- function(data,
   set.seed(1234)
   center <- match.arg(center)
 
+  logDebug("estimateMap3D: prepared data")
   dataOrg <- data
   if (is.null(data)) return(NULL)
   if (Longitude == "" || Latitude == "" || DateOne == "") return(NULL)
@@ -812,6 +813,7 @@ estimateMap3D <- function(data,
   }
 
   ### data centering ----
+  logDebug("estimateMap3D: Center data")
   data2 <- centerData(data2, center = center)
 
   # calculate model ----
@@ -822,6 +824,7 @@ estimateMap3D <- function(data,
   }
 
   if (Bayes == FALSE){
+    logDebug("estimateMap3D: calculate non-bayesian model")
     #outlier
     sc <- NULL
     scV <- NULL
@@ -860,6 +863,7 @@ estimateMap3D <- function(data,
       names(model) <- colnames(dummy_matrix)
     }
     } else {
+      logDebug("estimateMap3D: calculate bayesian model")
       if(IndependentType == "numeric"){
       model <- try(modelLocalTempAvgMC(data = data2, K = K, KT = KT, iter = iter,
                                      burnin = burnin, nChains = nChains,
@@ -897,10 +901,15 @@ estimateMap3D <- function(data,
         sc = model[[1]]$sc
         scV = model[[1]]$scV
       }
+      logDebug("estimateMap3D: return bayesian model")
     return(list(model = model, data = data, sc = sc, scV = scV, independent = independent,
                 mRe = mRe, sRe = sRe, nChains = nChains, IndependentType = IndependentType))
   }
-  return(list(model = model, data = data, sc = sc, scV = scV, independent = independent, nChains = nChains, IndependentType = IndependentType))
+  logDebug("estimateMap3D: return non-bayesian model")
+  return(list(
+    model = model, data = data, sc = sc, scV = scV, independent = independent,
+    nChains = nChains, IndependentType = IndependentType
+  ))
 }
 
 estimateMap3DWrapper <- function(data, input) {
@@ -912,6 +921,7 @@ estimateMap3DWrapper <- function(data, input) {
     }
 
     if (input$Outlier == TRUE) {
+      logDebug("estimateMap3DWrapper: outlier handling")
       withProgress({
         dataOld <- data
         dataD <- data
@@ -951,6 +961,7 @@ estimateMap3DWrapper <- function(data, input) {
   }
 
   if(input$Bayes != TRUE){
+    logDebug("estimateMap3DWrapper: non-bayesian estimation")
     withProgress(
       model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$IndependentX,
                     independentUncertainty = input$IndependentUnc,
@@ -973,6 +984,7 @@ estimateMap3DWrapper <- function(data, input) {
       message = "Generating spatio-temporal model"
     )
   } else {
+    logDebug("estimateMap3DWrapper: bayesian estimation")
     model <- estimateMap3D(data = data, Bayes = input$Bayes, independent = input$IndependentX,
                   independentUncertainty = input$IndependentUnc,
                   IndependentType = input$IndependentType,
@@ -998,6 +1010,7 @@ estimateMap3DWrapper <- function(data, input) {
     model$outlierDR <- outlierDR
   }
 
+  logDebug("estimateMap3DWrapper: return model")
   model
 }
 
@@ -1305,6 +1318,7 @@ modelLocalTempAvgMC <- function(data, K, KT, iter, burnin, independent,
                                 smoothConst, IndependentType = "numeric", penalty, dateUnc = "uniform",
                                 splineType = 1, sdVar = FALSE, nChains = 1, thinning = thinning){
   ret <- lapply(1:nChains, function(x){
+    logDebug("modelLocalTempAvgMC: Chain %s", x)
     modelLocalTempAvg(data = data, K = K, KT = KT, iter = iter,
                       burnin = burnin, independent = independent,
                   smoothConst = smoothConst,
@@ -1325,11 +1339,13 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
                               smoothConst, IndependentType = "numeric", penalty,
                               dateUnc = "uniform",splineType = 1, sdVar = FALSE,
                               nChains = 1, thinning = 2){
+  logDebug("modelLocalTempAvg: date uncertainty handling")
   data$Date4 <- data$Date2
   set.seed(1234)
   data$Date2 <- sapply(1:length(data$Date2), function(x)
                                    runif(1, min = data$Date2[x] - 2 * data$Uncertainty2[x],
                                    max =  data$Date2[x] + 2 * data$Uncertainty2[x]))
+  logDebug("modelLocalTempAvg: prepare data and model matrices")
   n <- nrow(data)
   data$Y <- data[, independent]
 
@@ -1341,7 +1357,9 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   #Vektor der tatsaechlich benutzten Beobachtungen
   usedsamples <- seq(from = burnin, to = iter, by = every)
 
+  logDebug("modelLocalTempAvg: smoothing")
   if (splineType == 2){
+    logDebug("modelLocalTempAvg: using tensor product splines")
     s <- smoothCon(te(Latitude, Longitude, Date2, m = c(penalty, penalty), d = c(2,1),
                       k = c(K, KT), bs = c("sos", "tp")),
                    data = data, knots = NULL)[[1]]
@@ -1350,6 +1368,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
                        k = c(K, KT), bs = c("sos", "tp")),
                     data = data, knots = NULL)[[1]]
   } else {
+    logDebug("modelLocalTempAvg: using default splines")
     s <- smoothCon(s(Latitude2, Longitude2, Date2, m = c(penalty),
                      k = c(K), bs = c("ds")),
                    data = data, knots = NULL)[[1]]
@@ -1358,16 +1377,20 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
                       k = c(K), bs = c("ds")),
                     data = data, knots = NULL)[[1]]
   }
-  sV <- smoothCon(s(Latitude2, Longitude2, Date2, m = 1,
+
+  logDebug("modelLocalTempAvg: prepare variance spline")
+  sV <- smoothCon(s(Latitude2, Longitude2, Date2, m = c(1, 1),
                     k = min(100, ceiling(K / 2)), bs = c("ds")),
                   data = data, knots = NULL)[[1]]
 
+  logDebug("modelLocalTempAvg: prepare penalty matrices")
   #Strafmatrizen
   P <- s$S[[1]]
   #Rang der Strafmatrix P
   nknots <- dim(P)[1]
   M <- qr(P)$rank
 
+  logDebug("modelLocalTempAvg: prepare variance spline penalty matrix")
   #VarianzSpline
   PV <- sV$S[[1]]
   #Rang der Strafmatrix P
@@ -1383,6 +1406,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   }
   #Zur jeweiligen Erstellung der Praediktionsmatrix
 
+  logDebug("modelLocalTempAvg: prepare prediction matrix")
   #Designmatrix
   XX <- Predict.matrix(s, data)
 
@@ -1401,6 +1425,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   }
 
   uMatch <- unlist(sapply(1:ncol(U), function(x){which(U[, x]== 1)}))
+  logDebug("modelLocalTempAvg: starting values")
   #####################################
   ###Starting Values
   #####################################
@@ -1424,6 +1449,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
     lamSigma2 <- 1E-5
   }
 
+  logDebug("modelLocalTempAvg: tuning parameters")
   ######################################
   ###Tuningparameter der a-priori Verteilungen:
   ######################################
@@ -1439,6 +1465,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   #######################################
   ###Parametermatrizen zur Speicherung der MCMC Iterationen
   #######################################
+  logDebug("modelLocalTempAvg: prepare parameter matrices for MCMC iterations")
   betamc <- matrix(ncol = dim(XX)[2], nrow = length(usedsamples))
   betamcSigma <- matrix(ncol = dim(XXV)[2], nrow = length(usedsamples))
   taumc <- matrix(ncol = 1, nrow = length(usedsamples))
@@ -1454,6 +1481,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   ########################################
   changeX <- which(data$Uncertainty2 > 0)
 
+  logDebug("modelLocalTempAvg: rescale data")
   #rescale
   if(IndependentType == "numeric"){
   mRe <- mean(data$Y)
@@ -1479,7 +1507,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
           data$Y <- pmax(0, pmin(1, rnorm(length(data$independentUncertainty), mY, sd = sqrt(sdmY))))
         }
       }
-      #Betas
+      # Betas
       if (splineType == 2){
         if(IndependentType == "numeric"){
         inverse <- spdinv(Crossprod(XX2 / sigma, XX2) + lam * P + lam2 * P2)
@@ -1499,7 +1527,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
         beta <<- as.vector(rmvnorm(1, mu = inverse %*% (crossprod(XX2, (data$Y - 0.5)) - crossprod(XX2*sigma, U %*% gamma)), sigma = inverse))
       }
         #beta <<- mvrnorm(mu = inverse %*% crossprod(XX2 / sigma, (data$Y - U %*% gamma)), Sigma = inverse, tol = 1E-5)
-      # #MH-step for time
+      # MH-step for time
       if ((i %% 10 == 0) & length(changeX) > 0){
         data$Date3 <- sapply(1:length(data$Date4), function(x)
           runif(1,min = data$Date4[x] - 2 * data$Uncertainty2[x],
@@ -1643,6 +1671,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   }
 
   for ( k in 1:10) {
+    logDebug("Entering MCMC chain no %s...", k)
     j <- seq(1, iter, iter / 10)[k]
     log_memory_usage()
     showMessage(
@@ -1653,6 +1682,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
         start = j, iter = j + iter / 10 - 1
       )
   }
+  logDebug("Finished loop for mcmc chains...")
   # burnin <- round(burnInProp * iter)
   # every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   #
@@ -1675,6 +1705,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
     seTotal = range(sqrt(apply(pred_probs, 1, var) + pred_probs * (1-pred_probs)))
   }
   log_memory_usage()
+  logDebug("modelLocalTempAvg: finished MCMC iterations")
   return(list(beta = betamc, betaSigma = betamcSigma, sc = s, scV = sV, sigma = smc,
               tau = taumc, mRe = mRe, sRe = sRe,
               range = list(mean = range(rowMeans(sapply(1:length(usedsamples), function(x)
