@@ -1,3 +1,10 @@
+# DSSM 26.03.0
+
+## Updates
+- Removed the deprecated fileExtension argument from `DataTools::importServer()` calls across model/map modules.
+- Added additional logging around 3D model execution.
+- Adjusted variance-spline construction in `mgcv::smoothCon()` to improve smoothing stability.
+
 # DSSM 26.01.1
 
 ## Updates
