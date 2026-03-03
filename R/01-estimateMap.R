@@ -1671,7 +1671,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
   }
 
   for ( k in 1:10) {
-    logDebug("Entering MCMC chain no %s...", k)
+    logDebug("modelLocalTempAvg: Entering MCMC progress chunk %s/10...", k)
     j <- seq(1, iter, iter / 10)[k]
     log_memory_usage()
     showMessage(
@@ -1682,7 +1682,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
         start = j, iter = j + iter / 10 - 1
       )
   }
-  logDebug("Finished loop for mcmc chains...")
+  logDebug("modelLocalTempAvg: Finished looping through MCMC progress chunks.")
   # burnin <- round(burnInProp * iter)
   # every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   #
