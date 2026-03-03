@@ -1,3 +1,9 @@
+# DSSM 26.03.1
+
+## Updates
+- Replaced `pryr::mem_used()` with a new helper based on gc() and `pryr::object_size()` with utils::object.size().
+- Removed `pryr` dependency (not available on CRAN anymore).
+
 # DSSM 26.03.0
 
 ## Updates

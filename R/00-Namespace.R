@@ -58,8 +58,8 @@
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom tclust tclust
-#' @importFrom utils available.packages compareVersion install.packages head zip
-#'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom utils available.packages capture.output compareVersion install.packages head
+#'  packageVersion read.csv read.csv2 write.table installed.packages object.size zip
 #' @importFrom webshot2 webshot
 #' @importFrom yaml read_yaml
 #' @importFrom zip zipr
