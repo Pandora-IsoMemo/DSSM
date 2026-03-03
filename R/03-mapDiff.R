@@ -417,7 +417,6 @@ mapDiff <- function(input, output, session, savedMaps, fruitsData){
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {

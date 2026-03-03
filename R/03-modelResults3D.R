@@ -537,7 +537,6 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
@@ -608,9 +607,11 @@ modelResults3D <- function(input, output, session, isoData, savedMaps, fruitsDat
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
+    logDebug("modelResults3D: Run model")
     model <- estimateMap3DWrapper(data(), params) %>%
       shinyTryCatch()
 
+    logDebug("modelResults3D: Pass model output")
     Model(model)
     log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)

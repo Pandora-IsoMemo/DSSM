@@ -9,7 +9,6 @@ options(shiny.maxRequestSize = 300*1024^2)
 options(scipen=999)
 
 server <- function(input, output, session) {
-#  savedMaps <- reactiveVal(readRDS("~/savedMaps.rds"))
   savedMaps <- reactiveVal(list())
   fruitsData <- reactiveVal(list(event = NULL, data = NULL))
 

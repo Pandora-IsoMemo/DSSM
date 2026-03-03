@@ -347,8 +347,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                                    importType = "model",
   #                                    rPackageName = config()[["rPackageName"]],
   #                                    subFolder = subFolder,
-  #                                    ignoreWarnings = TRUE,
-  #                                    fileExtension = config()[["fileExtension"]])
+  #                                    ignoreWarnings = TRUE)
   #
   # observe(priority = 100, {
   #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
