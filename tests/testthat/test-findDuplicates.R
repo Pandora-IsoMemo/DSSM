@@ -53,6 +53,16 @@ test_that("findDuplicates", {
   expect_true("duplicateRows" %in% names(findDuplicatesResult$allDuplicatesDF))
   expect_true("duplicateRows" %in% names(findDuplicatesResult$uniqueData))
 
+  # duplicateRows should be filled only for actual duplicates (3,4,6,7)
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[3], "3,4")
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[4], "3,4")
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[6], "6,7")
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[7], "6,7")
+
+  # empty-string group should NOT be considered duplicates due to ignoreEmpty=TRUE
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[9], "")
+  expect_equal(findDuplicatesResult$inputData$duplicateRows[10], "")
+
   userSimilaritySelection <- data.frame(
     cols = c("id4"),
     textSimilarity = NA,
@@ -78,4 +88,7 @@ test_that("findDuplicates", {
   expect_true("duplicateRows" %in% names(findDuplicatesResult$inputData))
   expect_true("duplicateRows" %in% names(findDuplicatesResult$allDuplicatesDF))
   expect_true("duplicateRows" %in% names(findDuplicatesResult$uniqueData))
+
+  expect_true(nchar(findDuplicatesResult$inputData$duplicateRows[1]) > 0)
+  expect_true(grepl("1", findDuplicatesResult$inputData$duplicateRows[1]))
 })
