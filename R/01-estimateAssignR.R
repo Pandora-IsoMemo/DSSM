@@ -188,6 +188,7 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
 
 
   for ( k in 1:5) {
+    log_memory_usage()
     j <- seq(1, iter, iter / 5)[k]
     showMessage(
       MCMC_AssignR,
@@ -204,6 +205,7 @@ fitModelAssignR <- function(XNUM, XCAT, y, yUnc = NULL, xUncNUM = NULL, xUncCAT 
   every <- thinning  #nur die x-te MCMC-Iteration soll genutzt werden
   #Vektor der tatsaechlich benutzten Beobachtungen
   usedsamples <- unlist(sapply(1:nChains, function(k) seq(from = burnin[k], to = iter / nChains * k, by = every)))
+  log_memory_usage()
   return(list(beta = betamc[usedsamples, , drop = F],
               mRe = mRe, sRe = sRe,
               nChains = nChains))

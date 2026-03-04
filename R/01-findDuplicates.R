@@ -61,41 +61,41 @@ findDuplicates <- function(data, userSimilaritySelection, addColumn, keepFirst) 
     uniqueData <- data[!duplicated(checkData, fromLast = TRUE), ]
   }
 
-  if(addColumn){
-  # add column with duplicate rows
-  rowCheckData <- checkData
-  rowCheckData$row <- rownames(rowCheckData)
-  duplicateRows <-
-    rowCheckData %>%
-    group_by_at(cols) %>%
-    summarise(row,
-      duplicateRows = paste0(row, collapse = ","),
-      .groups = "drop"
-    ) %>%
-    select(row, duplicateRows)
+  if (addColumn) {
+    # add column with duplicate rows
+    rowCheckData <- checkData
+    rowCheckData$row <- rownames(rowCheckData)
+    # Use mutate() on preprocessed data so each row gets its group's duplicate
+    # row indices, then join original data by "row" to avoid mismatch between
+    # original and preprocessed column values (e.g. after rounding or lowercasing)
+    rowToDuplicates <- rowCheckData %>%
+      group_by_at(cols) %>%
+      mutate(duplicateRows = paste0(row, collapse = ",")) %>%
+      ungroup()
+    rowToDuplicates <- rowToDuplicates[, c("row", "duplicateRows")]
 
-  data$duplicateRows <- NULL
-  data$row <- row.names(data)
-  data <- data %>%
-    left_join(duplicateRows, by = "row")
-  data[!data$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
-  row.names(data) <- data$row
-  data$row <- NULL
+    data$duplicateRows <- NULL
+    data$row <- row.names(data)
+    data <- data %>%
+      left_join(rowToDuplicates, by = "row")
+    data[!data$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
+    row.names(data) <- data$row
+    data$row <- NULL
 
-  uniqueData$duplicateRows <- NULL
-  uniqueData$row <- row.names(uniqueData)
-  uniqueData <- uniqueData %>%
-    left_join(duplicateRows, by = "row")
-  uniqueData[!uniqueData$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
-  row.names(uniqueData) <- uniqueData$row
-  uniqueData$row <- NULL
+    uniqueData$duplicateRows <- NULL
+    uniqueData$row <- row.names(uniqueData)
+    uniqueData <- uniqueData %>%
+      left_join(rowToDuplicates, by = "row")
+    uniqueData[!uniqueData$row %in% suppressWarnings(as.numeric(allDuplicateRows)), "duplicateRows"] <- ""
+    row.names(uniqueData) <- uniqueData$row
+    uniqueData$row <- NULL
 
-  allDuplicatesDF$duplicateRows <- NULL
-  allDuplicatesDF$row <- row.names(allDuplicatesDF)
-  allDuplicatesDF <- allDuplicatesDF %>%
-    left_join(duplicateRows, by = "row")
-  row.names(allDuplicatesDF) <- allDuplicatesDF$row
-  allDuplicatesDF$row <- NULL
+    allDuplicatesDF$duplicateRows <- NULL
+    allDuplicatesDF$row <- row.names(allDuplicatesDF)
+    allDuplicatesDF <- allDuplicatesDF %>%
+      left_join(rowToDuplicates, by = "row")
+    row.names(allDuplicatesDF) <- allDuplicatesDF$row
+    allDuplicatesDF$row <- NULL
 
   # relocate duplicate column as first column
   col_order_data <- c("duplicateRows",names(data)[names(data) != "duplicateRows"])

@@ -45,7 +45,8 @@ new_PlotSeriesExport <- function(plotFun,
   pngFileNames <- file.path(maprFolder, paste0(baseNames, ".png"))
   names(pngFileNames) <- times
 
-  mainFileNames <- file.path(graphicFolder, paste0(baseNames, ".", exportType))
+  fileExt <- ifelse(exportType == "geo-tiff", "tif", exportType)
+  mainFileNames <- file.path(graphicFolder, paste0(baseNames, ".", fileExt))
   names(mainFileNames) <- times
 
   structure(
@@ -337,7 +338,7 @@ generateGif <- function(gifFile = "animated.gif",
                         width = 1280,
                         height = 800) {
   # Create the GIF from a vector of image paths
-  gifski(
+  gifski::gifski(
     png_files = files,
     gif_file = gifFile,
     width = width,
@@ -363,24 +364,41 @@ writePlotSeriesFilePair <- function(plotFun,
   # recorded <- grDevices::recordPlot()
   # grDevices::dev.off()
 
-  # Save in main export format
+  # Save always as PNG (for MapR/gif etc.) ----
+
+  grDevices::png(pngFile, width = width, height = height)
+  #replayPlot(recorded) # replayPlot() WILL NOT WORK HERE!!!
+  res <- plotFun(model = model, time = time)
+  grDevices::dev.off()
+  #print(paste("pngFile:", (file.exists(pngFile))))  # Should be TRUE
+
+  # Save in main export format ----
+
+  # if exportType == "geo-tiff", save as GeoTIFF
+  
+  if (exportType == "geo-tiff") {
+    writeGeoTiff(res$XPred, filename = mainFile)
+    return(invisible())
+  }
+  # if exportType == "png", just copy the PNG file
+  if (exportType == "png") {
+    file.copy(pngFile, mainFile, overwrite = TRUE)
+    return(invisible())
+  }
+
+  # if exportType is jpeg, pdf, tiff, svg, open the corresponding device
+  # and plot again
   switch(
     exportType,
-    png  = grDevices::png(mainFile, width = width, height = height),
     jpeg = grDevices::jpeg(mainFile, width = width, height = height),
     pdf  = grDevices::pdf(mainFile, width = width / 72, height = height / 72),
     tiff = grDevices::tiff(mainFile, width = width, height = height),
     svg  = grDevices::svg(mainFile, width = width / 72, height = height / 72)
   )
-  #replayPlot(recorded) # THIS WILL NOT WORK HERE!!!
+  #replayPlot(recorded) # replayPlot() WILL NOT WORK HERE!!!
   plotFun(model = model, time = time)
   grDevices::dev.off()
   #print(paste("mainFile:", file.exists(mainFile)))  # Should be TRUE
 
-  # Save always as PNG too (for MapR/gif etc.)
-  grDevices::png(pngFile, width = width, height = height)
-  #replayPlot(recorded) # THIS WILL NOT WORK HERE!!!
-  plotFun(model = model, time = time)
-  grDevices::dev.off()
-  #print(paste("pngFile:", (file.exists(pngFile))))  # Should be TRUE
+  invisible()
 }

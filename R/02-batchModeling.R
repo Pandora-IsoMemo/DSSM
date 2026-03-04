@@ -78,7 +78,9 @@ batchModeling <- function(input, output, session, data, plotFun, modelParams, ty
         res <- plotFun()(Model())
         values$updated <- Sys.time()
         values$predictions <- res$XPred
+        log_object_size(values$predictions)
         values$plot <- recordPlot()
+        log_object_size(values$plot)
     })
 
 

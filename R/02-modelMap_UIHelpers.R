@@ -12,6 +12,7 @@ centerEstimateUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
+    tags$br(),
     tags$strong("Center estimates:"),
     numericInput(
       inputId = ns("centerY"),
@@ -53,7 +54,8 @@ centerEstimateUI <- function(id, title = "") {
         step = 10,
         width = "100%"
       )
-    )
+    ),
+    tags$br()
   )
 }
 
@@ -280,38 +282,47 @@ formatTimeCourseUI <- function(id, title = "") {
   ns <- NS(id)
 
   tagList(
-    numericInput(
-      inputId = ns("axesDecPlace"),
-      label = "Decimal places for axes",
-      min = 0,
-      max = 10,
-      value = 0,
-      step = 1,
-      width = "100%"
-    ),
-    fluidRow(
-      column(
-        width = 6,
-        numericInput(
-          inputId = ns("nLabelsX"),
-          label = "N labels of x axis",
-          min = 0,
-          max = 20,
-          value = 7,
-          step = 1,
-          width = "100%"
+    tags$br(),
+    tags$fieldset(
+      tags$strong("Decimal places"),
+      fluidRow(
+        column(
+          6,
+          numericInput(
+            ns("decPlacesX"),
+            label = "X axis",
+            min = 0, max = 10, value = 0, step = 1
+          )
+        ),
+        column(
+          6,
+          numericInput(
+            ns("decPlacesY"),
+            label = "Y axis",
+            min = 0, max = 10, value = 1, step = 1
+          )
         )
-      ),
-      column(
-        width = 6,
-        numericInput(
-          inputId = ns("nLabelsY"),
-          label = "N labels of y axis",
-          min = 0,
-          max = 20,
-          value = 7,
-          step = 1,
-          width = "100%"
+      )
+    ),
+    tags$br(),
+    tags$fieldset(
+      tags$strong("Number of labels"),
+      fluidRow(
+        column(
+          6,
+          numericInput(
+            ns("nLabelsX"),
+            label = "X axis",
+            min = 0, max = 20, value = 7, step = 1
+          )
+        ),
+        column(
+          6,
+          numericInput(
+            ns("nLabelsY"),
+            label = "Y axis",
+            min = 0, max = 20, value = 7, step = 1
+          )
         )
       )
     )
@@ -330,7 +341,8 @@ formatTimeCourseServer <-
                  function(input, output, session) {
                    reactive(
                      list(
-                       axesDecPlace = input$axesDecPlace,
+                       decPlacesX = input$decPlacesX,
+                       decPlacesY = input$decPlacesY,
                        nLabelsX = input$nLabelsX,
                        nLabelsY = input$nLabelsY
                      )
@@ -440,6 +452,47 @@ timeAndMapSectionServer <- function(id,
 
                  return(mapAndTimeSettings)
                })
+}
+
+
+update_date_extent <- function(input_data, model_data, input) {
+  if (input$dataSource != "model") {
+    try({
+      if (input$DateType == "Interval") {
+        d <- c(input_data[, isolate(input$DateOne)], input_data[, isolate(input$DateTwo)])
+      }
+      if (input$DateType == "Mean + 1 SD uncertainty") {
+        d <- c(input_data[, isolate(input$DateOne)] + 2 * input_data[, isolate(input$DateTwo)],
+                input_data[, isolate(input$DateOne)] - 2 * input_data[, isolate(input$DateTwo)])
+      }
+      if (input$DateType == "Single point") {
+        d <- input_data[, isolate(input$DateOne)]
+      }
+    }, silent = TRUE)
+  } else {
+    try({
+      d <- model_data[, "Date"]
+    }, silent = TRUE)
+  }
+
+  if (!exists("d")) return(list())
+
+  d <- suppressWarnings(as.numeric(d))
+  d <- na.omit(d)
+
+  if (length(d) == 0) return(list())
+
+  mean <- signif(mean(d), digits = 1)
+  range <- signif(range(d), digits = 1)
+  step <- signif(roundUpNice(diff(range(d)), nice = c(1, 10)) / 10000, digits = 2)
+  min <- signif(min(d) - diff(range(d)) * 0.1, digits = 2)
+  max <- signif(max(d) + diff(range(d)) * 0.1, digits = 2)
+
+  list(mean = mean,
+       range = range,
+       step = step,
+       min = min,
+       max = max)
 }
 
 
@@ -582,7 +635,7 @@ zScaleUI <-
       ),
       conditionalPanel(
         ns = ns,
-        condition = "input.estType != 'Significance (Overlap)'",
+        condition = "input.estType != 'Significance (Overlap)' && input.showModel == true",
         htmlOutput(ns("titleScaleInput"), style = "font-weight: bold"),
         numericInput(
           inputId = ns("max"),
@@ -593,11 +646,11 @@ zScaleUI <-
           inputId = ns("min"),
           label = "Min range",
           value = 0
-        ),
+        )
       ),
       conditionalPanel(
         ns = ns,
-        condition = "output.restrictOption == 'show'",
+        condition = "output.restrictOption == 'show' && input.showModel == true",
         selectInput(
           inputId = ns("limit"),
           label = "Range restriction",
@@ -607,7 +660,8 @@ zScaleUI <-
             "0-100" = "0-100"
           )
         )
-      )
+      ),
+      tags$br()
     )
   }
 
@@ -650,9 +704,10 @@ zScaleServer <- function(id,
                  output$titleScaleInput <- renderText({
                    switch(
                      mapType(),
-                     "Time course" = "Range of y axis:",
-                     "Minima/Maxima" = "Range of y axis:",
-                     "Range of estimates:"
+                     "Time course" = "Range of y axis",
+                     "Minima/Maxima" = "Range of y axis",
+                     "Time intervals by temporal group or cluster" = "Range of y axis",
+                     "Range of estimates"
                    )
                  })
 
@@ -1166,4 +1221,33 @@ extractZoomFromLongRange <- function(rangeLongitude, mapCentering) {
   }
 
   pmin(360, pmax(0, rangeLong, na.rm = TRUE)) %>% round()
+}
+
+get_num_vars <- function(input_data, min_values = 3) {
+  unlist(lapply(names(input_data), function(x) {
+    if (
+      (
+        is.integer(input_data[[x]]) |
+          is.numeric(input_data[[x]]) |
+          sum(!is.na(suppressWarnings(as.numeric((input_data[[x]]))))) >= min_values
+      ) #& !(x %in% c("Latitude", "Longitude"))
+    )
+      x
+    else
+      NULL
+  }))
+}
+
+get_time_vars <- function(input_data) {
+  unlist(lapply(names(input_data), function(x) {
+    if (grepl("date", x, ignore.case = TRUE)) x else NULL
+  }))
+}
+
+select_if_db_and_exists <- function(input, dat, col) {
+  if (input$dataSource == "db" && col %in% names(dat)) {
+    col
+  } else {
+    character(0)
+  }
 }

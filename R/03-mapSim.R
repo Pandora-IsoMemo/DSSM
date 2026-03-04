@@ -196,27 +196,10 @@ modelResultsSimUI <- function(id, title = ""){
             sliderInput(ns("NorthY"), "North arrow y orientation", min = 0, max = 1, value = 0.925),
             ns = ns
           ),
-          selectInput(inputId = ns("Colours"), label = "Colour palette",
-                      choices = list("Red-Yellow-Green" = "RdYlGn",
-                                     "Yellow-Green-Blue" = "YlGnBu",
-                                     "Purple-Orange" = "PuOr",
-                                     "Pink-Yellow-Green" = "PiYG",
-                                     "Red-Yellow-Blue" = "RdYlBu",
-                                     "Yellow-Brown" = "YlOrBr",
-                                     "Brown-Turquoise" = "BrBG"),
-                      selected = "RdYlGn"),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           checkboxInput(inputId = ns("showValues"),
                         label = "Show data values in plot",
                         value = TRUE, width = "100%"),
-          checkboxInput(inputId = ns("reverseCols"),
-                        label = "Reverse colors",
-                        value = FALSE, width = "100%"),
-          checkboxInput(inputId = ns("smoothCols"),
-                        label = "Smooth color transition",
-                        value = FALSE, width = "100%"),
-          sliderInput(inputId = ns("ncol"),
-                      label = "Approximate number of colour levels",
-                      min = 4, max = 50, value = 20, step = 2, width = "100%"),
           sliderInput(inputId = ns("AxisSize"),
                       label = "Axis title font size",
                       min = 0.1, max = 3, value = 1, step = 0.1, width = "100%"),
@@ -364,8 +347,7 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   #                                    importType = "model",
   #                                    rPackageName = config()[["rPackageName"]],
   #                                    subFolder = subFolder,
-  #                                    ignoreWarnings = TRUE,
-  #                                    fileExtension = config()[["fileExtension"]])
+  #                                    ignoreWarnings = TRUE)
   #
   # observe(priority = 100, {
   #   req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["data"]]))
@@ -540,6 +522,8 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          predictions = reactive(values$predictions))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <-  reactive({
     validate(validInput(Model()))
     pointDatOK = pointDatOK()
@@ -566,13 +550,6 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       values$rangex <- rangex
       values$rangey <- rangey
     }
-    if(input$smoothCols){
-      values$ncol <- 200
-    } else {
-      if(input$fixCol == FALSE){
-        values$ncol <- input$ncol
-      }
-    }
 
     req(zSettings$estType)
 
@@ -587,9 +564,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
              estQuantile = zSettings$Quantile,
              rangez = zSettings$range,
              showModel = zSettings$showModel,
-             colors = input$Colours,
-             ncol = values$ncol,
-             reverseColors = input$reverseCols,
+             colors = colour_pal()$colours,
+             ncol = colour_pal()$n,
+             reverseColors = colour_pal()$reverse,
              terrestrial = input[["mapLayerSettings-terrestrial"]],
              grid = input[["mapLayerSettings-grid"]],
              showBorders = input[["mapLayerSettings-showBorders"]],
@@ -652,7 +629,9 @@ mapSim <- function(input, output, session, savedMaps, fruitsData){
       alert(res)
     } else {
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
     }
   })
 

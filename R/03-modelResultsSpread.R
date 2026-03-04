@@ -359,24 +359,7 @@ modelResultsSpreadUI <- function(id, title = ""){
           sliderInput(inputId = ns("StdErr"),
                       label = "Display up to max standard error",
                       min = 0, max = 10000, value = 10000, width = "100%"),
-          selectInput(inputId = ns("Colours"), label = "Colour palette",
-                       choices = list("Red-Yellow-Green" = "RdYlGn",
-                                      "Yellow-Green-Blue" = "YlGnBu",
-                                      "Purple-Orange" = "PuOr",
-                                      "Pink-Yellow-Green" = "PiYG",
-                                      "Red-Yellow-Blue" = "RdYlBu",
-                                      "Yellow-Brown" = "YlOrBr",
-                                      "Brown-Turquoise" = "BrBG"),
-                       selected = "RdYlGn"),
-          checkboxInput(inputId = ns("reverseCols"),
-                        label = "Reverse colors",
-                        value = FALSE, width = "100%"),
-          sliderInput(inputId = ns("ncol"),
-                      label = "Approximate number of colour levels",
-                      min = 4, max = 50, value = 20, step = 2, width = "100%"),
-          checkboxInput(inputId = ns("smoothCols"),
-                        label = "Smooth color transition",
-                        value = FALSE, width = "100%"),
+          colour_palette_ui(ns("colourPalette"), selected = "RdYlGn"),
           sliderInput(inputId = ns("resolution"),
                       label = "Plot resolution (px)",
                       min = 20, max = 500, value = 100, width = "100%",
@@ -470,6 +453,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -507,7 +491,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
   observe(priority = 100, {
@@ -517,6 +500,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -543,6 +527,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -555,6 +540,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
 
@@ -565,14 +551,15 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       return()
     }
 
+    showNotification("Starting Calculation. This may take a while ...", type = "message")
     params <- reactiveValuesToList(input)
     params$coordType <- coordType()
 
     model <- estimateMapSpreadWrapper(data(), params) %>%
-      withProgress(value = 0.1, message = "Starting Calculation ...", detail = "This may take a while ...") %>%
       shinyTryCatch()
 
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -774,6 +761,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
                                          predictions = reactive(values$predictions),
                                          mapType = reactive(input$mapType))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <- reactive({
     function(model, ...){
       pointDatOK = pointDatOK()
@@ -798,13 +787,6 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
 
         values$rangex <- rangex
         values$rangey <- rangey
-      }
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-          values$ncol <- input$ncol
-        }
       }
 
       textLabels <- NULL
@@ -848,7 +830,7 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
-        ncol = values$ncol,
+        ncol = colour_pal()$n,
         pColor = input$pointCol,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
@@ -862,8 +844,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
         terrestrial = input[["mapLayerSettings-terrestrial"]],
         grid = input[["mapLayerSettings-grid"]],
         showBorders = input[["mapLayerSettings-showBorders"]],
-        colors = input$Colours,
-        reverseColors = input$reverseCols,
+        colors = colour_pal()$colours,
+        reverseColors = colour_pal()$reverse,
         mapType = input$mapType,
         arrow = input$arrow,
         scale = input$scale,
@@ -907,7 +889,9 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       alert(res)
     } else{
       values$predictions <- res$XPred
+      log_object_size(values$predictions)
       values$plot <- recordPlot()
+      log_object_size(values$plot)
     }
   })
 
@@ -922,43 +906,23 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
   })
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 3) #&
-      )
-        x
-      else
-        NULL
-    }))
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data(), min_values = 4)
+    #timeVars <- get_time_vars(data())
 
-    timeVars <- unlist(lapply(names(data()), function(x){
-      if (grepl("date", x, ignore.case = TRUE)
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "Longitude", choices = c("", names(data())),
                       selected = selectedLongitude)
     updateSelectInput(session, "Latitude", choices = c("", names(data())),
                       selected = selectedLatitude)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
 
     # if (input$dataSource == "db"){
     #   updateSelectInput(session, "DateOne", choices = c("", timeVars))
@@ -1003,6 +967,8 @@ modelResultsSpread <- function(input, output, session, isoData, savedMaps, fruit
       allData$Outlier <- "non-outlier"
       allData$Outlier[which(rownames(allData) %in% outlier)] <- "model outlier"
       allData$Outlier[which(rownames(allData) %in% outlierDR)] <- "data outlier"
+      log_object_size(allData)
+      log_memory_usage()
       return(allData)
     }
   })

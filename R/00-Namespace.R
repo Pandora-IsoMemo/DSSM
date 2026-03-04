@@ -6,7 +6,7 @@
 #' @importFrom DataTools cutAllLongStrings downloadModelUI downloadModelServer
 #'  fillIsoData handleDescription has_internet importDataUI importDataServer importUI importServer
 #'  importOptions prefixSysTime previewDataUI previewDataServer updateNameEntryIfDuplicate
-#' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join select summarise
+#' @importFrom dplyr "%>%" arrange desc distinct filter group_by group_by_at left_join mutate select summarise
 #'  ungroup
 #' @importFrom DT datatable renderDataTable dataTableOutput
 #' @importFrom elevatr get_elev_point
@@ -40,9 +40,9 @@
 #' @importFrom mice mice complete
 #' @importFrom openxlsx read.xlsx write.xlsx
 #' @importFrom pgdraw pgdraw
-#' @importFrom pryr mem_used
 #' @importFrom raster raster getValues terrain writeRaster rasterFromXYZ adjacent ncell
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom RefManageR ReadBib
 #' @importFrom Rfast spdinv Crossprod rmvnorm
 #' @importFrom rlang .data
 #' @importFrom sf as_Spatial st_as_sf st_as_sfc st_bbox st_centroid st_combine st_coordinates
@@ -58,8 +58,8 @@
 #' @importFrom sp point.in.polygon plot SpatialPoints SpatialPixelsDataFrame
 #' @importFrom stringi stri_escape_unicode
 #' @importFrom tclust tclust
-#' @importFrom utils available.packages compareVersion install.packages head zip
-#'  packageVersion read.csv read.csv2 write.table installed.packages capture.output
+#' @importFrom utils available.packages capture.output compareVersion install.packages head
+#'  packageVersion read.csv read.csv2 write.table installed.packages object.size zip
 #' @importFrom webshot2 webshot
 #' @importFrom yaml read_yaml
 #' @importFrom zip zipr

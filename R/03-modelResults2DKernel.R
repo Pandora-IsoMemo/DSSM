@@ -280,31 +280,7 @@ modelResults2DKernelUI <- function(id, title = "", asFruitsTab = FALSE){
                         label = "Mask radius in km",
                         min = 10, max = 2500, value = 500, width = "100%",
                         step = 10), ns = ns),
-          selectInput(inputId = ns("Colours"), label = "Colour palette",
-                      choices = list("Yellow-Red" = "YlOrRd",
-                                     "Purple-Red" = "PuRd",
-                                     "Red" = "Reds",
-                                     "Purple" = "Purples",
-                                     "Orange" = "Oranges",
-                                     "Grey" = "Greys",
-                                     "Blue" = "Blues",
-                                     "Green" = "Greens",
-                                     "Yellow-Green" = "YlGn",
-                                     "Red-Purple" = "RdPu",
-                                     "Orange-Red" = "OrRd",
-                                     "Green-Blue" = "GnBu",
-                                     "Blue-Green" = "BuGn",
-                                     "Purple-Blue" = "PuBu"),
-                      selected = "RdYlGn"),
-          checkboxInput(inputId = ns("reverseCols"),
-                        label = "Reverse colors",
-                        value = FALSE, width = "100%"),
-          sliderInput(inputId = ns("ncol"),
-                      label = "Approximate number of colour levels",
-                      min = 4, max = 50, value = 50, step = 2, width = "100%"),
-          checkboxInput(inputId = ns("smoothCols"),
-                        label = "Smooth color transition",
-                        value = FALSE, width = "100%"),
+          colour_palette_ui(ns("colourPalette"), selected = "WhYlRd"),
           sliderInput(inputId = ns("resolution"),
                       label = "Plot resolution (px)",
                       min = 20, max = 500, value = 100, width = "100%",
@@ -397,6 +373,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     # reset model
     Model(NULL)
     data(activeData)
+    log_object_size(data())
   })
 
   coordType <- reactive({
@@ -434,7 +411,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
                                      subFolder = subFolder,
                                      ignoreWarnings = TRUE,
                                      defaultSource = config()[["defaultSourceModel"]],
-                                     fileExtension = config()[["fileExtension"]],
                                      options = importOptions(rPackageName = config()[["rPackageName"]]))
 
 
@@ -446,6 +422,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     Model(NULL)
     fileImport(uploadedValues()[[1]][["data"]])
     data(uploadedValues()[[1]][["data"]])
+    log_object_size(data())
 
     # update notes in tab "Estimates" model download ----
     uploadedNotes(uploadedValues()[[1]][["notes"]])
@@ -472,6 +449,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     req(length(uploadedValues()) > 0, !is.null(uploadedValues()[[1]][["model"]]))
     ## update model ----
     Model(unpackModel(uploadedValues()[[1]][["model"]]))
+    log_object_size(Model())
 
     uploadedSavedMaps <- unpackSavedMaps(uploadedValues()[[1]][["model"]], currentSavedMaps = savedMaps())
     savedMaps(c(savedMaps(), uploadedSavedMaps))
@@ -484,6 +462,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       if (length(savedMaps()) == 0) return(NULL)
 
       Model(savedMaps()[[as.numeric(input$savedModel)]]$model)
+      log_object_size(Model())
       return()
     }
     if (input$Latitude == "" | input$Longitude == "") {
@@ -521,6 +500,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       message = "Generating local kernel density model"
     )
     Model(model)
+    log_object_size(Model())
     updateSelectInput(session, "Centering", selected = input$centerOfData)
   })
 
@@ -690,6 +670,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   centerEstimate <- centerEstimateServer("centerEstimateParams",
                                          predictions = reactive(values$predictions))
 
+  colour_pal <- colour_palette_server("colourPalette", fixCol = reactive(input$fixCol))
+
   plotFun <- reactive({
     function (model, ...) {
       pointDatOK = pointDatOK()
@@ -717,13 +699,6 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         values$rangey <- rangey
       }
 
-      if(input$smoothCols){
-        values$ncol <- 200
-      } else {
-        if(input$fixCol == FALSE){
-          values$ncol <- input$ncol
-        }
-      }
       textLabels <- NULL
       if(input$textLabels & !is.null(input$textLabelsVar) & input$textLabelsVar != ""){
         textLabels <- (data())[, input$textLabelsVar, drop = FALSE]
@@ -764,7 +739,7 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         interior = input$interior,
         mask = input$mask,
         maskRadius = input$maskRadius,
-        ncol = values$ncol,
+        ncol = colour_pal()$n,
         pColor = input$pointCol,
         pointShape = as.numeric(input$pointShape),
         textLabels = textLabels,
@@ -778,8 +753,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         terrestrial = input[["mapLayerSettings-terrestrial"]],
         grid = input[["mapLayerSettings-grid"]],
         showBorders = input[["mapLayerSettings-showBorders"]],
-        colors = input$Colours,
-        reverseColors = input$reverseCols,
+        colors = colour_pal()$colours,
+        reverseColors = colour_pal()$reverse,
         arrow = input$arrow,
         scale = input$scale,
         titleMain = !input$titleMain,
@@ -814,7 +789,9 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
       res <- plotFun()(Model())
     }, min = 0, max = 1, value = 0.8, message = "Plotting map ...")
     values$predictions <- res$XPred
+    log_object_size(values$predictions)
     values$plot <- recordPlot()
+    log_object_size(values$plot)
   })
 
   values <- reactiveValues(
@@ -833,35 +810,13 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
   })
 
   observe(priority = 75, {
-    numVars <- unlist(lapply(names(data()), function(x){
-      if (
-        (is.integer(data()[[x]]) | is.numeric(data()[[x]]) | sum(!is.na(as.numeric((data()[[x]])))) > 2) #&
-        #!(x %in% c("Latitude", "Longitude"))
-      )
-        x
-      else
-        NULL
-    }))
-    selectedTextLabel <- NULL
+    logDebug("Update input choices")
+    numVars <- get_num_vars(data())
 
-    selectedIndependent <- NULL
-    if (input$dataSource == "db" & ("mean" %in% names(data()))){
-      selectedIndependent <- "mean"
-    }
-
-    selectedIndependentUnc <- NULL
-    if (input$dataSource == "db" & ("sd" %in% names(data()))){
-      selectedIndependentUnc <- "sd"
-    }
-
-    selectedLongitude <- NULL
-    if (input$dataSource == "db" & ("longitude" %in% names(data()))){
-      selectedLongitude <- "longitude"
-    }
-    selectedLatitude <- NULL
-    if (input$dataSource == "db" & ("latitude" %in% names(data()))){
-      selectedLatitude <- "latitude"
-    }
+    selectedIndependent <- select_if_db_and_exists(input, data(), "mean")
+    #selectedIndependentUnc  <- select_if_db_and_exists(input, data(), "sd")
+    selectedLongitude <- select_if_db_and_exists(input, data(), "longitude")
+    selectedLatitude  <- select_if_db_and_exists(input, data(), "latitude")
 
     updateSelectInput(session, "IndependentX",  choices = c("", numVars),
                       selected = selectedIndependent)
@@ -871,11 +826,11 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
     updateSelectInput(session, "Latitude", choices = c("", names(data())),
                       selected = selectedLatitude)
     updateSelectInput(session, "textLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVar", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
     updateSelectInput(session, "pointLabelsVarCol", choices = c("", names(data())),
-                      selected = selectedTextLabel)
+                      selected = character(0))
   }) %>%
     bindEvent(data())
 
@@ -910,6 +865,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("spatial_cluster", "long_centroid_spatial_cluster", "lat_centroid_spatial_cluster", "rNames")], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       } else {
         allData <- data()
@@ -918,6 +875,8 @@ modelResults2DKernel <- function(input, output, session, isoData, savedMaps, fru
         modelData$rNames <- rownames(modelData)
         modelData <- merge(modelData[, c("rNames"), drop = FALSE], allData, all.y = FALSE, sort = FALSE)
         modelData$rNames <- NULL
+        log_object_size(modelData)
+        log_memory_usage()
         return(modelData)
       }
     }

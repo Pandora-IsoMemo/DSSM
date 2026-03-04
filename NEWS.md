@@ -1,3 +1,52 @@
+# DSSM 26.03.1
+
+## Updates
+- Replaced `pryr::mem_used()` with a new helper based on gc() and `pryr::object_size()` with utils::object.size().
+- Removed `pryr` dependency (not available on CRAN anymore).
+
+# DSSM 26.03.0
+
+## Updates
+- Removed the deprecated fileExtension argument from `DataTools::importServer()` calls across model/map modules.
+- Added additional logging around 3D model execution.
+- Adjusted variance-spline construction in `mgcv::smoothCon()` to improve smoothing stability (#296).
+
+# DSSM 26.01.1
+
+## Updates
+- Refactored colour palette handling by introducing a centralized, reusable colour palette module (#293).
+  - Replaced duplicated UI and server logic across multiple visualisation modules.
+  - Added support for single-colour, multi-colour, white-start, and diverging palettes.
+  - Updated map plotting functions to use the new palette infrastructure.
+
+# DSSM 26.01.0
+
+## Updates
+- Added logging of object sizes also to the modelling tabs _KernelR, KernelTimeR, SpreadR AssignR_ (#206)
+
+## Bug Fixes
+- Fixed hidden UI for setting the center estimates in _KernelTimeR_ time course plots (#292)
+- Fixed decimal-place settings for axis labels: x and y axes now have separate inputs, with an improved default for the y axis (1 decimal place) to prevent rounding issues (#292)
+
+# DSSM 25.12.0
+
+## Bug Fixes
+- Fixed an issue where date columns were parsed as character instead of numeric, causing errors when 
+  calculating date ranges and means in the UI (#289).
+- Added logging of object sizes for easier debugging of memory issues. (#289)
+- Extracted common code into helper functions to reduce code duplication.
+
+# DSSM 25.10.0
+
+## New Features
+- BibTeX Citation Formatting:
+  Added support for formatting and exporting BibTeX citations. Users can now select citation styles (APA, Chicago, Harvard) and output formats (text, HTML, LaTeX, etc.) for BibTeX entries. New UI modules allow configuration of citation styles and columns, and citation export supports user-selected formatting.
+
+# DSSM 25.09.1
+
+## New Features
+- _Modeling tabs - TimeR_: option to export a series of geotiff files for each selected time slice (#286)
+
 # DSSM 25.09.0
 
 ## Bug Fixes
