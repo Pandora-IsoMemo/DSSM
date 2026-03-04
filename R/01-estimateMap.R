@@ -1677,7 +1677,7 @@ modelLocalTempAvg <- function(data, K, KT, iter, burnin, independent,
     showMessage(
       MCMC_LocalTempAvg,
       msg = msg,
-      detail = paste0("Chain ", nChains),
+      detail = paste0("Chain ", nChains, ", Chunk ", k, "/10"),
       value = k / 10)(
         start = j, iter = j + iter / 10 - 1
       )
