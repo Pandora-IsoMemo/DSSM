@@ -1,3 +1,8 @@
+# DSSM 26.03.2
+
+## Updates
+- Refactored the summarise() call in findDuplicates() to remove the deprecated unnamed column expression, fixing compatibility with recent dplyr versions.
+
 # DSSM 26.03.1
 
 ## Updates
