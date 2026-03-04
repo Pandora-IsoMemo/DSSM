@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">DSSM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">25.09.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">26.03.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,6 +121,13 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">document</span><span class="op">(</span><span class="op">)</span> <span class="co"># or CTRL + SHIFT + D in RStudio</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build_site</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>When testing with a local docker container, please make sure to rebuild the docker image after changes in the R code or dependencies. You can do this from the root of the repository via:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-t</span> dssm-app:latest .</span></code></pre></div>
+<p>After that, start the container as usual via:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-p</span> 3838:3838 dssm-app:latest</span></code></pre></div>
+<p>and access the app in your browser at <code>http://localhost:3838/</code>. Stop the container with <code>CTRL + C</code> in the terminal.</p>
+<p><strong>Optional:</strong></p>
+<p>Add <code>-it</code> for interactive mode, or <code>--rm</code> to remove the container after stopping.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

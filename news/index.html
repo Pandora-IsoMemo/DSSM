@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">DSSM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">25.09.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">26.03.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,70 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="26.03.1" id="dssm-26031">DSSM 26.03.1<a class="anchor" aria-label="anchor" href="#dssm-26031"></a></h2>
+<div class="section level3">
+<h3 id="updates-26-03-1">Updates<a class="anchor" aria-label="anchor" href="#updates-26-03-1"></a></h3>
+<ul><li>Replaced <code>pryr::mem_used()</code> with a new helper based on gc() and <code>pryr::object_size()</code> with utils::object.size().</li>
+<li>Removed <code>pryr</code> dependency (not available on CRAN anymore).</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="26.03.0" id="dssm-26030">DSSM 26.03.0<a class="anchor" aria-label="anchor" href="#dssm-26030"></a></h2>
+<div class="section level3">
+<h3 id="updates-26-03-0">Updates<a class="anchor" aria-label="anchor" href="#updates-26-03-0"></a></h3>
+<ul><li>Removed the deprecated fileExtension argument from <code><a href="https://pandora-isomemo.github.io/data-tools/reference/importServer.html" class="external-link">DataTools::importServer()</a></code> calls across model/map modules.</li>
+<li>Added additional logging around 3D model execution.</li>
+<li>Adjusted variance-spline construction in <code><a href="https://rdrr.io/pkg/mgcv/man/smoothCon.html" class="external-link">mgcv::smoothCon()</a></code> to improve smoothing stability (#296).</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="26.01.1" id="dssm-26011">DSSM 26.01.1<a class="anchor" aria-label="anchor" href="#dssm-26011"></a></h2>
+<div class="section level3">
+<h3 id="updates-26-01-1">Updates<a class="anchor" aria-label="anchor" href="#updates-26-01-1"></a></h3>
+<ul><li>Refactored colour palette handling by introducing a centralized, reusable colour palette module (#293).
+<ul><li>Replaced duplicated UI and server logic across multiple visualisation modules.</li>
+<li>Added support for single-colour, multi-colour, white-start, and diverging palettes.</li>
+<li>Updated map plotting functions to use the new palette infrastructure.</li>
+</ul></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="26.01.0" id="dssm-26010">DSSM 26.01.0<a class="anchor" aria-label="anchor" href="#dssm-26010"></a></h2>
+<div class="section level3">
+<h3 id="updates-26-01-0">Updates<a class="anchor" aria-label="anchor" href="#updates-26-01-0"></a></h3>
+<ul><li>Added logging of object sizes also to the modelling tabs <em>KernelR, KernelTimeR, SpreadR AssignR</em> (#206)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-26-01-0">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-26-01-0"></a></h3>
+<ul><li>Fixed hidden UI for setting the center estimates in <em>KernelTimeR</em> time course plots (#292)</li>
+<li>Fixed decimal-place settings for axis labels: x and y axes now have separate inputs, with an improved default for the y axis (1 decimal place) to prevent rounding issues (#292)</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="25.12.0" id="dssm-25120">DSSM 25.12.0<a class="anchor" aria-label="anchor" href="#dssm-25120"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-25-12-0">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-25-12-0"></a></h3>
+<ul><li>Fixed an issue where date columns were parsed as character instead of numeric, causing errors when calculating date ranges and means in the UI (#289).</li>
+<li>Added logging of object sizes for easier debugging of memory issues. (#289)</li>
+<li>Extracted common code into helper functions to reduce code duplication.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="25.10.0" id="dssm-25100">DSSM 25.10.0<a class="anchor" aria-label="anchor" href="#dssm-25100"></a></h2>
+<div class="section level3">
+<h3 id="new-features-25-10-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-25-10-0"></a></h3>
+<ul><li>BibTeX Citation Formatting: Added support for formatting and exporting BibTeX citations. Users can now select citation styles (APA, Chicago, Harvard) and output formats (text, HTML, LaTeX, etc.) for BibTeX entries. New UI modules allow configuration of citation styles and columns, and citation export supports user-selected formatting.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="25.09.1" id="dssm-25091">DSSM 25.09.1<a class="anchor" aria-label="anchor" href="#dssm-25091"></a></h2>
+<div class="section level3">
+<h3 id="new-features-25-09-1">New Features<a class="anchor" aria-label="anchor" href="#new-features-25-09-1"></a></h3>
+<ul><li>
+<em>Modeling tabs - TimeR</em>: option to export a series of geotiff files for each selected time slice (#286)</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="25.09.0" id="dssm-25090">DSSM 25.09.0<a class="anchor" aria-label="anchor" href="#dssm-25090"></a></h2>
 <div class="section level3">
