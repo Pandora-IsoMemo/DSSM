@@ -65,3 +65,11 @@ and access the app in your browser at `http://localhost:3838/`. Stop the contain
 **Optional:**
 
 Add `-it` for interactive mode, or `--rm` to remove the container after stopping.
+
+## Acknowledgments
+
+This project is licensed under the GNU General Public License v3. It incorporates third-party packages with their respective licenses:
+
+- **rnaturalearth** (MIT License) - Provides map data from Natural Earth. See [LICENSE.md](LICENSE.md) for full license details.
+
+For complete license information, please see [LICENSE.md](LICENSE.md).
