@@ -71,7 +71,6 @@ Add `-it` for interactive mode, or `--rm` to remove the container after stopping
 This project is licensed under the GNU General Public License v3. It incorporates third-party packages with their respective licenses:
 
 - **rnaturalearth** (MIT License) - Provides map data from Natural Earth. See [LICENSE.md](LICENSE.md) for full license details.
-- **mclust** (GPL >= 2) - Provides model-based clustering functionality used by DSSM. See [LICENSE.md](LICENSE.md) for license details.
 
 ## Recommended Citations
 

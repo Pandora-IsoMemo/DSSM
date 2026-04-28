@@ -3,7 +3,7 @@
 ## Updates
 - Added rnaturalearth attribution in `RScripts/update_maps.R`, and added an acknowledgments section in `README.md`.
 - Appended a “Third-Party Licenses” section (including MIT license text for rnaturalearth) to `LICENSE.md`.
-- Added mclust attribution to `README.md` and `LICENSE.md`, including a recommended citation section in `README.md`.
+- Added a recommended citation for mclust in `README.md`.
 
 # DSSM 26.03.2
 
