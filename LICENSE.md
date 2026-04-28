@@ -610,3 +610,14 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **Source:** https://github.com/ropensci/rnaturalearth
+
+### mclust
+This project uses the mclust R package, which is distributed under the GNU General Public License (GPL) version 2 or later.
+
+The DSSM package itself is licensed under GPL (>= 3), which is compatible with mclust.
+
+Recommended scholarly citation for mclust:
+
+Scrucca L, Fraley C, Murphy TB, Raftery AE (2023). _Model-Based Clustering, Classification, and Density Estimation Using mclust in R_. Chapman and Hall/CRC. ISBN 978-1032234953, doi:10.1201/9781003277965, https://mclust-org.github.io/book/.
+
+**Package source:** https://mclust-org.github.io/mclust/
