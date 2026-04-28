@@ -65,3 +65,17 @@ and access the app in your browser at `http://localhost:3838/`. Stop the contain
 **Optional:**
 
 Add `-it` for interactive mode, or `--rm` to remove the container after stopping.
+
+## Acknowledgments
+
+This project is licensed under the GNU General Public License v3. It incorporates third-party packages with their respective licenses:
+
+- **rnaturalearth** (MIT License) - Provides map data from Natural Earth. See [LICENSE.md](LICENSE.md) for full license details.
+
+## Recommended Citations
+
+If you reference methods implemented through this application in academic work, please also cite mclust as recommended by its authors:
+
+Scrucca L, Fraley C, Murphy TB, Raftery AE (2023). _Model-Based Clustering, Classification, and Density Estimation Using mclust in R_. Chapman and Hall/CRC. ISBN 978-1032234953, doi:10.1201/9781003277965, <https://mclust-org.github.io/book/>.
+
+For complete license information, please see [LICENSE.md](LICENSE.md).
