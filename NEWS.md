@@ -1,3 +1,8 @@
+# DSSM 26.04.1
+
+## Updates
+- _Interactive map export_: added a notice about third-party basemap licenses/terms and attribution requirements, and added a corresponding note to `README.md`.
+
 # DSSM 26.04.0
 
 ## Updates

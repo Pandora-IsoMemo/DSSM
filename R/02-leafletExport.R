@@ -49,7 +49,24 @@ leafletExport <- function(input,
     showModal(
       modalDialog(
         title = "Export Map",
-        footer = modalButton("OK"),
+        footer = tagList(
+          tags$div(
+            style = "float: left; max-width: calc(100% - 70px); text-align: left;",
+            helpText(
+              tagList(
+                "Note: Basemaps in the 'Interactive map' tab are provided by third parties and subject to their own licenses/terms. Users are responsible for ensuring permitted reuse/publication (",
+                tags$a(
+                  href = "https://leaflet-extras.github.io/leaflet-providers/preview/",
+                  target = "_blank",
+                  rel = "noopener noreferrer",
+                  "Leaflet providers"
+                ),
+                "). Please verify that required basemap attribution is visible in the exported figure before publication."
+              )
+            )
+          ),
+          modalButton("OK")
+        ),
         fluidRow(
           column(4, numericInput(ns("width"), "Width (px)", value = width())),
           column(4, numericInput(ns("height"), "Height (px)", value = height())),

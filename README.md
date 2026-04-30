@@ -72,6 +72,8 @@ This project is licensed under the GNU General Public License v3. It incorporate
 
 - **rnaturalearth** (MIT License) - Provides map data from Natural Earth. See [LICENSE.md](LICENSE.md) for full license details.
 
+Interactive basemaps shown via Leaflet providers are provided by third parties and remain subject to their own licenses, attribution requirements, and terms of use. Users are responsible for ensuring permitted reuse and publication of any exported or published maps. A reference list of supported Leaflet providers is available at [leaflet-providers preview](https://leaflet-extras.github.io/leaflet-providers/preview/).
+
 ## Recommended Citations
 
 If you reference methods implemented through this application in academic work, please also cite mclust as recommended by its authors:
