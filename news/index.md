@@ -1,5 +1,31 @@
 # Changelog
 
+## DSSM 26.04.1
+
+### Updates
+
+- *Interactive map export*: added a notice about third-party basemap
+  licenses/terms and attribution requirements, and added a corresponding
+  note to `README.md`.
+
+## DSSM 26.04.0
+
+### Updates
+
+- Added rnaturalearth attribution in `RScripts/update_maps.R`, and added
+  an acknowledgments section in `README.md`.
+- Appended a “Third-Party Licenses” section (including MIT license text
+  for rnaturalearth) to `LICENSE.md`.
+- Added a recommended citation for mclust in `README.md`.
+
+## DSSM 26.03.2
+
+### Updates
+
+- Refactored the summarise() call in findDuplicates() to remove the
+  deprecated unnamed column expression, fixing compatibility with recent
+  dplyr versions.
+
 ## DSSM 26.03.1
 
 ### Updates

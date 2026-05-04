@@ -41,7 +41,7 @@ The jittered coordinate in degrees.
 
 ``` r
 jitter_latlong(-73, type = "long", lat = 43, km = 1)
-#> [1] -73.01152
+#> [1] -73.01037
 jitter_latlong(42, type = "lat", km = 1)
-#> [1] 41.99675
+#> [1] 42.00605
 ```
