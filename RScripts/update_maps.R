@@ -1,6 +1,11 @@
 library(rnaturalearth)
 library(sf) # load whole library to enable syntax for overwriting of st_geometry and st_crs
 
+# This script uses the rnaturalearth package (MIT License)
+# rnaturalearth (c) 2017 Andy South and contributors
+# https://github.com/ropensci/rnaturalearth
+# See LICENSE.md for full license details
+
 # Update maps of package
 #
 # This function downloads maps from the package 'rnaturalearth' and saves them into the folder for

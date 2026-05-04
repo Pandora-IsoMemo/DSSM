@@ -1,0 +1,4 @@
+{
+  "r.alwaysUseActiveTerminal": false,
+  "terminal.integrated.cwd": "${workspaceFolder}"
+}
