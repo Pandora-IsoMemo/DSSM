@@ -19,9 +19,10 @@ RUN apt-get update \
 
 RUN echo "options(repos = c(getOption('repos'), PANDORA = 'https://Pandora-IsoMemo.github.io/drat/'))" >> /usr/local/lib/R/etc/Rprofile.site
 
-# Install nimble and ellmer from GitHub
-RUN Rscript -e "install.packages('nimble', repos = 'https://packagemanager.posit.co/cran/__linux__/jammy/2025-03-01', version = '1.3.0')" \
-    && Rscript -e "remotes::install_github(c('r-lib/httr2@v1.2.3', 'tidyverse/ellmer@v0.4.1'))"
+# Install nimble, sf as well as ellmer
+RUN Rscript -e "install.packages('nimble', repos = 'https://packagemanager.posit.co/cran/__linux__/noble/2025-03-01', version = '1.3.0')" \
+    && Rscript -e "remotes::install_github(c('r-lib/httr2@v1.2.3', 'tidyverse/ellmer@v0.4.1'))" \
+    && Rscript -e "install.packages('sf', repos = 'https://packagemanager.posit.co/cran/__linux__/noble/latest')"
 
 COPY . .
 
