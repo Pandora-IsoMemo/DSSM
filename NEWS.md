@@ -1,3 +1,9 @@
+# DSSM 26.08.0
+
+## Updates
+- Exchanged image (substituted pandora base-image with inwt:r-shiny)
+- Adapted dependencies
+
 # DSSM 26.04.1
 
 ## Updates
