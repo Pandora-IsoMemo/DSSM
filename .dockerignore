@@ -1,4 +1,63 @@
-libLinux/*
-libWin/*
+# Version control
 .git
+.gitignore
+.github/
+
+# RStudio / IDE files
+.Rproj.user/
+*.Rproj
+.vscode/
+
+# Local R/session config
 .Rprofile
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+
+# Secrets / local env files
+.env
+.env.*
+!.env.example
+
+# Local dependency libraries
+lib/
+libLinux/
+libWin/
+libMac/
+deps/
+
+# Generated package/build artifacts
+*.tar.gz
+*.Rcheck/
+check/
+Meta/
+src/*.o
+src/*.so
+src/*.dll
+
+# Generated docs/sites
+docs/
+pkgdown/
+inst/doc/
+
+# Coverage/test/dev artifacts
+.Rcoverage
+covr/
+
+# CI/deployment files not needed inside image
+Jenkinsfile
+.github/
+deploy.sh
+
+# Docker metadata not needed after build starts
+Dockerfile
+.dockerignore
+
+# OS/editor temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+*.swp
