@@ -13,13 +13,13 @@
 ## Citation
 
 Gross M, Fernandes R (2026). *DSSM: Pandora & IsoMemo spatiotemporal
-modeling*. R package version 26.04.1,
+modeling*. R package version 26.08.0,
 <https://pandora-isomemo.github.io/DSSM/>.
 
     @Manual{,
       title = {DSSM: Pandora & IsoMemo spatiotemporal modeling},
       author = {Marcus Gross and Ricardo Fernandes},
       year = {2026},
-      note = {R package version 26.04.1},
+      note = {R package version 26.08.0},
       url = {https://pandora-isomemo.github.io/DSSM/},
     }
