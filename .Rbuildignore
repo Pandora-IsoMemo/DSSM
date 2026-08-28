@@ -1,24 +1,49 @@
-^.+\.Rproj$
-^libWin$
-^libMac$
-^lib$
-^libLinux$
-^Dockerfile$
-^covr$
-^deps$
-^Jenkinsfile$
-^JenkinsfileMPI$
-^bin$
-^LICENSE\.md$
-^deploy\.sh$
-^\..*$
+# RStudio / IDE files
+^.*\.Rproj$
 ^\.Rproj\.user$
-^doc$
-^Meta$
+^\.vscode$
+
+# Local/user config
+^\.Rprofile$
+^\.Renviron$
+^\.env$
+
+# Version control / GitHub
+^\.git$
+^\.gitignore$
+^\.github$
+
+# CI / deployment / containers
+^Dockerfile$
+^\.dockerignore$
+^Jenkinsfile$
+^deploy\.sh$
+
+# pkgdown site and config
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
-^\.github$
+
+# Local dependency/vendor libraries
+^lib$
+^libWin$
+^libMac$
+^libLinux$
+^deps$
+
+# Build/test artifacts
+^covr$
+^bin$
+^.*\.tar\.gz$
+^.*\.Rcheck$
+
+# Non-package license/readme variants
+^LICENSE\.md$
+
+^doc$
+^Meta$
 ^inst/app/predefinedModels/
 ^inst/app/dataQueries/
 ^tests/testthat/testdata_large/
+^\.positai$
+^\.claude$

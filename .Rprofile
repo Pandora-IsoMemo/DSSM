@@ -2,6 +2,8 @@
 # It's called libWin resp. libLinux. As it is on the first libPath position,
 # packages are installed into this directory by default. This enables working in
 # a sandbox.
+message("Loading project .Rprofile")
+message(">>> .Rprofile loaded from: ", getwd())
 
 .First <- function() {
   # Check operating system

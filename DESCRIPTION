@@ -1,7 +1,7 @@
 Package: DSSM
 Title: Pandora & IsoMemo spatiotemporal modeling
-Version: 26.04.1
-Date: 2026-04-30
+Version: 26.08.0
+Date: 2026-08-28
 Authors@R: c(
             person("Marcus", "Gross", email = "marcus.gross@inwt-statistics.de", role = c("cre", "aut")),
             person("Ricardo", "Fernandes", email = "ldv1452@gmail.com", role = c("aut")),
@@ -18,7 +18,7 @@ Imports:
     animation,
     coda,
     colourpicker,
-    DataTools (>= 26.01.1),
+    DataTools (>= 26.08.2),
     dplyr,
     DT (>= 0.4),
     elevatr (>= 0.4.2),
@@ -68,6 +68,6 @@ Suggests:
     ReSources (>= 0.7.9),
     rmarkdown,
     testthat (>= 2.0.0)
-RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 URL: https://pandora-isomemo.github.io/DSSM/
+Config/roxygen2/version: 8.0.0
