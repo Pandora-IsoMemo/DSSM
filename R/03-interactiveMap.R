@@ -458,6 +458,16 @@ draw <- function(isoData,
 drawType <- function(map, type = "8") {
   mType <- leafletProviderTypes[[as.character(type)]]
 
+  # raise error if type is not valid
+  if (is.null(mType)) {
+    validTypes <- paste0(names(leafletProviderTypes), " (", leafletProviderTypes, ")",
+                         collapse = ", ")
+    stop(paste0(
+      "Invalid map type: ", type,
+      ". Valid types are: ", validTypes
+    ))
+  }
+
   map %>%
     addProviderTiles(mType)
 }
