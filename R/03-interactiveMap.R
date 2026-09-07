@@ -160,7 +160,7 @@ interactiveMap <- function(input, output, session, isoData) {
       setView(lng = defaultCenter()$lng,
               lat = defaultCenter()$lat,
               zoom = 4) %>%
-      addProviderTiles("CartoDB.Positron")
+      addProviderTiles("Esri.WorldGrayCanvas")
   })
 
   # newZoom <- reactive({
@@ -443,40 +443,14 @@ draw <- function(isoData,
     map %>% addCirclesRelativeToZoom(isoData, newZoom = zoom, zoom = zoom)
 }
 
-
 # Draw Type of Interactive Map
 # @param map leaflet map
 # @param type map type
-drawType <- function(map, type = "1") {
-  if (type == "1") {
-    mType <- "CartoDB.Positron"
-  }
-  if (type == "2") {
-    mType <- "OpenStreetMap.Mapnik"
-  }
-  if (type == "3") {
-    mType <- "OpenStreetMap.DE"
-  }
-  if (type == "4") {
-    mType <- "OpenTopoMap"
-  }
-  if (type == "5") {
-    mType <- "Stamen.TonerLite"
-  }
-  if (type == "5") {
-    mType <-  "Esri"
-  }
-  if (type == "6") {
-    mType <- "Esri.WorldTopoMap"
-  }
-  if (type == "7") {
-    mType <-  "Esri.WorldImagery"
-  }
+drawType <- function(map, type = "8") {
+  mType <- leafletProviderTypes[[as.character(type)]]
 
-  map <- map %>%
+  map %>%
     addProviderTiles(mType)
-
-  map
 }
 
 # Draw Icons on Interactive Map

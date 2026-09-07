@@ -1,3 +1,46 @@
+# legacy numeric codes for the exported `draw(type = ...)` API;
+# values must be in leafletProviderChoices
+leafletProviderTypes <- c(
+  "1" = "CartoDB.Positron",
+  "2" = "OpenStreetMap.Mapnik",
+  "3" = "OpenStreetMap.DE",
+  "4" = "OpenTopoMap",
+  "5" = "Esri",
+  "6" = "Esri.WorldTopoMap",
+  "7" = "Esri.WorldImagery",
+  "8" = "Esri.WorldGrayCanvas",
+  "9" = "Esri.WorldImagery",
+  "10" = "Esri.WorldTerrain",
+  "11" = "Esri.WorldShadedRelief",
+  "12" = "Esri.WorldPhysical",
+  "13" = "CartoDB.PositronNoLabels"
+)
+
+leafletProviderChoices <- list(
+  `borders & names` = list(
+    "Esri.WorldGrayCanvas",
+    "Esri",
+    "Esri.WorldTopoMap",
+    "Esri.OceanBasemap",
+    "CartoDB.Positron",   # previous default now needs an api key
+    "OpenStreetMap.Mapnik",
+    "OpenStreetMap.DE",
+    "OpenTopoMap"
+  ),
+  `only borders` = list(
+    "CartoDB.PositronNoLabels"
+  ),
+  `plain maps` = list(
+    "Esri.WorldImagery",
+    "Esri.WorldTerrain",
+    "Esri.WorldShadedRelief",
+    "Esri.WorldPhysical"
+  ),
+  `custom maps` = list(
+    "NASAGIBS.ViirsEarthAtNight2012"
+  )
+)
+
 #' ui function of leaflet settings module
 #'
 #' @param id namespace
@@ -10,31 +53,8 @@ leafletSettingsUI <- function(id, title = "") {
     selectizeInput(
       ns("LeafletType"),
       label = "Map type",
-      choices = list(
-        `borders & names`= list(
-        "CartoDB.Positron",
-        "OpenStreetMap.Mapnik",
-        "OpenStreetMap.DE",
-        "OpenTopoMap",
-        "Esri",
-        "Esri.WorldTopoMap",
-        "Esri.OceanBasemap"
-      ),
-      `only borders`= list(
-        "CartoDB.PositronNoLabels"
-      ),
-      `plain maps`= list(
-        "Esri.WorldImagery",
-        "Esri.WorldTerrain",
-        "Esri.WorldShadedRelief",
-        "Esri.WorldPhysical"
-      ),
-      `custom maps` = list(
-        "NASAGIBS.ViirsEarthAtNight2012"
-      )
-    ),
-    options = list(create = TRUE,
-                   dropdownParent = 'body')
+      choices = leafletProviderChoices,
+      options = list(create = TRUE, dropdownParent = 'body')
     ),
     helpText(HTML(paste0("Find more maps ",
                          tags$i(
