@@ -1,7 +1,7 @@
 # legacy numeric codes for the exported `draw(type = ...)` API;
 # values must be in leafletProviderChoices
 leafletProviderTypes <- c(
-  "1" = "CartoDB.Positron",
+  "1" = "Esri.WorldGrayCanvas",
   "2" = "OpenStreetMap.Mapnik",
   "3" = "OpenStreetMap.DE",
   "4" = "OpenTopoMap",
