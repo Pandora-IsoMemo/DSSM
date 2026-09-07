@@ -61,7 +61,7 @@ testthat::test_that("function drawSymbolsOnMap", {
         setView(lng = 30,
                 lat = 50,
                 zoom = 4) %>%
-        addProviderTiles("CartoDB.Positron"),
+        addProviderTiles("Esri.WorldGrayCanvas"),
       isoData = testIsoData,
       pointRadius = c(10, 20, 3.5, 80, 10, 20),
       colourPal = colorFactor(
