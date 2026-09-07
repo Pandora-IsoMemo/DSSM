@@ -325,10 +325,17 @@ interactiveMap <- function(input, output, session, isoData) {
   observe({
     req(isoData())
     numVars <- unlist(lapply(names(isoData()), function(x) {
-      if (is.integer(isoData()[[x]]) | is.numeric(isoData()[[x]]))
-        x
-      else
-        NULL
+      col <- isoData()[[x]]
+      # handle numeric and integer columns
+      if (is.integer(col) || is.numeric(col)) return(x)
+      # handle character and factor columns that can be converted to numeric
+      if (is.character(col) || is.factor(col)) {
+        converted <- suppressWarnings(as.numeric(as.character(col)))
+        # only treat as numeric if every non-NA value converted successfully
+        if (all(is.na(converted) == is.na(col)) && !all(is.na(converted))) return(x)
+      }
+      # otherwise, return NULL
+      return(NULL)
     }))
 
     updateSelectInput(session, "var1", choices = c("", numVars))
@@ -339,14 +346,14 @@ interactiveMap <- function(input, output, session, isoData) {
     if (is.null(isoData()) | is.null(input$var1) | input$var1 == "")
       return(NULL)
 
-    isoData()[[input$var1]]
+    suppressWarnings(as.numeric(as.character(isoData()[[input$var1]])))
   })
 
   var2 <- reactive({
     if (is.null(isoData()) | is.null(input$var2) | input$var2 == "")
       return(NULL)
 
-    isoData()[[input$var2]]
+    suppressWarnings(as.numeric(as.character(isoData()[[input$var2]])))
   })
 
   # export leaflet ----
