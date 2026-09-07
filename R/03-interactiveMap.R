@@ -346,7 +346,9 @@ interactiveMap <- function(input, output, session, isoData) {
     if (is.null(isoData()) | is.null(input$var1) | input$var1 == "")
       return(NULL)
 
-    suppressWarnings(as.numeric(as.character(isoData()[[input$var1]])))
+    col <- isoData()[[input$var1]]
+    if (is.numeric(col) || is.integer(col)) return(col)
+    suppressWarnings(as.numeric(as.character(col)))
   })
 
   var2 <- reactive({
