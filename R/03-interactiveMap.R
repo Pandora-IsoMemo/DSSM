@@ -160,7 +160,7 @@ interactiveMap <- function(input, output, session, isoData) {
       setView(lng = defaultCenter()$lng,
               lat = defaultCenter()$lat,
               zoom = 4) %>%
-      addProviderTiles("CartoDB.Positron")
+      addProviderTiles("Esri.WorldGrayCanvas")
   })
 
   # newZoom <- reactive({
@@ -325,10 +325,17 @@ interactiveMap <- function(input, output, session, isoData) {
   observe({
     req(isoData())
     numVars <- unlist(lapply(names(isoData()), function(x) {
-      if (is.integer(isoData()[[x]]) | is.numeric(isoData()[[x]]))
-        x
-      else
-        NULL
+      col <- isoData()[[x]]
+      # handle numeric and integer columns
+      if (is.integer(col) || is.numeric(col)) return(x)
+      # handle character and factor columns that can be converted to numeric
+      if (is.character(col) || is.factor(col)) {
+        converted <- suppressWarnings(as.numeric(as.character(col)))
+        # only treat as numeric if every non-NA value converted successfully
+        if (all(is.na(converted) == is.na(col)) && !all(is.na(converted))) return(x)
+      }
+      # otherwise, return NULL
+      return(NULL)
     }))
 
     updateSelectInput(session, "var1", choices = c("", numVars))
@@ -339,14 +346,16 @@ interactiveMap <- function(input, output, session, isoData) {
     if (is.null(isoData()) | is.null(input$var1) | input$var1 == "")
       return(NULL)
 
-    isoData()[[input$var1]]
+    col <- isoData()[[input$var1]]
+    if (is.numeric(col) || is.integer(col)) return(col)
+    suppressWarnings(as.numeric(as.character(col)))
   })
 
   var2 <- reactive({
     if (is.null(isoData()) | is.null(input$var2) | input$var2 == "")
       return(NULL)
 
-    isoData()[[input$var2]]
+    suppressWarnings(as.numeric(as.character(isoData()[[input$var2]])))
   })
 
   # export leaflet ----
@@ -443,40 +452,24 @@ draw <- function(isoData,
     map %>% addCirclesRelativeToZoom(isoData, newZoom = zoom, zoom = zoom)
 }
 
-
 # Draw Type of Interactive Map
 # @param map leaflet map
 # @param type map type
-drawType <- function(map, type = "1") {
-  if (type == "1") {
-    mType <- "CartoDB.Positron"
-  }
-  if (type == "2") {
-    mType <- "OpenStreetMap.Mapnik"
-  }
-  if (type == "3") {
-    mType <- "OpenStreetMap.DE"
-  }
-  if (type == "4") {
-    mType <- "OpenTopoMap"
-  }
-  if (type == "5") {
-    mType <- "Stamen.TonerLite"
-  }
-  if (type == "5") {
-    mType <-  "Esri"
-  }
-  if (type == "6") {
-    mType <- "Esri.WorldTopoMap"
-  }
-  if (type == "7") {
-    mType <-  "Esri.WorldImagery"
+drawType <- function(map, type = "8") {
+  mType <- leafletProviderTypes[[as.character(type)]]
+
+  # raise error if type is not valid
+  if (is.null(mType)) {
+    validTypes <- paste0(names(leafletProviderTypes), " (", leafletProviderTypes, ")",
+                         collapse = ", ")
+    stop(paste0(
+      "Invalid map type: ", type,
+      ". Valid types are: ", validTypes
+    ))
   }
 
-  map <- map %>%
+  map %>%
     addProviderTiles(mType)
-
-  map
 }
 
 # Draw Icons on Interactive Map
