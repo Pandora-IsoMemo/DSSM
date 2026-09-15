@@ -1,5 +1,19 @@
 # Changelog
 
+## DSSM 26.09.0
+
+### Updates
+
+- Updated the default *Interactive map* and the column selection in the
+  *Statistics* panel:
+  - Switched default *Interactive map* from `CartoDB.Positron` (which
+    now requires an API key) to `Esri.WorldGrayCanvas`.
+  - Expanded “numeric variable” detection for variable 1 and 2 in the
+    *Statistics* panel to include character/factor columns that cleanly
+    coerce to numeric.
+  - Selected variables are now coerced to numeric before plotting and
+    computing summary statistics.
+
 ## DSSM 26.08.0
 
 ### Updates
