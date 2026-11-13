@@ -20,11 +20,11 @@ getAppTitle <- function() {
   version <- packageVersion("DSSM")
 
   if (isOnlyDataSearchMode()) {
-    title <- paste(subTitle0, subTitle1, version)
+    title <- paste(subTitle0, subTitle1)
   } else {
     subTitle2 <- "and Spatiotemporal modeling"
-    title <- paste(subTitle0, subTitle1, subTitle2, version)
+    title <- paste(subTitle0, subTitle1, subTitle2)
   }
 
-  HTML(title)
+  title = shinyTools::headerTitle(pkg_name = "DSSM", title = title, url_docu = "https://pandora-isomemo.github.io/DSSM/")
 }
