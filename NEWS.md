@@ -1,3 +1,8 @@
+# DSSM 26.11.0
+
+## Updates
+- Updated to the latest DataTools version, which provides access to RADOGOST.
+
 # DSSM 26.09.0
 
 ## Updates
