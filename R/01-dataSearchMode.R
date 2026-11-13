@@ -17,7 +17,6 @@ isOnlyDataSearchMode <- function() {
 getAppTitle <- function() {
   subTitle0 <- "" #"Pandora & IsoMemo &ensp;"
   subTitle1 <- "Data search"
-  version <- packageVersion("DSSM")
 
   if (isOnlyDataSearchMode()) {
     title <- paste(subTitle0, subTitle1)
