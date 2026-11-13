@@ -1,3 +1,8 @@
+# DSSM 26.11.0
+
+## Updates
+- Updated to most recent DataTools version.
+
 # DSSM 26.09.0
 
 ## Updates
