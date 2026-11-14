@@ -5,7 +5,7 @@ ckanFileTypes:
   - "xls"
   - "xlsx"
   - "csv"
-  - "odt"
+  - "ods"
   - "txt"
 ckanModelTypes:
   - "dssm"
