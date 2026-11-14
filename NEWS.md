@@ -1,3 +1,8 @@
+# DSSM 26.11.1
+
+## Bug Fixes
+- Updated the configuration to use ODS instead of ODT.
+
 # DSSM 26.11.0
 
 ## Updates
