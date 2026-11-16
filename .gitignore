@@ -76,8 +76,6 @@ vignettes/*.pdf
 # src files
 src/*
 
-# profiling script
-RScripts/profileApp.R
 /doc/
 /Meta/
 .positai

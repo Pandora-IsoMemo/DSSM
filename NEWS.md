@@ -1,3 +1,18 @@
+# DSSM 26.11.2
+
+## Updates
+- Changed the “Skin” label from “Pandora” to “Pandora & Radogost”.
+
+# DSSM 26.11.1
+
+## Bug Fixes
+- Updated the configuration to use ODS instead of ODT.
+
+# DSSM 26.11.0
+
+## Updates
+- Updated to the latest DataTools version, which provides access to RADOGOST.
+
 # DSSM 26.09.0
 
 ## Updates

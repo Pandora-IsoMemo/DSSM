@@ -54,7 +54,7 @@
 #' @importFrom sf st_union
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom shinyjs alert runjs useShinyjs hide show enable disable
-#' @importFrom shinyTools headerButtonsUI shinyTryCatch
+#' @importFrom shinyTools headerButtonsUI headerTitle shinyTryCatch
 #' @importFrom shinyMatrix matrixInput updateMatrixInput
 #' @importFrom shinyWidgets pickerInput updatePickerInput
 #' @importFrom stats aggregate as.formula cor cov density dist dnorm dunif kmeans
