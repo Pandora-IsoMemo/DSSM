@@ -1,3 +1,8 @@
+# DSSM 26.11.2
+
+## Updates
+- Changed the “Skin” label from “Pandora” to “Pandora & Radogost”.
+
 # DSSM 26.11.1
 
 ## Bug Fixes

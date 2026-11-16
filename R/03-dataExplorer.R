@@ -20,7 +20,7 @@ dataExplorerUI <- function(id, title = "") {
           "skin",
           ## no namespace to make it easier to use it across tabs
           "Skin",
-          choices = c("Pandora" = "pandora", "Data networks" = "isomemo"),
+          choices = c("Pandora & Radogost" = "pandora", "Data networks" = "isomemo"),
           selected = "pandora",
           inline = TRUE
         ),
